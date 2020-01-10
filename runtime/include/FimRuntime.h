@@ -25,7 +25,7 @@ private:
     size_t threadCnt_;
     size_t blockCnt_;
     FimRuntimeType rtType_;
-	hipDeviceProp_t devProp_;
+    hipDeviceProp_t devProp_;
 };
 
 } /* namespace runtime */

@@ -4,8 +4,8 @@
 #define __FIM_API__
 
 typedef enum __FimRuntimeType {
-	RT_TYPE_HIP,
-	RT_TYPE_OPENCL,
+    RT_TYPE_HIP,
+    RT_TYPE_OPENCL,
 } FimRuntimeType;
 
 typedef enum __FimMemType {
@@ -20,16 +20,16 @@ typedef enum __FimMemcpyType {
 } FimMemcpyType;
 
 typedef enum __FimOpType {
-	OP_MAT_MUL,
-	OP_ELT_ADD,
-	OP_ELT_MUL,
-	OP_BATCH_NORM,
-	OP_RELU,
+    OP_MAT_MUL,
+    OP_ELT_ADD,
+    OP_ELT_MUL,
+    OP_BATCH_NORM,
+    OP_RELU,
 } FimOpType;
 
 typedef enum __FimPrecision {
-	FIM_FP16,
-	FIM_INT8,
+    FIM_FP16,
+    FIM_INT8,
 } FimPrecision;
 
 #endif
