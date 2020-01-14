@@ -1,0 +1,11 @@
+
+__global__ void eltwise_add_fp32(
+    const float* __restrict__ operand0,
+    const float* __restrict__ operand1,
+    float* __restrict__ result)
+{
+    int offset = hipBlockDim_x * hipBlockIdx_x + hipThreadIdx_x;
+
+    result[offset] = operand0[offset] + operand1[offset];
+}
+
