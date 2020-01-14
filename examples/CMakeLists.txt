@@ -1,2 +1,3 @@
-add_executable(eltwise_add_hip eltwise_add_hip.cpp)
-target_link_libraries(eltwise_add_hip FimRuntime)
+add_subdirectory(native)
+add_subdirectory(miopen)
+#add_subdirectory(tensorflow)

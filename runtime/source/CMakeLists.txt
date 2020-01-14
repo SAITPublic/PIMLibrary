@@ -1,3 +1,7 @@
 aux_source_directory(. runtime_source)
+aux_source_directory(manager  runtime_source)
+aux_source_directory(executor runtime_source)
+aux_source_directory(emulator runtime_source)
+aux_source_directory(utility  runtime_source)
 add_library(FimRuntime SHARED ${runtime_source})
 target_link_libraries (FimRuntime)

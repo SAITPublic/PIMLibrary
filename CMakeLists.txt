@@ -11,9 +11,12 @@ set(ROCM_PATH $ENV{ROCM_PATH})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BUILD_DIR})
 set(CMAKE_CXX_COMPILER "${ROCM_PATH}/hip/bin/hipcc")
 
-include_directories("${PROJECT_SOURCE_DIR}/runtime/include" "${ROCM_PATH}/include")
+include_directories("${PROJECT_SOURCE_DIR}/runtime/include"
+                    "${PROJECT_SOURCE_DIR}/tools/crfcodegen/include"
+                    "${PROJECT_SOURCE_DIR}/tools/profiler/include"
+                    "${ROCM_PATH}/include")
 link_directories("${ROCM_PATH}/hsa/lib" "${ROCM_PATH}/libhsakmt/lib" "${PROJECT_SOURCE_DIR}/external_libs")
 
 add_subdirectory(runtime/source)
 add_subdirectory(examples)
-#add_subdirectory(tools)
+add_subdirectory(tools)
