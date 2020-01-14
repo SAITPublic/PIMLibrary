@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <stdlib.h>
 #include <iostream>
-#include "hip/hip_runtime.h"
 #include "fim_runtime_api.h"
 
 #define LENGTH	(1024*1024)
@@ -22,7 +21,7 @@ int main(void)
     float* deviceOutput = nullptr;
 
     /* __FIM_API__ call : Initialize FimRuntime */
-    FimInitialize();
+    FimInitialize(RT_TYPE_HIP, FIM_FP16);
 
     /* __FIM_API__ call : Allocate host(CPU) memory */
     FimAllocMemory((float**)&hostInput0, LENGTH * sizeof(float), MEM_TYPE_HOST);
@@ -40,12 +39,15 @@ int main(void)
     FimAllocMemory((float**)&deviceInput1, LENGTH * sizeof(float), MEM_TYPE_DEVICE);
     FimAllocMemory((float**)&deviceOutput, LENGTH * sizeof(float), MEM_TYPE_DEVICE);
 
+    /* __FIM_API__ call : Replacement data */
+    FimDataReplacement(deviceInput1, LENGTH * sizeof(float), OP_ELT_ADD);
+
     /* __FIM_API__ call : Copy operand data from host to device */
-    FimCopyMemory(deviceInput0, hostInput0, LENGTH * sizeof(float), HOST_TO_FIM);
+    FimCopyMemory(deviceInput0, hostInput0, LENGTH * sizeof(float), HOST_TO_DEVICE);
     FimCopyMemory(deviceInput1, hostInput1, LENGTH * sizeof(float), HOST_TO_FIM);
 
     /* __FIM_API__ call : Execute FIM kernel (Element-wise Add) */
-    FimExecute(deviceOutput, deviceInput0, deviceInput1, LENGTH, OP_ELT_ADD, FIM_FP16);
+    FimExecute(deviceOutput, deviceInput0, deviceInput1, LENGTH, OP_ELT_ADD);
 
     /* __FIM_API__ call : Copy output data from device to host */
     FimCopyMemory(hostOutput, deviceOutput, LENGTH * sizeof(float), FIM_TO_HOST);
@@ -63,7 +65,7 @@ int main(void)
 
     /* __FIM_API__ call : Free device(GPU) memory */
     FimFreeMemory(deviceInput0, MEM_TYPE_DEVICE);
-    FimFreeMemory(deviceInput1, MEM_TYPE_DEVICE);
+    FimFreeMemory(deviceInput1, MEM_TYPE_FIM);
 
     /* __FIM_API__ call : Free host(CPU) memory */
     FimFreeMemory(hostInput0, MEM_TYPE_HOST);

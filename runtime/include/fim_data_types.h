@@ -15,8 +15,15 @@ typedef enum __FimMemType {
 } FimMemType;
 
 typedef enum __FimMemcpyType {
+    HOST_TO_HOST,
+    HOST_TO_DEVICE,
     HOST_TO_FIM,
+    DEVICE_TO_HOST,
+    DEVICE_TO_DEVICE,
+    DEVICE_TO_FIM,
     FIM_TO_HOST,
+    FIM_TO_DEVICE,
+    FIM_TO_FIM,
 } FimMemcpyType;
 
 typedef enum __FimOpType {
@@ -31,5 +38,11 @@ typedef enum __FimPrecision {
     FIM_FP16,
     FIM_INT8,
 } FimPrecision;
+
+typedef struct __FimMemory {
+    size_t size;
+    FimMemType memType;
+    void* ptr;
+} FimMemory;
 
 #endif
