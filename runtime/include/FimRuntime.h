@@ -26,7 +26,6 @@ private:
     fim::runtime::executor::FimExecutor* fimExecutor_;
     FimRuntimeType rtType_;
     FimPrecision precision_;
-    hipDeviceProp_t devProp_;
 };
 
 } /* namespace runtime */
