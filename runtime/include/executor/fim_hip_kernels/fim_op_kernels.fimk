@@ -1,8 +1,29 @@
+#include "hip/hip_fp16.h"
 
 __global__ void eltwise_add_fp32(
     const float* __restrict__ operand0,
     const float* __restrict__ operand1,
     float* __restrict__ result)
+{
+    int offset = hipBlockDim_x * hipBlockIdx_x + hipThreadIdx_x;
+
+    result[offset] = operand0[offset] + operand1[offset];
+}
+
+__global__ void eltwise_add_fp16(
+    const __half* __restrict__ operand0,
+    const __half* __restrict__ operand1,
+    __half* __restrict__ result)
+{
+    int offset = hipBlockDim_x * hipBlockIdx_x + hipThreadIdx_x;
+
+    result[offset] = operand0[offset] + operand1[offset];
+}
+
+__global__ void eltwise_add_int8(
+    const char* __restrict__ operand0,
+    const char* __restrict__ operand1,
+    char* __restrict__ result)
 {
     int offset = hipBlockDim_x * hipBlockIdx_x + hipThreadIdx_x;
 

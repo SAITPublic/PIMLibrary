@@ -15,11 +15,11 @@ public:
 
     int Initialize(void);
     int Deinitialize(void);
-    int AllocMemory(float** ptr, size_t size, FimMemType memType);
-    int FreeMemory(float* ptr, FimMemType memType);
-    int DataReplacement(float* data, size_t size, FimOpType opType);
-    int CopyMemory(float* dst, float* src, size_t size, FimMemcpyType);
-    int Execute(float* output, float* operand0, float* operand1, size_t size, FimOpType opType);
+    int AllocMemory(void** ptr, size_t size, FimMemType memType);
+    int FreeMemory(void* ptr, FimMemType memType);
+    int DataReplacement(void* data, size_t size, FimOpType opType);
+    int CopyMemory(void* dst, void* src, size_t size, FimMemcpyType);
+    int Execute(void* output, void* operand0, void* operand1, size_t size, FimOpType opType);
 
 private:
     fim::runtime::manager::FimManager* fimManager_;
