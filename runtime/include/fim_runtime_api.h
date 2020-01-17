@@ -10,18 +10,18 @@ __FIM_API__
 int FimDeinitialize(void);
 
 __FIM_API__
-int FimAllocMemory(float** ptr, size_t size, FimMemType memType = MEM_TYPE_FIM);
+int FimAllocMemory(void** ptr, size_t size, FimMemType memType = MEM_TYPE_FIM);
 
 __FIM_API__
-int FimFreeMemory(float* ptr, FimMemType memType = MEM_TYPE_FIM);
+int FimFreeMemory(void* ptr, FimMemType memType = MEM_TYPE_FIM);
 
 __FIM_API__
-int FimDataReplacement(float* data, size_t size, FimOpType opType);
+int FimDataReplacement(void* data, size_t size, FimOpType opType);
 
 __FIM_API__
-int FimCopyMemory(float* dst, float* src, size_t size, FimMemcpyType cpyType);
+int FimCopyMemory(void* dst, void* src, size_t size, FimMemcpyType cpyType);
 
 __FIM_API__
-int FimExecute(float* output, float* operand0, float* operand1, size_t size, FimOpType opType);
+int FimExecute(void* output, void* operand0, void* operand1, size_t size, FimOpType opType);
 
 #endif

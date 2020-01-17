@@ -48,22 +48,37 @@ int FimExecutor::Deinitialize(void)
     return ret;
 }
 
-int FimExecutor::Execute(float* output, float* operand0, float* operand1, size_t size, FimOpType opType)
+int FimExecutor::Execute(void* output, void* operand0, void* operand1, size_t size, FimOpType opType)
 {
     std::cout << "fim::runtime::executor Execute call" << std::endl;
 
     int ret = 0;
 
     if (opType == OP_ELT_ADD) {
-        hipLaunchKernelGGL(
-                eltwise_add_fp32,
+        if (precision_ == FIM_FP16) {
+#if 1
+            hipLaunchKernelGGL(
+                eltwise_add_fp16,
                 dim3(size / threadCnt_),
                 dim3(threadCnt_),
                 0,
                 0,
-                operand0,
-                operand1,
-                output);
+                (__half*)operand0,
+                (__half*)operand1,
+                (__half*)output);
+#endif
+        }
+        else if (precision_  == FIM_INT8) {
+            hipLaunchKernelGGL(
+                eltwise_add_int8,
+                dim3(size / threadCnt_),
+                dim3(threadCnt_),
+                0,
+                0,
+                (char*)operand0,
+                (char*)operand1,
+                (char*)output);
+        }
     }
     else {
         /* todo:implement other operation function */

@@ -59,7 +59,7 @@ int FimManager::Deinitialize(void)
     return ret;
 }
 
-int FimManager::AllocMemory(float** ptr, size_t size, FimMemType memType)
+int FimManager::AllocMemory(void** ptr, size_t size, FimMemType memType)
 {
     std::cout << "fim::runtime::manager AllocMemory call" << std::endl;
 
@@ -70,7 +70,7 @@ int FimManager::AllocMemory(float** ptr, size_t size, FimMemType memType)
     return ret;
 }
 
-int FimManager::FreeMemory(float* ptr, FimMemType memType)
+int FimManager::FreeMemory(void* ptr, FimMemType memType)
 {
     std::cout << "fim::runtime::manager FreeMemory call" << std::endl;
 
@@ -81,7 +81,7 @@ int FimManager::FreeMemory(float* ptr, FimMemType memType)
     return ret;
 }
 
-int FimManager::CopyMemory(float* dst, float* src, size_t size, FimMemcpyType cpyType)
+int FimManager::CopyMemory(void* dst, void* src, size_t size, FimMemcpyType cpyType)
 {
     std::cout << "fim::runtime::manager CopyeMemory call" << std::endl;
 
@@ -92,7 +92,7 @@ int FimManager::CopyMemory(float* dst, float* src, size_t size, FimMemcpyType cp
     return ret;
 }
 
-int FimManager::DataReplacement(float* data, size_t size, FimOpType opType)
+int FimManager::DataReplacement(void* data, size_t size, FimOpType opType)
 {
     std::cout << "fim::runtime::manager CopyeMemory call" << std::endl;
 

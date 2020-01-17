@@ -1,6 +1,7 @@
 #ifndef FIM_EXECUTOR_H_
 #define FIM_EXECUTOR_H_
 
+#include "hip/hip_fp16.h"
 #include "hip/hip_runtime.h"
 #include "fim_data_types.h"
 
@@ -17,7 +18,7 @@ public:
 
     int Initialize(void);
     int Deinitialize(void);
-    int Execute(float* output, float* operand0, float* operand1, size_t size, FimOpType opType);
+    int Execute(void* output, void* operand0, void* operand1, size_t size, FimOpType opType);
 
 private:
     FimRuntimeType rtType_;
