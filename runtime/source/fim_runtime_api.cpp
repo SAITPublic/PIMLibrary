@@ -36,7 +36,7 @@ int FimDeinitialize(void)
     return ret;
 }
 
-int FimAllocMemory(float** ptr, size_t size, FimMemType memType)
+int FimAllocMemory(void** ptr, size_t size, FimMemType memType)
 {
     std::cout << "fim::runtime::api FimAllocMemory call" << std::endl;
 
@@ -51,7 +51,7 @@ int FimAllocMemory(float** ptr, size_t size, FimMemType memType)
     return ret;
 }
 
-int FimFreeMemory(float* ptr, FimMemType memType)
+int FimFreeMemory(void* ptr, FimMemType memType)
 {
     std::cout << "fim::runtime::api FimFreeMemory call" << std::endl;
 
@@ -65,7 +65,7 @@ int FimFreeMemory(float* ptr, FimMemType memType)
     return ret;
 }
 
-int FimDataReplacement(float* ptr, size_t size, FimOpType opType)
+int FimDataReplacement(void* ptr, size_t size, FimOpType opType)
 {
     std::cout << "fim::runtime::api FimPreprocessor call" << std::endl;
 
@@ -79,7 +79,7 @@ int FimDataReplacement(float* ptr, size_t size, FimOpType opType)
     return ret;
 }
 
-int FimCopyMemory(float* dst, float* src, size_t size, FimMemcpyType cpyType)
+int FimCopyMemory(void* dst, void* src, size_t size, FimMemcpyType cpyType)
 {
     std::cout << "fim::runtime::api FimAllocMemory call" << std::endl;
 
@@ -94,7 +94,7 @@ int FimCopyMemory(float* dst, float* src, size_t size, FimMemcpyType cpyType)
     return ret;
 }
 
-int FimExecute(float* output, float* operand0, float* operand1, size_t size, FimOpType opType)
+int FimExecute(void* output, void* operand0, void* operand1, size_t size, FimOpType opType)
 {
     std::cout << "fim::runtime::api FimExecute call" << std::endl;
 

@@ -35,7 +35,7 @@ int FimRuntime::Deinitialize(void)
     return ret;
 }
 
-int FimRuntime::AllocMemory(float** ptr, size_t size, FimMemType memType)
+int FimRuntime::AllocMemory(void** ptr, size_t size, FimMemType memType)
 {
     std::cout << "fim::runtime AllocMemory call" << std::endl;
 
@@ -46,7 +46,7 @@ int FimRuntime::AllocMemory(float** ptr, size_t size, FimMemType memType)
     return ret;
 }
 
-int FimRuntime::FreeMemory(float* ptr, FimMemType memType)
+int FimRuntime::FreeMemory(void* ptr, FimMemType memType)
 {
     std::cout << "fim::runtime FreeMemory call" << std::endl;
 
@@ -57,7 +57,7 @@ int FimRuntime::FreeMemory(float* ptr, FimMemType memType)
     return ret;
 }
 
-int FimRuntime::DataReplacement(float* data, size_t size, FimOpType opType)
+int FimRuntime::DataReplacement(void* data, size_t size, FimOpType opType)
 {
     std::cout << "fim::runtime DataReplacement call" << std::endl;
 
@@ -68,7 +68,7 @@ int FimRuntime::DataReplacement(float* data, size_t size, FimOpType opType)
     return ret;
 }
 
-int FimRuntime::CopyMemory(float* dst, float* src, size_t size, FimMemcpyType cpyType)
+int FimRuntime::CopyMemory(void* dst, void* src, size_t size, FimMemcpyType cpyType)
 {
     std::cout << "fim::runtime Memcpy call" << std::endl;
 
@@ -79,7 +79,7 @@ int FimRuntime::CopyMemory(float* dst, float* src, size_t size, FimMemcpyType cp
     return ret;
 }
 
-int FimRuntime::Execute(float* output, float* operand0, float* operand1, size_t size, FimOpType opType)
+int FimRuntime::Execute(void* output, void* operand0, void* operand1, size_t size, FimOpType opType)
 {
     std::cout << "fim::runtime Execute call" << std::endl;
 

@@ -37,7 +37,7 @@ int FimMemoryManager::Deinitialize(void)
     return ret;
 }
 
-int FimMemoryManager::AllocMemory(float** ptr, size_t size, FimMemType memType)
+int FimMemoryManager::AllocMemory(void** ptr, size_t size, FimMemType memType)
 {
     std::cout << "fim::runtime::manager FimMemoryManager::AllocMemory call" << std::endl;
 
@@ -49,7 +49,7 @@ int FimMemoryManager::AllocMemory(float** ptr, size_t size, FimMemType memType)
         }
     }
     else if (memType == MEM_TYPE_HOST) {
-        *ptr = (float*)malloc(size);
+        *ptr = (void*)malloc(size);
     }
     else if (memType == MEM_TYPE_FIM) {
         /* todo:implement fimalloc function */
@@ -61,7 +61,7 @@ int FimMemoryManager::AllocMemory(float** ptr, size_t size, FimMemType memType)
     return ret;
 }
 
-int FimMemoryManager::FreeMemory(float* ptr, FimMemType memType)
+int FimMemoryManager::FreeMemory(void* ptr, FimMemType memType)
 {
     std::cout << "fim::runtime::manager FimMemoryManager::FreeMemory call" << std::endl;
 
@@ -85,7 +85,7 @@ int FimMemoryManager::FreeMemory(float* ptr, FimMemType memType)
     return ret;
 }
 
-int FimMemoryManager::CopyMemory(float* dst, float* src, size_t size, FimMemcpyType cpyType)
+int FimMemoryManager::CopyMemory(void* dst, void* src, size_t size, FimMemcpyType cpyType)
 {
     std::cout << "fim::runtime::manager FimMemoryManager::CopyMemory call" << std::endl;
 
@@ -115,7 +115,7 @@ int FimMemoryManager::CopyMemory(float* dst, float* src, size_t size, FimMemcpyT
     return ret;
 }
 
-int FimMemoryManager::DataReplacement(float* data, size_t size, FimOpType opType)
+int FimMemoryManager::DataReplacement(void* data, size_t size, FimOpType opType)
 {
     std::cout << "fim::runtime::manager FimMemoryManager::DataReplacement call" << std::endl;
 
