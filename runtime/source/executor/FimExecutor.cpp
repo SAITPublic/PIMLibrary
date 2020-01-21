@@ -56,7 +56,6 @@ int FimExecutor::Execute(void* output, void* operand0, void* operand1, size_t si
 
     if (opType == OP_ELT_ADD) {
         if (precision_ == FIM_FP16) {
-#if 1
             hipLaunchKernelGGL(
                 eltwise_add_fp16,
                 dim3(size / threadCnt_),
@@ -66,7 +65,6 @@ int FimExecutor::Execute(void* output, void* operand0, void* operand1, size_t si
                 (__half*)operand0,
                 (__half*)operand1,
                 (__half*)output);
-#endif
         }
         else if (precision_  == FIM_INT8) {
             hipLaunchKernelGGL(
