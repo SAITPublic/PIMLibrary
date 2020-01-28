@@ -115,13 +115,14 @@ int FimMemoryManager::CopyMemory(void* dst, void* src, size_t size, FimMemcpyTyp
     return ret;
 }
 
-int FimMemoryManager::DataReplacement(void* data, size_t size, FimOpType opType)
+int FimMemoryManager::ConvertDataLayout(void* dst, void* src, size_t size, FimOpType opType)
 {
-    std::cout << "fim::runtime::manager FimMemoryManager::DataReplacement call" << std::endl;
+    std::cout << "fim::runtime::manager FimMemoryManager::ConvertDataLayout call" << std::endl;
 
     int ret = 0;
 
-    /* todo: implement data replacement function refer to memory map */
+    /* todo: implement ConvertDataLayout function refer to memory map */
+    hipMemcpy(dst, src, size, hipMemcpyHostToDevice);
 
     return ret;
 }

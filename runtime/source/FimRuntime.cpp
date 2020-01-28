@@ -57,13 +57,13 @@ int FimRuntime::FreeMemory(void* ptr, FimMemType memType)
     return ret;
 }
 
-int FimRuntime::DataReplacement(void* data, size_t size, FimOpType opType)
+int FimRuntime::ConvertDataLayout(void* dst, void* src, size_t size, FimOpType opType)
 {
-    std::cout << "fim::runtime DataReplacement call" << std::endl;
+    std::cout << "fim::runtime ConvertDataLayout call" << std::endl;
 
     int ret = 0;
 
-    ret = fimManager_->DataReplacement(data, size, opType);
+    ret = fimManager_->ConvertDataLayout(dst, src, size, opType);
 
     return ret;
 }
