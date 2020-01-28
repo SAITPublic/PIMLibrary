@@ -92,13 +92,13 @@ int FimManager::CopyMemory(void* dst, void* src, size_t size, FimMemcpyType cpyT
     return ret;
 }
 
-int FimManager::DataReplacement(void* data, size_t size, FimOpType opType)
+int FimManager::ConvertDataLayout(void* dst, void* src, size_t size, FimOpType opType)
 {
-    std::cout << "fim::runtime::manager CopyeMemory call" << std::endl;
+    std::cout << "fim::runtime::manager ConvertDataLayout call" << std::endl;
 
     int ret = 0;
 
-    ret = fimMemoryManager_->DataReplacement(data, size, opType);
+    ret = fimMemoryManager_->ConvertDataLayout(dst, src, size, opType);
 
     return ret;
 }

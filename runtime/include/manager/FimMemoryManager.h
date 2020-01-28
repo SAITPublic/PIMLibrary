@@ -20,7 +20,7 @@ public:
     int AllocMemory(void** ptr, size_t size, FimMemType memType);
     int FreeMemory(void* ptr, FimMemType memType);
     int CopyMemory(void* dst, void* src, size_t size, FimMemcpyType);
-    int DataReplacement(void* data, size_t size, FimOpType);
+    int ConvertDataLayout(void* dst, void* src, size_t size, FimOpType);
 
 private:
     FimDevice *fimDevice_;

@@ -16,7 +16,7 @@ __FIM_API__
 int FimFreeMemory(void* ptr, FimMemType memType = MEM_TYPE_FIM);
 
 __FIM_API__
-int FimDataReplacement(void* data, size_t size, FimOpType opType);
+int FimConvertDataLayout(void* dst, void* src, size_t size, FimOpType opType);
 
 __FIM_API__
 int FimCopyMemory(void* dst, void* src, size_t size, FimMemcpyType cpyType);

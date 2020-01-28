@@ -65,7 +65,7 @@ int FimFreeMemory(void* ptr, FimMemType memType)
     return ret;
 }
 
-int FimDataReplacement(void* ptr, size_t size, FimOpType opType)
+int FimConvertDataLayout(void* dst, void* src, size_t size, FimOpType opType)
 {
     std::cout << "fim::runtime::api FimPreprocessor call" << std::endl;
 
@@ -74,7 +74,7 @@ int FimDataReplacement(void* ptr, size_t size, FimOpType opType)
     if (fimRuntime  == nullptr) {
         return -1;
     }
-    ret = fimRuntime->DataReplacement(ptr, size, opType);
+    ret = fimRuntime->ConvertDataLayout(dst, src, size, opType);
 
     return ret;
 }
