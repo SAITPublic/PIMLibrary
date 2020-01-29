@@ -1,5 +1,5 @@
-#ifndef FIM_RUNTIME_API_H_
-#define FIM_RUNTIME_API_H_
+#ifndef _FIM_RUNTIME_API_H_
+#define _FIM_RUNTIME_API_H_
 
 #include "fim_data_types.h"
 
@@ -24,4 +24,4 @@ int FimCopyMemory(void* dst, void* src, size_t size, FimMemcpyType cpyType);
 __FIM_API__
 int FimExecute(void* output, void* operand0, void* operand1, size_t size, FimOpType opType);
 
-#endif
+#endif /* _FIM_RUNTIME_API_H_ */

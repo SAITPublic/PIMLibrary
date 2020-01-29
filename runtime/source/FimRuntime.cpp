@@ -1,15 +1,15 @@
+#include "FimRuntime.h"
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
 #include "executor/FimExecutor.h"
-#include "FimRuntime.h"
 
-namespace fim {
-namespace runtime {
-
-FimRuntime::FimRuntime(FimRuntimeType rtType, FimPrecision precision)
-    :rtType_(rtType), precision_(precision)
+namespace fim
+{
+namespace runtime
+{
+FimRuntime::FimRuntime(FimRuntimeType rtType, FimPrecision precision) : rtType_(rtType), precision_(precision)
 {
     std::cout << "fim::runtime::FimRuntime creator call" << std::endl;
 
@@ -92,4 +92,3 @@ int FimRuntime::Execute(void* output, void* operand0, void* operand1, size_t siz
 
 } /* namespace runtime */
 } /* namespace fim */
-

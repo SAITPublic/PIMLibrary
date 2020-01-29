@@ -1,13 +1,15 @@
-#include <iostream>
-#include <stdlib.h>
-#include <assert.h>
-#include "hip/hip_runtime.h"
 #include "manager/FimMemoryManager.h"
+#include <assert.h>
+#include <stdlib.h>
+#include <iostream>
+#include "hip/hip_runtime.h"
 
-namespace fim {
-namespace runtime {
-namespace manager {
-
+namespace fim
+{
+namespace runtime
+{
+namespace manager
+{
 FimMemoryManager::FimMemoryManager(FimDevice* fimDevice, FimRuntimeType rtType, FimPrecision precision)
     : fimDevice_(fimDevice), rtType_(rtType), precision_(precision)
 {
@@ -47,11 +49,9 @@ int FimMemoryManager::AllocMemory(void** ptr, size_t size, FimMemType memType)
         if (hipMalloc((void**)ptr, size) != hipSuccess) {
             return -1;
         }
-    }
-    else if (memType == MEM_TYPE_HOST) {
+    } else if (memType == MEM_TYPE_HOST) {
         *ptr = (void*)malloc(size);
-    }
-    else if (memType == MEM_TYPE_FIM) {
+    } else if (memType == MEM_TYPE_FIM) {
         /* todo:implement fimalloc function */
         if (hipMalloc((void**)ptr, size) != hipSuccess) {
             return -1;
@@ -71,11 +71,9 @@ int FimMemoryManager::FreeMemory(void* ptr, FimMemType memType)
         if (hipFree(ptr) != hipSuccess) {
             return -1;
         }
-    }
-    else if (memType == MEM_TYPE_HOST) {
+    } else if (memType == MEM_TYPE_HOST) {
         free(ptr);
-    }
-    else if (memType == MEM_TYPE_FIM) {
+    } else if (memType == MEM_TYPE_FIM) {
         /* todo:implement fimfree function */
         if (hipFree(ptr) != hipSuccess) {
             return -1;
@@ -92,22 +90,19 @@ int FimMemoryManager::CopyMemory(void* dst, void* src, size_t size, FimMemcpyTyp
     int ret = 0;
 
     if (cpyType == HOST_TO_FIM || cpyType == HOST_TO_DEVICE) {
-        if (hipMemcpy(dst, src, size, hipMemcpyHostToDevice)!= hipSuccess) {
+        if (hipMemcpy(dst, src, size, hipMemcpyHostToDevice) != hipSuccess) {
             return -1;
         }
-    }
-    else if (cpyType == FIM_TO_HOST || cpyType == DEVICE_TO_HOST) {
-        if (hipMemcpy(dst, src, size, hipMemcpyDeviceToHost)!= hipSuccess) {
+    } else if (cpyType == FIM_TO_HOST || cpyType == DEVICE_TO_HOST) {
+        if (hipMemcpy(dst, src, size, hipMemcpyDeviceToHost) != hipSuccess) {
             return -1;
         }
-    }
-    else if (cpyType == DEVICE_TO_FIM || cpyType == FIM_TO_DEVICE) {
-        if (hipMemcpy(dst, src, size, hipMemcpyDeviceToDevice)!= hipSuccess) {
+    } else if (cpyType == DEVICE_TO_FIM || cpyType == FIM_TO_DEVICE) {
+        if (hipMemcpy(dst, src, size, hipMemcpyDeviceToDevice) != hipSuccess) {
             return -1;
         }
-    }
-    else if (cpyType == HOST_TO_HOST) {
-        if (hipMemcpy(dst, src, size, hipMemcpyHostToHost)!= hipSuccess) {
+    } else if (cpyType == HOST_TO_HOST) {
+        if (hipMemcpy(dst, src, size, hipMemcpyHostToHost) != hipSuccess) {
             return -1;
         }
     }

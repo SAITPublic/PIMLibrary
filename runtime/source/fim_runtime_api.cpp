@@ -1,7 +1,7 @@
-#include <iostream>
-#include "hip/hip_runtime.h"
 #include "fim_runtime_api.h"
+#include <iostream>
 #include "FimRuntime.h"
+#include "hip/hip_runtime.h"
 
 using namespace fim::runtime;
 
@@ -13,8 +13,7 @@ int FimInitialize(FimRuntimeType rtType, FimPrecision precision)
 
     int ret = 0;
 
-    if (fimRuntime == nullptr)
-        fimRuntime = new FimRuntime(rtType, precision);
+    if (fimRuntime == nullptr) fimRuntime = new FimRuntime(rtType, precision);
 
     ret = fimRuntime->Initialize();
 
@@ -71,7 +70,7 @@ int FimConvertDataLayout(void* dst, void* src, size_t size, FimOpType opType)
 
     int ret = 0;
 
-    if (fimRuntime  == nullptr) {
+    if (fimRuntime == nullptr) {
         return -1;
     }
     ret = fimRuntime->ConvertDataLayout(dst, src, size, opType);
@@ -108,4 +107,3 @@ int FimExecute(void* output, void* operand0, void* operand1, size_t size, FimOpT
 
     return ret;
 }
-

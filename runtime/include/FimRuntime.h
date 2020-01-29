@@ -1,15 +1,17 @@
-#ifndef FIM_RUNTIME_H_
-#define FIM_RUNTIME_H_
+#ifndef _FIM_RUNTIME_H_
+#define _FIM_RUNTIME_H_
 
-#include "manager/FimManager.h"
 #include "executor/FimExecutor.h"
 #include "fim_data_types.h"
+#include "manager/FimManager.h"
 
-namespace fim {
-namespace runtime {
-
-class FimRuntime {
-public:
+namespace fim
+{
+namespace runtime
+{
+class FimRuntime
+{
+   public:
     FimRuntime(FimRuntimeType rtType, FimPrecision precision);
     virtual ~FimRuntime(void) {}
 
@@ -21,7 +23,7 @@ public:
     int CopyMemory(void* dst, void* src, size_t size, FimMemcpyType);
     int Execute(void* output, void* operand0, void* operand1, size_t size, FimOpType opType);
 
-private:
+   private:
     fim::runtime::manager::FimManager* fimManager_;
     fim::runtime::executor::FimExecutor* fimExecutor_;
     FimRuntimeType rtType_;
@@ -31,4 +33,4 @@ private:
 } /* namespace runtime */
 } /* namespace fim */
 
-#endif
+#endif /* _FIM_RUNTIME_H_ */

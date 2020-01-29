@@ -1,14 +1,16 @@
-#include <iostream>
-#include <stdlib.h>
-#include <assert.h>
-#include "hip/hip_runtime.h"
-#include "executor/fim_hip_kernels/fim_op_kernels.fimk"
 #include "executor/FimExecutor.h"
+#include <assert.h>
+#include <stdlib.h>
+#include <iostream>
+#include "executor/fim_hip_kernels/fim_op_kernels.fimk"
+#include "hip/hip_runtime.h"
 
-namespace fim {
-namespace runtime {
-namespace executor {
-
+namespace fim
+{
+namespace runtime
+{
+namespace executor
+{
 FimExecutor::FimExecutor(FimRuntimeType rtType, FimPrecision precision)
     : rtType_(rtType), precision_(precision), threadCnt_(16)
 {
@@ -56,29 +58,13 @@ int FimExecutor::Execute(void* output, void* operand0, void* operand1, size_t si
 
     if (opType == OP_ELT_ADD) {
         if (precision_ == FIM_FP16) {
-            hipLaunchKernelGGL(
-                eltwise_add_fp16,
-                dim3(size / threadCnt_),
-                dim3(threadCnt_),
-                0,
-                0,
-                (__half*)operand0,
-                (__half*)operand1,
-                (__half*)output);
+            hipLaunchKernelGGL(eltwise_add_fp16, dim3(size / threadCnt_), dim3(threadCnt_), 0, 0, (__half*)operand0,
+                               (__half*)operand1, (__half*)output);
+        } else if (precision_ == FIM_INT8) {
+            hipLaunchKernelGGL(eltwise_add_int8, dim3(size / threadCnt_), dim3(threadCnt_), 0, 0, (char*)operand0,
+                               (char*)operand1, (char*)output);
         }
-        else if (precision_  == FIM_INT8) {
-            hipLaunchKernelGGL(
-                eltwise_add_int8,
-                dim3(size / threadCnt_),
-                dim3(threadCnt_),
-                0,
-                0,
-                (char*)operand0,
-                (char*)operand1,
-                (char*)output);
-        }
-    }
-    else {
+    } else {
         /* todo:implement other operation function */
         return -1;
     }

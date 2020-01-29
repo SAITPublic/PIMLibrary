@@ -1,13 +1,15 @@
-#include <iostream>
-#include <stdlib.h>
-#include <assert.h>
 #include "manager/FimControlManager.h"
+#include <assert.h>
+#include <stdlib.h>
+#include <iostream>
 #include "fim_data_types.h"
 
-namespace fim {
-namespace runtime {
-namespace manager {
-
+namespace fim
+{
+namespace runtime
+{
+namespace manager
+{
 FimControlManager::FimControlManager(FimDevice* fimDevice, FimRuntimeType rtType, FimPrecision precision)
     : fimDevice_(fimDevice), rtType_(rtType), precision_(precision)
 {

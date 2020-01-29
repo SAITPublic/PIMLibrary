@@ -1,21 +1,24 @@
-#ifndef FIM_MANAGER_H_
-#define FIM_MANAGER_H_
+#ifndef _FIM_MANAGER_H_
+#define _FIM_MANAGER_H_
 
-#include "manager/FimControlManager.h"
-#include "manager/FimMemoryManager.h"
-#include "manager/FimDevice.h"
 #include "fim_data_types.h"
+#include "manager/FimControlManager.h"
+#include "manager/FimDevice.h"
+#include "manager/FimMemoryManager.h"
 
-namespace fim {
-namespace runtime {
-namespace manager {
-
+namespace fim
+{
+namespace runtime
+{
+namespace manager
+{
 class FimMemoryManager;
 class FimControlManager;
 class FimDevice;
 
-class FimManager {
-public:
+class FimManager
+{
+   public:
     virtual ~FimManager(void);
 
     static FimManager* getInstance(FimRuntimeType rtType, FimPrecision precision);
@@ -27,7 +30,7 @@ public:
     int CopyMemory(void* dst, void* src, size_t size, FimMemcpyType);
     int ConvertDataLayout(void* dst, void* src, size_t size, FimOpType);
 
-private:
+   private:
     FimManager(FimRuntimeType rtType, FimPrecision precision);
 
     FimDevice* fimDevice_;
@@ -35,13 +38,11 @@ private:
     FimMemoryManager* fimMemoryManager_;
 
     FimRuntimeType rtType_;
-	FimPrecision precision_;
+    FimPrecision precision_;
 };
 
 } /* namespace manager */
 } /* namespace runtime */
 } /* namespace fim */
 
-
-
-#endif
+#endif /* _FIM_MANAGER_H_ */

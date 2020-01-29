@@ -1,5 +1,7 @@
-#ifndef FIM_DATA_TYPE_H_
-#define FIM_DATA_TYPE_H_
+#ifndef _FIM_DATA_TYPE_H_
+#define _FIM_DATA_TYPE_H_
+
+#include <stddef.h>
 
 #define __FIM_API__
 
@@ -45,4 +47,4 @@ typedef struct __FimMemory {
     void* ptr;
 } FimMemory;
 
-#endif
+#endif /* _FIM_DATA_TYPE_H_ */

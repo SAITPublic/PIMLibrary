@@ -1,22 +1,20 @@
-#include <iostream>
-#include <stdlib.h>
-#include <assert.h>
 #include "manager/FimDevice.h"
+#include <assert.h>
+#include <stdlib.h>
+#include <iostream>
 
-namespace fim {
-namespace runtime {
-namespace manager {
-
-FimDevice::FimDevice(FimPrecision precision)
-    : precision_(precision)
+namespace fim
+{
+namespace runtime
+{
+namespace manager
+{
+FimDevice::FimDevice(FimPrecision precision) : precision_(precision)
 {
     std::cout << "fim::runtime::manager FimDevice creator call" << std::endl;
 }
 
-FimDevice::~FimDevice(void)
-{
-
-}
+FimDevice::~FimDevice(void) {}
 
 int FimDevice::Initialize(void)
 {

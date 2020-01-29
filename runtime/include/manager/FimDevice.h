@@ -1,14 +1,17 @@
-#ifndef FIM_DEVICE_H_
-#define FIM_DEVICE_H_
+#ifndef _FIM_DEVICE_H_
+#define _FIM_DEVICE_H_
 
 #include "fim_data_types.h"
 
-namespace fim {
-namespace runtime {
-namespace manager {
-
-class FimDevice {
-public:
+namespace fim
+{
+namespace runtime
+{
+namespace manager
+{
+class FimDevice
+{
+   public:
     FimDevice(FimPrecision precision);
     virtual ~FimDevice(void);
 
@@ -16,7 +19,7 @@ public:
     int Deinitialize(void);
     int RequestIoctl(void);
 
-private:
+   private:
     int OpenDevice(void);
     int CloseDevice(void);
 
@@ -32,4 +35,4 @@ private:
 } /* namespace runtime */
 } /* namespace fim */
 
-#endif
+#endif /* _FIM_DEVICE_H_ */

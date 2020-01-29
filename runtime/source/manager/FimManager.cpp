@@ -1,20 +1,21 @@
-#include <iostream>
-#include <stdlib.h>
-#include <assert.h>
 #include "manager/FimManager.h"
+#include <assert.h>
+#include <stdlib.h>
+#include <iostream>
 
-namespace fim {
-namespace runtime {
-namespace manager {
-
-FimManager::FimManager(FimRuntimeType rtType, FimPrecision precision)
-    : rtType_(rtType), precision_(precision)
+namespace fim
+{
+namespace runtime
+{
+namespace manager
+{
+FimManager::FimManager(FimRuntimeType rtType, FimPrecision precision) : rtType_(rtType), precision_(precision)
 {
     std::cout << "fim::runtime::manager creator call" << std::endl;
 
-    fimDevice_  = new FimDevice(precision_);
+    fimDevice_ = new FimDevice(precision_);
     fimControlManager_ = new FimControlManager(fimDevice_, rtType_, precision_);
-    fimMemoryManager_  = new FimMemoryManager(fimDevice_, rtType_, precision_);
+    fimMemoryManager_ = new FimMemoryManager(fimDevice_, rtType_, precision_);
 }
 
 FimManager::~FimManager(void)

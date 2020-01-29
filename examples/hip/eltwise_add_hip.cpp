@@ -1,12 +1,12 @@
 #include <assert.h>
 #include <stdio.h>
-#include <algorithm>
 #include <stdlib.h>
+#include <algorithm>
 #include <iostream>
-#include "hip/hip_fp16.h"
 #include "fim_runtime_api.h"
+#include "hip/hip_fp16.h"
 
-#define LENGTH	(1024*1024)
+#define LENGTH (1024 * 1024)
 
 using namespace std;
 
@@ -55,11 +55,10 @@ int main(void)
     /* Verify the results */
     errors = 0;
     for (i = 0; i < LENGTH; i++) {
-        if (hostInput[i] + hostWeight[i] != hostOutput[i])
-            errors++;
+        if (hostInput[i] + hostWeight[i] != hostOutput[i]) errors++;
     }
     if (errors != 0)
-        printf("\t\t\t\t\tFAILED: %d errors\n",errors);
+        printf("\t\t\t\t\tFAILED: %d errors\n", errors);
     else
         printf("\t\t\t\t\tPASSED!\n");
 

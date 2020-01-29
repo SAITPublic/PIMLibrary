@@ -1,16 +1,19 @@
-#ifndef FIM_EXECUTOR_H_
-#define FIM_EXECUTOR_H_
+#ifndef _FIM_EXECUTOR_H_
+#define _FIM_EXECUTOR_H_
 
+#include "fim_data_types.h"
 #include "hip/hip_fp16.h"
 #include "hip/hip_runtime.h"
-#include "fim_data_types.h"
 
-namespace fim {
-namespace runtime {
-namespace executor {
-
-class FimExecutor {
-public:
+namespace fim
+{
+namespace runtime
+{
+namespace executor
+{
+class FimExecutor
+{
+   public:
     FimExecutor(FimRuntimeType rtType, FimPrecision precision);
     virtual ~FimExecutor(void) {}
 
@@ -20,7 +23,7 @@ public:
     int Deinitialize(void);
     int Execute(void* output, void* operand0, void* operand1, size_t size, FimOpType opType);
 
-private:
+   private:
     FimRuntimeType rtType_;
     FimPrecision precision_;
     hipDeviceProp_t devProp_;
@@ -31,4 +34,4 @@ private:
 } /* namespace runtime */
 } /* namespace fim */
 
-#endif
+#endif /* _FIM_EXECUTOR_H_ */
