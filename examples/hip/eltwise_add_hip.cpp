@@ -1,3 +1,4 @@
+#include <gtest/gtest.h>
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,7 +12,7 @@
 
 using namespace std;
 
-int main(void)
+int fim_elementwise_add(void)
 {
     int ret = 0;
 
@@ -64,3 +65,5 @@ int main(void)
 
     return ret;
 }
+
+TEST(IntegrationTest, FimEltAdd) { EXPECT_TRUE(fim_elementwise_add()); }

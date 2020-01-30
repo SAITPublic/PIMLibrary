@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 3.5.1)
 project(FIM_LIBRARY)
 
 #Define minimum version for GCC
@@ -21,7 +21,6 @@ endif()
 message(STATUS "Build Type is ${CMAKE_BUILD_TYPE}")
 
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BUILD_DIR})
-set(CMAKE_CXX_COMPILER "${ROCM_PATH}/hip/bin/hipcc")
 
 # Set CMake Flags
 set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -Wno-unused-command-line-argument")
@@ -31,14 +30,11 @@ if("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3")
 elseif("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG -DPROFILE -g -O0")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DDEBUG -DPROFILE -g -O0")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG -DPROFILE -g")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DDEBUG -DPROFILE -g")
 endif()
 message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
 message(STATUS "CMAKE_C_FLAGS: ${CMAKE_C_FLAGS}")
-
-set(HCC_CXX_FLAGS  "-hc --amdgpu-target=gfx803 --amdgpu-target=gfx900 --amdgpu-target=gfx906 --amdgpu-target=gfx908 ")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HCC_CXX_FLAGS}")
 
 include_directories("${PROJECT_SOURCE_DIR}/runtime/include"
                     "${PROJECT_SOURCE_DIR}/tools/crfcodegen/include"
@@ -49,3 +45,4 @@ link_directories("${ROCM_PATH}/hsa/lib" "${ROCM_PATH}/libhsakmt/lib" "${PROJECT_
 add_subdirectory(runtime/source)
 add_subdirectory(examples)
 add_subdirectory(tools)
+add_subdirectory(external_libs)

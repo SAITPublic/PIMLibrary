@@ -1,3 +1,4 @@
+#include <gtest/gtest.h>
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,7 +15,7 @@
 
 using namespace std;
 
-int main(void)
+int fim_gemv_hip(void)
 {
     int ret = 0;
 
@@ -67,3 +68,5 @@ int main(void)
 
     return ret;
 }
+
+TEST(IntergrationTest, FimGEMV) { EXPECT_TRUE(fim_gemv_hip()); }
