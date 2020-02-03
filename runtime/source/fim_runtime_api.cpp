@@ -50,6 +50,19 @@ int FimAllocMemory(void** ptr, size_t size, FimMemType memType)
     return ret;
 }
 
+int FimAllocMemory(FimBo* fimBo)
+{
+    int ret = 0;
+
+    if (fimRuntime == nullptr) {
+        return -1;
+    }
+
+    ret = fimRuntime->AllocMemory(fimBo);
+
+    return ret;
+}
+
 int FimFreeMemory(void* ptr, FimMemType memType)
 {
     std::cout << "fim::runtime::api FimFreeMemory call" << std::endl;
@@ -64,6 +77,18 @@ int FimFreeMemory(void* ptr, FimMemType memType)
     return ret;
 }
 
+int FimFreeMemory(FimBo* fimBo)
+{
+    int ret = 0;
+
+    if (fimRuntime == nullptr) {
+        return -1;
+    }
+    ret = fimRuntime->FreeMemory(fimBo);
+
+    return ret;
+}
+
 int FimConvertDataLayout(void* dst, void* src, size_t size, FimOpType opType)
 {
     std::cout << "fim::runtime::api FimPreprocessor call" << std::endl;
@@ -74,6 +99,18 @@ int FimConvertDataLayout(void* dst, void* src, size_t size, FimOpType opType)
         return -1;
     }
     ret = fimRuntime->ConvertDataLayout(dst, src, size, opType);
+
+    return ret;
+}
+
+int FimConvertDataLayout(FimBo* dst, FimBo* src, FimOpType opType)
+{
+    int ret = 0;
+
+    if (fimRuntime == nullptr) {
+        return -1;
+    }
+    ret = fimRuntime->ConvertDataLayout(dst, src, opType);
 
     return ret;
 }
@@ -93,6 +130,19 @@ int FimCopyMemory(void* dst, void* src, size_t size, FimMemcpyType cpyType)
     return ret;
 }
 
+int FimCopyMemory(FimBo* dst, FimBo* src, FimMemcpyType cpyType)
+{
+    int ret = 0;
+
+    if (fimRuntime == nullptr) {
+        return -1;
+    }
+
+    ret = fimRuntime->CopyMemory(dst, src, cpyType);
+
+    return ret;
+}
+
 int FimExecute(void* output, void* operand0, void* operand1, size_t size, FimOpType opType)
 {
     std::cout << "fim::runtime::api FimExecute call" << std::endl;
@@ -104,6 +154,19 @@ int FimExecute(void* output, void* operand0, void* operand1, size_t size, FimOpT
     }
 
     ret = fimRuntime->Execute(output, operand0, operand1, size, opType);
+
+    return ret;
+}
+
+int FimExecute(FimBo* output, FimBo* operand0, FimBo* operand1, FimOpType opType)
+{
+    int ret = 0;
+
+    if (fimRuntime == nullptr) {
+        return -1;
+    }
+
+    ret = fimRuntime->Execute(output, operand0, operand1, opType);
 
     return ret;
 }

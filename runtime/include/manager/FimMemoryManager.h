@@ -21,9 +21,13 @@ class FimMemoryManager
     int Initialize(void);
     int Deinitialize(void);
     int AllocMemory(void** ptr, size_t size, FimMemType memType);
+    int AllocMemory(FimBo* fimBo);
     int FreeMemory(void* ptr, FimMemType memType);
+    int FreeMemory(FimBo* fimBo);
     int CopyMemory(void* dst, void* src, size_t size, FimMemcpyType);
+    int CopyMemory(FimBo* dst, FimBo* src, FimMemcpyType);
     int ConvertDataLayout(void* dst, void* src, size_t size, FimOpType);
+    int ConvertDataLayout(FimBo* dst, FimBo* src, FimOpType);
 
    private:
     FimDevice* fimDevice_;

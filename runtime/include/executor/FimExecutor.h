@@ -22,6 +22,7 @@ class FimExecutor
     int Initialize(void);
     int Deinitialize(void);
     int Execute(void* output, void* operand0, void* operand1, size_t size, FimOpType opType);
+    int Execute(FimBo* output, FimBo* operand0, FimBo* operand1, FimOpType opType);
 
    private:
     FimRuntimeType rtType_;

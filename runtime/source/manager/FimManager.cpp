@@ -71,6 +71,15 @@ int FimManager::AllocMemory(void** ptr, size_t size, FimMemType memType)
     return ret;
 }
 
+int FimManager::AllocMemory(FimBo* fimBo)
+{
+    int ret = 0;
+
+    ret = fimMemoryManager_->AllocMemory(fimBo);
+
+    return ret;
+}
+
 int FimManager::FreeMemory(void* ptr, FimMemType memType)
 {
     std::cout << "fim::runtime::manager FreeMemory call" << std::endl;
@@ -78,6 +87,15 @@ int FimManager::FreeMemory(void* ptr, FimMemType memType)
     int ret = 0;
 
     ret = fimMemoryManager_->FreeMemory(ptr, memType);
+
+    return ret;
+}
+
+int FimManager::FreeMemory(FimBo* fimBo)
+{
+    int ret = 0;
+
+    ret = fimMemoryManager_->FreeMemory(fimBo);
 
     return ret;
 }
@@ -93,6 +111,15 @@ int FimManager::CopyMemory(void* dst, void* src, size_t size, FimMemcpyType cpyT
     return ret;
 }
 
+int FimManager::CopyMemory(FimBo* dst, FimBo* src, FimMemcpyType cpyType)
+{
+    int ret = 0;
+
+    ret = fimMemoryManager_->CopyMemory(dst, src, cpyType);
+
+    return ret;
+}
+
 int FimManager::ConvertDataLayout(void* dst, void* src, size_t size, FimOpType opType)
 {
     std::cout << "fim::runtime::manager ConvertDataLayout call" << std::endl;
@@ -100,6 +127,15 @@ int FimManager::ConvertDataLayout(void* dst, void* src, size_t size, FimOpType o
     int ret = 0;
 
     ret = fimMemoryManager_->ConvertDataLayout(dst, src, size, opType);
+
+    return ret;
+}
+
+int FimManager::ConvertDataLayout(FimBo* dst, FimBo* src, FimOpType opType)
+{
+    int ret = 0;
+
+    ret = fimMemoryManager_->ConvertDataLayout(dst, src, opType);
 
     return ret;
 }

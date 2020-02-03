@@ -5,6 +5,21 @@
 
 #define __FIM_API__
 
+#define FP16 _Float16
+#define INT8 char
+
+inline float convertH2F(_Float16 h_val)
+{
+    float f_val = h_val;
+    return f_val;
+}
+
+inline FP16 convertF2H(float f_val)
+{
+    FP16 h_val(f_val);
+    return h_val;
+}
+
 typedef enum __FimRuntimeType {
     RT_TYPE_HIP,
     RT_TYPE_OPENCL,
@@ -29,7 +44,7 @@ typedef enum __FimMemcpyType {
 } FimMemcpyType;
 
 typedef enum __FimOpType {
-    OP_MAT_MUL,
+    OP_GEMV,
     OP_ELT_ADD,
     OP_ELT_MUL,
     OP_BATCH_NORM,
@@ -41,10 +56,10 @@ typedef enum __FimPrecision {
     FIM_INT8,
 } FimPrecision;
 
-typedef struct __FimMemory {
+typedef struct __FimBufferObject {
     size_t size;
     FimMemType memType;
-    void* ptr;
-} FimMemory;
+    void* data;
+} FimBo;
 
 #endif /* _FIM_DATA_TYPE_H_ */

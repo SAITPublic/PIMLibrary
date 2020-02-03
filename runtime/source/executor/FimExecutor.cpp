@@ -72,6 +72,34 @@ int FimExecutor::Execute(void* output, void* operand0, void* operand1, size_t si
     return ret;
 }
 
+int FimExecutor::Execute(FimBo* output, FimBo* operand0, FimBo* operand1, FimOpType opType)
+{
+    int ret = 0;
+    size_t size = output->size;
+
+    if (opType == OP_ELT_ADD) {
+        if (precision_ == FIM_FP16) {
+            hipLaunchKernelGGL(eltwise_add_fp16, dim3(size / threadCnt_), dim3(threadCnt_), 0, 0,
+                               (__half*)operand0->data, (__half*)operand1->data, (__half*)output->data);
+        } else if (precision_ == FIM_INT8) {
+            hipLaunchKernelGGL(eltwise_add_int8, dim3(size / threadCnt_), dim3(threadCnt_), 0, 0, (char*)operand0->data,
+                               (char*)operand1->data, (char*)output->data);
+        }
+    } else if (opType == OP_GEMV) {
+        if (precision_ == FIM_FP16) {
+            size_t in_size = operand0->size / sizeof(__half);
+            size_t out_size = output->size / sizeof(__half);
+            hipLaunchKernelGGL(gemv_1cu_1th_fp16, dim3(1), dim3(1), 0, 0, (__half*)operand0->data,
+                               (__half*)operand1->data, (__half*)output->data, in_size, out_size);
+        }
+    } else {
+        /* todo:implement other operation function */
+        return -1;
+    }
+
+    return ret;
+}
+
 } /* namespace executor */
 } /* namespace runtime */
 } /* namespace fim */

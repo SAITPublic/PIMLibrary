@@ -3,30 +3,47 @@
 __global__ void eltwise_add_fp32(
     const float* __restrict__ operand0,
     const float* __restrict__ operand1,
-    float* __restrict__ result)
+    float* __restrict__ output)
 {
     int offset = hipBlockDim_x * hipBlockIdx_x + hipThreadIdx_x;
 
-    result[offset] = operand0[offset] + operand1[offset];
+    output[offset] = operand0[offset] + operand1[offset];
 }
 
 __global__ void eltwise_add_fp16(
     const __half* __restrict__ operand0,
     const __half* __restrict__ operand1,
-    __half* __restrict__ result)
+    __half* __restrict__ output)
 {
     int offset = hipBlockDim_x * hipBlockIdx_x + hipThreadIdx_x;
 
-    result[offset] = operand0[offset] + operand1[offset];
+    output[offset] = operand0[offset] + operand1[offset];
 }
 
 __global__ void eltwise_add_int8(
     const char* __restrict__ operand0,
     const char* __restrict__ operand1,
-    char* __restrict__ result)
+    char* __restrict__ output)
 {
     int offset = hipBlockDim_x * hipBlockIdx_x + hipThreadIdx_x;
 
-    result[offset] = operand0[offset] + operand1[offset];
+    output[offset] = operand0[offset] + operand1[offset];
 }
 
+__global__ void gemv_1cu_1th_fp16(
+    const __half* __restrict__ input,
+    __half* __restrict__ weight,
+    __half* __restrict__ output,
+    const int in_size,
+    const int out_size)
+{
+    __half* t_weight = weight;
+
+    int w, h;
+    for (h = 0; h < out_size; h++) {
+       for (w = 0; w < in_size; w++) {
+           output[h] += t_weight[w] * input[w];
+       }
+       t_weight += in_size;
+    }
+}

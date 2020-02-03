@@ -61,6 +61,26 @@ int FimMemoryManager::AllocMemory(void** ptr, size_t size, FimMemType memType)
     return ret;
 }
 
+int FimMemoryManager::AllocMemory(FimBo* fimBo)
+{
+    int ret = 0;
+
+    if (fimBo->memType == MEM_TYPE_DEVICE) {
+        if (hipMalloc((void**)&fimBo->data, fimBo->size) != hipSuccess) {
+            return -1;
+        }
+    } else if (fimBo->memType == MEM_TYPE_HOST) {
+        fimBo->data = (void*)malloc(fimBo->size);
+    } else if (fimBo->memType == MEM_TYPE_FIM) {
+        /* todo:implement fimalloc function */
+        if (hipMalloc((void**)&fimBo->data, fimBo->size) != hipSuccess) {
+            return -1;
+        }
+    }
+
+    return ret;
+}
+
 int FimMemoryManager::FreeMemory(void* ptr, FimMemType memType)
 {
     std::cout << "fim::runtime::manager FimMemoryManager::FreeMemory call" << std::endl;
@@ -76,6 +96,26 @@ int FimMemoryManager::FreeMemory(void* ptr, FimMemType memType)
     } else if (memType == MEM_TYPE_FIM) {
         /* todo:implement fimfree function */
         if (hipFree(ptr) != hipSuccess) {
+            return -1;
+        }
+    }
+
+    return ret;
+}
+
+int FimMemoryManager::FreeMemory(FimBo* fimBo)
+{
+    int ret = 0;
+
+    if (fimBo->memType == MEM_TYPE_DEVICE) {
+        if (hipFree(fimBo->data) != hipSuccess) {
+            return -1;
+        }
+    } else if (fimBo->memType == MEM_TYPE_HOST) {
+        free(fimBo->data);
+    } else if (fimBo->memType == MEM_TYPE_FIM) {
+        /* todo:implement fimfree function */
+        if (hipFree(fimBo->data) != hipSuccess) {
             return -1;
         }
     }
@@ -110,6 +150,32 @@ int FimMemoryManager::CopyMemory(void* dst, void* src, size_t size, FimMemcpyTyp
     return ret;
 }
 
+int FimMemoryManager::CopyMemory(FimBo* dst, FimBo* src, FimMemcpyType cpyType)
+{
+    int ret = 0;
+    size_t size = dst->size;
+
+    if (cpyType == HOST_TO_FIM || cpyType == HOST_TO_DEVICE) {
+        if (hipMemcpy(dst->data, src->data, size, hipMemcpyHostToDevice) != hipSuccess) {
+            return -1;
+        }
+    } else if (cpyType == FIM_TO_HOST || cpyType == DEVICE_TO_HOST) {
+        if (hipMemcpy(dst->data, src->data, size, hipMemcpyDeviceToHost) != hipSuccess) {
+            return -1;
+        }
+    } else if (cpyType == DEVICE_TO_FIM || cpyType == FIM_TO_DEVICE) {
+        if (hipMemcpy(dst->data, src->data, size, hipMemcpyDeviceToDevice) != hipSuccess) {
+            return -1;
+        }
+    } else if (cpyType == HOST_TO_HOST) {
+        if (hipMemcpy(dst->data, src->data, size, hipMemcpyHostToHost) != hipSuccess) {
+            return -1;
+        }
+    }
+
+    return ret;
+}
+
 int FimMemoryManager::ConvertDataLayout(void* dst, void* src, size_t size, FimOpType opType)
 {
     std::cout << "fim::runtime::manager FimMemoryManager::ConvertDataLayout call" << std::endl;
@@ -118,6 +184,17 @@ int FimMemoryManager::ConvertDataLayout(void* dst, void* src, size_t size, FimOp
 
     /* todo: implement ConvertDataLayout function refer to memory map */
     hipMemcpy(dst, src, size, hipMemcpyHostToDevice);
+
+    return ret;
+}
+
+int FimMemoryManager::ConvertDataLayout(FimBo* dst, FimBo* src, FimOpType opType)
+{
+    int ret = 0;
+    size_t size = dst->size;
+
+    /* todo: implement ConvertDataLayout function refer to memory map */
+    hipMemcpy(dst->data, src->data, size, hipMemcpyHostToDevice);
 
     return ret;
 }
