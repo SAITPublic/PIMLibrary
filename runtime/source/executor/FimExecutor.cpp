@@ -4,6 +4,7 @@
 #include <iostream>
 #include "executor/fim_hip_kernels/fim_op_kernels.fimk"
 #include "hip/hip_runtime.h"
+#include "utility/fim_log.h"
 
 namespace fim
 {
@@ -14,13 +15,12 @@ namespace executor
 FimExecutor::FimExecutor(FimRuntimeType rtType, FimPrecision precision)
     : rtType_(rtType), precision_(precision), threadCnt_(16)
 {
-    std::cout << "fim::runtime::executor creator call" << std::endl;
+    LOGI(FIM_EXE, "called");
 }
 
 FimExecutor* FimExecutor::getInstance(FimRuntimeType rtType, FimPrecision precision)
 {
-    std::cout << "fim::runtime::executor getInstance call" << std::endl;
-
+    LOGI(FIM_EXE, "called");
     static FimExecutor* instance_ = new FimExecutor(rtType, precision);
 
     return instance_;
@@ -28,8 +28,7 @@ FimExecutor* FimExecutor::getInstance(FimRuntimeType rtType, FimPrecision precis
 
 int FimExecutor::Initialize(void)
 {
-    std::cout << "fim::runtime::executor Initialize call" << std::endl;
-
+    LOGI(FIM_EXE, "called");
     int ret = 0;
 
     hipGetDeviceProperties(&devProp_, 0);
@@ -43,8 +42,7 @@ int FimExecutor::Initialize(void)
 
 int FimExecutor::Deinitialize(void)
 {
-    std::cout << "fim::runtime::executor Deinitialize call" << std::endl;
-
+    LOGI(FIM_EXE, "called");
     int ret = 0;
 
     return ret;
@@ -52,8 +50,7 @@ int FimExecutor::Deinitialize(void)
 
 int FimExecutor::Execute(void* output, void* operand0, void* operand1, size_t size, FimOpType opType)
 {
-    std::cout << "fim::runtime::executor Execute call" << std::endl;
-
+    LOGI(FIM_EXE, "called");
     int ret = 0;
 
     if (opType == OP_ELT_ADD) {
@@ -74,6 +71,7 @@ int FimExecutor::Execute(void* output, void* operand0, void* operand1, size_t si
 
 int FimExecutor::Execute(FimBo* output, FimBo* operand0, FimBo* operand1, FimOpType opType)
 {
+    LOGI(FIM_EXE, "called");
     int ret = 0;
     size_t size = output->size;
 

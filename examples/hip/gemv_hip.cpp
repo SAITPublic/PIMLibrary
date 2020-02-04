@@ -23,7 +23,6 @@ int main(void)
     FimBo hostOutput = {.size = OUTPUT * sizeof(FP16), .memType = MEM_TYPE_HOST};
     FimBo goldenOutput = {.size = OUTPUT * sizeof(FP16), .memType = MEM_TYPE_HOST};
     FimBo deviceInput = {.size = INPUT * sizeof(FP16), .memType = MEM_TYPE_DEVICE};
-    FimBo deviceWeight = {.size = WIDTH * HEIGHT * sizeof(FP16), .memType = MEM_TYPE_DEVICE};
     FimBo deviceOutput = {.size = OUTPUT * sizeof(FP16), .memType = MEM_TYPE_DEVICE};
     FimBo fimWeight = {.size = WIDTH * HEIGHT * sizeof(FP16), .memType = MEM_TYPE_FIM};
 

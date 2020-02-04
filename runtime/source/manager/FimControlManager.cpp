@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <iostream>
 #include "fim_data_types.h"
+#include "utility/fim_log.h"
 
 namespace fim
 {
@@ -13,17 +14,14 @@ namespace manager
 FimControlManager::FimControlManager(FimDevice* fimDevice, FimRuntimeType rtType, FimPrecision precision)
     : fimDevice_(fimDevice), rtType_(rtType), precision_(precision)
 {
-    std::cout << "fim::runtime::manager FimControlManager creator call" << std::endl;
+    LOGI(FIM_CON_MG, "called");
 }
 
-FimControlManager::~FimControlManager(void)
-{
-    std::cout << "fim::runtime::manager FimControlManager destroyer call" << std::endl;
-}
+FimControlManager::~FimControlManager(void) { LOGI(FIM_CON_MG, "called"); }
 
 int FimControlManager::Initialize(void)
 {
-    std::cout << "fim::runtime::manager FimControlManager::Initialize call" << std::endl;
+    LOGI(FIM_CON_MG, "called");
 
     int ret = 0;
 
@@ -32,7 +30,7 @@ int FimControlManager::Initialize(void)
 
 int FimControlManager::Deinitialize(void)
 {
-    std::cout << "fim::runtime::manager FimControlManager::Deinitialize call" << std::endl;
+    LOGI(FIM_CON_MG, "called");
 
     int ret = 0;
 
@@ -41,7 +39,7 @@ int FimControlManager::Deinitialize(void)
 
 int FimControlManager::ProgramCRFCode(void)
 {
-    std::cout << "fim::runtime::manager FimControlManager::ProgramCRFCode call" << std::endl;
+    LOGI(FIM_CON_MG, "called");
 
     int ret = 0;
 
@@ -53,7 +51,7 @@ int FimControlManager::ProgramCRFCode(void)
 
 int FimControlManager::SetFimMode(void)
 {
-    std::cout << "fim::runtime::manager FimControlManager::setFimMode call" << std::endl;
+    LOGI(FIM_CON_MG, "called");
 
     int ret = 0;
 

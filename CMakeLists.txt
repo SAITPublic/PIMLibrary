@@ -14,9 +14,9 @@ set(PREFIX ${CMAKE_INSTRALL_PREFIX})
 set(EXEC_PREFIX "${PREFIX}/bin")
 set(ROCM_PATH $ENV{ROCM_PATH})
 
-# Set Default build type to "Release"
+# Set Default build type to "Debug"
 if((NOT CMAKE_BUILD_TYPE) OR (CMAKE_BUILD_TYPE) STREQUAL None)
-    set(CMAKE_BUILD_TYPE Release)
+    set(CMAKE_BUILD_TYPE Debug)
 endif()
 message(STATUS "Build Type is ${CMAKE_BUILD_TYPE}")
 

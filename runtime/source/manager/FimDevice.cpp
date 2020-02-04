@@ -2,6 +2,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <iostream>
+#include "utility/fim_log.h"
 
 namespace fim
 {
@@ -9,17 +10,13 @@ namespace runtime
 {
 namespace manager
 {
-FimDevice::FimDevice(FimPrecision precision) : precision_(precision)
-{
-    std::cout << "fim::runtime::manager FimDevice creator call" << std::endl;
-}
+FimDevice::FimDevice(FimPrecision precision) : precision_(precision) { LOGI(FIM_DEV, "called"); }
 
 FimDevice::~FimDevice(void) {}
 
 int FimDevice::Initialize(void)
 {
-    std::cout << "fim::runtime::manager FimDiver::Initialize call" << std::endl;
-
+    LOGI(FIM_DEV, "called");
     int ret = 0;
 
     /* open fim device driver */
@@ -30,7 +27,7 @@ int FimDevice::Initialize(void)
 
 int FimDevice::Deinitialize(void)
 {
-    std::cout << "fim::runtime::manager FimDevice::Deinitialize call" << std::endl;
+    LOGI(FIM_DEV, "called");
     int ret = 0;
 
     /* close fim device driver */
@@ -41,8 +38,7 @@ int FimDevice::Deinitialize(void)
 
 int FimDevice::RequestIoctl(void)
 {
-    std::cout << "fim::runtime::manager FimDevice::RequestIoctl call" << std::endl;
-
+    LOGI(FIM_DEV, "called");
     int ret = 0;
 
     /* ioctl by fim command */
@@ -53,8 +49,7 @@ int FimDevice::RequestIoctl(void)
 
 int FimDevice::OpenDevice(void)
 {
-    std::cout << "fim::runtime::manager FimDevice::OpenDevice call" << std::endl;
-
+    LOGI(FIM_DEV, "called");
     int ret = 0;
 
     return ret;
@@ -62,8 +57,7 @@ int FimDevice::OpenDevice(void)
 
 int FimDevice::CloseDevice(void)
 {
-    std::cout << "fim::runtime::manager FimDevice::CloseDevice call" << std::endl;
-
+    LOGI(FIM_DEV, "called");
     int ret = 0;
 
     return ret;

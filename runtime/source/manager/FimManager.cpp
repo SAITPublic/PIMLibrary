@@ -2,6 +2,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <iostream>
+#include "utility/fim_log.h"
 
 namespace fim
 {
@@ -11,8 +12,7 @@ namespace manager
 {
 FimManager::FimManager(FimRuntimeType rtType, FimPrecision precision) : rtType_(rtType), precision_(precision)
 {
-    std::cout << "fim::runtime::manager creator call" << std::endl;
-
+    LOGI(FIM_MG, "called");
     fimDevice_ = new FimDevice(precision_);
     fimControlManager_ = new FimControlManager(fimDevice_, rtType_, precision_);
     fimMemoryManager_ = new FimMemoryManager(fimDevice_, rtType_, precision_);
@@ -20,6 +20,7 @@ FimManager::FimManager(FimRuntimeType rtType, FimPrecision precision) : rtType_(
 
 FimManager::~FimManager(void)
 {
+    LOGI(FIM_MG, "called");
     delete fimDevice_;
     delete fimControlManager_;
     delete fimMemoryManager_;
@@ -27,8 +28,7 @@ FimManager::~FimManager(void)
 
 FimManager* FimManager::getInstance(FimRuntimeType rtType, FimPrecision precision)
 {
-    std::cout << "fim::runtime::manager getInstance call" << std::endl;
-
+    LOGI(FIM_MG, "called");
     static FimManager* instance_ = new FimManager(rtType, precision);
 
     return instance_;
@@ -36,8 +36,7 @@ FimManager* FimManager::getInstance(FimRuntimeType rtType, FimPrecision precisio
 
 int FimManager::Initialize(void)
 {
-    std::cout << "fim::runtime::manager Initialize call" << std::endl;
-
+    LOGI(FIM_MG, "called");
     int ret = 0;
 
     fimDevice_->Initialize();
@@ -49,8 +48,7 @@ int FimManager::Initialize(void)
 
 int FimManager::Deinitialize(void)
 {
-    std::cout << "fim::runtime::manager Deinitialize call" << std::endl;
-
+    LOGI(FIM_MG, "called");
     int ret = 0;
 
     fimMemoryManager_->Deinitialize();
@@ -62,8 +60,7 @@ int FimManager::Deinitialize(void)
 
 int FimManager::AllocMemory(void** ptr, size_t size, FimMemType memType)
 {
-    std::cout << "fim::runtime::manager AllocMemory call" << std::endl;
-
+    LOGI(FIM_MG, "called");
     int ret = 0;
 
     ret = fimMemoryManager_->AllocMemory(ptr, size, memType);
@@ -73,6 +70,7 @@ int FimManager::AllocMemory(void** ptr, size_t size, FimMemType memType)
 
 int FimManager::AllocMemory(FimBo* fimBo)
 {
+    LOGI(FIM_MG, "called");
     int ret = 0;
 
     ret = fimMemoryManager_->AllocMemory(fimBo);
@@ -82,8 +80,7 @@ int FimManager::AllocMemory(FimBo* fimBo)
 
 int FimManager::FreeMemory(void* ptr, FimMemType memType)
 {
-    std::cout << "fim::runtime::manager FreeMemory call" << std::endl;
-
+    LOGI(FIM_MG, "called");
     int ret = 0;
 
     ret = fimMemoryManager_->FreeMemory(ptr, memType);
@@ -93,6 +90,7 @@ int FimManager::FreeMemory(void* ptr, FimMemType memType)
 
 int FimManager::FreeMemory(FimBo* fimBo)
 {
+    LOGI(FIM_MG, "called");
     int ret = 0;
 
     ret = fimMemoryManager_->FreeMemory(fimBo);
@@ -102,8 +100,7 @@ int FimManager::FreeMemory(FimBo* fimBo)
 
 int FimManager::CopyMemory(void* dst, void* src, size_t size, FimMemcpyType cpyType)
 {
-    std::cout << "fim::runtime::manager CopyeMemory call" << std::endl;
-
+    LOGI(FIM_MG, "called");
     int ret = 0;
 
     ret = fimMemoryManager_->CopyMemory(dst, src, size, cpyType);
@@ -113,6 +110,7 @@ int FimManager::CopyMemory(void* dst, void* src, size_t size, FimMemcpyType cpyT
 
 int FimManager::CopyMemory(FimBo* dst, FimBo* src, FimMemcpyType cpyType)
 {
+    LOGI(FIM_MG, "called");
     int ret = 0;
 
     ret = fimMemoryManager_->CopyMemory(dst, src, cpyType);
@@ -122,8 +120,7 @@ int FimManager::CopyMemory(FimBo* dst, FimBo* src, FimMemcpyType cpyType)
 
 int FimManager::ConvertDataLayout(void* dst, void* src, size_t size, FimOpType opType)
 {
-    std::cout << "fim::runtime::manager ConvertDataLayout call" << std::endl;
-
+    LOGI(FIM_MG, "called");
     int ret = 0;
 
     ret = fimMemoryManager_->ConvertDataLayout(dst, src, size, opType);
@@ -133,6 +130,7 @@ int FimManager::ConvertDataLayout(void* dst, void* src, size_t size, FimOpType o
 
 int FimManager::ConvertDataLayout(FimBo* dst, FimBo* src, FimOpType opType)
 {
+    LOGI(FIM_MG, "called");
     int ret = 0;
 
     ret = fimMemoryManager_->ConvertDataLayout(dst, src, opType);
