@@ -19,8 +19,9 @@ enum __log_level {
 #define FIM_DEV "FIM_DEV"
 #define FIM_EXE "FIM_EXE"
 #define FIM_EMUL "FIM_EMUL"
+#define FIM_PROFILE "FIM_PROFILE"
 
-static int FIM_LOG_LEVEL = FIM_LOG_INFO;
+static int FIM_LOG_LEVEL = FIM_LOG_DEBUG;
 
 #define CHECK_LOG_LEVEL(LOG_LEVEL) (((FIM_LOG_LEVEL) >= (LOG_LEVEL)) != 0)
 

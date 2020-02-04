@@ -65,6 +65,7 @@ int FimExecutor::Execute(void* output, void* operand0, void* operand1, size_t si
         /* todo:implement other operation function */
         return -1;
     }
+    hipStreamSynchronize(NULL);
 
     return ret;
 }
@@ -94,6 +95,7 @@ int FimExecutor::Execute(FimBo* output, FimBo* operand0, FimBo* operand1, FimOpT
         /* todo:implement other operation function */
         return -1;
     }
+    hipStreamSynchronize(NULL);
 
     return ret;
 }
