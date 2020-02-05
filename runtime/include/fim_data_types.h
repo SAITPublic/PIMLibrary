@@ -2,23 +2,16 @@
 #define _FIM_DATA_TYPE_H_
 
 #include <stddef.h>
+#include "hip/hip_fp16.h"
 
 #define __FIM_API__
 
 #define FP16 _Float16
 #define INT8 char
 
-inline float convertH2F(_Float16 h_val)
-{
-    float f_val = h_val;
-    return f_val;
-}
+inline float convertH2F(FP16 h_val) { return __half2float(h_val); }
 
-inline FP16 convertF2H(float f_val)
-{
-    FP16 h_val(f_val);
-    return h_val;
-}
+inline FP16 convertF2H(float f_val) { return __float2half(f_val); }
 
 typedef enum __FimRuntimeType {
     RT_TYPE_HIP,
@@ -49,6 +42,7 @@ typedef enum __FimOpType {
     OP_ELT_MUL,
     OP_BATCH_NORM,
     OP_RELU,
+    OP_DUMMY,
 } FimOpType;
 
 typedef enum __FimPrecision {

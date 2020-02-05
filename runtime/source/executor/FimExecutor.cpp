@@ -88,11 +88,16 @@ int FimExecutor::Execute(FimBo* output, FimBo* operand0, FimBo* operand1, FimOpT
         if (precision_ == FIM_FP16) {
             size_t in_size = operand0->size / sizeof(__half);
             size_t out_size = output->size / sizeof(__half);
-            hipLaunchKernelGGL(gemv_1cu_1th_fp16, dim3(1), dim3(1), 0, 0, (__half*)operand0->data,
-                               (__half*)operand1->data, (__half*)output->data, in_size, out_size);
+            const unsigned int blocks = 64;
+            const unsigned int threads_per_block = 1;
+            const unsigned int loop_cnt = out_size / blocks;
+
+            hipLaunchKernelGGL(gemv_64cu_1th_fp16, dim3(blocks), dim3(threads_per_block), 0, 0, (__half*)operand0->data,
+                               (__half*)operand1->data, (__half*)output->data, in_size, loop_cnt);
         }
     } else {
         /* todo:implement other operation function */
+        hipLaunchKernelGGL(dummy_kernel, dim3(1), dim3(1), 0, 0);
         return -1;
     }
     hipStreamSynchronize(NULL);
