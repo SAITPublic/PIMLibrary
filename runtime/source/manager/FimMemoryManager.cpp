@@ -46,10 +46,7 @@ int FimMemoryManager::AllocMemory(void** ptr, size_t size, FimMemType memType)
     } else if (memType == MEM_TYPE_HOST) {
         *ptr = (void*)malloc(size);
     } else if (memType == MEM_TYPE_FIM) {
-        /* todo:implement fimalloc function */
-        if (hipMalloc((void**)ptr, size) != hipSuccess) {
-            return -1;
-        }
+        *ptr = fragment_allocator_.alloc(size);
     }
 
     return ret;
@@ -88,10 +85,7 @@ int FimMemoryManager::FreeMemory(void* ptr, FimMemType memType)
     } else if (memType == MEM_TYPE_HOST) {
         free(ptr);
     } else if (memType == MEM_TYPE_FIM) {
-        /* todo:implement fimfree function */
-        if (hipFree(ptr) != hipSuccess) {
-            return -1;
-        }
+        return fragment_allocator_.free(ptr);
     }
 
     return ret;
@@ -192,6 +186,29 @@ int FimMemoryManager::ConvertDataLayout(FimBo* dst, FimBo* src, FimOpType opType
     hipMemcpy(dst->data, src->data, size, hipMemcpyHostToDevice);
 
     return ret;
+}
+
+void* FimMemoryManager::FimBlockAllocator::alloc(size_t request_size, size_t& allocated_size) const
+{
+    assert(request_size <= block_size() && "BlockAllocator alloc request exceeds block size.");
+    void* ret;
+    size_t bsize = block_size();
+
+    // TODO: Replace malloc with the appropriate HIP call for fim allocation
+    ret = (void*)malloc(bsize);
+
+    assert(ret != nullptr && "Region returned nullptr on success.");
+
+    allocated_size = block_size();
+    return ret;
+}
+
+void FimMemoryManager::FimBlockAllocator::free(void* ptr, size_t length) const
+{
+    if (ptr == NULL || length == 0) {
+        return;
+    }
+    std::free(ptr);
 }
 
 } /* namespace manager */

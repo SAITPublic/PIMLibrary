@@ -2,6 +2,7 @@
 #define _FIM_MEMORY_MANAGER_H_
 
 #include "fim_data_types.h"
+#include "internal/simple_heap.hpp"
 #include "manager/FimManager.h"
 
 namespace fim
@@ -33,6 +34,27 @@ class FimMemoryManager
     FimDevice* fimDevice_;
     FimRuntimeType rtType_;
     FimPrecision precision_;
+
+    /**
+     * @brief FIM Block allocator of size 2MB
+     *
+     * TODO: This is a simple block allocator where it uses malloc for allocation and free
+     *       It has to be modified to use FIM memory region for alloc and free.
+     */
+
+    class FimBlockAllocator
+    {
+       private:
+        static const size_t block_size_ = 2 * 1024 * 1024;  // 2MB blocks.
+
+       public:
+        explicit FimBlockAllocator() {}
+        void* alloc(size_t request_size, size_t& allocated_size) const;
+        void free(void* ptr, size_t length) const;
+        size_t block_size() const { return block_size_; }
+    };
+
+    SimpleHeap<FimBlockAllocator> fragment_allocator_;
 };
 
 } /* namespace manager */
