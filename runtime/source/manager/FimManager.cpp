@@ -12,7 +12,7 @@ namespace manager
 {
 FimManager::FimManager(FimRuntimeType rtType, FimPrecision precision) : rtType_(rtType), precision_(precision)
 {
-    LOGI(FIM_MG, "called");
+    DLOG(INFO) << "called";
     fimDevice_ = new FimDevice(precision_);
     fimControlManager_ = new FimControlManager(fimDevice_, rtType_, precision_);
     fimMemoryManager_ = new FimMemoryManager(fimDevice_, rtType_, precision_);
@@ -20,7 +20,7 @@ FimManager::FimManager(FimRuntimeType rtType, FimPrecision precision) : rtType_(
 
 FimManager::~FimManager(void)
 {
-    LOGI(FIM_MG, "called");
+    DLOG(INFO) << "called";
     delete fimDevice_;
     delete fimControlManager_;
     delete fimMemoryManager_;
@@ -28,7 +28,7 @@ FimManager::~FimManager(void)
 
 FimManager* FimManager::getInstance(FimRuntimeType rtType, FimPrecision precision)
 {
-    LOGI(FIM_MG, "called");
+    DLOG(INFO) << "called";
     static FimManager* instance_ = new FimManager(rtType, precision);
 
     return instance_;
@@ -36,7 +36,7 @@ FimManager* FimManager::getInstance(FimRuntimeType rtType, FimPrecision precisio
 
 int FimManager::Initialize(void)
 {
-    LOGI(FIM_MG, "called");
+    DLOG(INFO) << "called";
     int ret = 0;
 
     fimDevice_->Initialize();
@@ -48,7 +48,7 @@ int FimManager::Initialize(void)
 
 int FimManager::Deinitialize(void)
 {
-    LOGI(FIM_MG, "called");
+    DLOG(INFO) << "called";
     int ret = 0;
 
     fimMemoryManager_->Deinitialize();
@@ -60,7 +60,7 @@ int FimManager::Deinitialize(void)
 
 int FimManager::AllocMemory(void** ptr, size_t size, FimMemType memType)
 {
-    LOGI(FIM_MG, "called");
+    DLOG(INFO) << "called";
     int ret = 0;
 
     ret = fimMemoryManager_->AllocMemory(ptr, size, memType);
@@ -70,7 +70,7 @@ int FimManager::AllocMemory(void** ptr, size_t size, FimMemType memType)
 
 int FimManager::AllocMemory(FimBo* fimBo)
 {
-    LOGI(FIM_MG, "called");
+    DLOG(INFO) << "called";
     int ret = 0;
 
     ret = fimMemoryManager_->AllocMemory(fimBo);
@@ -80,7 +80,7 @@ int FimManager::AllocMemory(FimBo* fimBo)
 
 int FimManager::FreeMemory(void* ptr, FimMemType memType)
 {
-    LOGI(FIM_MG, "called");
+    DLOG(INFO) << "called";
     int ret = 0;
 
     ret = fimMemoryManager_->FreeMemory(ptr, memType);
@@ -90,7 +90,7 @@ int FimManager::FreeMemory(void* ptr, FimMemType memType)
 
 int FimManager::FreeMemory(FimBo* fimBo)
 {
-    LOGI(FIM_MG, "called");
+    DLOG(INFO) << "called";
     int ret = 0;
 
     ret = fimMemoryManager_->FreeMemory(fimBo);
@@ -100,7 +100,7 @@ int FimManager::FreeMemory(FimBo* fimBo)
 
 int FimManager::CopyMemory(void* dst, void* src, size_t size, FimMemcpyType cpyType)
 {
-    LOGI(FIM_MG, "called");
+    DLOG(INFO) << "called";
     int ret = 0;
 
     ret = fimMemoryManager_->CopyMemory(dst, src, size, cpyType);
@@ -110,7 +110,7 @@ int FimManager::CopyMemory(void* dst, void* src, size_t size, FimMemcpyType cpyT
 
 int FimManager::CopyMemory(FimBo* dst, FimBo* src, FimMemcpyType cpyType)
 {
-    LOGI(FIM_MG, "called");
+    DLOG(INFO) << "called";
     int ret = 0;
 
     ret = fimMemoryManager_->CopyMemory(dst, src, cpyType);
@@ -120,7 +120,7 @@ int FimManager::CopyMemory(FimBo* dst, FimBo* src, FimMemcpyType cpyType)
 
 int FimManager::ConvertDataLayout(void* dst, void* src, size_t size, FimOpType opType)
 {
-    LOGI(FIM_MG, "called");
+    DLOG(INFO) << "called";
     int ret = 0;
 
     ret = fimMemoryManager_->ConvertDataLayout(dst, src, size, opType);
@@ -130,7 +130,7 @@ int FimManager::ConvertDataLayout(void* dst, void* src, size_t size, FimOpType o
 
 int FimManager::ConvertDataLayout(FimBo* dst, FimBo* src, FimOpType opType)
 {
-    LOGI(FIM_MG, "called");
+    DLOG(INFO) << "called";
     int ret = 0;
 
     ret = fimMemoryManager_->ConvertDataLayout(dst, src, opType);

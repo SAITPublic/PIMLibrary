@@ -12,7 +12,7 @@ namespace runtime
 {
 FimRuntime::FimRuntime(FimRuntimeType rtType, FimPrecision precision) : rtType_(rtType), precision_(precision)
 {
-    LOGI(FIM_RT, "called");
+    DLOG(INFO) << "called";
 
     fimManager_ = fim::runtime::manager::FimManager::getInstance(rtType, precision);
     fimExecutor_ = fim::runtime::executor::FimExecutor::getInstance(rtType, precision);
@@ -20,7 +20,7 @@ FimRuntime::FimRuntime(FimRuntimeType rtType, FimPrecision precision) : rtType_(
 
 int FimRuntime::Initialize(void)
 {
-    LOGI(FIM_RT, "called");
+    DLOG(INFO) << "called";
     int ret = 0;
 
     return ret;
@@ -28,7 +28,7 @@ int FimRuntime::Initialize(void)
 
 int FimRuntime::Deinitialize(void)
 {
-    LOGI(FIM_RT, "called");
+    DLOG(INFO) << "called";
     int ret = 0;
 
     return ret;
@@ -36,7 +36,7 @@ int FimRuntime::Deinitialize(void)
 
 int FimRuntime::AllocMemory(void** ptr, size_t size, FimMemType memType)
 {
-    LOGI(FIM_RT, "called");
+    DLOG(INFO) << "called";
     int ret = 0;
 
     ret = fimManager_->AllocMemory(ptr, size, memType);
@@ -46,7 +46,7 @@ int FimRuntime::AllocMemory(void** ptr, size_t size, FimMemType memType)
 
 int FimRuntime::AllocMemory(FimBo* fimBo)
 {
-    LOGI(FIM_RT, "called");
+    DLOG(INFO) << "called";
     int ret = 0;
 
     ret = fimManager_->AllocMemory(fimBo);
@@ -56,7 +56,7 @@ int FimRuntime::AllocMemory(FimBo* fimBo)
 
 int FimRuntime::FreeMemory(void* ptr, FimMemType memType)
 {
-    LOGI(FIM_RT, "called");
+    DLOG(INFO) << "called";
     int ret = 0;
 
     ret = fimManager_->FreeMemory(ptr, memType);
@@ -66,7 +66,7 @@ int FimRuntime::FreeMemory(void* ptr, FimMemType memType)
 
 int FimRuntime::FreeMemory(FimBo* fimBo)
 {
-    LOGI(FIM_RT, "called");
+    DLOG(INFO) << "called";
     int ret = 0;
 
     ret = fimManager_->FreeMemory(fimBo);
@@ -76,7 +76,7 @@ int FimRuntime::FreeMemory(FimBo* fimBo)
 
 int FimRuntime::ConvertDataLayout(void* dst, void* src, size_t size, FimOpType opType)
 {
-    LOGI(FIM_RT, "called");
+    DLOG(INFO) << "called";
     int ret = 0;
 
     ret = fimManager_->ConvertDataLayout(dst, src, size, opType);
@@ -86,7 +86,7 @@ int FimRuntime::ConvertDataLayout(void* dst, void* src, size_t size, FimOpType o
 
 int FimRuntime::ConvertDataLayout(FimBo* dst, FimBo* src, FimOpType opType)
 {
-    LOGI(FIM_RT, "called");
+    DLOG(INFO) << "called";
     int ret = 0;
 
     ret = fimManager_->ConvertDataLayout(dst, src, opType);
@@ -96,7 +96,7 @@ int FimRuntime::ConvertDataLayout(FimBo* dst, FimBo* src, FimOpType opType)
 
 int FimRuntime::CopyMemory(void* dst, void* src, size_t size, FimMemcpyType cpyType)
 {
-    LOGI(FIM_RT, "called");
+    DLOG(INFO) << "called";
     int ret = 0;
 
     ret = fimManager_->CopyMemory(dst, src, size, cpyType);
@@ -106,7 +106,7 @@ int FimRuntime::CopyMemory(void* dst, void* src, size_t size, FimMemcpyType cpyT
 
 int FimRuntime::CopyMemory(FimBo* dst, FimBo* src, FimMemcpyType cpyType)
 {
-    LOGI(FIM_RT, "called");
+    DLOG(INFO) << "called";
     int ret = 0;
 
     ret = fimManager_->CopyMemory(dst, src, cpyType);
@@ -116,7 +116,7 @@ int FimRuntime::CopyMemory(FimBo* dst, FimBo* src, FimMemcpyType cpyType)
 
 int FimRuntime::Execute(void* output, void* operand0, void* operand1, size_t size, FimOpType opType)
 {
-    LOGI(FIM_RT, "called");
+    DLOG(INFO) << "called";
     int ret = 0;
 
     ret = fimExecutor_->Execute(output, operand0, operand1, size, opType);
@@ -126,7 +126,7 @@ int FimRuntime::Execute(void* output, void* operand0, void* operand1, size_t siz
 
 int FimRuntime::Execute(FimBo* output, FimBo* operand0, FimBo* operand1, FimOpType opType)
 {
-    LOGI(FIM_RT, "called");
+    DLOG(INFO) << "called";
     int ret = 0;
 
     ret = fimExecutor_->Execute(output, operand0, operand1, opType);

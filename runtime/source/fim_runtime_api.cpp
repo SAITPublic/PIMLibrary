@@ -11,7 +11,7 @@ FimRuntime* fimRuntime = nullptr;
 
 int FimInitialize(FimRuntimeType rtType, FimPrecision precision)
 {
-    LOGI(FIM_API, "called");
+    DLOG(INFO) << "called";
     FIM_PROFILE_TICK(Initialize);
     int ret = 0;
 
@@ -24,7 +24,7 @@ int FimInitialize(FimRuntimeType rtType, FimPrecision precision)
 
 int FimDeinitialize(void)
 {
-    LOGI(FIM_API, "called");
+    DLOG(INFO) << "called";
     FIM_PROFILE_TICK(Deinitialize);
     int ret = 0;
 
@@ -40,7 +40,7 @@ int FimDeinitialize(void)
 
 int FimAllocMemory(void** ptr, size_t size, FimMemType memType)
 {
-    LOGI(FIM_API, "called");
+    DLOG(INFO) << "called";
     FIM_PROFILE_TICK(AllocMemory);
     int ret = 0;
 
@@ -55,7 +55,7 @@ int FimAllocMemory(void** ptr, size_t size, FimMemType memType)
 
 int FimAllocMemory(FimBo* fimBo)
 {
-    LOGI(FIM_API, "called");
+    DLOG(INFO) << "called";
     FIM_PROFILE_TICK(AllocMemory);
     int ret = 0;
 
@@ -70,7 +70,7 @@ int FimAllocMemory(FimBo* fimBo)
 
 int FimFreeMemory(void* ptr, FimMemType memType)
 {
-    LOGI(FIM_API, "called");
+    DLOG(INFO) << "called";
     FIM_PROFILE_TICK(FreeMemory);
     int ret = 0;
 
@@ -85,7 +85,7 @@ int FimFreeMemory(void* ptr, FimMemType memType)
 
 int FimFreeMemory(FimBo* fimBo)
 {
-    LOGI(FIM_API, "called");
+    DLOG(INFO) << "called";
     FIM_PROFILE_TICK(FreeMemory);
     int ret = 0;
 
@@ -100,7 +100,7 @@ int FimFreeMemory(FimBo* fimBo)
 
 int FimConvertDataLayout(void* dst, void* src, size_t size, FimOpType opType)
 {
-    LOGI(FIM_API, "called");
+    DLOG(INFO) << "called";
     FIM_PROFILE_TICK(ConvertDataLayout);
     int ret = 0;
 
@@ -115,7 +115,7 @@ int FimConvertDataLayout(void* dst, void* src, size_t size, FimOpType opType)
 
 int FimConvertDataLayout(FimBo* dst, FimBo* src, FimOpType opType)
 {
-    LOGI(FIM_API, "called");
+    DLOG(INFO) << "called";
     FIM_PROFILE_TICK(ConvertDataLayout);
     int ret = 0;
 
@@ -130,7 +130,7 @@ int FimConvertDataLayout(FimBo* dst, FimBo* src, FimOpType opType)
 
 int FimCopyMemory(void* dst, void* src, size_t size, FimMemcpyType cpyType)
 {
-    LOGI(FIM_API, "called");
+    DLOG(INFO) << "called";
     FIM_PROFILE_TICK(CopyMemory);
     int ret = 0;
 
@@ -145,7 +145,7 @@ int FimCopyMemory(void* dst, void* src, size_t size, FimMemcpyType cpyType)
 
 int FimCopyMemory(FimBo* dst, FimBo* src, FimMemcpyType cpyType)
 {
-    LOGI(FIM_API, "called");
+    DLOG(INFO) << "called";
     FIM_PROFILE_TICK(CopyMemory);
     int ret = 0;
 
@@ -160,7 +160,7 @@ int FimCopyMemory(FimBo* dst, FimBo* src, FimMemcpyType cpyType)
 
 int FimExecute(void* output, void* operand0, void* operand1, size_t size, FimOpType opType)
 {
-    LOGI(FIM_API, "called");
+    DLOG(INFO) << "called";
     FIM_PROFILE_TICK(Execute);
     int ret = 0;
 
@@ -175,7 +175,7 @@ int FimExecute(void* output, void* operand0, void* operand1, size_t size, FimOpT
 
 int FimExecute(FimBo* output, FimBo* operand0, FimBo* operand1, FimOpType opType)
 {
-    LOGI(FIM_API, "called");
+    DLOG(INFO) << "called";
     FIM_PROFILE_TICK(Execute);
     int ret = 0;
 

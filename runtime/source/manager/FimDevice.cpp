@@ -10,13 +10,11 @@ namespace runtime
 {
 namespace manager
 {
-FimDevice::FimDevice(FimPrecision precision) : precision_(precision) { LOGI(FIM_DEV, "called"); }
-
+FimDevice::FimDevice(FimPrecision precision) : precision_(precision) { DLOG(INFO) << "called"; }
 FimDevice::~FimDevice(void) {}
-
 int FimDevice::Initialize(void)
 {
-    LOGI(FIM_DEV, "called");
+    DLOG(INFO) << "called";
     int ret = 0;
 
     /* open fim device driver */
@@ -27,7 +25,7 @@ int FimDevice::Initialize(void)
 
 int FimDevice::Deinitialize(void)
 {
-    LOGI(FIM_DEV, "called");
+    DLOG(INFO) << "called";
     int ret = 0;
 
     /* close fim device driver */
@@ -38,7 +36,7 @@ int FimDevice::Deinitialize(void)
 
 int FimDevice::RequestIoctl(void)
 {
-    LOGI(FIM_DEV, "called");
+    DLOG(INFO) << "called";
     int ret = 0;
 
     /* ioctl by fim command */
@@ -49,7 +47,7 @@ int FimDevice::RequestIoctl(void)
 
 int FimDevice::OpenDevice(void)
 {
-    LOGI(FIM_DEV, "called");
+    DLOG(INFO) << "called";
     int ret = 0;
 
     return ret;
@@ -57,7 +55,7 @@ int FimDevice::OpenDevice(void)
 
 int FimDevice::CloseDevice(void)
 {
-    LOGI(FIM_DEV, "called");
+    DLOG(INFO) << "called";
     int ret = 0;
 
     return ret;

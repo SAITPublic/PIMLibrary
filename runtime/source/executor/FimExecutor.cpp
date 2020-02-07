@@ -15,12 +15,12 @@ namespace executor
 FimExecutor::FimExecutor(FimRuntimeType rtType, FimPrecision precision)
     : rtType_(rtType), precision_(precision), threadCnt_(16)
 {
-    LOGI(FIM_EXE, "called");
+    DLOG(INFO) << "called ";
 }
 
 FimExecutor* FimExecutor::getInstance(FimRuntimeType rtType, FimPrecision precision)
 {
-    LOGI(FIM_EXE, "called");
+    DLOG(INFO) << "Called";
     static FimExecutor* instance_ = new FimExecutor(rtType, precision);
 
     return instance_;
@@ -28,7 +28,9 @@ FimExecutor* FimExecutor::getInstance(FimRuntimeType rtType, FimPrecision precis
 
 int FimExecutor::Initialize(void)
 {
-    LOGI(FIM_EXE, "called");
+    google::InitGoogleLogging("FIMExecutor");
+    DLOG(INFO) << "Intialization done ";
+
     int ret = 0;
 
     hipGetDeviceProperties(&devProp_, 0);
@@ -42,7 +44,7 @@ int FimExecutor::Initialize(void)
 
 int FimExecutor::Deinitialize(void)
 {
-    LOGI(FIM_EXE, "called");
+    DLOG(INFO) << "called";
     int ret = 0;
 
     return ret;
@@ -50,7 +52,7 @@ int FimExecutor::Deinitialize(void)
 
 int FimExecutor::Execute(void* output, void* operand0, void* operand1, size_t size, FimOpType opType)
 {
-    LOGI(FIM_EXE, "called");
+    DLOG(INFO) << "called";
     int ret = 0;
 
     if (opType == OP_ELT_ADD) {
@@ -72,7 +74,7 @@ int FimExecutor::Execute(void* output, void* operand0, void* operand1, size_t si
 
 int FimExecutor::Execute(FimBo* output, FimBo* operand0, FimBo* operand1, FimOpType opType)
 {
-    LOGI(FIM_EXE, "called");
+    DLOG(INFO) << "called";
     int ret = 0;
     size_t size = output->size;
 
