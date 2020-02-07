@@ -14,9 +14,9 @@ double getTickFrequency(void);
 
 #else /* !PROFILE */
 
-#define FIM_TICK(name) long long __tick_##name = getTickCount()
-#define FIM_TOCK(name) \
-    DLOG(INFO) << #name << " : %f " << double(getTickCount() - __tick_##name) / (double)getTickFrequency();
+#define FIM_PROFILE_TICK(name) long long __tick_##name = getTickCount()
+#define FIM_PROFILE_TOCK(name) \
+    LOGD(FIM_PROFILE, "%s : %f ", #name, double(getTickCount() - __tick_##name) / (double)getTickFrequency())
 #endif /* PROFILE */
 
 #endif /* _FIM_PROFILE_H_ */
