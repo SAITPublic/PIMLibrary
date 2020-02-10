@@ -52,6 +52,7 @@
 #include <map>
 #include <utility>
 
+#include "utility/fim_log.h"
 #include "utils.hpp"
 
 template <typename Allocator>
@@ -116,8 +117,7 @@ class SimpleHeap
     void* alloc(size_t bytes)
     {
         if (bytes > max_alloc()) {
-            assert(false && "Requested allocation is larger than block size.");
-            throw std::bad_alloc();
+            DLOG(ERROR) << "Requested allocation is larger than block size.";
             return nullptr;
         }
 

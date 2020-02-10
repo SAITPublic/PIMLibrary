@@ -50,6 +50,8 @@ int FimAllocMemory(void** ptr, size_t size, FimMemType memType)
     ret = fimRuntime->AllocMemory(ptr, size, memType);
     FIM_PROFILE_TOCK(AllocMemory);
 
+    if (ptr == 0) return -1;
+
     return ret;
 }
 
@@ -64,6 +66,8 @@ int FimAllocMemory(FimBo* fimBo)
     }
     ret = fimRuntime->AllocMemory(fimBo);
     FIM_PROFILE_TOCK(AllocMemory);
+
+    if (fimBo->data == 0) return -1;
 
     return ret;
 }
