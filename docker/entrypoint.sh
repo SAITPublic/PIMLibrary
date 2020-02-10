@@ -15,6 +15,7 @@ if [ ! $USER_ID -eq 0 ]; then
             echo "user-$USER_ID ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
         fi
         usermod -a -G developer user-$USER_ID
+        usermod -a -G video user-$USER_ID
 
         if [ ! -e /home/user ]; then
             mkdir -p /home/user

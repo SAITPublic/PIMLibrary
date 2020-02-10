@@ -25,6 +25,9 @@ RUN apt-get --yes --allow-unauthenticated install bash-completion
 RUN apt-get --yes --allow-unauthenticated install clang-format-3.9
 RUN apt-get --yes --allow-unauthenticated install cmake
 
+# FIM Library requirements
+RUN apt-get --yes --allow-unauthenticated install libgoogle-glog-dev
+
 ENV QWORKSPACE=/home/user/fim-workspace
 ENV ROCM_PATH=/opt/rocm
 ENV HIP_PATH=${ROCM_PATH}/hip
