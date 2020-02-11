@@ -138,6 +138,16 @@ int FimManager::ConvertDataLayout(FimBo* dst, FimBo* src, FimOpType opType)
     return ret;
 }
 
+int FimManager::ConvertDataLayout(FimBo* dst, FimBo* src0, FimBo* src1, FimOpType opType)
+{
+    DLOG(INFO) << "called";
+    int ret = 0;
+
+    ret = fimMemoryManager_->ConvertDataLayout(dst, src0, src1, opType);
+
+    return ret;
+}
+
 } /* namespace manager */
 } /* namespace runtime */
 } /* namespace fim */

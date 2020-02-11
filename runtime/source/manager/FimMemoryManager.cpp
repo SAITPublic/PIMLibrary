@@ -1,6 +1,8 @@
 #include "manager/FimMemoryManager.h"
 #include <assert.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <iostream>
 #include "hip/hip_runtime.h"
 #include "utility/fim_log.h"
@@ -181,6 +183,141 @@ int FimMemoryManager::ConvertDataLayout(FimBo* dst, FimBo* src, FimOpType opType
     hipMemcpy(dst->data, src->data, size, hipMemcpyHostToDevice);
 
     return ret;
+}
+
+int FimMemoryManager::ConvertDataLayout(FimBo* dst, FimBo* src0, FimBo* src1, FimOpType opType)
+{
+    DLOG(INFO) << "called";
+    int ret = 0;
+
+    if (opType == OP_ELT_ADD) {
+        convertDataLayoutForEltAdd(dst, src0, FimBankType::EVEN_BANK);
+        convertDataLayoutForEltAdd(dst, src1, FimBankType::ODD_BANK);
+    } else {
+        DLOG(ERROR) << "not yet implemented";
+    }
+
+    return ret;
+}
+
+int FimMemoryManager::convertDataLayoutForEltAdd(FimBo* dst, FimBo* src, FimBankType fimBankType)
+{
+    DLOG(INFO) << "called";
+    uint32_t ret = 0;
+
+    uint32_t cidx = 0;
+    uint32_t rank = 0;
+    uint32_t bg = 0;
+    uint32_t bank = 0;
+    uint32_t s_row = 0;
+    uint32_t s_col = 0;
+    uint32_t trans_size = 32;
+    uint32_t type_size = (precision_ == FIM_FP16) ? sizeof(FP16) : sizeof(char);
+    uint64_t addr_op = 0x0;
+    uint32_t dim_operand = dst->size / trans_size / type_size;
+    char* dst_data = (char*)dst->data;
+    char* src_data = (char*)src->data;
+
+    for (int x = 0; x < dim_operand; x += num_grf_) {
+        uint32_t row = 0;
+        uint32_t col = 0;
+
+        for (int grf_idx = 0; grf_idx < num_grf_; grf_idx++) {
+            addr_op = addr_gen_safe(cidx, rank, bg, bank + (int)fimBankType, row, col);
+            memcpy(dst_data + addr_op, src_data + (x + grf_idx) * trans_size, trans_size);
+            col++;
+        }
+
+        bank += (num_banks_ / num_fim_blocks_);
+
+        if (bank >= (num_banks_ / num_bank_groups_)) {
+            bg++;
+            bank = 0;
+        }
+
+        if (bg >= num_bank_groups_) {
+            bg = 0;
+            rank++;
+        }
+
+        if (rank >= num_fim_rank_) {
+            rank = 0;
+            cidx++;
+        }
+
+        if (cidx >= num_fim_chan_) {
+            cidx = 0;
+            s_row = row;
+            s_col = col;
+        }
+    }
+
+    return ret;
+}
+
+uint32_t FimMemoryManager::mask_by_bit(uint32_t value, uint32_t start, uint32_t end)
+{
+    int length = start - end + 1;
+    value = value >> end;
+    return value & ((1 << length) - 1);
+}
+
+uint64_t FimMemoryManager::addr_gen(uint32_t chan, uint32_t rank, uint32_t bankgroup, uint32_t bank, uint32_t row,
+                                    uint32_t col)
+{
+    uint64_t addr = 0;
+
+    if (fim_addr_map_ == AMDGPU_VEGA20) {
+        addr = rank;
+
+        addr <<= num_row_bit_;
+        addr |= row;
+
+        addr <<= num_col_high_bit_;
+        addr |= mask_by_bit(col, 4, 2);
+
+        addr <<= num_bank_high_bit_;
+        addr |= mask_by_bit(bank, 1, 1);
+
+        addr <<= num_bankgroup_bit_;
+        addr |= bankgroup;
+
+        addr <<= num_bank_low_bit_;
+        addr |= mask_by_bit(bank, 0, 0);
+
+        addr <<= num_chan_bit_ - 1;
+        addr |= mask_by_bit(chan, num_chan_bit_ - 1, 1);
+
+        addr <<= 1;
+        addr |= mask_by_bit(col, 1, 1);
+
+        addr <<= 1;
+        addr |= mask_by_bit(chan, 0, 0);
+
+        addr <<= 1;
+        addr |= mask_by_bit(col, 0, 0);
+
+        addr <<= num_offset_bit_;
+    } else {
+        DLOG(ERROR) << "Fatal: Not supported address scheme for FIM controller";
+    }
+
+    return addr;
+}
+
+uint64_t FimMemoryManager::addr_gen_safe(uint32_t chan, uint32_t rank, uint32_t bg, uint32_t bank, uint32_t& row,
+                                         uint32_t& col)
+{
+    while (col >= num_col_ / bl_) {
+        row++;
+        col -= (num_col_ / bl_);
+    }
+
+    if (row >= num_row_) {
+        DLOG(ERROR) << "row corruption";
+    }
+
+    return addr_gen(chan, rank, bg, bank, row, col);
 }
 
 void* FimMemoryManager::FimBlockAllocator::alloc(size_t request_size, size_t& allocated_size) const

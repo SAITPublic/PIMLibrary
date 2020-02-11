@@ -23,12 +23,14 @@ class FimExecutor
     int Deinitialize(void);
     int Execute(void* output, void* operand0, void* operand1, size_t size, FimOpType opType);
     int Execute(FimBo* output, FimBo* operand0, FimBo* operand1, FimOpType opType);
+    int Execute(FimBo* output, FimBo* fimData, FimOpType opType);
 
    private:
     FimRuntimeType rtType_;
     FimPrecision precision_;
     hipDeviceProp_t devProp_;
     size_t threadCnt_;
+    uint64_t fimBaseAddr_;
 };
 
 } /* namespace executor */

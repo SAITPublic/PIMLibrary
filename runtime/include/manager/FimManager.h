@@ -33,6 +33,7 @@ class FimManager
     int CopyMemory(FimBo* dst, FimBo* src, FimMemcpyType);
     int ConvertDataLayout(void* dst, void* src, size_t size, FimOpType);
     int ConvertDataLayout(FimBo* dst, FimBo* src, FimOpType);
+    int ConvertDataLayout(FimBo* dst, FimBo* src0, FimBo* src1, FimOpType);
 
    private:
     FimManager(FimRuntimeType rtType, FimPrecision precision);

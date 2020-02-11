@@ -151,6 +151,7 @@ class ScopeGuard
         rhs.dismiss_ = true;
     }
     __forceinline void Dismiss() { dismiss_ = true; }
+
    private:
     lambda release_;
     bool dismiss_;

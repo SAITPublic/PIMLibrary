@@ -23,6 +23,9 @@ int FimRuntime::Initialize(void)
     DLOG(INFO) << "called";
     int ret = 0;
 
+    fimManager_->Initialize();
+    fimExecutor_->Initialize();
+
     return ret;
 }
 
@@ -94,6 +97,16 @@ int FimRuntime::ConvertDataLayout(FimBo* dst, FimBo* src, FimOpType opType)
     return ret;
 }
 
+int FimRuntime::ConvertDataLayout(FimBo* dst, FimBo* src0, FimBo* src1, FimOpType opType)
+{
+    DLOG(INFO) << "called";
+    int ret = 0;
+
+    ret = fimManager_->ConvertDataLayout(dst, src0, src1, opType);
+
+    return ret;
+}
+
 int FimRuntime::CopyMemory(void* dst, void* src, size_t size, FimMemcpyType cpyType)
 {
     DLOG(INFO) << "called";
@@ -130,6 +143,16 @@ int FimRuntime::Execute(FimBo* output, FimBo* operand0, FimBo* operand1, FimOpTy
     int ret = 0;
 
     ret = fimExecutor_->Execute(output, operand0, operand1, opType);
+
+    return ret;
+}
+
+int FimRuntime::Execute(FimBo* output, FimBo* fimData, FimOpType opType)
+{
+    DLOG(INFO) << "called";
+    int ret = 0;
+
+    ret = fimExecutor_->Execute(output, fimData, opType);
 
     return ret;
 }

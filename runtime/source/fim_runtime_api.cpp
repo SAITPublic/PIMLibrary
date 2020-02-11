@@ -139,6 +139,21 @@ int FimConvertDataLayout(FimBo* dst, FimBo* src, FimOpType opType)
     return ret;
 }
 
+int FimConvertDataLayout(FimBo* dst, FimBo* src0, FimBo* src1, FimOpType opType)
+{
+    DLOG(INFO) << "called";
+    FIM_PROFILE_TICK(ConvertDataLayout);
+    int ret = 0;
+
+    if (fimRuntime == nullptr) {
+        return -1;
+    }
+    ret = fimRuntime->ConvertDataLayout(dst, src0, src1, opType);
+    FIM_PROFILE_TOCK(ConvertDataLayout);
+
+    return ret;
+}
+
 int FimCopyMemory(void* dst, void* src, size_t size, FimMemcpyType cpyType)
 {
     DLOG(INFO) << "called";
@@ -194,6 +209,21 @@ int FimExecute(FimBo* output, FimBo* operand0, FimBo* operand1, FimOpType opType
         return -1;
     }
     ret = fimRuntime->Execute(output, operand0, operand1, opType);
+    FIM_PROFILE_TOCK(Execute);
+
+    return ret;
+}
+
+int FimExecute(FimBo* output, FimBo* fimData, FimOpType opType)
+{
+    DLOG(INFO) << "called";
+    FIM_PROFILE_TICK(Execute);
+    int ret = 0;
+
+    if (fimRuntime == nullptr) {
+        return -1;
+    }
+    ret = fimRuntime->Execute(output, fimData, opType);
     FIM_PROFILE_TOCK(Execute);
 
     return ret;

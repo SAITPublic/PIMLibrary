@@ -18,6 +18,10 @@ typedef enum __FimRuntimeType {
     RT_TYPE_OPENCL,
 } FimRuntimeType;
 
+typedef enum __FimAddrMap {
+    AMDGPU_VEGA20,
+} FimAddrMap;
+
 typedef enum __FimMemType {
     MEM_TYPE_HOST,
     MEM_TYPE_DEVICE,
@@ -55,5 +59,17 @@ typedef struct __FimBufferObject {
     FimMemType memType;
     void* data;
 } FimBo;
+
+typedef enum __FimBankType {
+    EVEN_BANK,
+    ODD_BANK,
+    ALL_BANK,
+} FimBankType;
+
+typedef enum __FimMode {
+    SB_MODE,
+    HAB_MODE,
+    HAB_FIM,
+};
 
 #endif /* _FIM_DATA_TYPE_H_ */

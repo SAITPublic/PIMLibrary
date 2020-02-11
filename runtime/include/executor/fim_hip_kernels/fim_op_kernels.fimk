@@ -1,7 +1,17 @@
 #include "hip/hip_fp16.h"
+#include "fim_crf_bins.h"
 
 __global__ void dummy_kernel(void)
 {
+}
+
+__global__ void elt_add_fim_1cu_1th_fp16(
+    const char* __restrict__ fim_ctr,
+    const char* __restrict__ fim_data,
+    char* __restrict__ output,
+    int size)
+{
+
 }
 
 __global__ void eltwise_add_fp32(

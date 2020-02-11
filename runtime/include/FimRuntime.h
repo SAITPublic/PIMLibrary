@@ -23,10 +23,12 @@ class FimRuntime
     int FreeMemory(FimBo* fimBo);
     int ConvertDataLayout(void* dst, void* src, size_t size, FimOpType opType);
     int ConvertDataLayout(FimBo* dst, FimBo* src, FimOpType opType);
+    int ConvertDataLayout(FimBo* dst, FimBo* src0, FimBo* src1, FimOpType opType);
     int CopyMemory(void* dst, void* src, size_t size, FimMemcpyType);
     int CopyMemory(FimBo* dst, FimBo* src, FimMemcpyType);
     int Execute(void* output, void* operand0, void* operand1, size_t size, FimOpType opType);
     int Execute(FimBo* output, FimBo* operand0, FimBo* operand1, FimOpType opType);
+    int Execute(FimBo* output, FimBo* fimData, FimOpType opType);
 
    private:
     fim::runtime::manager::FimManager* fimManager_;
