@@ -28,11 +28,9 @@ FimExecutor* FimExecutor::getInstance(FimRuntimeType rtType, FimPrecision precis
 
 int FimExecutor::Initialize(void)
 {
-    google::InitGoogleLogging("FIMExecutor");
     DLOG(INFO) << "Intialization done ";
 
     int ret = 0;
-
     hipGetDeviceProperties(&devProp_, 0);
     std::cout << " System minor " << devProp_.minor << std::endl;
     std::cout << " System major " << devProp_.major << std::endl;

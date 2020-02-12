@@ -8,9 +8,16 @@
 using namespace fim::runtime;
 
 FimRuntime* fimRuntime = nullptr;
+static bool log_initialized = false;
 
 int FimInitialize(FimRuntimeType rtType, FimPrecision precision)
 {
+    if (!log_initialized) {
+        google::InitGoogleLogging("FIMRuntime");
+        FLAGS_minloglevel = FIM_LOG_LEVEL;
+        log_initialized = true;
+    }
+
     DLOG(INFO) << "called";
     FIM_PROFILE_TICK(Initialize);
     int ret = 0;

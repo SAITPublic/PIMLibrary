@@ -8,5 +8,13 @@ set(CMAKE_CXX_COMPILER "${ROCM_PATH}/hip/bin/hipcc")
 set(HCC_CXX_FLAGS  "-hc --amdgpu-target=gfx900 --amdgpu-target=gfx906 --amdgpu-target=gfx908 ")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HCC_CXX_FLAGS}")
 
+if(DEFINED ENV{FIM_LOG_LEVEL})
+    add_definitions(-DFIM_LOG_LEVEL=$ENV{FIM_LOG_LEVEL})
+else()
+    add_definitions(-DFIM_LOG_LEVEL=0)
+endif()
+
+message(STATUS "FIM Log level is " $ENV{FIM_LOG_LEVEL})
+
 add_library(FimRuntime SHARED ${runtime_source})
 target_link_libraries (FimRuntime glog)
