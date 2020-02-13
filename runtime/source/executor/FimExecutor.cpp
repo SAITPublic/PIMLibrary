@@ -5,6 +5,7 @@
 #include "executor/fim_hip_kernels/fim_op_kernels.fimk"
 #include "hip/hip_runtime.h"
 #include "utility/fim_log.h"
+#include "utility/fim_util.h"
 
 namespace fim
 {
@@ -38,11 +39,14 @@ int FimExecutor::Initialize(void)
     std::cout << " hip Device prop succeeded " << std::endl;
 
     /* TODO: get fim control base address from device driver */
+    /* roct should write fim_base_va */
     FILE* fp;
     fp = fopen("fim_base_va.txt", "rt");
     fscanf(fp, "%lX", &fimBaseAddr_);
-    DLOG(INFO) << "fimBaseAddr = " << fimBaseAddr_;
+    printf("fimBaseAddr_ : 0x%X\n");
     fclose(fp);
+
+    get_fim_block_info(&fbi_);
 
     return ret;
 }
@@ -117,16 +121,15 @@ int FimExecutor::Execute(FimBo* output, FimBo* fimData, FimOpType opType)
     DLOG(INFO) << "called";
     int ret = 0;
     size_t size = output->size;
-    char* fim_base_va = (char*)fimBaseAddr_;
+    char* fimBasePtr = (char*)fimBaseAddr_;
+    char* outputPtr = (char*)output->data;
 
     if (opType == OP_ELT_ADD) {
-#if 0
-    std::cout << "fimBaseAddr = " << fimBaseAddr_ << std::endl;
-    hipMemcpy((void*)fim_base_va, fimData->data, fimData->size, hipMemcpyDeviceToDevice);
+        std::cout << "fimBaseAddr = " << fimBaseAddr_ << std::endl;
+        hipMemcpy((void*)fimBasePtr, fimData->data, fimData->size, hipMemcpyHostToDevice);
+        hipLaunchKernelGGL(elt_add_fim_1cu_1th_fp16, dim3(1), dim3(1), 0, 0, (char*)fimBasePtr, (char*)fimBasePtr,
+                           (char*)outputPtr, (int)output->size);
 
-            hipLaunchKernelGGL(elt_add_fim_1cu_1th_fp16, dim3(1), dim3(1), 0, 0, (char*)fimData->data,
-                             (char*)fimBaseAddr_, (char*)crfBin_, (char*)output->data);
-#endif
     } else {
         /* todo:implement other operation function */
         hipLaunchKernelGGL(dummy_kernel, dim3(1), dim3(1), 0, 0);

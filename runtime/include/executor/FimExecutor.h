@@ -28,6 +28,7 @@ class FimExecutor
    private:
     FimRuntimeType rtType_;
     FimPrecision precision_;
+    FimBlockInfo fbi_;
     hipDeviceProp_t devProp_;
     size_t threadCnt_;
     uint64_t fimBaseAddr_;

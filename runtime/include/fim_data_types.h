@@ -69,7 +69,29 @@ typedef enum __FimBankType {
 typedef enum __FimMode {
     SB_MODE,
     HAB_MODE,
-    HAB_FIM,
-};
+    HAB_FIM_MODE,
+} FimMode;
+
+typedef struct __FimBlockInfo {
+    FimAddrMap fim_addr_map;
+    int num_banks;
+    int num_bank_groups;
+    int num_rank_bit;
+    int num_row_bit;
+    int num_col_high_bit;
+    int num_bank_high_bit;
+    int num_bankgroup_bit;
+    int num_bank_low_bit;
+    int num_chan_bit;
+    int num_col_low_bit;
+    int num_offset_bit;
+    int num_grf;
+    int num_col;
+    int num_row;
+    int bl;
+    int num_fim_blocks;
+    int num_fim_rank;
+    int num_fim_chan;
+} FimBlockInfo;
 
 #endif /* _FIM_DATA_TYPE_H_ */

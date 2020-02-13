@@ -1,17 +1,32 @@
-#include "hip/hip_fp16.h"
+#ifndef _FIM_OP_KERNELS_FIMK_
+#define _FIM_OP_KERNELS_FIMK_
+
+#include "fim_data_types.h"
+#include "utility/fim_util.h"
 #include "fim_crf_bins.h"
+#include "hip/hip_fp16.h"
+
 
 __global__ void dummy_kernel(void)
 {
 }
 
 __global__ void elt_add_fim_1cu_1th_fp16(
-    const char* __restrict__ fim_ctr,
-    const char* __restrict__ fim_data,
-    char* __restrict__ output,
+    volatile char* __restrict__ fim_data,
+    volatile char* __restrict__ fim_ctr,
+    volatile char* __restrict__ output,
     int size)
 {
-
+	/* Radeon7(VEGA20) memory is 16GB but our target is 32GB system */
+    /* so program_crf and chagne_fim_mode functions can not access to over 8GB in our system */
+    park_in(fim_ctr);
+    change_fim_mode(fim_ctr, SB_MODE, HAB_MODE);
+//    program_crf(fim_ctr, elt_add_crf, sizeof(elt_add_crf));
+//    change_fim_mode(fim_ctr, HAB_MODE, HAB_FIM_MODE);
+    compute_elt_add(fim_ctr, get_num_tile(size));
+//    change_fim_mode(fim_ctr, HAB_FIM_MODE, HAB_MODE);
+    change_fim_mode(fim_ctr, HAB_MODE, SB_MODE);
+    park_out(fim_ctr);
 }
 
 __global__ void eltwise_add_fp32(
@@ -82,3 +97,4 @@ __global__ void gemv_64cu_1th_fp16(
 	}
 }
 
+#endif /* _FIM_OP_KERNELS_FIMK_ */

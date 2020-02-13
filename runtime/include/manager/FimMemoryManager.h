@@ -33,35 +33,12 @@ class FimMemoryManager
 
    private:
     int convertDataLayoutForEltAdd(FimBo* dst, FimBo* src, FimBankType fimBankType);
-    uint32_t mask_by_bit(uint32_t value, uint32_t start, uint32_t end);
-    uint64_t addr_gen(uint32_t chan, uint32_t rank, uint32_t bankgroup, uint32_t bank, uint32_t row, uint32_t col);
-    uint64_t addr_gen_safe(uint32_t chan, uint32_t rank, uint32_t bg, uint32_t bank, uint32_t& row, uint32_t& col);
 
    private:
     FimDevice* fimDevice_;
     FimRuntimeType rtType_;
     FimPrecision precision_;
-
-    /* TODO: get VEGA20 scheme from device driver */
-    FimAddrMap fim_addr_map_ = AMDGPU_VEGA20;
-    const int num_banks_ = 16;
-    const int num_fim_blocks_ = 8;
-    const int num_bank_groups_ = 4;
-    const int num_fim_rank_ = 1;
-    const int num_fim_chan_ = 64;
-    const int num_rank_bit_ = 1;
-    const int num_row_bit_ = 14;
-    const int num_col_high_bit_ = 3;
-    const int num_bank_high_bit_ = 1;
-    const int num_bankgroup_bit_ = 2;
-    const int num_bank_low_bit_ = 1;
-    const int num_chan_bit_ = 6;
-    const int num_col_low_bit_ = 2;
-    const int num_offset_bit_ = 5;
-    const int num_grf_ = 8;
-    const int num_col_ = 128;
-    const int num_row_ = 16384;
-    const int bl_ = 4;
+    FimBlockInfo fbi_;
 
     /**
      * @brief FIM Block allocator of size 2MB
