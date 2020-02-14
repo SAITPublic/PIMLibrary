@@ -1,6 +1,7 @@
 #ifndef _FIM_UTIL_H_
 #define _FIM_UTIL_H_
 
+#include "executor/fim_hip_kernels/fim_crf_bins.h"
 #include "fim_data_types.h"
 #include "hip/hip_fp16.h"
 #include "hip/hip_runtime.h"
@@ -29,10 +30,9 @@ FimBlockInfo vega20_fbi = {
     .num_fim_chan = 64,
 };
 
-char null_bst[32] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-
-char bst_hab_fim[32];
-char bst_hab[32];
+uint8_t null_bst[32] = {
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+};
 
 __host__ inline int get_fim_block_info(FimBlockInfo* fbi) { memcpy(fbi, &vega20_fbi, sizeof(FimBlockInfo)); }
 
@@ -100,8 +100,26 @@ __host__ __device__ inline uint64_t addr_gen_safe(uint32_t chan, uint32_t rank, 
     return addr_gen(chan, rank, bg, bank, row, col);
 }
 
-__device__ inline void add_transaction_all(volatile char* __restrict__ fim_ctr, bool is_write, uint32_t bg,
-                                           uint32_t bank, uint32_t row, uint32_t col, char* burst, int loop_cnt = 1)
+__device__ inline void GEN_WRITE_CMD(volatile uint8_t* __restrict__ dst, volatile uint8_t* __restrict__ src)
+{
+#ifdef EMULATOR_PATH
+
+#else
+    asm volatile("global_store_dwordx4 %0, v[27:30], off\n\t" ::"v"(dst) : "v27", "v28", "v29", "v30");
+#endif
+}
+
+__device__ inline void GEN_READ_CMD(volatile uint8_t* __restrict__ dst, volatile uint8_t* __restrict__ src)
+{
+#ifdef EMULATOR_PATH
+
+#else
+    asm volatile("global_load_dwordx4 v[27:30], %0, off\n\t" ::"v"(src) : "v27", "v28", "v29", "v30");
+#endif
+}
+
+__device__ inline void add_transaction_all(volatile uint8_t* __restrict__ fim_addr, bool is_write, uint32_t bg,
+                                           uint32_t bank, uint32_t row, uint32_t col, uint8_t* burst, int loop_cnt = 1)
 {
     uint64_t t_addr;
     FimBlockInfo* fbi = &vega20_fbi;
@@ -113,15 +131,11 @@ __device__ inline void add_transaction_all(volatile char* __restrict__ fim_ctr, 
             for (int lc = 0; lc < loop_cnt; lc++) {
                 t_addr = addr_gen_safe(cidx, rank, bg, bank, local_row, local_col);
                 if (is_write) {
-                    asm volatile("global_store_dwordx4 %0, v[27:30], off\n\t" ::"v"(&fim_ctr[t_addr])
-                                 : "v27", "v28", "v29", "v30");
-                    asm volatile("global_store_dwordx4 %0, v[27:30], off\n\t" ::"v"(&fim_ctr[t_addr + 16])
-                                 : "v27", "v28", "v29", "v30");
+                    GEN_WRITE_CMD(&fim_addr[t_addr], null_bst);
+                    GEN_WRITE_CMD(&fim_addr[t_addr], null_bst + 0x10);
                 } else {
-                    asm volatile("global_load_dwordx4 v[27:30], %0, off\n\t" ::"v"(&fim_ctr[t_addr])
-                                 : "v27", "v28", "v29", "v30");
-                    asm volatile("global_load_dwordx4 v[27:30], %0, off\n\t" ::"v"(&fim_ctr[t_addr + 16])
-                                 : "v27", "v28", "v29", "v30");
+                    GEN_READ_CMD(null_bst, &fim_addr[t_addr]);
+                    GEN_READ_CMD(null_bst + 0x10, &fim_addr[t_addr]);
                 }
                 local_col++;
             }
@@ -130,7 +144,7 @@ __device__ inline void add_transaction_all(volatile char* __restrict__ fim_ctr, 
     __syncthreads();
 }
 
-__device__ inline void change_fim_mode(volatile char* __restrict__ fim_ctr, FimMode mode1, FimMode mode2)
+__device__ inline void change_fim_mode(volatile uint8_t* __restrict__ fim_ctr, FimMode mode1, FimMode mode2)
 {
     FimBlockInfo* fbi = &vega20_fbi;
 
@@ -148,17 +162,17 @@ __device__ inline void change_fim_mode(volatile char* __restrict__ fim_ctr, FimM
             add_transaction_all(fim_ctr, true, 0, 0, 0x1fff, 0x1f, null_bst);
             add_transaction_all(fim_ctr, true, 0, 1, 0x1fff, 0x1f, null_bst);
         } else if (mode2 == HAB_FIM_MODE) {
-            add_transaction_all(fim_ctr, true, 0, 0, 0x3fff, 0x0, bst_hab_fim);
+            add_transaction_all(fim_ctr, true, 0, 0, 0x3fff, 0x0, hab_to_hab_fim);
         }
     } else if (mode1 == HAB_FIM_MODE) {
         if (mode2 == HAB_MODE) {
-            add_transaction_all(fim_ctr, true, 0, 0, 0x3fff, 0x0, bst_hab);
+            add_transaction_all(fim_ctr, true, 0, 0, 0x3fff, 0x0, hab_fim_to_hab);
         }
     }
     __syncthreads();
 }
 
-__device__ inline void park_in(volatile char* __restrict__ fim_ctr)
+__device__ inline void park_in(volatile uint8_t* __restrict__ fim_ctr)
 {
     uint32_t cidx;
     uint32_t rank;
@@ -174,10 +188,8 @@ __device__ inline void park_in(volatile char* __restrict__ fim_ctr)
             for (b = 0; b < fbi->num_banks / fbi->num_bank_groups; b++) {
                 for (bg = 0; bg < fbi->num_bank_groups; bg++) {
                     t_addr = addr_gen(cidx, rank, bg, b, (1 << 12), 0);
-                    asm volatile("global_load_dwordx4 v[27:30], %0, off\n\t" ::"v"(&fim_ctr[t_addr])
-                                 : "v27", "v28", "v29", "v30");
-                    asm volatile("global_load_dwordx4 v[27:30], %0, off\n\t" ::"v"(&fim_ctr[t_addr + 16])
-                                 : "v27", "v28", "v29", "v30");
+                    GEN_READ_CMD(null_bst, &fim_ctr[t_addr]);
+                    GEN_READ_CMD(null_bst, &fim_ctr[t_addr + 0x10]);
                 }
             }
         }
@@ -185,7 +197,7 @@ __device__ inline void park_in(volatile char* __restrict__ fim_ctr)
     __syncthreads();
 }
 
-__device__ inline void park_out(volatile char* __restrict__ fim_ctr)
+__device__ inline void park_out(volatile uint8_t* __restrict__ fim_ctr)
 {
     uint32_t cidx;
     uint32_t rank;
@@ -195,21 +207,18 @@ __device__ inline void park_out(volatile char* __restrict__ fim_ctr)
     for (cidx = 0; cidx < fbi->num_fim_chan; cidx++) {
         for (rank = 0; rank < fbi->num_fim_rank; rank++) {
             t_addr = addr_gen(cidx, rank, 0, 0, (1 << 12), 0);
-            asm volatile("global_load_dwordx4 v[27:30], %0, off\n\t" ::"v"(&fim_ctr[t_addr])
-                         : "v27", "v28", "v29", "v30");
-            asm volatile("global_load_dwordx4 v[27:30], %0, off\n\t" ::"v"(&fim_ctr[t_addr + 16])
-                         : "v27", "v28", "v29", "v30");
+            GEN_READ_CMD(null_bst, &fim_ctr[t_addr]);
+            GEN_READ_CMD(null_bst, &fim_ctr[t_addr + 0x10]);
+
             t_addr = addr_gen(cidx, rank, 0, 1, (1 << 12), 0);
-            asm volatile("global_load_dwordx4 v[27:30], %0, off\n\t" ::"v"(&fim_ctr[t_addr])
-                         : "v27", "v28", "v29", "v30");
-            asm volatile("global_load_dwordx4 v[27:30], %0, off\n\t" ::"v"(&fim_ctr[t_addr + 16])
-                         : "v27", "v28", "v29", "v30");
+            GEN_READ_CMD(null_bst, &fim_ctr[t_addr]);
+            GEN_READ_CMD(null_bst, &fim_ctr[t_addr + 0x10]);
         }
     }
     __syncthreads();
 }
 
-__device__ inline void program_crf(volatile char* __restrict__ fim_ctr, char* elt_add_crf, uint32_t cmd_size)
+__device__ inline void program_crf(volatile uint8_t* __restrict__ fim_ctr, uint8_t* elt_add_crf, uint32_t cmd_size)
 {
     int i;
     int offset = 0;
@@ -221,14 +230,14 @@ __device__ inline void program_crf(volatile char* __restrict__ fim_ctr, char* el
     }
 }
 
-__device__ inline void compute_elt_add(volatile char* __restrict__ fim_ctr, int num_tile)
+__device__ inline void compute_elt_add(volatile uint8_t* __restrict__ fim_data, int num_tile)
 {
     FimBlockInfo* fbi = &vega20_fbi;
 
     for (int i = 0; i < num_tile; i++) {
-        add_transaction_all(fim_ctr, false, 0, 0, 0, fbi->num_grf * i, null_bst, fbi->num_grf);
-        add_transaction_all(fim_ctr, false, 0, 1, 0, fbi->num_grf * i, null_bst, fbi->num_grf);
-        add_transaction_all(fim_ctr, true, 0, 1, 0, fbi->num_grf * (num_tile + i), null_bst, fbi->num_grf);
+        add_transaction_all(fim_data, false, 0, 0, 0, fbi->num_grf * i, null_bst, fbi->num_grf);
+        add_transaction_all(fim_data, false, 0, 1, 0, fbi->num_grf * i, null_bst, fbi->num_grf);
+        add_transaction_all(fim_data, true, 0, 1, 0, fbi->num_grf * (num_tile + i), null_bst, fbi->num_grf);
     }
 }
 

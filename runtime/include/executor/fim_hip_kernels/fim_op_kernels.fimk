@@ -4,7 +4,6 @@
 #include "fim_data_types.h"
 #include "utility/fim_util.h"
 #include "fim_crf_bins.h"
-#include "hip/hip_fp16.h"
 
 
 __global__ void dummy_kernel(void)
@@ -12,9 +11,9 @@ __global__ void dummy_kernel(void)
 }
 
 __global__ void elt_add_fim_1cu_1th_fp16(
-    volatile char* __restrict__ fim_data,
-    volatile char* __restrict__ fim_ctr,
-    volatile char* __restrict__ output,
+    volatile uint8_t* __restrict__ fim_data,
+    volatile uint8_t* __restrict__ fim_ctr,
+    volatile uint8_t* __restrict__ output,
     int size)
 {
 	/* Radeon7(VEGA20) memory is 16GB but our target is 32GB system */
@@ -23,78 +22,10 @@ __global__ void elt_add_fim_1cu_1th_fp16(
     change_fim_mode(fim_ctr, SB_MODE, HAB_MODE);
 //    program_crf(fim_ctr, elt_add_crf, sizeof(elt_add_crf));
 //    change_fim_mode(fim_ctr, HAB_MODE, HAB_FIM_MODE);
-    compute_elt_add(fim_ctr, get_num_tile(size));
+    compute_elt_add(fim_data, get_num_tile(size));
 //    change_fim_mode(fim_ctr, HAB_FIM_MODE, HAB_MODE);
     change_fim_mode(fim_ctr, HAB_MODE, SB_MODE);
     park_out(fim_ctr);
-}
-
-__global__ void eltwise_add_fp32(
-    const float* __restrict__ operand0,
-    const float* __restrict__ operand1,
-    float* __restrict__ output)
-{
-    int offset = hipBlockDim_x * hipBlockIdx_x + hipThreadIdx_x;
-
-    output[offset] = operand0[offset] + operand1[offset];
-}
-
-__global__ void eltwise_add_fp16(
-    const __half* __restrict__ operand0,
-    const __half* __restrict__ operand1,
-    __half* __restrict__ output)
-{
-    int offset = hipBlockDim_x * hipBlockIdx_x + hipThreadIdx_x;
-
-    output[offset] = operand0[offset] + operand1[offset];
-}
-
-__global__ void eltwise_add_int8(
-    const char* __restrict__ operand0,
-    const char* __restrict__ operand1,
-    char* __restrict__ output)
-{
-    int offset = hipBlockDim_x * hipBlockIdx_x + hipThreadIdx_x;
-
-    output[offset] = operand0[offset] + operand1[offset];
-}
-
-__global__ void gemv_1cu_1th_fp16(
-    const __half* __restrict__ input,
-    __half* __restrict__ weight,
-    __half* __restrict__ output,
-    const int in_size,
-    const int out_size)
-{
-    __half* t_weight = weight;
-
-    int w, h;
-    for (h = 0; h < out_size; h++) {
-       for (w = 0; w < in_size; w++) {
-           output[h] += t_weight[w] * input[w];
-       }
-       t_weight += in_size;
-    }
-}
-
-__global__ void gemv_64cu_1th_fp16(
-    const __half* __restrict__ input,
-    __half* __restrict__ weight,
-    __half* __restrict__ output,
-    const int in_size,
-	const int loop_cnt)
-{
-	size_t offset = hipBlockIdx_x * in_size;
-	__half* t_weight = weight + offset;
-	__half* t_output = output + hipBlockIdx_x;
-
-	int w, loop;
-	for (loop = 0; loop < loop_cnt; loop++) {
-		for (w = 0; w < in_size; w++) {
-			t_output[0] += t_weight[w] * input[w];
-		}
-		t_output += 64;
-	}
 }
 
 #endif /* _FIM_OP_KERNELS_FIMK_ */

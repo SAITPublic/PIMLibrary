@@ -94,4 +94,12 @@ typedef struct __FimBlockInfo {
     int num_fim_chan;
 } FimBlockInfo;
 
+typedef struct __FimRecordInfo {
+    int block_id;
+    int thread_id;
+    char cmd;
+    uint64_t addr;
+    char data[16];
+};
+
 #endif /* _FIM_DATA_TYPE_H_ */

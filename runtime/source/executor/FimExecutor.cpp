@@ -65,13 +65,6 @@ int FimExecutor::Execute(void* output, void* operand0, void* operand1, size_t si
     int ret = 0;
 
     if (opType == OP_ELT_ADD) {
-        if (precision_ == FIM_FP16) {
-            hipLaunchKernelGGL(eltwise_add_fp16, dim3(size / threadCnt_), dim3(threadCnt_), 0, 0, (__half*)operand0,
-                               (__half*)operand1, (__half*)output);
-        } else if (precision_ == FIM_INT8) {
-            hipLaunchKernelGGL(eltwise_add_int8, dim3(size / threadCnt_), dim3(threadCnt_), 0, 0, (char*)operand0,
-                               (char*)operand1, (char*)output);
-        }
     } else {
         /* todo:implement other operation function */
         return -1;
@@ -88,24 +81,6 @@ int FimExecutor::Execute(FimBo* output, FimBo* operand0, FimBo* operand1, FimOpT
     size_t size = output->size;
 
     if (opType == OP_ELT_ADD) {
-        if (precision_ == FIM_FP16) {
-            hipLaunchKernelGGL(eltwise_add_fp16, dim3(size / threadCnt_), dim3(threadCnt_), 0, 0,
-                               (__half*)operand0->data, (__half*)operand1->data, (__half*)output->data);
-        } else if (precision_ == FIM_INT8) {
-            hipLaunchKernelGGL(eltwise_add_int8, dim3(size / threadCnt_), dim3(threadCnt_), 0, 0, (char*)operand0->data,
-                               (char*)operand1->data, (char*)output->data);
-        }
-    } else if (opType == OP_GEMV) {
-        if (precision_ == FIM_FP16) {
-            size_t in_size = operand0->size / sizeof(__half);
-            size_t out_size = output->size / sizeof(__half);
-            const unsigned int blocks = 64;
-            const unsigned int threads_per_block = 1;
-            const unsigned int loop_cnt = out_size / blocks;
-
-            hipLaunchKernelGGL(gemv_64cu_1th_fp16, dim3(blocks), dim3(threads_per_block), 0, 0, (__half*)operand0->data,
-                               (__half*)operand1->data, (__half*)output->data, in_size, loop_cnt);
-        }
     } else {
         /* todo:implement other operation function */
         hipLaunchKernelGGL(dummy_kernel, dim3(1), dim3(1), 0, 0);
@@ -121,14 +96,14 @@ int FimExecutor::Execute(FimBo* output, FimBo* fimData, FimOpType opType)
     DLOG(INFO) << "called";
     int ret = 0;
     size_t size = output->size;
-    char* fimBasePtr = (char*)fimBaseAddr_;
-    char* outputPtr = (char*)output->data;
+    uint8_t* fimBasePtr = (uint8_t*)fimBaseAddr_;
+    uint8_t* outputPtr = (uint8_t*)output->data;
 
     if (opType == OP_ELT_ADD) {
         std::cout << "fimBaseAddr = " << fimBaseAddr_ << std::endl;
         hipMemcpy((void*)fimBasePtr, fimData->data, fimData->size, hipMemcpyHostToDevice);
-        hipLaunchKernelGGL(elt_add_fim_1cu_1th_fp16, dim3(1), dim3(1), 0, 0, (char*)fimBasePtr, (char*)fimBasePtr,
-                           (char*)outputPtr, (int)output->size);
+        hipLaunchKernelGGL(elt_add_fim_1cu_1th_fp16, dim3(1), dim3(1), 0, 0, (uint8_t*)fimBasePtr, (uint8_t*)fimBasePtr,
+                           (uint8_t*)outputPtr, (int)output->size);
 
     } else {
         /* todo:implement other operation function */
