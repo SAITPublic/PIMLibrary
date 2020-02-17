@@ -15,17 +15,17 @@ class FimDevice;
 class FimControlManager
 {
    public:
-    FimControlManager(FimDevice* fimDevice, FimRuntimeType rtType, FimPrecision precision);
+    FimControlManager(FimDevice* fim_device, FimRuntimeType rt_type, FimPrecision precision);
     virtual ~FimControlManager(void);
 
-    int Initialize(void);
-    int Deinitialize(void);
-    int ProgramCRFCode(void);
-    int SetFimMode(void);
+    int initialize(void);
+    int deinitialize(void);
+    int program_crf_code(void);
+    int set_fim_mode(void);
 
    private:
-    FimDevice* fimDevice_;
-    FimRuntimeType rtType_;
+    FimDevice* fim_device_;
+    FimRuntimeType rt_type_;
     FimPrecision precision_;
 };
 

@@ -14,14 +14,14 @@ using namespace std;
 
 bool simple_fim_alloc_free()
 {
-    FimBo fimWeight = {.size = LENGTH * sizeof(FP16), .memType = MEM_TYPE_FIM};
+    FimBo fim_weight = {.size = LENGTH * sizeof(FP16), .mem_type = MEM_TYPE_FIM};
 
     FimInitialize(RT_TYPE_HIP, FIM_FP16);
 
-    int ret = FimAllocMemory(&fimWeight);
+    int ret = FimAllocMemory(&fim_weight);
     if (ret) return false;
 
-    ret = FimFreeMemory(&fimWeight);
+    ret = FimFreeMemory(&fim_weight);
     if (ret) return false;
 
     FimDeinitialize();
@@ -31,15 +31,15 @@ bool simple_fim_alloc_free()
 
 bool fim_repeat_allocate_free(void)
 {
-    FimBo fimWeight = {.size = LENGTH * sizeof(FP16), .memType = MEM_TYPE_FIM};
+    FimBo fim_weight = {.size = LENGTH * sizeof(FP16), .mem_type = MEM_TYPE_FIM};
 
     FimInitialize(RT_TYPE_HIP, FIM_FP16);
 
     int i = 0;
     while (i < 100) {
-        int ret = FimAllocMemory(&fimWeight);
+        int ret = FimAllocMemory(&fim_weight);
         if (ret) return false;
-        ret = FimFreeMemory(&fimWeight);
+        ret = FimFreeMemory(&fim_weight);
         if (ret) return false;
         i++;
     }
@@ -51,12 +51,12 @@ bool fim_repeat_allocate_free(void)
 
 bool fim_allocate_exceed_blocksize(void)
 {
-    FimBo fimWeight = {.size = LENGTH * sizeof(FP16) * 1024 * 1024, .memType = MEM_TYPE_FIM};
+    FimBo fim_weight = {.size = LENGTH * sizeof(FP16) * 1024 * 1024, .mem_type = MEM_TYPE_FIM};
 
     FimInitialize(RT_TYPE_HIP, FIM_FP16);
 
     while (true) {
-        int ret = FimAllocMemory(&fimWeight);
+        int ret = FimAllocMemory(&fim_weight);
         if (ret) return false;
     }
 

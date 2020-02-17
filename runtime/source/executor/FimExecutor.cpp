@@ -13,36 +13,36 @@ namespace runtime
 {
 namespace executor
 {
-FimExecutor::FimExecutor(FimRuntimeType rtType, FimPrecision precision)
-    : rtType_(rtType), precision_(precision), threadCnt_(16)
+FimExecutor::FimExecutor(FimRuntimeType rt_type, FimPrecision precision)
+    : rt_type_(rt_type), precision_(precision), thread_cnt_(16)
 {
     DLOG(INFO) << "called ";
 }
 
-FimExecutor* FimExecutor::getInstance(FimRuntimeType rtType, FimPrecision precision)
+FimExecutor* FimExecutor::get_instance(FimRuntimeType rt_type, FimPrecision precision)
 {
     DLOG(INFO) << "Called";
-    static FimExecutor* instance_ = new FimExecutor(rtType, precision);
+    static FimExecutor* instance_ = new FimExecutor(rt_type, precision);
 
     return instance_;
 }
 
-int FimExecutor::Initialize(void)
+int FimExecutor::initialize(void)
 {
     DLOG(INFO) << "Intialization done ";
 
     int ret = 0;
-    hipGetDeviceProperties(&devProp_, 0);
-    std::cout << " System minor " << devProp_.minor << std::endl;
-    std::cout << " System major " << devProp_.major << std::endl;
-    std::cout << " agent prop name " << devProp_.name << std::endl;
+    hipGetDeviceProperties(&dev_prop_, 0);
+    std::cout << " System minor " << dev_prop_.minor << std::endl;
+    std::cout << " System major " << dev_prop_.major << std::endl;
+    std::cout << " agent prop name " << dev_prop_.name << std::endl;
     std::cout << " hip Device prop succeeded " << std::endl;
 
     /* TODO: get fim control base address from device driver */
     /* roct should write fim_base_va */
     FILE* fp;
     fp = fopen("fim_base_va.txt", "rt");
-    fscanf(fp, "%lX", &fimBaseAddr_);
+    fscanf(fp, "%lX", &fim_base_addr_);
     printf("fimBaseAddr_ : 0x%X\n");
     fclose(fp);
 
@@ -51,7 +51,7 @@ int FimExecutor::Initialize(void)
     return ret;
 }
 
-int FimExecutor::Deinitialize(void)
+int FimExecutor::deinitialize(void)
 {
     DLOG(INFO) << "called";
     int ret = 0;
@@ -59,12 +59,12 @@ int FimExecutor::Deinitialize(void)
     return ret;
 }
 
-int FimExecutor::Execute(void* output, void* operand0, void* operand1, size_t size, FimOpType opType)
+int FimExecutor::execute(void* output, void* operand0, void* operand1, size_t size, FimOpType op_type)
 {
     DLOG(INFO) << "called";
     int ret = 0;
 
-    if (opType == OP_ELT_ADD) {
+    if (op_type == OP_ELT_ADD) {
     } else {
         /* todo:implement other operation function */
         return -1;
@@ -74,13 +74,13 @@ int FimExecutor::Execute(void* output, void* operand0, void* operand1, size_t si
     return ret;
 }
 
-int FimExecutor::Execute(FimBo* output, FimBo* operand0, FimBo* operand1, FimOpType opType)
+int FimExecutor::execute(FimBo* output, FimBo* operand0, FimBo* operand1, FimOpType op_type)
 {
     DLOG(INFO) << "called";
     int ret = 0;
     size_t size = output->size;
 
-    if (opType == OP_ELT_ADD) {
+    if (op_type == OP_ELT_ADD) {
     } else {
         /* todo:implement other operation function */
         hipLaunchKernelGGL(dummy_kernel, dim3(1), dim3(1), 0, 0);
@@ -91,19 +91,19 @@ int FimExecutor::Execute(FimBo* output, FimBo* operand0, FimBo* operand1, FimOpT
     return ret;
 }
 
-int FimExecutor::Execute(FimBo* output, FimBo* fimData, FimOpType opType)
+int FimExecutor::execute(FimBo* output, FimBo* fim_data, FimOpType op_type)
 {
     DLOG(INFO) << "called";
     int ret = 0;
     size_t size = output->size;
-    uint8_t* fimBasePtr = (uint8_t*)fimBaseAddr_;
-    uint8_t* outputPtr = (uint8_t*)output->data;
+    uint8_t* fim_base_ptr = (uint8_t*)fim_base_addr_;
+    uint8_t* output_ptr = (uint8_t*)output->data;
 
-    if (opType == OP_ELT_ADD) {
-        std::cout << "fimBaseAddr = " << fimBaseAddr_ << std::endl;
-        hipMemcpy((void*)fimBasePtr, fimData->data, fimData->size, hipMemcpyHostToDevice);
-        hipLaunchKernelGGL(elt_add_fim_1cu_1th_fp16, dim3(1), dim3(1), 0, 0, (uint8_t*)fimBasePtr, (uint8_t*)fimBasePtr,
-                           (uint8_t*)outputPtr, (int)output->size);
+    if (op_type == OP_ELT_ADD) {
+        std::cout << "fim_base_addr = " << fim_base_addr_ << std::endl;
+        hipMemcpy((void*)fim_base_ptr, fim_data->data, fim_data->size, hipMemcpyHostToDevice);
+        hipLaunchKernelGGL(elt_add_fim_1cu_1th_fp16, dim3(1), dim3(1), 0, 0, (uint8_t*)fim_base_ptr,
+                           (uint8_t*)fim_base_ptr, (uint8_t*)output_ptr, (int)output->size);
 
     } else {
         /* todo:implement other operation function */

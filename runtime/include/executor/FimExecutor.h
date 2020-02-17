@@ -14,24 +14,24 @@ namespace executor
 class FimExecutor
 {
    public:
-    FimExecutor(FimRuntimeType rtType, FimPrecision precision);
+    FimExecutor(FimRuntimeType rt_type, FimPrecision precision);
     virtual ~FimExecutor(void) {}
 
-    static FimExecutor* getInstance(FimRuntimeType rtType, FimPrecision precision);
+    static FimExecutor* get_instance(FimRuntimeType rt_type, FimPrecision precision);
 
-    int Initialize(void);
-    int Deinitialize(void);
-    int Execute(void* output, void* operand0, void* operand1, size_t size, FimOpType opType);
-    int Execute(FimBo* output, FimBo* operand0, FimBo* operand1, FimOpType opType);
-    int Execute(FimBo* output, FimBo* fimData, FimOpType opType);
+    int initialize(void);
+    int deinitialize(void);
+    int execute(void* output, void* operand0, void* operand1, size_t size, FimOpType op_type);
+    int execute(FimBo* output, FimBo* operand0, FimBo* operand1, FimOpType op_type);
+    int execute(FimBo* output, FimBo* fim_data, FimOpType op_type);
 
    private:
-    FimRuntimeType rtType_;
+    FimRuntimeType rt_type_;
     FimPrecision precision_;
     FimBlockInfo fbi_;
-    hipDeviceProp_t devProp_;
-    size_t threadCnt_;
-    uint64_t fimBaseAddr_;
+    hipDeviceProp_t dev_prop_;
+    size_t thread_cnt_;
+    uint64_t fim_base_addr_;
 };
 
 } /* namespace executor */

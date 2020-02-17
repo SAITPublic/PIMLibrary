@@ -11,14 +11,14 @@ namespace runtime
 {
 namespace manager
 {
-FimControlManager::FimControlManager(FimDevice* fimDevice, FimRuntimeType rtType, FimPrecision precision)
-    : fimDevice_(fimDevice), rtType_(rtType), precision_(precision)
+FimControlManager::FimControlManager(FimDevice* fim_device, FimRuntimeType rt_type, FimPrecision precision)
+    : fim_device_(fim_device), rt_type_(rt_type), precision_(precision)
 {
     DLOG(INFO) << "called";
 }
 
 FimControlManager::~FimControlManager(void) { DLOG(INFO) << "called"; }
-int FimControlManager::Initialize(void)
+int FimControlManager::initialize(void)
 {
     DLOG(INFO) << "called";
 
@@ -27,7 +27,7 @@ int FimControlManager::Initialize(void)
     return ret;
 }
 
-int FimControlManager::Deinitialize(void)
+int FimControlManager::deinitialize(void)
 {
     DLOG(INFO) << "called";
 
@@ -36,26 +36,26 @@ int FimControlManager::Deinitialize(void)
     return ret;
 }
 
-int FimControlManager::ProgramCRFCode(void)
+int FimControlManager::program_crf_code(void)
 {
     DLOG(INFO) << "called";
 
     int ret = 0;
 
     /* ioctl by fim command */
-    ret = fimDevice_->RequestIoctl();
+    ret = fim_device_->request_ioctl();
 
     return ret;
 }
 
-int FimControlManager::SetFimMode(void)
+int FimControlManager::set_fim_mode(void)
 {
     DLOG(INFO) << "called";
 
     int ret = 0;
 
     /* ioctl by fim command */
-    ret = fimDevice_->RequestIoctl();
+    ret = fim_device_->request_ioctl();
 
     return ret;
 }

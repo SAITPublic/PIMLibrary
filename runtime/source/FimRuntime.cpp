@@ -10,26 +10,26 @@ namespace fim
 {
 namespace runtime
 {
-FimRuntime::FimRuntime(FimRuntimeType rtType, FimPrecision precision) : rtType_(rtType), precision_(precision)
+FimRuntime::FimRuntime(FimRuntimeType rt_type, FimPrecision precision) : rt_type_(rt_type), precision_(precision)
 {
     DLOG(INFO) << "called";
 
-    fimManager_ = fim::runtime::manager::FimManager::getInstance(rtType, precision);
-    fimExecutor_ = fim::runtime::executor::FimExecutor::getInstance(rtType, precision);
+    fim_manager_ = fim::runtime::manager::FimManager::get_instance(rt_type, precision);
+    fim_executor_ = fim::runtime::executor::FimExecutor::get_instance(rt_type, precision);
 }
 
-int FimRuntime::Initialize(void)
+int FimRuntime::initialize(void)
 {
     DLOG(INFO) << "called";
     int ret = 0;
 
-    fimManager_->Initialize();
-    fimExecutor_->Initialize();
+    fim_manager_->initialize();
+    fim_executor_->initialize();
 
     return ret;
 }
 
-int FimRuntime::Deinitialize(void)
+int FimRuntime::deinitialize(void)
 {
     DLOG(INFO) << "called";
     int ret = 0;
@@ -37,122 +37,122 @@ int FimRuntime::Deinitialize(void)
     return ret;
 }
 
-int FimRuntime::AllocMemory(void** ptr, size_t size, FimMemType memType)
+int FimRuntime::alloc_memory(void** ptr, size_t size, FimMemType mem_type)
 {
     DLOG(INFO) << "called";
     int ret = 0;
 
-    ret = fimManager_->AllocMemory(ptr, size, memType);
+    ret = fim_manager_->alloc_memory(ptr, size, mem_type);
 
     return ret;
 }
 
-int FimRuntime::AllocMemory(FimBo* fimBo)
+int FimRuntime::alloc_memory(FimBo* fim_bo)
 {
     DLOG(INFO) << "called";
     int ret = 0;
 
-    ret = fimManager_->AllocMemory(fimBo);
+    ret = fim_manager_->alloc_memory(fim_bo);
 
     return ret;
 }
 
-int FimRuntime::FreeMemory(void* ptr, FimMemType memType)
+int FimRuntime::free_memory(void* ptr, FimMemType mem_type)
 {
     DLOG(INFO) << "called";
     int ret = 0;
 
-    ret = fimManager_->FreeMemory(ptr, memType);
+    ret = fim_manager_->free_memory(ptr, mem_type);
 
     return ret;
 }
 
-int FimRuntime::FreeMemory(FimBo* fimBo)
+int FimRuntime::free_memory(FimBo* fim_bo)
 {
     DLOG(INFO) << "called";
     int ret = 0;
 
-    ret = fimManager_->FreeMemory(fimBo);
+    ret = fim_manager_->free_memory(fim_bo);
 
     return ret;
 }
 
-int FimRuntime::ConvertDataLayout(void* dst, void* src, size_t size, FimOpType opType)
+int FimRuntime::convert_data_layout(void* dst, void* src, size_t size, FimOpType op_type)
 {
     DLOG(INFO) << "called";
     int ret = 0;
 
-    ret = fimManager_->ConvertDataLayout(dst, src, size, opType);
+    ret = fim_manager_->convert_data_layout(dst, src, size, op_type);
 
     return ret;
 }
 
-int FimRuntime::ConvertDataLayout(FimBo* dst, FimBo* src, FimOpType opType)
+int FimRuntime::convert_data_layout(FimBo* dst, FimBo* src, FimOpType op_type)
 {
     DLOG(INFO) << "called";
     int ret = 0;
 
-    ret = fimManager_->ConvertDataLayout(dst, src, opType);
+    ret = fim_manager_->convert_data_layout(dst, src, op_type);
 
     return ret;
 }
 
-int FimRuntime::ConvertDataLayout(FimBo* dst, FimBo* src0, FimBo* src1, FimOpType opType)
+int FimRuntime::convert_data_layout(FimBo* dst, FimBo* src0, FimBo* src1, FimOpType op_type)
 {
     DLOG(INFO) << "called";
     int ret = 0;
 
-    ret = fimManager_->ConvertDataLayout(dst, src0, src1, opType);
+    ret = fim_manager_->convert_data_layout(dst, src0, src1, op_type);
 
     return ret;
 }
 
-int FimRuntime::CopyMemory(void* dst, void* src, size_t size, FimMemcpyType cpyType)
+int FimRuntime::copy_memory(void* dst, void* src, size_t size, FimMemCpyType cpy_type)
 {
     DLOG(INFO) << "called";
     int ret = 0;
 
-    ret = fimManager_->CopyMemory(dst, src, size, cpyType);
+    ret = fim_manager_->copy_memory(dst, src, size, cpy_type);
 
     return ret;
 }
 
-int FimRuntime::CopyMemory(FimBo* dst, FimBo* src, FimMemcpyType cpyType)
+int FimRuntime::copy_memory(FimBo* dst, FimBo* src, FimMemCpyType cpy_type)
 {
     DLOG(INFO) << "called";
     int ret = 0;
 
-    ret = fimManager_->CopyMemory(dst, src, cpyType);
+    ret = fim_manager_->copy_memory(dst, src, cpy_type);
 
     return ret;
 }
 
-int FimRuntime::Execute(void* output, void* operand0, void* operand1, size_t size, FimOpType opType)
+int FimRuntime::execute(void* output, void* operand0, void* operand1, size_t size, FimOpType op_type)
 {
     DLOG(INFO) << "called";
     int ret = 0;
 
-    ret = fimExecutor_->Execute(output, operand0, operand1, size, opType);
+    ret = fim_executor_->execute(output, operand0, operand1, size, op_type);
 
     return ret;
 }
 
-int FimRuntime::Execute(FimBo* output, FimBo* operand0, FimBo* operand1, FimOpType opType)
+int FimRuntime::execute(FimBo* output, FimBo* operand0, FimBo* operand1, FimOpType op_type)
 {
     DLOG(INFO) << "called";
     int ret = 0;
 
-    ret = fimExecutor_->Execute(output, operand0, operand1, opType);
+    ret = fim_executor_->execute(output, operand0, operand1, op_type);
 
     return ret;
 }
 
-int FimRuntime::Execute(FimBo* output, FimBo* fimData, FimOpType opType)
+int FimRuntime::execute(FimBo* output, FimBo* fim_data, FimOpType op_type)
 {
     DLOG(INFO) << "called";
     int ret = 0;
 
-    ret = fimExecutor_->Execute(output, fimData, opType);
+    ret = fim_executor_->execute(output, fim_data, op_type);
 
     return ret;
 }

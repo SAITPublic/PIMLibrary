@@ -15,15 +15,15 @@ class FimDevice
     FimDevice(FimPrecision precision);
     virtual ~FimDevice(void);
 
-    int Initialize(void);
-    int Deinitialize(void);
-    int RequestIoctl(void);
+    int initialize(void);
+    int deinitialize(void);
+    int request_ioctl(void);
 
    private:
-    int OpenDevice(void);
-    int CloseDevice(void);
+    int open_device(void);
+    int close_device(void);
 
-    static constexpr char fimDrvName_[] = "/dev/fim_drv";
+    static constexpr char fim_drv_name_[] = "/dev/fim_drv";
     int fim_fd_;
     size_t grf_size_;
     size_t grf_cnt_;

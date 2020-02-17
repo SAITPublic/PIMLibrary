@@ -21,28 +21,28 @@ class FimManager
    public:
     virtual ~FimManager(void);
 
-    static FimManager* getInstance(FimRuntimeType rtType, FimPrecision precision);
+    static FimManager* get_instance(FimRuntimeType rt_type, FimPrecision precision);
 
-    int Initialize(void);
-    int Deinitialize(void);
-    int AllocMemory(void** ptr, size_t size, FimMemType memType);
-    int AllocMemory(FimBo* fimBo);
-    int FreeMemory(void* ptr, FimMemType memType);
-    int FreeMemory(FimBo* fimBo);
-    int CopyMemory(void* dst, void* src, size_t size, FimMemcpyType);
-    int CopyMemory(FimBo* dst, FimBo* src, FimMemcpyType);
-    int ConvertDataLayout(void* dst, void* src, size_t size, FimOpType);
-    int ConvertDataLayout(FimBo* dst, FimBo* src, FimOpType);
-    int ConvertDataLayout(FimBo* dst, FimBo* src0, FimBo* src1, FimOpType);
+    int initialize(void);
+    int deinitialize(void);
+    int alloc_memory(void** ptr, size_t size, FimMemType mem_type);
+    int alloc_memory(FimBo* fim_bo);
+    int free_memory(void* ptr, FimMemType mem_type);
+    int free_memory(FimBo* fim_bo);
+    int copy_memory(void* dst, void* src, size_t size, FimMemCpyType cpy_type);
+    int copy_memory(FimBo* dst, FimBo* src, FimMemCpyType);
+    int convert_data_layout(void* dst, void* src, size_t size, FimOpType op_type);
+    int convert_data_layout(FimBo* dst, FimBo* src, FimOpType);
+    int convert_data_layout(FimBo* dst, FimBo* src0, FimBo* src1, FimOpType op_type);
 
    private:
-    FimManager(FimRuntimeType rtType, FimPrecision precision);
+    FimManager(FimRuntimeType rt_type, FimPrecision precision);
 
-    FimDevice* fimDevice_;
-    FimControlManager* fimControlManager_;
-    FimMemoryManager* fimMemoryManager_;
+    FimDevice* fim_device_;
+    FimControlManager* fim_control_manager_;
+    FimMemoryManager* fim_memory_manager_;
 
-    FimRuntimeType rtType_;
+    FimRuntimeType rt_type_;
     FimPrecision precision_;
 };
 

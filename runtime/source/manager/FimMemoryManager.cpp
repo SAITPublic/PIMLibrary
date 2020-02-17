@@ -14,15 +14,15 @@ namespace runtime
 {
 namespace manager
 {
-FimMemoryManager::FimMemoryManager(FimDevice* fimDevice, FimRuntimeType rtType, FimPrecision precision)
-    : fimDevice_(fimDevice), rtType_(rtType), precision_(precision)
+FimMemoryManager::FimMemoryManager(FimDevice* fim_device, FimRuntimeType rt_type, FimPrecision precision)
+    : fim_device_(fim_device), rt_type_(rt_type), precision_(precision)
 {
     DLOG(INFO) << "called";
     get_fim_block_info(&fbi_);
 }
 
 FimMemoryManager::~FimMemoryManager(void) { DLOG(INFO) << "called"; }
-int FimMemoryManager::Initialize(void)
+int FimMemoryManager::initialize(void)
 {
     DLOG(INFO) << "called";
     int ret = 0;
@@ -30,7 +30,7 @@ int FimMemoryManager::Initialize(void)
     return ret;
 }
 
-int FimMemoryManager::Deinitialize(void)
+int FimMemoryManager::deinitialize(void)
 {
     DLOG(INFO) << "called";
     int ret = 0;
@@ -38,97 +38,97 @@ int FimMemoryManager::Deinitialize(void)
     return ret;
 }
 
-int FimMemoryManager::AllocMemory(void** ptr, size_t size, FimMemType memType)
+int FimMemoryManager::alloc_memory(void** ptr, size_t size, FimMemType mem_type)
 {
     DLOG(INFO) << "called";
     int ret = 0;
 
-    if (memType == MEM_TYPE_DEVICE) {
+    if (mem_type == MEM_TYPE_DEVICE) {
         if (hipMalloc((void**)ptr, size) != hipSuccess) {
             return -1;
         }
-    } else if (memType == MEM_TYPE_HOST) {
+    } else if (mem_type == MEM_TYPE_HOST) {
         *ptr = (void*)malloc(size);
-    } else if (memType == MEM_TYPE_FIM) {
+    } else if (mem_type == MEM_TYPE_FIM) {
         *ptr = fragment_allocator_.alloc(size);
     }
 
     return ret;
 }
 
-int FimMemoryManager::AllocMemory(FimBo* fimBo)
+int FimMemoryManager::alloc_memory(FimBo* fim_bo)
 {
     DLOG(INFO) << "called";
     int ret = 0;
 
-    if (fimBo->memType == MEM_TYPE_DEVICE) {
-        if (hipMalloc((void**)&fimBo->data, fimBo->size) != hipSuccess) {
+    if (fim_bo->mem_type == MEM_TYPE_DEVICE) {
+        if (hipMalloc((void**)&fim_bo->data, fim_bo->size) != hipSuccess) {
             return -1;
         }
-    } else if (fimBo->memType == MEM_TYPE_HOST) {
-        fimBo->data = (void*)malloc(fimBo->size);
-    } else if (fimBo->memType == MEM_TYPE_FIM) {
-        fimBo->data = fragment_allocator_.alloc(fimBo->size);
+    } else if (fim_bo->mem_type == MEM_TYPE_HOST) {
+        fim_bo->data = (void*)malloc(fim_bo->size);
+    } else if (fim_bo->mem_type == MEM_TYPE_FIM) {
+        fim_bo->data = fragment_allocator_.alloc(fim_bo->size);
     }
 
     return ret;
 }
 
-int FimMemoryManager::FreeMemory(void* ptr, FimMemType memType)
+int FimMemoryManager::free_memory(void* ptr, FimMemType mem_type)
 {
     DLOG(INFO) << "called";
     int ret = 0;
 
-    if (memType == MEM_TYPE_DEVICE) {
+    if (mem_type == MEM_TYPE_DEVICE) {
         if (hipFree(ptr) != hipSuccess) {
             return -1;
         }
-    } else if (memType == MEM_TYPE_HOST) {
+    } else if (mem_type == MEM_TYPE_HOST) {
         free(ptr);
-    } else if (memType == MEM_TYPE_FIM) {
+    } else if (mem_type == MEM_TYPE_FIM) {
         return fragment_allocator_.free(ptr);
     }
 
     return ret;
 }
 
-int FimMemoryManager::FreeMemory(FimBo* fimBo)
+int FimMemoryManager::free_memory(FimBo* fim_bo)
 {
     DLOG(INFO) << "called";
     int ret = 0;
 
-    if (fimBo->memType == MEM_TYPE_DEVICE) {
-        if (hipFree(fimBo->data) != hipSuccess) {
+    if (fim_bo->mem_type == MEM_TYPE_DEVICE) {
+        if (hipFree(fim_bo->data) != hipSuccess) {
             return -1;
         }
-    } else if (fimBo->memType == MEM_TYPE_HOST) {
-        free(fimBo->data);
-    } else if (fimBo->memType == MEM_TYPE_FIM) {
-        if (fragment_allocator_.free(fimBo->data)) return 0;
+    } else if (fim_bo->mem_type == MEM_TYPE_HOST) {
+        free(fim_bo->data);
+    } else if (fim_bo->mem_type == MEM_TYPE_FIM) {
+        if (fragment_allocator_.free(fim_bo->data)) return 0;
         return -1;
     }
 
     return ret;
 }
 
-int FimMemoryManager::CopyMemory(void* dst, void* src, size_t size, FimMemcpyType cpyType)
+int FimMemoryManager::copy_memory(void* dst, void* src, size_t size, FimMemCpyType cpy_type)
 {
     DLOG(INFO) << "called";
     int ret = 0;
 
-    if (cpyType == HOST_TO_FIM || cpyType == HOST_TO_DEVICE) {
+    if (cpy_type == HOST_TO_FIM || cpy_type == HOST_TO_DEVICE) {
         if (hipMemcpy(dst, src, size, hipMemcpyHostToDevice) != hipSuccess) {
             return -1;
         }
-    } else if (cpyType == FIM_TO_HOST || cpyType == DEVICE_TO_HOST) {
+    } else if (cpy_type == FIM_TO_HOST || cpy_type == DEVICE_TO_HOST) {
         if (hipMemcpy(dst, src, size, hipMemcpyDeviceToHost) != hipSuccess) {
             return -1;
         }
-    } else if (cpyType == DEVICE_TO_FIM || cpyType == FIM_TO_DEVICE) {
+    } else if (cpy_type == DEVICE_TO_FIM || cpy_type == FIM_TO_DEVICE) {
         if (hipMemcpy(dst, src, size, hipMemcpyDeviceToDevice) != hipSuccess) {
             return -1;
         }
-    } else if (cpyType == HOST_TO_HOST) {
+    } else if (cpy_type == HOST_TO_HOST) {
         if (hipMemcpy(dst, src, size, hipMemcpyHostToHost) != hipSuccess) {
             return -1;
         }
@@ -137,25 +137,25 @@ int FimMemoryManager::CopyMemory(void* dst, void* src, size_t size, FimMemcpyTyp
     return ret;
 }
 
-int FimMemoryManager::CopyMemory(FimBo* dst, FimBo* src, FimMemcpyType cpyType)
+int FimMemoryManager::copy_memory(FimBo* dst, FimBo* src, FimMemCpyType cpy_type)
 {
     DLOG(INFO) << "called";
     int ret = 0;
     size_t size = dst->size;
 
-    if (cpyType == HOST_TO_FIM || cpyType == HOST_TO_DEVICE) {
+    if (cpy_type == HOST_TO_FIM || cpy_type == HOST_TO_DEVICE) {
         if (hipMemcpy(dst->data, src->data, size, hipMemcpyHostToDevice) != hipSuccess) {
             return -1;
         }
-    } else if (cpyType == FIM_TO_HOST || cpyType == DEVICE_TO_HOST) {
+    } else if (cpy_type == FIM_TO_HOST || cpy_type == DEVICE_TO_HOST) {
         if (hipMemcpy(dst->data, src->data, size, hipMemcpyDeviceToHost) != hipSuccess) {
             return -1;
         }
-    } else if (cpyType == DEVICE_TO_FIM || cpyType == FIM_TO_DEVICE) {
+    } else if (cpy_type == DEVICE_TO_FIM || cpy_type == FIM_TO_DEVICE) {
         if (hipMemcpy(dst->data, src->data, size, hipMemcpyDeviceToDevice) != hipSuccess) {
             return -1;
         }
-    } else if (cpyType == HOST_TO_HOST) {
+    } else if (cpy_type == HOST_TO_HOST) {
         if (hipMemcpy(dst->data, src->data, size, hipMemcpyHostToHost) != hipSuccess) {
             return -1;
         }
@@ -164,7 +164,7 @@ int FimMemoryManager::CopyMemory(FimBo* dst, FimBo* src, FimMemcpyType cpyType)
     return ret;
 }
 
-int FimMemoryManager::ConvertDataLayout(void* dst, void* src, size_t size, FimOpType opType)
+int FimMemoryManager::convert_data_layout(void* dst, void* src, size_t size, FimOpType op_type)
 {
     DLOG(INFO) << "called";
     int ret = 0;
@@ -175,7 +175,7 @@ int FimMemoryManager::ConvertDataLayout(void* dst, void* src, size_t size, FimOp
     return ret;
 }
 
-int FimMemoryManager::ConvertDataLayout(FimBo* dst, FimBo* src, FimOpType opType)
+int FimMemoryManager::convert_data_layout(FimBo* dst, FimBo* src, FimOpType op_type)
 {
     DLOG(INFO) << "called";
     int ret = 0;
@@ -187,14 +187,14 @@ int FimMemoryManager::ConvertDataLayout(FimBo* dst, FimBo* src, FimOpType opType
     return ret;
 }
 
-int FimMemoryManager::ConvertDataLayout(FimBo* dst, FimBo* src0, FimBo* src1, FimOpType opType)
+int FimMemoryManager::convert_data_layout(FimBo* dst, FimBo* src0, FimBo* src1, FimOpType op_type)
 {
     DLOG(INFO) << "called";
     int ret = 0;
 
-    if (opType == OP_ELT_ADD) {
-        convertDataLayoutForEltAdd(dst, src0, FimBankType::EVEN_BANK);
-        convertDataLayoutForEltAdd(dst, src1, FimBankType::ODD_BANK);
+    if (op_type == OP_ELT_ADD) {
+        convert_data_layout_for_elt_add(dst, src0, FimBankType::EVEN_BANK);
+        convert_data_layout_for_elt_add(dst, src1, FimBankType::ODD_BANK);
     } else {
         DLOG(ERROR) << "not yet implemented";
     }
@@ -203,7 +203,7 @@ int FimMemoryManager::ConvertDataLayout(FimBo* dst, FimBo* src0, FimBo* src1, Fi
 }
 
 #include "executor/fim_hip_kernels/fim_op_kernels.fimk"
-int FimMemoryManager::convertDataLayoutForEltAdd(FimBo* dst, FimBo* src, FimBankType fimBankType)
+int FimMemoryManager::convert_data_layout_for_elt_add(FimBo* dst, FimBo* src, FimBankType fim_bank_type)
 {
     DLOG(INFO) << "called";
     uint32_t ret = 0;
@@ -232,7 +232,7 @@ int FimMemoryManager::convertDataLayoutForEltAdd(FimBo* dst, FimBo* src, FimBank
         uint32_t col = 0;
 
         for (int grf_idx = 0; grf_idx < num_grf; grf_idx++) {
-            addr_op = addr_gen_safe(cidx, rank, bg, bank + (int)fimBankType, row, col);
+            addr_op = addr_gen_safe(cidx, rank, bg, bank + (int)fim_bank_type, row, col);
             memcpy(dst_data + addr_op, src_data + (x + grf_idx) * trans_size, trans_size);
             col++;
         }

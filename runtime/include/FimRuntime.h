@@ -15,25 +15,25 @@ class FimRuntime
     FimRuntime(FimRuntimeType rtType, FimPrecision precision);
     virtual ~FimRuntime(void) {}
 
-    int Initialize(void);
-    int Deinitialize(void);
-    int AllocMemory(void** ptr, size_t size, FimMemType memType);
-    int AllocMemory(FimBo* fimBo);
-    int FreeMemory(void* ptr, FimMemType memType);
-    int FreeMemory(FimBo* fimBo);
-    int ConvertDataLayout(void* dst, void* src, size_t size, FimOpType opType);
-    int ConvertDataLayout(FimBo* dst, FimBo* src, FimOpType opType);
-    int ConvertDataLayout(FimBo* dst, FimBo* src0, FimBo* src1, FimOpType opType);
-    int CopyMemory(void* dst, void* src, size_t size, FimMemcpyType);
-    int CopyMemory(FimBo* dst, FimBo* src, FimMemcpyType);
-    int Execute(void* output, void* operand0, void* operand1, size_t size, FimOpType opType);
-    int Execute(FimBo* output, FimBo* operand0, FimBo* operand1, FimOpType opType);
-    int Execute(FimBo* output, FimBo* fimData, FimOpType opType);
+    int initialize(void);
+    int deinitialize(void);
+    int alloc_memory(void** ptr, size_t size, FimMemType mem_type);
+    int alloc_memory(FimBo* fimBo);
+    int free_memory(void* ptr, FimMemType mem_type);
+    int free_memory(FimBo* fimBo);
+    int convert_data_layout(void* dst, void* src, size_t size, FimOpType op_type);
+    int convert_data_layout(FimBo* dst, FimBo* src, FimOpType op_type);
+    int convert_data_layout(FimBo* dst, FimBo* src0, FimBo* src1, FimOpType op_type);
+    int copy_memory(void* dst, void* src, size_t size, FimMemCpyType cpy_type);
+    int copy_memory(FimBo* dst, FimBo* src, FimMemCpyType cpy_type);
+    int execute(void* output, void* operand0, void* operand1, size_t size, FimOpType op_type);
+    int execute(FimBo* output, FimBo* operand0, FimBo* operand1, FimOpType op_type);
+    int execute(FimBo* output, FimBo* fimData, FimOpType op_type);
 
    private:
-    fim::runtime::manager::FimManager* fimManager_;
-    fim::runtime::executor::FimExecutor* fimExecutor_;
-    FimRuntimeType rtType_;
+    fim::runtime::manager::FimManager* fim_manager_;
+    fim::runtime::executor::FimExecutor* fim_executor_;
+    FimRuntimeType rt_type_;
     FimPrecision precision_;
 };
 

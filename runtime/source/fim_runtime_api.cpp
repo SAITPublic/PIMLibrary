@@ -7,10 +7,10 @@
 
 using namespace fim::runtime;
 
-FimRuntime* fimRuntime = nullptr;
+FimRuntime* fim_runtime = nullptr;
 static bool log_initialized = false;
 
-int FimInitialize(FimRuntimeType rtType, FimPrecision precision)
+int FimInitialize(FimRuntimeType rt_type, FimPrecision precision)
 {
     if (!log_initialized) {
         google::InitGoogleLogging("FIMRuntime");
@@ -22,8 +22,8 @@ int FimInitialize(FimRuntimeType rtType, FimPrecision precision)
     FIM_PROFILE_TICK(Initialize);
     int ret = 0;
 
-    if (fimRuntime == nullptr) fimRuntime = new FimRuntime(rtType, precision);
-    ret = fimRuntime->Initialize();
+    if (fim_runtime == nullptr) fim_runtime = new FimRuntime(rt_type, precision);
+    ret = fim_runtime->initialize();
     FIM_PROFILE_TOCK(Initialize);
 
     return ret;
@@ -35,26 +35,26 @@ int FimDeinitialize(void)
     FIM_PROFILE_TICK(Deinitialize);
     int ret = 0;
 
-    if (fimRuntime != nullptr) {
-        ret = fimRuntime->Deinitialize();
-        delete fimRuntime;
-        fimRuntime = nullptr;
+    if (fim_runtime != nullptr) {
+        ret = fim_runtime->deinitialize();
+        delete fim_runtime;
+        fim_runtime = nullptr;
     }
     FIM_PROFILE_TOCK(Deinitialize);
 
     return ret;
 }
 
-int FimAllocMemory(void** ptr, size_t size, FimMemType memType)
+int FimAllocMemory(void** ptr, size_t size, FimMemType mem_type)
 {
     DLOG(INFO) << "called";
     FIM_PROFILE_TICK(AllocMemory);
     int ret = 0;
 
-    if (fimRuntime == nullptr) {
+    if (fim_runtime == nullptr) {
         return -1;
     }
-    ret = fimRuntime->AllocMemory(ptr, size, memType);
+    ret = fim_runtime->alloc_memory(ptr, size, mem_type);
     FIM_PROFILE_TOCK(AllocMemory);
 
     if (ptr == 0) return -1;
@@ -62,168 +62,168 @@ int FimAllocMemory(void** ptr, size_t size, FimMemType memType)
     return ret;
 }
 
-int FimAllocMemory(FimBo* fimBo)
+int FimAllocMemory(FimBo* fim_bo)
 {
     DLOG(INFO) << "called";
     FIM_PROFILE_TICK(AllocMemory);
     int ret = 0;
 
-    if (fimRuntime == nullptr) {
+    if (fim_runtime == nullptr) {
         return -1;
     }
-    ret = fimRuntime->AllocMemory(fimBo);
+    ret = fim_runtime->alloc_memory(fim_bo);
     FIM_PROFILE_TOCK(AllocMemory);
 
-    if (fimBo->data == 0) return -1;
+    if (fim_bo->data == 0) return -1;
 
     return ret;
 }
 
-int FimFreeMemory(void* ptr, FimMemType memType)
+int FimFreeMemory(void* ptr, FimMemType mem_type)
 {
     DLOG(INFO) << "called";
     FIM_PROFILE_TICK(FreeMemory);
     int ret = 0;
 
-    if (fimRuntime == nullptr) {
+    if (fim_runtime == nullptr) {
         return -1;
     }
-    ret = fimRuntime->FreeMemory(ptr, memType);
+    ret = fim_runtime->free_memory(ptr, mem_type);
     FIM_PROFILE_TOCK(FreeMemory);
 
     return ret;
 }
 
-int FimFreeMemory(FimBo* fimBo)
+int FimFreeMemory(FimBo* fim_bo)
 {
     DLOG(INFO) << "called";
     FIM_PROFILE_TICK(FreeMemory);
     int ret = 0;
 
-    if (fimRuntime == nullptr) {
+    if (fim_runtime == nullptr) {
         return -1;
     }
-    ret = fimRuntime->FreeMemory(fimBo);
+    ret = fim_runtime->free_memory(fim_bo);
     FIM_PROFILE_TOCK(FreeMemory);
 
     return ret;
 }
 
-int FimConvertDataLayout(void* dst, void* src, size_t size, FimOpType opType)
+int FimConvertDataLayout(void* dst, void* src, size_t size, FimOpType op_type)
 {
     DLOG(INFO) << "called";
     FIM_PROFILE_TICK(ConvertDataLayout);
     int ret = 0;
 
-    if (fimRuntime == nullptr) {
+    if (fim_runtime == nullptr) {
         return -1;
     }
-    ret = fimRuntime->ConvertDataLayout(dst, src, size, opType);
+    ret = fim_runtime->convert_data_layout(dst, src, size, op_type);
     FIM_PROFILE_TOCK(ConvertDataLayout);
 
     return ret;
 }
 
-int FimConvertDataLayout(FimBo* dst, FimBo* src, FimOpType opType)
+int FimConvertDataLayout(FimBo* dst, FimBo* src, FimOpType op_type)
 {
     DLOG(INFO) << "called";
     FIM_PROFILE_TICK(ConvertDataLayout);
     int ret = 0;
 
-    if (fimRuntime == nullptr) {
+    if (fim_runtime == nullptr) {
         return -1;
     }
-    ret = fimRuntime->ConvertDataLayout(dst, src, opType);
+    ret = fim_runtime->convert_data_layout(dst, src, op_type);
     FIM_PROFILE_TOCK(ConvertDataLayout);
 
     return ret;
 }
 
-int FimConvertDataLayout(FimBo* dst, FimBo* src0, FimBo* src1, FimOpType opType)
+int FimConvertDataLayout(FimBo* dst, FimBo* src0, FimBo* src1, FimOpType op_type)
 {
     DLOG(INFO) << "called";
     FIM_PROFILE_TICK(ConvertDataLayout);
     int ret = 0;
 
-    if (fimRuntime == nullptr) {
+    if (fim_runtime == nullptr) {
         return -1;
     }
-    ret = fimRuntime->ConvertDataLayout(dst, src0, src1, opType);
+    ret = fim_runtime->convert_data_layout(dst, src0, src1, op_type);
     FIM_PROFILE_TOCK(ConvertDataLayout);
 
     return ret;
 }
 
-int FimCopyMemory(void* dst, void* src, size_t size, FimMemcpyType cpyType)
+int FimCopyMemory(void* dst, void* src, size_t size, FimMemCpyType cpy_type)
 {
     DLOG(INFO) << "called";
     FIM_PROFILE_TICK(CopyMemory);
     int ret = 0;
 
-    if (fimRuntime == nullptr) {
+    if (fim_runtime == nullptr) {
         return -1;
     }
-    ret = fimRuntime->CopyMemory(dst, src, size, cpyType);
+    ret = fim_runtime->copy_memory(dst, src, size, cpy_type);
     FIM_PROFILE_TOCK(CopyMemory);
 
     return ret;
 }
 
-int FimCopyMemory(FimBo* dst, FimBo* src, FimMemcpyType cpyType)
+int FimCopyMemory(FimBo* dst, FimBo* src, FimMemCpyType cpy_type)
 {
     DLOG(INFO) << "called";
     FIM_PROFILE_TICK(CopyMemory);
     int ret = 0;
 
-    if (fimRuntime == nullptr) {
+    if (fim_runtime == nullptr) {
         return -1;
     }
-    ret = fimRuntime->CopyMemory(dst, src, cpyType);
+    ret = fim_runtime->copy_memory(dst, src, cpy_type);
     FIM_PROFILE_TOCK(CopyMemory);
 
     return ret;
 }
 
-int FimExecute(void* output, void* operand0, void* operand1, size_t size, FimOpType opType)
+int FimExecute(void* output, void* operand0, void* operand1, size_t size, FimOpType op_type)
 {
     DLOG(INFO) << "called";
     FIM_PROFILE_TICK(Execute);
     int ret = 0;
 
-    if (fimRuntime == nullptr) {
+    if (fim_runtime == nullptr) {
         return -1;
     }
-    ret = fimRuntime->Execute(output, operand0, operand1, size, opType);
+    ret = fim_runtime->execute(output, operand0, operand1, size, op_type);
     FIM_PROFILE_TOCK(Execute);
 
     return ret;
 }
 
-int FimExecute(FimBo* output, FimBo* operand0, FimBo* operand1, FimOpType opType)
+int FimExecute(FimBo* output, FimBo* operand0, FimBo* operand1, FimOpType op_type)
 {
     DLOG(INFO) << "called";
     FIM_PROFILE_TICK(Execute);
     int ret = 0;
 
-    if (fimRuntime == nullptr) {
+    if (fim_runtime == nullptr) {
         return -1;
     }
-    ret = fimRuntime->Execute(output, operand0, operand1, opType);
+    ret = fim_runtime->execute(output, operand0, operand1, op_type);
     FIM_PROFILE_TOCK(Execute);
 
     return ret;
 }
 
-int FimExecute(FimBo* output, FimBo* fimData, FimOpType opType)
+int FimExecute(FimBo* output, FimBo* fim_data, FimOpType op_type)
 {
     DLOG(INFO) << "called";
     FIM_PROFILE_TICK(Execute);
     int ret = 0;
 
-    if (fimRuntime == nullptr) {
+    if (fim_runtime == nullptr) {
         return -1;
     }
-    ret = fimRuntime->Execute(output, fimData, opType);
+    ret = fim_runtime->execute(output, fim_data, op_type);
     FIM_PROFILE_TOCK(Execute);
 
     return ret;

@@ -12,40 +12,40 @@ namespace manager
 {
 FimDevice::FimDevice(FimPrecision precision) : precision_(precision) { DLOG(INFO) << "called"; }
 FimDevice::~FimDevice(void) {}
-int FimDevice::Initialize(void)
+int FimDevice::initialize(void)
 {
     DLOG(INFO) << "called";
     int ret = 0;
 
     /* open fim device driver */
-    ret = OpenDevice();
+    ret = open_device();
 
     return ret;
 }
 
-int FimDevice::Deinitialize(void)
+int FimDevice::deinitialize(void)
 {
     DLOG(INFO) << "called";
     int ret = 0;
 
     /* close fim device driver */
-    ret = CloseDevice();
+    ret = close_device();
 
     return ret;
 }
 
-int FimDevice::RequestIoctl(void)
+int FimDevice::request_ioctl(void)
 {
     DLOG(INFO) << "called";
     int ret = 0;
 
     /* ioctl by fim command */
-    ret = RequestIoctl();
+    ret = request_ioctl();
 
     return ret;
 }
 
-int FimDevice::OpenDevice(void)
+int FimDevice::open_device(void)
 {
     DLOG(INFO) << "called";
     int ret = 0;
@@ -53,7 +53,7 @@ int FimDevice::OpenDevice(void)
     return ret;
 }
 
-int FimDevice::CloseDevice(void)
+int FimDevice::close_device(void)
 {
     DLOG(INFO) << "called";
     int ret = 0;
