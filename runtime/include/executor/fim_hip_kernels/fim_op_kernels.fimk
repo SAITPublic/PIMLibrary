@@ -5,6 +5,11 @@
 #include "utility/fim_util.h"
 #include "fim_crf_bins.h"
 
+#ifdef EMULATOR
+uint64_t g_fba;
+FimMemTraceData* g_fmtd16;
+int g_ridx;
+#endif
 
 __global__ void dummy_kernel(void)
 {
@@ -14,18 +19,28 @@ __global__ void elt_add_fim_1cu_1th_fp16(
     volatile uint8_t* __restrict__ fim_data,
     volatile uint8_t* __restrict__ fim_ctr,
     volatile uint8_t* __restrict__ output,
-    int size)
+    int size,
+    FimMemTraceData* fmtd16,
+    int* frd_size)
 {
-	/* Radeon7(VEGA20) memory is 16GB but our target is 32GB system */
+#ifdef EMULATOR
+    g_fba = (uint64_t)fim_ctr;
+    g_fmtd16 = fmtd16;
+    g_ridx = 0;
+#endif
+    /* Radeon7(VEGA20) memory is 16GB but our target is 32GB system */
     /* so program_crf and chagne_fim_mode functions can not access to over 8GB in our system */
     park_in(fim_ctr);
     change_fim_mode(fim_ctr, SB_MODE, HAB_MODE);
-//    program_crf(fim_ctr, elt_add_crf, sizeof(elt_add_crf));
-//    change_fim_mode(fim_ctr, HAB_MODE, HAB_FIM_MODE);
+    program_crf(fim_ctr, elt_add_crf, sizeof(elt_add_crf));
+    change_fim_mode(fim_ctr, HAB_MODE, HAB_FIM_MODE);
     compute_elt_add(fim_data, get_num_tile(size));
-//    change_fim_mode(fim_ctr, HAB_FIM_MODE, HAB_MODE);
+    change_fim_mode(fim_ctr, HAB_FIM_MODE, HAB_MODE);
     change_fim_mode(fim_ctr, HAB_MODE, SB_MODE);
     park_out(fim_ctr);
+#ifdef EMULATOR
+    frd_size[0] = g_ridx;
+#endif
 }
 
 #endif /* _FIM_OP_KERNELS_FIMK_ */

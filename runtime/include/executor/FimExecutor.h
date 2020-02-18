@@ -1,6 +1,7 @@
 #ifndef _FIM_EXECUTOR_H_
 #define _FIM_EXECUTOR_H_
 
+#include "emulator/FimEmulator.h"
 #include "fim_data_types.h"
 #include "hip/hip_fp16.h"
 #include "hip/hip_runtime.h"
@@ -28,10 +29,15 @@ class FimExecutor
    private:
     FimRuntimeType rt_type_;
     FimPrecision precision_;
-    FimBlockInfo fbi_;
     hipDeviceProp_t dev_prop_;
     size_t thread_cnt_;
     uint64_t fim_base_addr_;
+#ifdef EMULATOR
+    fim::runtime::emulator::FimEmulator* fim_emulator_;
+    FimMemTraceData* fmtd16_;
+    FimMemTraceData* fmtd32_;
+    int* fmtd16_size_;
+#endif
 };
 
 } /* namespace executor */

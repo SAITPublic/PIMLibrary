@@ -4,6 +4,8 @@
 #include <stddef.h>
 #include "hip/hip_fp16.h"
 
+#define EMULATOR
+
 #define __FIM_API__
 
 #define FP16 _Float16
@@ -94,12 +96,12 @@ typedef struct __FimBlockInfo {
     int num_fim_chan;
 } FimBlockInfo;
 
-typedef struct __FimRecordInfo {
+typedef struct __FimMemTraceData {
+    uint8_t data[32];
+    uint64_t addr;
     int block_id;
     int thread_id;
     char cmd;
-    uint64_t addr;
-    char data[16];
-} FimRecordInfo;
+} FimMemTraceData;
 
 #endif /* _FIM_DATA_TYPE_H_ */
