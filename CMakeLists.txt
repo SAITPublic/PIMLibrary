@@ -37,6 +37,7 @@ message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
 message(STATUS "CMAKE_C_FLAGS: ${CMAKE_C_FLAGS}")
 
 include_directories("${PROJECT_SOURCE_DIR}/runtime/include"
+                    "${PROJECT_SOURCE_DIR}/external_libs/include"
                     "${PROJECT_SOURCE_DIR}/tools/crfcodegen/include"
                     "${PROJECT_SOURCE_DIR}/tools/profiler/include"
                     "${ROCM_PATH}/include")
@@ -45,4 +46,3 @@ link_directories("${ROCM_PATH}/hsa/lib" "${ROCM_PATH}/libhsakmt/lib" "${PROJECT_
 add_subdirectory(runtime/source)
 add_subdirectory(examples)
 add_subdirectory(tools)
-add_subdirectory(external_libs)
