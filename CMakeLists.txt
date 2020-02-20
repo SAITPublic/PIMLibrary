@@ -43,6 +43,6 @@ include_directories("${PROJECT_SOURCE_DIR}/runtime/include"
                     "${ROCM_PATH}/include")
 link_directories("${ROCM_PATH}/hsa/lib" "${ROCM_PATH}/libhsakmt/lib" "${PROJECT_SOURCE_DIR}/external_libs")
 
-add_subdirectory(runtime/source)
+add_subdirectory(runtime)
 add_subdirectory(examples)
 add_subdirectory(tools)
