@@ -12,8 +12,6 @@
 
 using namespace std;
 
-int verifyResult(FimBo& host_input, FimBo& host_weight, FimBo& host_output, FimBo& device_output);
-
 int fim_elt_add(void)
 {
     int ret = 0;

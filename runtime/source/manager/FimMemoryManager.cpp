@@ -202,7 +202,6 @@ int FimMemoryManager::convert_data_layout(FimBo* dst, FimBo* src0, FimBo* src1, 
     return ret;
 }
 
-#include "executor/fim_hip_kernels/fim_op_kernels.fimk"
 int FimMemoryManager::convert_data_layout_for_elt_add(FimBo* dst, FimBo* src, FimBankType fim_bank_type)
 {
     DLOG(INFO) << "called";

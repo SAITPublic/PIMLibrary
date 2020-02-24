@@ -28,6 +28,7 @@ FimBlockInfo vega20_fbi = {
     .num_fim_blocks = 8,
     .num_fim_rank = 1,
     .num_fim_chan = 64,
+    .trans_size = 32,
 };
 
 uint8_t null_bst[32] = {
@@ -118,14 +119,14 @@ __device__ inline void GEN_WRITE_CMD(volatile uint8_t* __restrict__ dst, volatil
     g_ridx++;
 }
 
-__device__ inline void GEN_READ_CMD(volatile uint8_t* __restrict__ dst, volatile uint8_t* __restrict__ src)
+__device__ inline void GEN_READ_CMD(volatile uint8_t* __restrict__ dst, volatile uint8_t* __restrict__ src, bool is_output = false)
 {
     int bid = hipBlockIdx_x;
     int tid = hipThreadIdx_x;
 
     g_fmtd16[g_ridx].block_id = bid;
     g_fmtd16[g_ridx].thread_id = tid;
-    g_fmtd16[g_ridx].cmd = 'R';
+    g_fmtd16[g_ridx].cmd = (is_output == true) ? 'O' : 'R';
     g_fmtd16[g_ridx].addr = (uint64_t)src - g_fba;
     g_ridx++;
 }
@@ -151,7 +152,7 @@ __device__ inline void GEN_WRITE_CMD(volatile uint8_t* __restrict__ dst, volatil
     asm volatile("global_store_dwordx4 %0, v[27:30], off\n\t" ::"v"(dst) : "v27", "v28", "v29", "v30");
 }
 
-__device__ inline void GEN_READ_CMD(volatile uint8_t* __restrict__ dst, volatile uint8_t* __restrict__ src)
+__device__ inline void GEN_READ_CMD(volatile uint8_t* __restrict__ dst, volatile uint8_t* __restrict__ src, bool is_output = false)
 {
     asm volatile("global_load_dwordx4 v[27:30], %0, off\n\t" ::"v"(src) : "v27", "v28", "v29", "v30");
 }
@@ -290,6 +291,56 @@ __device__ inline int get_num_tile(int dim)
     int tile = dim / num_parallelism;
 
     return tile;
+}
+
+__device__ inline int get_result_col(int dim)
+{
+    FimBlockInfo* fbi = &vega20_fbi;
+
+    return dim / (fbi->num_fim_blocks * fbi->num_fim_chan * fbi->num_fim_rank);
+}
+
+__device__ inline void read_result(volatile uint8_t* __restrict__ output, volatile uint8_t* __restrict__ fim_data,
+                         FimBankType bank_type, int out_dim, uint32_t s_row, uint32_t s_col)
+{
+    FimBlockInfo* fbi = &vega20_fbi;
+    uint32_t cidx = 0;
+    uint32_t rank = 0;
+    uint32_t bg = 0;
+    uint32_t bank = 0;
+    uint32_t row = 0;
+    uint32_t col = 0;
+    uint64_t t_addr;
+
+    for (int x = 0; x < out_dim; x += fbi->num_grf) {
+        row = s_row;
+        col = s_col;
+        for (int grf_idx = 0; grf_idx < fbi->num_grf; grf_idx++) {
+            t_addr = addr_gen_safe(cidx, rank, bg, bank + (uint32_t)bank_type, row, col);
+            GEN_READ_CMD(output + x + grf_idx, &fim_data[t_addr], true);
+            GEN_READ_CMD(output + x + grf_idx + 0x10, &fim_data[t_addr + 0x10], true);
+            col++;
+        }
+
+        bank += (fbi->num_banks / fbi->num_fim_blocks);
+        if (bank >= (fbi->num_banks / fbi->num_bank_groups)) {
+            bg++;
+            bank = 0;
+        }
+        if (bg >= fbi->num_bank_groups) {
+            bg = 0;
+            rank++;
+        }
+        if (rank >= fbi->num_fim_rank) {
+            rank = 0;
+            cidx++;
+        }
+        if (cidx >= fbi->num_fim_chan) {
+            cidx = 0;
+            s_row = row;
+            s_col = col;
+        }
+    }
 }
 
 #endif /* _FIM_UTIL_H_ */

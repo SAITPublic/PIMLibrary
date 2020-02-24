@@ -28,16 +28,20 @@ __global__ void elt_add_fim_1cu_1th_fp16(
     g_fmtd16 = fmtd16;
     g_ridx = 0;
 #endif
+    FimBlockInfo* fbi = &vega20_fbi;
+    int out_dim = size / fbi->trans_size;
+
     /* Radeon7(VEGA20) memory is 16GB but our target is 32GB system */
     /* so program_crf and chagne_fim_mode functions can not access to over 8GB in our system */
     park_in(fim_ctr);
     change_fim_mode(fim_ctr, SB_MODE, HAB_MODE);
     program_crf(fim_ctr, elt_add_crf, sizeof(elt_add_crf));
     change_fim_mode(fim_ctr, HAB_MODE, HAB_FIM_MODE);
-    compute_elt_add(fim_data, get_num_tile(size));
+    compute_elt_add(fim_data, get_num_tile(out_dim));
     change_fim_mode(fim_ctr, HAB_FIM_MODE, HAB_MODE);
     change_fim_mode(fim_ctr, HAB_MODE, SB_MODE);
     park_out(fim_ctr);
+    read_result(output, fim_data, FimBankType::ODD_BANK,  out_dim, 0, get_result_col(out_dim));
 #ifdef EMULATOR
     frd_size[0] = g_ridx;
 #endif
