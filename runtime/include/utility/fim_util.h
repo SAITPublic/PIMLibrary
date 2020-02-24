@@ -119,7 +119,8 @@ __device__ inline void GEN_WRITE_CMD(volatile uint8_t* __restrict__ dst, volatil
     g_ridx++;
 }
 
-__device__ inline void GEN_READ_CMD(volatile uint8_t* __restrict__ dst, volatile uint8_t* __restrict__ src, bool is_output = false)
+__device__ inline void GEN_READ_CMD(volatile uint8_t* __restrict__ dst, volatile uint8_t* __restrict__ src,
+                                    bool is_output = false)
 {
     int bid = hipBlockIdx_x;
     int tid = hipThreadIdx_x;
@@ -152,7 +153,8 @@ __device__ inline void GEN_WRITE_CMD(volatile uint8_t* __restrict__ dst, volatil
     asm volatile("global_store_dwordx4 %0, v[27:30], off\n\t" ::"v"(dst) : "v27", "v28", "v29", "v30");
 }
 
-__device__ inline void GEN_READ_CMD(volatile uint8_t* __restrict__ dst, volatile uint8_t* __restrict__ src, bool is_output = false)
+__device__ inline void GEN_READ_CMD(volatile uint8_t* __restrict__ dst, volatile uint8_t* __restrict__ src,
+                                    bool is_output = false)
 {
     asm volatile("global_load_dwordx4 v[27:30], %0, off\n\t" ::"v"(src) : "v27", "v28", "v29", "v30");
 }
@@ -301,7 +303,7 @@ __device__ inline int get_result_col(int dim)
 }
 
 __device__ inline void read_result(volatile uint8_t* __restrict__ output, volatile uint8_t* __restrict__ fim_data,
-                         FimBankType bank_type, int out_dim, uint32_t s_row, uint32_t s_col)
+                                   FimBankType bank_type, int out_dim, uint32_t s_row, uint32_t s_col)
 {
     FimBlockInfo* fbi = &vega20_fbi;
     uint32_t cidx = 0;

@@ -48,8 +48,7 @@ int dump_fmtd16(const char* filename, FimMemTraceData* fmtd16, size_t fmtd16_siz
     }
 
     for (int i = 0; i < fmtd16_size; i++) {
-        fprintf(fp, "%d\t%d\t%d\t%c\t0x%lX", i, fmtd16[i].block_id, fmtd16[i].thread_id, fmtd16[i].cmd,
-                fmtd16[i].addr);
+        fprintf(fp, "%d\t%d\t%d\t%c\t0x%lX", i, fmtd16[i].block_id, fmtd16[i].thread_id, fmtd16[i].cmd, fmtd16[i].addr);
         if (fmtd16[i].cmd == 'W') {
             for (int d = 0; d < 16; d++) fprintf(fp, "%c", fmtd16[i].data[d]);
         }
