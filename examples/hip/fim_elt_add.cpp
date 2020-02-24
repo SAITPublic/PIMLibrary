@@ -37,15 +37,14 @@ int fim_elt_add(void)
     FimAllocMemory(&fim_weight);
 
     /* Initialize the input, weight, output data */
-    load_fp16_data("../test_vectors/load/elt_add_input0_64K_fp16.txt", (FP16*)host_input.data, host_input.size);
-    load_fp16_data("../test_vectors/load/elt_add_input1_64K_fp16.txt", (FP16*)host_weight.data, host_weight.size);
-    load_fp16_data("../test_vectors/load/elt_add_output_64K_fp16.txt", (FP16*)host_output.data, host_output.size);
+    load_data("../test_vectors/load/elt_add_input0_64KB.txt", (char*)host_input.data, host_input.size);
+    load_data("../test_vectors/load/elt_add_input1_64KB.txt", (char*)host_weight.data, host_weight.size);
+    load_data("../test_vectors/load/elt_add_output_64KB.txt", (char*)host_output.data, host_output.size);
 
     /* __FIM_API__ call : Preload weight data on FIM memory */
     FimConvertDataLayout(&fim_weight, &host_input, &host_weight, OP_ELT_ADD);
 
-    dump_fp16_data("../test_vectors/dump/elt_add_preloaded_input_128K_fp16.txt", (FP16*)fim_weight.data,
-                   fim_weight.size);
+    dump_data("../test_vectors/dump/elt_add_preloaded_input_256KB.txt", (char*)fim_weight.data, fim_weight.size);
 
     /* __FIM_API__ call : Execute FIM kernel (ELT_ADD) */
     FimExecute(&device_output, &fim_weight, OP_ELT_ADD);

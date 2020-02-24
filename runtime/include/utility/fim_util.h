@@ -11,7 +11,7 @@
 FimBlockInfo vega20_fbi = {
     .fim_addr_map = AMDGPU_VEGA20,
     .num_banks = 16,
-    .num_bank_groups = 8,
+    .num_bank_groups = 4,
     .num_rank_bit = 1,
     .num_row_bit = 14,
     .num_col_high_bit = 3,
