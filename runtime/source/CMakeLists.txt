@@ -17,4 +17,4 @@ endif()
 message(STATUS "FIM Log level is " $ENV{FIM_LOG_LEVEL})
 
 add_library(FimRuntime SHARED ${runtime_source})
-target_link_libraries (FimRuntime glog)
+target_link_libraries (FimRuntime glog gflags)
