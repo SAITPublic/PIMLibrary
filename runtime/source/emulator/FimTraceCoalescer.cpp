@@ -4,25 +4,29 @@ namespace fim
 {
 namespace runtime
 {
-
-void TraceParser::parse()
+void TraceParser::parse(std::string file_name)
 {
+    FILE *file_ptr = fopen(file_name.c_str(), "r");
+    if (file_ptr == NULL) {
+        std::cout << "Trace file" << file_name << " not found\n";
+        exit(1);
+    }
     char type_str[10];
     // TODO: bar_id for each channel
     int bar_id = 0;
     char addr[33], write_data[65];
     DATA int_addr;
-    while (scanf("%s", type_str) > 0) {
+    while (fscanf(file_ptr, "%s", type_str) > 0) {
         if (!strcmp(type_str, "BAR")) {
             cur_vec_.push_back(Cmd(Barrier, bar_id, NULL));
         } else if (!strcmp(type_str, "READ")) {
-            std::cin >> addr;
+            fscanf(file_ptr, "%s", addr);
             int_addr = hex_to_int(addr);
             cur_vec_.push_back(Cmd(MemRead, int_addr, NULL));
         } else if (!strcmp(type_str, "WRITE")) {
-            std::cin >> std::hex >> addr;
+            fscanf(file_ptr, "%s", addr);
             int_addr = hex_to_int(addr);
-            scanf("%s", write_data);
+            fscanf(file_ptr, "%s", write_data);
             cur_vec_.push_back(Cmd(MemWrite, int_addr, write_data));
         }
     }
@@ -30,12 +34,14 @@ void TraceParser::parse()
 
 void TraceParser::coalesce_traces()
 {
+    coalesced_mem_trace_.clear();
     DATA prev_addr;
     TraceType prev_cmd = Barrier;
     for (int trace_it = 0; trace_it < (int)cur_vec_.size(); trace_it++) {
         switch (cur_vec_[trace_it].type_) {
             case Barrier:
                 std::cout << "BAR " << cur_vec_[trace_it].data_ << "\n";
+                coalesced_mem_trace_.push_back(Cmd(cur_vec_[trace_it]));
                 prev_addr = -1;
                 prev_cmd = Barrier;
                 break;
@@ -47,12 +53,14 @@ void TraceParser::coalesce_traces()
                         std::cout << "READ  ";
                         print_hex_base(cur_vec_[trace_it].data_);
                         std::cout << "\n";
+                        coalesced_mem_trace_.push_back(Cmd(cur_vec_[trace_it]));
                         prev_addr = cur_vec_[trace_it].data_;
                     }
                 } else {
                     std::cout << "READ  ";
                     print_hex_base(cur_vec_[trace_it].data_);
                     std::cout << "\n";
+                    coalesced_mem_trace_.push_back(Cmd(cur_vec_[trace_it]));
                     prev_addr = cur_vec_[trace_it].data_;
                 }
                 prev_cmd = MemRead;
@@ -64,6 +72,7 @@ void TraceParser::coalesce_traces()
                         for (int i = 0; cur_vec_[trace_it].write_data_[i] != '\0'; i++)
                             std::cout << cur_vec_[trace_it].write_data_[i];
                         std::cout << "\n";
+                        coalesced_mem_trace_.back().append_data(cur_vec_[trace_it].write_data_);
                     } else {
                         std::cout << "WRITE  ";
                         print_hex_base(cur_vec_[trace_it].data_);
@@ -71,6 +80,8 @@ void TraceParser::coalesce_traces()
                         // TODO: Which data to print?
                         for (int i = 0; cur_vec_[trace_it].write_data_[i] != '\0'; i++)
                             std::cout << cur_vec_[trace_it].write_data_[i];
+
+                        coalesced_mem_trace_.push_back(Cmd(cur_vec_[trace_it]));
                         prev_addr = cur_vec_[trace_it].data_;
                     }
                 } else {
@@ -78,7 +89,10 @@ void TraceParser::coalesce_traces()
                     print_hex_base(cur_vec_[trace_it].data_);
                     std::cout << " ";
                     // TODO: Which data to print?
-                    for (int i = 0; cur_vec_[trace_it].write_data_[i] != '\0'; i++) std::cout << cur_vec_[trace_it].write_data_[i];
+                    for (int i = 0; cur_vec_[trace_it].write_data_[i] != '\0'; i++)
+                        std::cout << cur_vec_[trace_it].write_data_[i];
+
+                    coalesced_mem_trace_.push_back(Cmd(cur_vec_[trace_it]));
                     prev_addr = cur_vec_[trace_it].data_;
                 }
                 prev_cmd = MemWrite;
@@ -129,6 +143,51 @@ void TraceParser::print_hex_base(DATA addr)
         std::cout << hex_print[index];
         index--;
     }
+}
+
+std::vector<Cmd> &TraceParser::get_trace_data()
+{
+    return cur_vec_;
+}
+
+bool TraceParser::verify_coalesced_trace(std::vector<Cmd> verified_trace)
+{
+    if (coalesced_mem_trace_.size() != verified_trace.size()) {
+        std::cout << "Size mismatch\n";
+        return false;
+    }
+
+    for (int i = 0; i < (int)coalesced_mem_trace_.size(); i++) {
+        if (coalesced_mem_trace_[i].type_ != verified_trace[i].type_) {
+            std::cout << "Trace file Cmd  mismatched at point. Expected "
+                      << verified_trace[i].type_ << " got " << coalesced_mem_trace_[i].type_ << "\n";
+            return false;
+        }
+        if (coalesced_mem_trace_[i].type_ == Barrier) {
+            if (coalesced_mem_trace_[i].data_ != verified_trace[i].data_) {
+                std::cout << "Trace file Barrier Channel mismatched at point. Expected "
+                          << verified_trace[i].data_ << " got " << coalesced_mem_trace_[i].data_ << "\n";
+                return false;
+            }
+        } else {
+            if (coalesced_mem_trace_[i].data_ != verified_trace[i].data_) {
+                std::cout << "Trace file MemRead/Write Address mismatched at point. Expected "
+                          << verified_trace[i].data_ << " got " << coalesced_mem_trace_[i].data_ << "\n";
+                return false;
+            }
+            if (coalesced_mem_trace_[i].type_ == MemWrite) {
+                for (int dataIt = 0; coalesced_mem_trace_[i].write_data_[dataIt] != '\0'; dataIt++) {
+                    if (coalesced_mem_trace_[i].write_data_[dataIt] != verified_trace[i].write_data_[dataIt]) {
+                        std::cout << "Trace file MemWrite data mismatched at point. Expected "
+                                  << verified_trace[i].write_data_[dataIt]
+                                  << " got " << coalesced_mem_trace_[i].write_data_[dataIt] << "\n";
+                        return false;
+                    }
+                }
+            }
+        }
+    }
+    return true;
 }
 
 } /* namespace runtime */
