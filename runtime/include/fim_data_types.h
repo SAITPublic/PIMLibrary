@@ -8,7 +8,6 @@
 
 #define __FIM_API__
 
-
 inline float convertH2F(_Float16 h_val) { return __half2float(h_val); }
 
 inline _Float16 convertF2H(float f_val) { return __float2half(f_val); }

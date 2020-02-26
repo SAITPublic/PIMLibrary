@@ -43,10 +43,11 @@ int FimExecutor::initialize(void)
     std::cout << " hip Device prop succeeded " << std::endl;
 
 #ifdef EMULATOR
-    int reserved_size = 1024 * 1024 * 1024;
-    hipMalloc((void**)&fim_base_addr_, reserved_size);
-    fmtd16_ = (FimMemTraceData*)(fim_base_addr_ + 256 * 1024 * 1024);
-    fmtd32_ = (FimMemTraceData*)(fim_base_addr_ + 512 * 1024 * 1024);
+    int dummy_size = 1;
+    int reserved_fmtd_size = 4 * 1024 * 1024;
+    hipMalloc((void**)&fim_base_addr_, dummy_size);
+    hipMalloc((void**)&fmtd16_, reserved_fmtd_size);
+    hipMalloc((void**)&fmtd32_, reserved_fmtd_size);
     hipMalloc((void**)&fmtd16_size_, sizeof(int));
 #else
     /* TODO: get fim control base address from device driver */
@@ -71,6 +72,8 @@ int FimExecutor::deinitialize(void)
 
 #ifdef EMULATOR
     hipFree((void*)fim_base_addr_);
+    hipFree((void*)fmtd16_);
+    hipFree((void*)fmtd32_);
     hipFree((void*)fmtd16_size_);
 #endif
 
