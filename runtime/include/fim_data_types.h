@@ -8,12 +8,10 @@
 
 #define __FIM_API__
 
-#define FP16 _Float16
-#define INT8 char
 
-inline float convertH2F(FP16 h_val) { return __half2float(h_val); }
+inline float convertH2F(_Float16 h_val) { return __half2float(h_val); }
 
-inline FP16 convertF2H(float f_val) { return __float2half(f_val); }
+inline _Float16 convertF2H(float f_val) { return __float2half(f_val); }
 
 typedef enum __FimRuntimeType {
     RT_TYPE_HIP,

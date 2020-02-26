@@ -14,7 +14,7 @@ using namespace std;
 
 bool simple_fim_alloc_free()
 {
-    FimBo fim_weight = {.size = LENGTH * sizeof(FP16), .mem_type = MEM_TYPE_FIM};
+    FimBo fim_weight = {.size = LENGTH * sizeof(_Float16 ), .mem_type = MEM_TYPE_FIM};
 
     FimInitialize(RT_TYPE_HIP, FIM_FP16);
 
@@ -31,7 +31,7 @@ bool simple_fim_alloc_free()
 
 bool fim_repeat_allocate_free(void)
 {
-    FimBo fim_weight = {.size = LENGTH * sizeof(FP16), .mem_type = MEM_TYPE_FIM};
+    FimBo fim_weight = {.size = LENGTH * sizeof(_Float16 ), .mem_type = MEM_TYPE_FIM};
 
     FimInitialize(RT_TYPE_HIP, FIM_FP16);
 
@@ -51,7 +51,7 @@ bool fim_repeat_allocate_free(void)
 
 bool fim_allocate_exceed_blocksize(void)
 {
-    FimBo fim_weight = {.size = LENGTH * sizeof(FP16) * 1024 * 1024, .mem_type = MEM_TYPE_FIM};
+    FimBo fim_weight = {.size = LENGTH * sizeof(_Float16 ) * 1024 * 1024, .mem_type = MEM_TYPE_FIM};
 
     FimInitialize(RT_TYPE_HIP, FIM_FP16);
 
