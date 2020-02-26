@@ -13,7 +13,7 @@ int test_fim_trace_parser()
     fim::runtime::TraceParser verify;
     verify.parse(verify_file_name);
 
-    if(!p.verify_coalesced_trace(verify.get_trace_data())) {
+    if (!p.verify_coalesced_trace(verify.get_trace_data())) {
         std::cout << "Verification failed\n\n";
     }
 

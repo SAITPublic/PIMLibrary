@@ -10,7 +10,6 @@ namespace fim
 {
 namespace runtime
 {
-
 // TODO: Define Stride for each FIM configuration
 #define TRANS_SIZE 0x10
 
@@ -61,7 +60,7 @@ class TraceParser
     std::vector<Cmd> &get_trace_data();
     bool verify_coalesced_trace(std::vector<Cmd> verified_trace);
 
-  private:
+   private:
     std::vector<Cmd> cur_vec_;
     std::vector<Cmd> coalesced_mem_trace_;
 };

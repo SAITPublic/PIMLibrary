@@ -145,10 +145,7 @@ void TraceParser::print_hex_base(DATA addr)
     }
 }
 
-std::vector<Cmd> &TraceParser::get_trace_data()
-{
-    return cur_vec_;
-}
+std::vector<Cmd> &TraceParser::get_trace_data() { return cur_vec_; }
 
 bool TraceParser::verify_coalesced_trace(std::vector<Cmd> verified_trace)
 {
@@ -159,14 +156,14 @@ bool TraceParser::verify_coalesced_trace(std::vector<Cmd> verified_trace)
 
     for (int i = 0; i < (int)coalesced_mem_trace_.size(); i++) {
         if (coalesced_mem_trace_[i].type_ != verified_trace[i].type_) {
-            std::cout << "Trace file Cmd  mismatched at point. Expected "
-                      << verified_trace[i].type_ << " got " << coalesced_mem_trace_[i].type_ << "\n";
+            std::cout << "Trace file Cmd  mismatched at point. Expected " << verified_trace[i].type_ << " got "
+                      << coalesced_mem_trace_[i].type_ << "\n";
             return false;
         }
         if (coalesced_mem_trace_[i].type_ == Barrier) {
             if (coalesced_mem_trace_[i].data_ != verified_trace[i].data_) {
-                std::cout << "Trace file Barrier Channel mismatched at point. Expected "
-                          << verified_trace[i].data_ << " got " << coalesced_mem_trace_[i].data_ << "\n";
+                std::cout << "Trace file Barrier Channel mismatched at point. Expected " << verified_trace[i].data_
+                          << " got " << coalesced_mem_trace_[i].data_ << "\n";
                 return false;
             }
         } else {
@@ -179,8 +176,8 @@ bool TraceParser::verify_coalesced_trace(std::vector<Cmd> verified_trace)
                 for (int dataIt = 0; coalesced_mem_trace_[i].write_data_[dataIt] != '\0'; dataIt++) {
                     if (coalesced_mem_trace_[i].write_data_[dataIt] != verified_trace[i].write_data_[dataIt]) {
                         std::cout << "Trace file MemWrite data mismatched at point. Expected "
-                                  << verified_trace[i].write_data_[dataIt]
-                                  << " got " << coalesced_mem_trace_[i].write_data_[dataIt] << "\n";
+                                  << verified_trace[i].write_data_[dataIt] << " got "
+                                  << coalesced_mem_trace_[i].write_data_[dataIt] << "\n";
                         return false;
                     }
                 }

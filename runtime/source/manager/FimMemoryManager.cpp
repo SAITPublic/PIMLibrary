@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <iostream>
+#include "fim_data_types.h"
 #include "hip/hip_runtime.h"
 #include "utility/fim_log.h"
 #include "utility/fim_util.h"
