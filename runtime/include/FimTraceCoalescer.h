@@ -1,6 +1,7 @@
 #ifndef _FIM_TRACE_COALESCER_H_
 #define _FIM_TRACE_COALESCER_H_
 
+#include "fim_data_types.h"
 #include <string.h>
 #include <iostream>
 #include <sstream>
@@ -60,7 +61,10 @@ class TraceParser
     std::vector<Cmd> &get_trace_data();
     bool verify_coalesced_trace(std::vector<Cmd> verified_trace);
 
-   private:
+    void coalesce_trace(FimMemTraceData *fmtd32, FimMemTraceData *fmtd16, int fmtd16_size);
+    void append_data(uint8_t *dst, uint8_t *src, int size);
+
+  private:
     std::vector<Cmd> cur_vec_;
     std::vector<Cmd> coalesced_mem_trace_;
 };

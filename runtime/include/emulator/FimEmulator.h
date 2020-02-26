@@ -2,6 +2,7 @@
 #define _FIM_EMULATOR_H_
 
 #include "fim_data_types.h"
+#include "FimTraceCoalescer.h"
 
 namespace fim
 {

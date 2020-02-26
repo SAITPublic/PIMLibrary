@@ -32,6 +32,99 @@ void TraceParser::parse(std::string file_name)
     }
 }
 
+void TraceParser::append_data(uint8_t *dst, uint8_t *src, int size)
+{
+    memcpy(dst, src, size);
+}
+
+void TraceParser::coalesce_trace(FimMemTraceData *fmtd32, FimMemTraceData *fmtd16, int fmtd16_size)
+{
+    uint64_t prev_addr = -1;
+    char prev_cmd = 'B';
+    int coalesced_trace_it = 0;
+    for (int trace_it = 0; trace_it < fmtd16_size; trace_it++) {
+        switch (fmtd16[trace_it].cmd) {
+            case 'B':
+                std::cout << "BAR " << fmtd16[trace_it].block_id << "\n";
+                fmtd32[coalesced_trace_it].cmd = 'B';
+                fmtd32[coalesced_trace_it].block_id = fmtd16[trace_it].block_id;
+                fmtd32[coalesced_trace_it].thread_id = fmtd16[trace_it].thread_id;
+                fmtd32[coalesced_trace_it].addr = 0;
+                coalesced_trace_it++;
+                prev_addr = -1;
+                prev_cmd = 'B';
+                break;
+            case 'R':
+                if (prev_addr != -1 && prev_cmd == 'R') {
+                    if ((prev_addr + TRANS_SIZE) == fmtd16[trace_it].addr) {
+                        ;
+                    } else {
+                        std::cout << "READ  ";
+                        print_hex_base(fmtd16[trace_it].addr);
+                        std::cout << "\n";
+                        fmtd32[coalesced_trace_it].cmd = 'R';
+                        fmtd32[coalesced_trace_it].block_id = fmtd16[trace_it].block_id;
+                        fmtd32[coalesced_trace_it].thread_id = fmtd16[trace_it].thread_id;
+                        fmtd32[coalesced_trace_it].addr = fmtd16[trace_it].addr;
+                        coalesced_trace_it++;
+                        prev_addr = fmtd16[trace_it].addr;
+                    }
+                } else {
+                    std::cout << "READ  ";
+                    print_hex_base(fmtd16[trace_it].addr);
+                    std::cout << "\n";
+                    fmtd32[coalesced_trace_it].cmd = 'R';
+                    fmtd32[coalesced_trace_it].block_id = fmtd16[trace_it].block_id;
+                    fmtd32[coalesced_trace_it].thread_id = fmtd16[trace_it].thread_id;
+                    fmtd32[coalesced_trace_it].addr = fmtd16[trace_it].addr;
+                    coalesced_trace_it++;
+                    prev_addr = fmtd16[trace_it].addr;
+                }
+                prev_cmd = 'R';
+                break;
+            case 'W':
+                if (prev_addr != -1 && prev_cmd == 'W') {
+                    if ((prev_addr + TRANS_SIZE) == fmtd16[trace_it].addr) {
+                        for (int i = 0; i < 16; i++)
+                            std::cout << fmtd16[trace_it].data[i];
+                        std::cout << "\n";
+                        append_data(fmtd32[coalesced_trace_it].data + 16, fmtd16[trace_it].data, 16);
+                    } else {
+                        std::cout << "WRITE  ";
+                        print_hex_base(fmtd16[trace_it].addr);
+                        std::cout << " ";
+                        for (int i = 0; i < 16; i++)
+                            std::cout << fmtd16[trace_it].data[i];
+
+                        fmtd32[coalesced_trace_it].cmd = 'W';
+                        fmtd32[coalesced_trace_it].block_id = fmtd16[trace_it].block_id;
+                        fmtd32[coalesced_trace_it].thread_id = fmtd16[trace_it].thread_id;
+                        fmtd32[coalesced_trace_it].addr = fmtd16[trace_it].addr;
+                        memcpy(fmtd32[coalesced_trace_it].data, fmtd16[trace_it].data, 16);
+                        coalesced_trace_it++;
+                        prev_addr = fmtd16[trace_it].addr;
+                    }
+                } else {
+                    std::cout << "WRITE  ";
+                    print_hex_base(fmtd16[trace_it].addr);
+                    std::cout << " ";
+                    for (int i = 0; i < 16; i++)
+                        std::cout << fmtd16[trace_it].data[i];
+
+                    fmtd32[coalesced_trace_it].cmd = 'W';
+                    fmtd32[coalesced_trace_it].block_id = fmtd16[trace_it].block_id;
+                    fmtd32[coalesced_trace_it].thread_id = fmtd16[trace_it].thread_id;
+                    fmtd32[coalesced_trace_it].addr = fmtd16[trace_it].addr;
+                    memcpy(fmtd32[coalesced_trace_it].data, fmtd16[trace_it].data, 16);
+                    coalesced_trace_it++;
+                    prev_addr = fmtd16[trace_it].addr;
+                }
+                prev_cmd = 'W';
+                break;
+        }
+    }
+}
+
 void TraceParser::coalesce_traces()
 {
     coalesced_mem_trace_.clear();
