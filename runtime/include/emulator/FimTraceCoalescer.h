@@ -11,6 +11,9 @@ namespace fim
 {
 namespace runtime
 {
+namespace emulator
+{
+
 // TODO: Define Stride for each FIM configuration
 #define TRANS_SIZE 0x10
 
@@ -69,6 +72,7 @@ class TraceParser
     std::vector<Cmd> coalesced_mem_trace_;
 };
 
+} /* namespace emulator */
 } /* namespace runtime */
 } /* namespace fim */
 

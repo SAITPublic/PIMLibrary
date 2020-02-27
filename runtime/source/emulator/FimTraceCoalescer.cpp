@@ -1,8 +1,10 @@
-#include "FimTraceCoalescer.h"
+#include "emulator/FimTraceCoalescer.h"
 
 namespace fim
 {
 namespace runtime
+{
+namespace emulator
 {
 void TraceParser::parse(std::string file_name)
 {
@@ -280,5 +282,6 @@ bool TraceParser::verify_coalesced_trace(std::vector<Cmd> verified_trace)
     return true;
 }
 
+} /* namespace emulator */
 } /* namespace runtime */
 } /* namespace fim */
