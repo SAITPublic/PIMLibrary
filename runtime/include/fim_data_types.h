@@ -96,7 +96,7 @@ typedef struct __FimBlockInfo {
 } FimBlockInfo;
 
 typedef struct __FimMemTraceData {
-    uint64_t data[2];
+    uint8_t data[32];
     uint64_t addr;
     int block_id;
     int thread_id;

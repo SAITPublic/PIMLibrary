@@ -36,11 +36,7 @@ class FimExecutor
     fim::runtime::emulator::FimEmulator* fim_emulator_;
     FimMemTraceData* fmtd16_;
     FimMemTraceData* fmtd32_;
-    FimMemTraceData* fmtd_h_;
-    FimMemTraceData* fmtd_d_;
-    size_t fmtd16_size_;
-    uint64_t *cmode_d_, *cbin_d_;
-    uint64_t *cmode_h_, *cbin_h_;
+    int* fmtd16_size_;
 #endif
 };
 

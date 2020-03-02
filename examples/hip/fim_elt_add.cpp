@@ -16,11 +16,11 @@ int fim_elt_add(void)
 {
     int ret = 0;
 
-    FimBo host_input = {.size = LENGTH * sizeof(_Float16), .mem_type = MEM_TYPE_HOST};
-    FimBo host_weight = {.size = LENGTH * sizeof(_Float16), .mem_type = MEM_TYPE_HOST};
-    FimBo host_output = {.size = LENGTH * sizeof(_Float16), .mem_type = MEM_TYPE_HOST};
-    FimBo device_output = {.size = LENGTH * sizeof(_Float16), .mem_type = MEM_TYPE_DEVICE};
-    FimBo fim_weight = {.size = 2 * LENGTH * sizeof(_Float16), .mem_type = MEM_TYPE_FIM};
+    FimBo host_input = {.size = LENGTH * sizeof(_Float16 ), .mem_type = MEM_TYPE_HOST};
+    FimBo host_weight = {.size = LENGTH * sizeof(_Float16 ), .mem_type = MEM_TYPE_HOST};
+    FimBo host_output = {.size = LENGTH * sizeof(_Float16 ), .mem_type = MEM_TYPE_HOST};
+    FimBo device_output = {.size = LENGTH * sizeof(_Float16 ), .mem_type = MEM_TYPE_DEVICE};
+    FimBo fim_weight = {.size = 2 * LENGTH * sizeof(_Float16 ), .mem_type = MEM_TYPE_FIM};
 
     /* __FIM_API__ call : Initialize FimRuntime */
     FimInitialize(RT_TYPE_HIP, FIM_FP16);
