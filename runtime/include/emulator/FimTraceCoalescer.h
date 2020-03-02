@@ -64,7 +64,7 @@ class TraceParser
     std::vector<Cmd> &get_trace_data();
     bool verify_coalesced_trace(std::vector<Cmd> verified_trace);
 
-    void coalesce_trace(FimMemTraceData *fmtd32, FimMemTraceData *fmtd16, int fmtd16_size);
+    void coalesce_trace(FimMemTraceData *fmtd32, int *fmtd32_size, FimMemTraceData *fmtd16, int fmtd16_size);
     void append_data(uint8_t *dst, uint8_t *src, int size);
 
   private:

@@ -48,7 +48,7 @@ int FimEmulator::convert_mem_trace_from_16B_to_32B(FimMemTraceData* fmtd32, int*
     dump_fmtd16(str, fmtd16, fmtd16_size);
 
     TraceParser trace_converter;
-    trace_converter.coalesce_trace(fmtd32, fmtd16, fmtd16_size);
+    trace_converter.coalesce_trace(fmtd32, fmtd32_size, fmtd16, fmtd16_size);
 
     return ret;
 }

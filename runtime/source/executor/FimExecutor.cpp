@@ -72,6 +72,7 @@ int FimExecutor::initialize(void)
     fmtd16_ = nullptr;
     fmtd32_ = nullptr;
     fmtd16_size_ = nullptr;
+    fmtd32_size_ = nullptr;
 #endif
 
     return ret;

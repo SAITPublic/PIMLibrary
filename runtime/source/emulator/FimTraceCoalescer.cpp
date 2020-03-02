@@ -39,7 +39,7 @@ void TraceParser::append_data(uint8_t *dst, uint8_t *src, int size)
     memcpy(dst, src, size);
 }
 
-void TraceParser::coalesce_trace(FimMemTraceData *fmtd32, FimMemTraceData *fmtd16, int fmtd16_size)
+void TraceParser::coalesce_trace(FimMemTraceData *fmtd32, int *fmtd32_size, FimMemTraceData *fmtd16, int fmtd16_size)
 {
     uint64_t prev_addr = -1;
     char prev_cmd = 'B';
@@ -84,6 +84,34 @@ void TraceParser::coalesce_trace(FimMemTraceData *fmtd32, FimMemTraceData *fmtd1
                 }
                 prev_cmd = 'R';
                 break;
+            case 'O':
+                if (prev_addr != -1 && prev_cmd == 'O') {
+                    if ((prev_addr + TRANS_SIZE) == fmtd16[trace_it].addr) {
+                        ;
+                    } else {
+                        std::cout << "READOUTPUT  ";
+                        print_hex_base(fmtd16[trace_it].addr);
+                        std::cout << "\n";
+                        fmtd32[coalesced_trace_it].cmd = 'O';
+                        fmtd32[coalesced_trace_it].block_id = fmtd16[trace_it].block_id;
+                        fmtd32[coalesced_trace_it].thread_id = fmtd16[trace_it].thread_id;
+                        fmtd32[coalesced_trace_it].addr = fmtd16[trace_it].addr;
+                        coalesced_trace_it++;
+                        prev_addr = fmtd16[trace_it].addr;
+                    }
+                } else {
+                    std::cout << "READOUTPUT  ";
+                    print_hex_base(fmtd16[trace_it].addr);
+                    std::cout << "\n";
+                    fmtd32[coalesced_trace_it].cmd = 'O';
+                    fmtd32[coalesced_trace_it].block_id = fmtd16[trace_it].block_id;
+                    fmtd32[coalesced_trace_it].thread_id = fmtd16[trace_it].thread_id;
+                    fmtd32[coalesced_trace_it].addr = fmtd16[trace_it].addr;
+                    coalesced_trace_it++;
+                    prev_addr = fmtd16[trace_it].addr;
+                }
+                prev_cmd = 'O';
+                break;
             case 'W':
                 if (prev_addr != -1 && prev_cmd == 'W') {
                     if ((prev_addr + TRANS_SIZE) == fmtd16[trace_it].addr) {
@@ -125,6 +153,7 @@ void TraceParser::coalesce_trace(FimMemTraceData *fmtd32, FimMemTraceData *fmtd1
                 break;
         }
     }
+    fmtd32_size[0] = coalesced_trace_it;
 }
 
 void TraceParser::coalesce_traces()
