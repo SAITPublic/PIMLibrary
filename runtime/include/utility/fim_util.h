@@ -133,18 +133,30 @@ __device__ inline void GEN_READ_CMD(volatile uint8_t* __restrict__ dst, volatile
     g_ridx++;
 }
 
-__device__ inline void BLOCK_SYNC(void)
+__device__ inline void BLOCK_SYNC(bool block_all_chan = true)
 {
+    __syncthreads();
+
+    FimBlockInfo* fbi = &vega20_fbi;
     int bid = hipBlockIdx_x;
     int tid = hipThreadIdx_x;
+    int num_chan = fbi->num_fim_chan;
 
-    g_fmtd16[g_ridx].block_id = bid;
-    g_fmtd16[g_ridx].thread_id = tid;
-    g_fmtd16[g_ridx].cmd = 'B';
-    g_fmtd16[g_ridx].addr = 0;
-    g_ridx++;
-
-    __syncthreads();
+    if (block_all_chan == true) {
+        for (int cidx = 0; cidx < num_chan; cidx++) {
+            g_fmtd16[g_ridx].block_id = cidx;
+            g_fmtd16[g_ridx].thread_id = tid;
+            g_fmtd16[g_ridx].cmd = 'B';
+            g_fmtd16[g_ridx].addr = 0;
+            g_ridx++;
+        }
+    } else {
+        g_fmtd16[g_ridx].block_id = bid;
+        g_fmtd16[g_ridx].thread_id = tid;
+        g_fmtd16[g_ridx].cmd = 'B';
+        g_fmtd16[g_ridx].addr = 0;
+        g_ridx++;
+    }
 }
 
 #else /* TARGET */
