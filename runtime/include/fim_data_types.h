@@ -2,16 +2,21 @@
 #define _FIM_DATA_TYPE_H_
 
 #include <stddef.h>
-#include "hip/hip_fp16.h"
+#include "half.hpp"
+
+using half_float::half;
 
 #define EMULATOR
 
 #define __FIM_API__
 
-inline float convertH2F(_Float16 h_val) { return __half2float(h_val); }
+/** TODO add the following function
 
 inline _Float16 convertF2H(float f_val) { return __float2half(f_val); }
 
+**/
+
+inline float convertH2F(half h_val) { return half_float::detail::half2float<float>(h_val); }
 typedef enum __FimRuntimeType {
     RT_TYPE_HIP,
     RT_TYPE_OPENCL,

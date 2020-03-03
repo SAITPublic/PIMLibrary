@@ -215,7 +215,7 @@ int FimMemoryManager::convert_data_layout_for_elt_add(FimBo* dst, FimBo* src, Fi
     uint32_t s_row = 0;
     uint32_t s_col = 0;
     uint32_t trans_size = 32;
-    uint32_t type_size = (precision_ == FIM_FP16) ? sizeof(_Float16) : sizeof(char);
+    uint32_t type_size = (precision_ == FIM_FP16) ? sizeof(half) : sizeof(char);
     uint64_t addr_op = 0x0;
     uint32_t dim_operand = dst->size / trans_size / type_size;
     char* dst_data = (char*)dst->data;

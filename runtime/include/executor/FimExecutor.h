@@ -3,7 +3,7 @@
 
 #include "emulator/FimEmulator.h"
 #include "fim_data_types.h"
-#include "hip/hip_fp16.h"
+#include "half.hpp"
 #include "hip/hip_runtime.h"
 
 namespace fim
@@ -17,7 +17,6 @@ class FimExecutor
    public:
     FimExecutor(FimRuntimeType rt_type, FimPrecision precision);
     virtual ~FimExecutor(void) {}
-
     static FimExecutor* get_instance(FimRuntimeType rt_type, FimPrecision precision);
 
     int initialize(void);

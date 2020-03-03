@@ -3,9 +3,11 @@
 
 #include "executor/fim_hip_kernels/fim_crf_bins.h"
 #include "fim_data_types.h"
-#include "hip/hip_fp16.h"
+#include "half.hpp"
 #include "hip/hip_runtime.h"
 #include "utility/fim_log.h"
+
+using half_float::half;
 
 /* TODO: get VEGA20 scheme from device driver */
 FimBlockInfo vega20_fbi = {
@@ -36,7 +38,6 @@ uint8_t null_bst[32] = {
 };
 
 __host__ inline int get_fim_block_info(FimBlockInfo* fbi) { memcpy(fbi, &vega20_fbi, sizeof(FimBlockInfo)); }
-
 __host__ __device__ inline uint32_t mask_by_bit(uint32_t value, uint32_t start, uint32_t end)
 {
     int length = start - end + 1;
