@@ -47,7 +47,6 @@ void TraceParser::coalesce_trace(FimMemTraceData *fmtd32, int *fmtd32_size, FimM
     for (int trace_it = 0; trace_it < fmtd16_size; trace_it++) {
         switch (fmtd16[trace_it].cmd) {
             case 'B':
-                std::cout << "BAR " << fmtd16[trace_it].block_id << "\n";
                 fmtd32[coalesced_trace_it].cmd = 'B';
                 fmtd32[coalesced_trace_it].block_id = fmtd16[trace_it].block_id;
                 fmtd32[coalesced_trace_it].thread_id = fmtd16[trace_it].thread_id;
@@ -61,9 +60,6 @@ void TraceParser::coalesce_trace(FimMemTraceData *fmtd32, int *fmtd32_size, FimM
                     if ((prev_addr + TRANS_SIZE) == fmtd16[trace_it].addr) {
                         ;
                     } else {
-                        std::cout << "READ  ";
-                        print_hex_base(fmtd16[trace_it].addr);
-                        std::cout << "\n";
                         fmtd32[coalesced_trace_it].cmd = 'R';
                         fmtd32[coalesced_trace_it].block_id = fmtd16[trace_it].block_id;
                         fmtd32[coalesced_trace_it].thread_id = fmtd16[trace_it].thread_id;
@@ -72,9 +68,6 @@ void TraceParser::coalesce_trace(FimMemTraceData *fmtd32, int *fmtd32_size, FimM
                         prev_addr = fmtd16[trace_it].addr;
                     }
                 } else {
-                    std::cout << "READ  ";
-                    print_hex_base(fmtd16[trace_it].addr);
-                    std::cout << "\n";
                     fmtd32[coalesced_trace_it].cmd = 'R';
                     fmtd32[coalesced_trace_it].block_id = fmtd16[trace_it].block_id;
                     fmtd32[coalesced_trace_it].thread_id = fmtd16[trace_it].thread_id;
@@ -89,9 +82,6 @@ void TraceParser::coalesce_trace(FimMemTraceData *fmtd32, int *fmtd32_size, FimM
                     if ((prev_addr + TRANS_SIZE) == fmtd16[trace_it].addr) {
                         ;
                     } else {
-                        std::cout << "READOUTPUT  ";
-                        print_hex_base(fmtd16[trace_it].addr);
-                        std::cout << "\n";
                         fmtd32[coalesced_trace_it].cmd = 'O';
                         fmtd32[coalesced_trace_it].block_id = fmtd16[trace_it].block_id;
                         fmtd32[coalesced_trace_it].thread_id = fmtd16[trace_it].thread_id;
@@ -100,9 +90,6 @@ void TraceParser::coalesce_trace(FimMemTraceData *fmtd32, int *fmtd32_size, FimM
                         prev_addr = fmtd16[trace_it].addr;
                     }
                 } else {
-                    std::cout << "READOUTPUT  ";
-                    print_hex_base(fmtd16[trace_it].addr);
-                    std::cout << "\n";
                     fmtd32[coalesced_trace_it].cmd = 'O';
                     fmtd32[coalesced_trace_it].block_id = fmtd16[trace_it].block_id;
                     fmtd32[coalesced_trace_it].thread_id = fmtd16[trace_it].thread_id;
@@ -116,15 +103,9 @@ void TraceParser::coalesce_trace(FimMemTraceData *fmtd32, int *fmtd32_size, FimM
                 if (prev_addr != -1 && prev_cmd == 'W') {
                     if ((prev_addr + TRANS_SIZE) == fmtd16[trace_it].addr) {
                         for (int i = 0; i < 16; i++)
-                            std::cout << fmtd16[trace_it].data[i];
-                        std::cout << "\n";
                         append_data(fmtd32[coalesced_trace_it].data + 16, fmtd16[trace_it].data, 16);
                     } else {
-                        std::cout << "WRITE  ";
-                        print_hex_base(fmtd16[trace_it].addr);
-                        std::cout << " ";
                         for (int i = 0; i < 16; i++)
-                            std::cout << fmtd16[trace_it].data[i];
 
                         fmtd32[coalesced_trace_it].cmd = 'W';
                         fmtd32[coalesced_trace_it].block_id = fmtd16[trace_it].block_id;
@@ -135,11 +116,7 @@ void TraceParser::coalesce_trace(FimMemTraceData *fmtd32, int *fmtd32_size, FimM
                         prev_addr = fmtd16[trace_it].addr;
                     }
                 } else {
-                    std::cout << "WRITE  ";
-                    print_hex_base(fmtd16[trace_it].addr);
-                    std::cout << " ";
                     for (int i = 0; i < 16; i++)
-                        std::cout << fmtd16[trace_it].data[i];
 
                     fmtd32[coalesced_trace_it].cmd = 'W';
                     fmtd32[coalesced_trace_it].block_id = fmtd16[trace_it].block_id;
@@ -164,7 +141,6 @@ void TraceParser::coalesce_traces()
     for (int trace_it = 0; trace_it < (int)cur_vec_.size(); trace_it++) {
         switch (cur_vec_[trace_it].type_) {
             case Barrier:
-                std::cout << "BAR " << cur_vec_[trace_it].data_ << "\n";
                 coalesced_mem_trace_.push_back(Cmd(cur_vec_[trace_it]));
                 prev_addr = -1;
                 prev_cmd = Barrier;
@@ -174,16 +150,10 @@ void TraceParser::coalesce_traces()
                     if ((prev_addr + TRANS_SIZE) == cur_vec_[trace_it].data_) {
                         ;
                     } else {
-                        std::cout << "READ  ";
-                        print_hex_base(cur_vec_[trace_it].data_);
-                        std::cout << "\n";
                         coalesced_mem_trace_.push_back(Cmd(cur_vec_[trace_it]));
                         prev_addr = cur_vec_[trace_it].data_;
                     }
                 } else {
-                    std::cout << "READ  ";
-                    print_hex_base(cur_vec_[trace_it].data_);
-                    std::cout << "\n";
                     coalesced_mem_trace_.push_back(Cmd(cur_vec_[trace_it]));
                     prev_addr = cur_vec_[trace_it].data_;
                 }
@@ -192,30 +162,12 @@ void TraceParser::coalesce_traces()
             case MemWrite:
                 if (prev_addr != -1 && prev_cmd == MemWrite) {
                     if ((prev_addr + TRANS_SIZE) == cur_vec_[trace_it].data_) {
-                        // TODO: Which data to print?
-                        for (int i = 0; cur_vec_[trace_it].write_data_[i] != '\0'; i++)
-                            std::cout << cur_vec_[trace_it].write_data_[i];
-                        std::cout << "\n";
                         coalesced_mem_trace_.back().append_data(cur_vec_[trace_it].write_data_);
                     } else {
-                        std::cout << "WRITE  ";
-                        print_hex_base(cur_vec_[trace_it].data_);
-                        std::cout << " ";
-                        // TODO: Which data to print?
-                        for (int i = 0; cur_vec_[trace_it].write_data_[i] != '\0'; i++)
-                            std::cout << cur_vec_[trace_it].write_data_[i];
-
                         coalesced_mem_trace_.push_back(Cmd(cur_vec_[trace_it]));
                         prev_addr = cur_vec_[trace_it].data_;
                     }
                 } else {
-                    std::cout << "WRITE  ";
-                    print_hex_base(cur_vec_[trace_it].data_);
-                    std::cout << " ";
-                    // TODO: Which data to print?
-                    for (int i = 0; cur_vec_[trace_it].write_data_[i] != '\0'; i++)
-                        std::cout << cur_vec_[trace_it].write_data_[i];
-
                     coalesced_mem_trace_.push_back(Cmd(cur_vec_[trace_it]));
                     prev_addr = cur_vec_[trace_it].data_;
                 }
@@ -240,33 +192,6 @@ DATA TraceParser::hex_to_int(char *str)
         i++;
     }
     return ret;
-}
-
-void TraceParser::print_hex_base(DATA addr)
-{
-    static char hex_print[16];
-    std::cout << "0x";
-    if (addr == 0) {
-        std::cout << "0";
-        return;
-    }
-    int reminder = 0;
-    int index = 0;
-    while (addr != 0) {
-        reminder = addr % 16;
-        addr = addr >> 4;
-        if (reminder >= 10) {
-            hex_print[index] = 'a' + (reminder - 10);
-        } else {
-            hex_print[index] = '0' + reminder;
-        }
-        index++;
-    }
-    index--;
-    while (index >= 0) {
-        std::cout << hex_print[index];
-        index--;
-    }
 }
 
 std::vector<Cmd> &TraceParser::get_trace_data() { return cur_vec_; }

@@ -38,7 +38,8 @@ int dump_data(const char* filename, char* data, size_t size)
     return 0;
 }
 
-int dump_fmtd16(const char* filename, FimMemTraceData* fmtd16, size_t fmtd16_size)
+template <int block_size>
+int dump_fmtd(const char* filename, FimMemTraceData* fmtd, size_t fmtd_size)
 {
     FILE* fp = fopen(filename, "wb");
 
@@ -47,11 +48,11 @@ int dump_fmtd16(const char* filename, FimMemTraceData* fmtd16, size_t fmtd16_siz
         return -1;
     }
 
-    for (int i = 0; i < fmtd16_size; i++) {
-        fprintf(fp, "%d\t%d\t%d\t%c\t0x%lX", i, fmtd16[i].block_id, fmtd16[i].thread_id, fmtd16[i].cmd, fmtd16[i].addr);
-        if (fmtd16[i].cmd == 'W') {
+    for (int i = 0; i < fmtd_size; i++) {
+        fprintf(fp, "%d\t%d\t%d\t%c\t0x%lX", i, fmtd[i].block_id, fmtd[i].thread_id, fmtd[i].cmd, fmtd[i].addr);
+        if (fmtd[i].cmd == 'W') {
             fprintf(fp, "\t");
-            for (int d = 0; d < 16; d++) fprintf(fp, "%02X", fmtd16[i].data[d]);
+            for (int d = 0; d < block_size; d++) fprintf(fp, "%02X", fmtd[i].data[d]);
         }
         fprintf(fp, "\n");
     }
