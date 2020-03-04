@@ -1,4 +1,6 @@
 #include <miopen/miopen.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <array>
 #include <iostream>
 #include <iterator>
@@ -9,7 +11,7 @@
 
 #include <utility>
 
-void ElementWiseAdd()
+int miopen_elt_add()
 {
     miopenTensorDescriptor_t a_desc, b_desc, c_desc;
 
@@ -48,6 +50,7 @@ void ElementWiseAdd()
                    c_data);
 
     miopenDestroy(handle);
+    return 0;
 }
 
-int main() { ElementWiseAdd(); }
+int main() { miopen_elt_add(); }
