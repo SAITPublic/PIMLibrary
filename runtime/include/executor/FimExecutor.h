@@ -33,9 +33,12 @@ class FimExecutor
     uint64_t fim_base_addr_;
 #ifdef EMULATOR
     fim::runtime::emulator::FimEmulator* fim_emulator_;
-    FimMemTraceData* fmtd16_;
-    FimMemTraceData* fmtd32_;
-    int* fmtd16_size_;
+    FimMemTraceData* h_fmtd16_;
+    FimMemTraceData* d_fmtd16_;
+    FimMemTraceData* h_fmtd32_;
+    int* h_fmtd16_size_;
+    int* d_fmtd16_size_;
+    int* h_fmtd32_size_;
 #endif
 };
 

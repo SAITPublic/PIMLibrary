@@ -46,9 +46,13 @@ int FimExecutor::initialize(void)
     int dummy_size = 1;
     int reserved_fmtd_size = 4 * 1024 * 1024;
     hipMalloc((void**)&fim_base_addr_, dummy_size);
-    hipMalloc((void**)&fmtd16_, reserved_fmtd_size);
-    hipMalloc((void**)&fmtd32_, reserved_fmtd_size);
-    hipMalloc((void**)&fmtd16_size_, sizeof(int));
+    hipMalloc((void**)&d_fmtd16_, reserved_fmtd_size);
+    hipMalloc((void**)&d_fmtd16_size_, sizeof(int));
+
+    h_fmtd16_ = (FimMemTraceData*)malloc(reserved_fmtd_size);
+    h_fmtd32_ = (FimMemTraceData*)malloc(reserved_fmtd_size);
+    h_fmtd16_size_ = (int*)malloc(sizeof(int));
+    h_fmtd32_size_ = (int*)malloc(sizeof(int));
 #else
     /* TODO: get fim control base address from device driver */
     /* roct should write fim_base_va */
@@ -72,9 +76,12 @@ int FimExecutor::deinitialize(void)
 
 #ifdef EMULATOR
     hipFree((void*)fim_base_addr_);
-    hipFree((void*)fmtd16_);
-    hipFree((void*)fmtd32_);
-    hipFree((void*)fmtd16_size_);
+    hipFree((void*)d_fmtd16_);
+    hipFree((void*)d_fmtd16_size_);
+    free(h_fmtd16_);
+    free(h_fmtd16_size_);
+    free(h_fmtd32_);
+    free(h_fmtd32_size_);
 #endif
 
     return ret;
@@ -121,7 +128,7 @@ int FimExecutor::execute(FimBo* output, FimBo* fim_data, FimOpType op_type)
         hipMemcpy((void*)fim_base_addr_, fim_data->data, fim_data->size, hipMemcpyHostToDevice);
         hipLaunchKernelGGL(elt_add_fim_1cu_1th_fp16, dim3(1), dim3(1), 0, 0, (uint8_t*)fim_base_addr_,
                            (uint8_t*)fim_base_addr_, (uint8_t*)output->data, (int)output->size,
-                           (FimMemTraceData*)fmtd16_, (int*)fmtd16_size_);
+                           (FimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_);
     } else {
         /* todo:implement other operation function */
         hipLaunchKernelGGL(dummy_kernel, dim3(1), dim3(1), 0, 0);
@@ -130,8 +137,10 @@ int FimExecutor::execute(FimBo* output, FimBo* fim_data, FimOpType op_type)
     hipStreamSynchronize(NULL);
 
 #ifdef EMULATOR
-    fim_emulator_->convert_mem_trace_from_16B_to_32B(fmtd32_, fmtd16_, fmtd16_size_[0]);
-    fim_emulator_->execute_fim(output, fim_data, fmtd32_, op_type);
+    hipMemcpy((void*)h_fmtd16_size_, (void*)d_fmtd16_size_, sizeof(int), hipMemcpyDeviceToHost);
+    hipMemcpy((void*)h_fmtd16_, (void*)d_fmtd16_, sizeof(FimMemTraceData) * h_fmtd16_size_[0], hipMemcpyDeviceToHost);
+    fim_emulator_->convert_mem_trace_from_16B_to_32B(h_fmtd32_, h_fmtd32_size_, h_fmtd16_, h_fmtd16_size_[0]);
+    fim_emulator_->execute_fim(output, fim_data, h_fmtd32_, h_fmtd32_size_[0], op_type);
 #endif
 
     return ret;
