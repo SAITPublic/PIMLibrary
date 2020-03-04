@@ -105,6 +105,8 @@ __host__ __device__ inline uint64_t addr_gen_safe(uint32_t chan, uint32_t rank, 
 #ifdef EMULATOR
 extern uint64_t g_fba;
 extern int g_ridx;
+extern int g_idx[64];
+extern int m_width;
 extern FimMemTraceData* g_fmtd16;
 
 __device__ inline void GEN_WRITE_CMD(volatile uint8_t* __restrict__ dst, volatile uint8_t* __restrict__ src)
@@ -358,4 +360,99 @@ __device__ inline void read_result(volatile uint8_t* __restrict__ output, volati
     }
 }
 
+#ifdef EMULATOR
+__device__ inline void R_CMD(uint8_t* addr)
+{
+    int row = hipBlockIdx_x * m_width;
+    int midx = row + atomicAdd(&g_idx[hipBlockIdx_x], 1);
+
+    memset(g_fmtd16[midx].data, 0, 16);
+    g_fmtd16[midx].block_id = hipBlockIdx_x;
+    g_fmtd16[midx].thread_id = hipThreadIdx_x;
+    g_fmtd16[midx].addr = (uint64_t)addr - g_fba;
+    g_fmtd16[midx].cmd = 'R';
+}
+
+__device__ inline void W_CMD(uint8_t* addr)
+{
+    int row = hipBlockIdx_x * m_width;
+    int midx = row + atomicAdd(&g_idx[hipBlockIdx_x], 1);
+
+    memset(g_fmtd16[midx].data, 0, 16);
+    g_fmtd16[midx].block_id = hipBlockIdx_x;
+    g_fmtd16[midx].thread_id = hipThreadIdx_x;
+    g_fmtd16[midx].addr = (uint64_t)addr - g_fba;
+    g_fmtd16[midx].cmd = 'W';
+}
+
+__device__ inline void W_CMD_R(uint8_t* addr, uint8_t* src)
+{
+    int row = hipBlockIdx_x * m_width;
+    int midx = row + atomicAdd(&g_idx[hipBlockIdx_x], 1);
+
+    memcpy(g_fmtd16[midx].data, (uint8_t*)src, 16);
+    g_fmtd16[midx].block_id = hipBlockIdx_x;
+    g_fmtd16[midx].thread_id = hipThreadIdx_x;
+    g_fmtd16[midx].addr = (uint64_t)addr - g_fba;
+    g_fmtd16[midx].cmd = 'W';
+}
+
+__device__ inline void B_CMD(int type)
+{
+    int row = hipBlockIdx_x * m_width;
+    int midx = row + atomicAdd(&g_idx[hipBlockIdx_x], 1);
+
+    memset(g_fmtd16[midx].data, 0, 16);
+    g_fmtd16[midx].block_id = hipBlockIdx_x;
+    g_fmtd16[midx].thread_id = hipThreadIdx_x;
+    g_fmtd16[midx].addr = 0;
+    g_fmtd16[midx].cmd = 'B';
+
+    if (type == 0)
+        __syncthreads();
+    else
+        __threadfence();
+}
+
+__device__ inline void record(int bid, char mtype, uint64_t paddr)
+{
+    int row = bid * m_width;
+    int midx = row + g_idx[bid]++;
+
+    memset(g_fmtd16[midx].data, 0, 16);
+    g_fmtd16[midx].block_id = bid;
+    g_fmtd16[midx].thread_id = 0;
+    g_fmtd16[midx].addr = paddr;
+    g_fmtd16[midx].cmd = mtype;
+}
+#else
+__device__ inline void R_CMD(uint8_t* addr)
+{
+    asm volatile("global_load_dwordx4 v[24:27], %0, off\n\t" ::"v"(addr) : "v24", "v25", "v26", "v37");
+}
+
+__device__ inline void W_CMD(uint8_t* addr)
+{
+    asm volatile("global_store_dwordx4 %0, v[24:27], off\n\t" ::"v"(addr) : "v24", "v25", "v26", "v27");
+}
+
+__device__ inline void W_CMD_R(uint8_t* addr, uint8_t* src)
+{
+    if (hipThreadIdx_x == 0) {
+        asm volatile("global_load_dwordx4 v[20:23], %0, off\n\t" ::"v"(src) : "v20", "v21", "v22", "v23");
+        asm volatile("global_store_dwordx4 %0, v[20:23], off\n\t" ::"v"(addr) : "v20", "v21", "v22", "v23");
+    } else {
+        asm volatile("global_load_dwordx4 v[24:27], %0, off\n\t" ::"v"(src) : "v24", "v25", "v26", "v37");
+        asm volatile("global_store_dwordx4 %0, v[24:27], off\n\t" ::"v"(addr) : "v24", "v25", "v26", "v27");
+    }
+}
+
+__device__ inline void B_CMD(int type)
+{
+    if (type == 0)
+        __syncthreads();
+    else
+        __threadfence();
+}
+#endif
 #endif /* _FIM_UTIL_H_ */

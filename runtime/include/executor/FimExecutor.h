@@ -31,13 +31,13 @@ class FimExecutor
     hipDeviceProp_t dev_prop_;
     size_t thread_cnt_;
     uint64_t fim_base_addr_;
+    FimMemTraceData* d_fmtd16_;
+    int* d_fmtd16_size_;
 #ifdef EMULATOR
     fim::runtime::emulator::FimEmulator* fim_emulator_;
     FimMemTraceData* h_fmtd16_;
-    FimMemTraceData* d_fmtd16_;
     FimMemTraceData* h_fmtd32_;
     int* h_fmtd16_size_;
-    int* d_fmtd16_size_;
     int* h_fmtd32_size_;
 #endif
 };

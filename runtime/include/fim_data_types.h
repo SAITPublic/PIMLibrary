@@ -7,6 +7,7 @@
 using half_float::half;
 
 #define EMULATOR
+#define MULTI_CU
 
 #define __FIM_API__
 
