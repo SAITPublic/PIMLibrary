@@ -1,8 +1,8 @@
 #ifndef _FIM_EMULATOR_H_
 #define _FIM_EMULATOR_H_
 
-#include "fim_data_types.h"
 #include "FimTraceCoalescer.h"
+#include "fim_data_types.h"
 
 namespace fim
 {

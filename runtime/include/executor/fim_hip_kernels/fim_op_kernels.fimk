@@ -1,9 +1,9 @@
 #ifndef _FIM_OP_KERNELS_FIMK_
 #define _FIM_OP_KERNELS_FIMK_
 
+#include "fim_crf_bins.h"
 #include "fim_data_types.h"
 #include "utility/fim_util.h"
-#include "fim_crf_bins.h"
 
 #ifdef EMULATOR
 uint64_t g_fba;
@@ -13,17 +13,11 @@ int g_idx[64];
 int m_width;
 #endif
 
-__global__ void dummy_kernel(void)
-{
-}
+__global__ void dummy_kernel(void) {}
 
-__global__ void elt_add_fim_1cu_1th_fp16(
-    volatile uint8_t* __restrict__ fim_data,
-    volatile uint8_t* __restrict__ fim_ctr,
-    volatile uint8_t* __restrict__ output,
-    int size,
-    FimMemTraceData* fmtd16,
-    int* frd_size)
+__global__ void elt_add_fim_1cu_1th_fp16(volatile uint8_t* __restrict__ fim_data,
+                                         volatile uint8_t* __restrict__ fim_ctr, volatile uint8_t* __restrict__ output,
+                                         int size, FimMemTraceData* fmtd16, int* frd_size)
 {
 #ifdef EMULATOR
     g_fba = (uint64_t)fim_ctr;
@@ -43,19 +37,14 @@ __global__ void elt_add_fim_1cu_1th_fp16(
     change_fim_mode(fim_ctr, HAB_FIM_MODE, HAB_MODE);
     change_fim_mode(fim_ctr, HAB_MODE, SB_MODE);
     park_out(fim_ctr);
-    read_result(output, fim_data, FimBankType::ODD_BANK,  out_dim, 0, get_result_col(out_dim));
+    read_result(output, fim_data, FimBankType::ODD_BANK, out_dim, 0, get_result_col(out_dim));
 #ifdef EMULATOR
     frd_size[0] = g_ridx;
 #endif
 }
 
-__global__ void elt_add_fim(uint8_t* fim_data,
-                            uint8_t* fim_ctr,
-                            uint8_t* output,
-                            unsigned int input_size,
-                            FimMemTraceData* fmtd,
-                            int *frd_size,
-                            int mt_width)
+__global__ void elt_add_fim(uint8_t* fim_data, uint8_t* fim_ctr, uint8_t* output, unsigned int input_size,
+                            FimMemTraceData* fmtd, int* frd_size, int mt_width)
 {
 #ifdef EMULATOR
     g_fba = (uint64_t)fim_ctr;
@@ -63,7 +52,7 @@ __global__ void elt_add_fim(uint8_t* fim_data,
     m_width = mt_width;
 #endif
     FimBlockInfo* fbi = &vega20_fbi;
-    int num_blk = fbi->num_fim_blocks; 
+    int num_blk = fbi->num_fim_blocks;
     int num_g = fbi->num_grf;
     int num_bg = fbi->num_bank_groups;
     int num_ba = fbi->num_banks;
@@ -71,7 +60,7 @@ __global__ void elt_add_fim(uint8_t* fim_data,
     int num_rank = 1;
     int num_col = 32;
     int g_size = 32;
-	unsigned int start_row = (((uint64_t)fim_ctr - (uint64_t)fim_data) >> 19) & 0x3FFF;
+    unsigned int start_row = (((uint64_t)fim_ctr - (uint64_t)fim_data) >> 19) & 0x3FFF;
 
     int num_p = num_blk * num_ch * num_g * (g_size / sizeof(short));
     int num_t = input_size / num_p;
@@ -82,51 +71,49 @@ __global__ void elt_add_fim(uint8_t* fim_data,
     B_CMD(0);
     if (hipThreadIdx_x < num_bg * 2) {
         addr = addr_gen(hipBlockIdx_x, 0, (hipThreadIdx_x / 2), 0, (1 << 12), 0);
-		R_CMD(&fim_ctr[addr + offset]);
+        R_CMD(&fim_ctr[addr + offset]);
 
         addr = addr_gen(hipBlockIdx_x, 0, (hipThreadIdx_x / 2), 1, (1 << 12), 0);
-		R_CMD(&fim_ctr[addr + offset]);
+        R_CMD(&fim_ctr[addr + offset]);
 
         addr = addr_gen(hipBlockIdx_x, 0, (hipThreadIdx_x / 2), 2, (1 << 12), 0);
-		R_CMD(&fim_ctr[addr + offset]);
+        R_CMD(&fim_ctr[addr + offset]);
 
         addr = addr_gen(hipBlockIdx_x, 0, (hipThreadIdx_x / 2), 3, (1 << 12), 0);
-		R_CMD(&fim_ctr[addr + offset]);
+        R_CMD(&fim_ctr[addr + offset]);
     }
     B_CMD(0);
 
     if (hipThreadIdx_x < 2) {
         addr = addr_gen(hipBlockIdx_x, 0, 0, 0, 0x17ff, 0x1f);
-		W_CMD(&fim_ctr[addr + offset]);
+        W_CMD(&fim_ctr[addr + offset]);
 
         addr = addr_gen(hipBlockIdx_x, 0, 0, 1, 0x17ff, 0x1f);
-		W_CMD(&fim_ctr[addr + offset]);
+        W_CMD(&fim_ctr[addr + offset]);
 
         addr = addr_gen(hipBlockIdx_x, 0, 2, 0, 0x17ff, 0x1f);
-		W_CMD(&fim_ctr[addr + offset]);
+        W_CMD(&fim_ctr[addr + offset]);
 
         addr = addr_gen(hipBlockIdx_x, 0, 2, 1, 0x17ff, 0x1f);
-		W_CMD(&fim_ctr[addr + offset]);
+        W_CMD(&fim_ctr[addr + offset]);
     }
     B_CMD(0);
 
     if (hipThreadIdx_x == 0) {
         addr = addr_gen(hipBlockIdx_x, 0, 0, 1, 0x3fff, 0x4);
-		W_CMD_R(&fim_ctr[addr + offset], elt_add_crf);
-    }
-    else if (hipThreadIdx_x == 1) {
+        W_CMD_R(&fim_ctr[addr + offset], elt_add_crf);
+    } else if (hipThreadIdx_x == 1) {
         addr = addr_gen(hipBlockIdx_x, 0, 0, 1, 0x3fff, 0x4);
-		W_CMD_R(&fim_ctr[addr + offset], elt_add_crf + 16);
+        W_CMD_R(&fim_ctr[addr + offset], elt_add_crf + 16);
     }
     B_CMD(0);
 
     if (hipThreadIdx_x == 0) {
         addr = addr_gen(hipBlockIdx_x, 0, 0, 0, 0x3fff, 0x0);
-		W_CMD_R(&fim_ctr[addr + offset], hab_to_hab_fim);
-    }
-    else if (hipThreadIdx_x == 1) {
+        W_CMD_R(&fim_ctr[addr + offset], hab_to_hab_fim);
+    } else if (hipThreadIdx_x == 1) {
         addr = addr_gen(hipBlockIdx_x, 0, 0, 0, 0x3fff, 0x0);
-		W_CMD_R(&fim_ctr[addr + offset], hab_to_hab_fim + 16);
+        W_CMD_R(&fim_ctr[addr + offset], hab_to_hab_fim + 16);
     }
     B_CMD(0);
 
@@ -136,10 +123,10 @@ __global__ void elt_add_fim(uint8_t* fim_data,
         unsigned int col = loc % num_col;
 
         addr = addr_gen(hipBlockIdx_x, 0, 0, 0, row, col);
-		R_CMD(&fim_ctr[addr + offset]);
+        R_CMD(&fim_ctr[addr + offset]);
         B_CMD(1);
 
-		R_CMD(&fim_ctr[addr + 0x2000 + offset]);
+        R_CMD(&fim_ctr[addr + 0x2000 + offset]);
         B_CMD(1);
 
         unsigned int output_loc = loc + num_t * num_g;
@@ -147,27 +134,26 @@ __global__ void elt_add_fim(uint8_t* fim_data,
         unsigned int output_col = output_loc % num_col;
 
         addr = addr_gen(hipBlockIdx_x, 0, 0, 1, output_row, output_col);
-		W_CMD(&fim_ctr[addr + offset]);
+        W_CMD(&fim_ctr[addr + offset]);
         B_CMD(1);
     }
 
     if (hipThreadIdx_x == 0) {
         addr = addr_gen(hipBlockIdx_x, 0, 0, 0, 0x3fff, 0x0);
-		W_CMD_R(&fim_ctr[addr + offset], hab_fim_to_hab);
-    }
-    else if (hipThreadIdx_x == 1) {
+        W_CMD_R(&fim_ctr[addr + offset], hab_fim_to_hab);
+    } else if (hipThreadIdx_x == 1) {
         addr = addr_gen(hipBlockIdx_x, 0, 0, 0, 0x3fff, 0x0);
-		W_CMD_R(&fim_ctr[addr + offset], hab_fim_to_hab + 16);
+        W_CMD_R(&fim_ctr[addr + offset], hab_fim_to_hab + 16);
     }
     B_CMD(0);
 
     if (hipThreadIdx_x < 4) {
         addr = addr_gen(hipBlockIdx_x, 0, 0, hipThreadIdx_x / 2, 0x1fff, 0x1f);
-		W_CMD(&fim_ctr[addr + offset]);
+        W_CMD(&fim_ctr[addr + offset]);
         B_CMD(1);
 
         addr = addr_gen(hipBlockIdx_x, 0, 0, hipThreadIdx_x / 2, (1 << 12), 0);
-		R_CMD(&fim_ctr[addr + offset]);
+        R_CMD(&fim_ctr[addr + offset]);
         B_CMD(1);
     }
 
@@ -211,7 +197,7 @@ __global__ void elt_add_fim(uint8_t* fim_data,
         }
     }
 
-	*frd_size = g_idx[0];
+    *frd_size = g_idx[0];
 #endif
 }
 #endif /* _FIM_OP_KERNELS_FIMK_ */

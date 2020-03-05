@@ -144,8 +144,8 @@ int FimExecutor::execute(FimBo* output, FimBo* fim_data, FimOpType op_type)
         const unsigned threads_per_block = 16;
         const unsigned input_size = blocks * 1024;
         hipLaunchKernelGGL(elt_add_fim, dim3(blocks), dim3(threads_per_block), 0, 0, (uint8_t*)fim_base_addr_,
-                           (uint8_t*)fim_base_addr_, (uint8_t*)output->data, input_size, d_fmtd16_, (int*)d_fmtd16_size_,
-                           WIDTH);
+                           (uint8_t*)fim_base_addr_, (uint8_t*)output->data, input_size, d_fmtd16_,
+                           (int*)d_fmtd16_size_, WIDTH);
 #endif
     } else {
         /* todo:implement other operation function */
@@ -158,7 +158,7 @@ int FimExecutor::execute(FimBo* output, FimBo* fim_data, FimOpType op_type)
 #ifndef MULTI_CU
     hipMemcpy((void*)h_fmtd16_, (void*)d_fmtd16_, sizeof(FimMemTraceData) * h_fmtd16_size_[0], hipMemcpyDeviceToHost);
 #else
-	/* for verifying output instantly, to be removed */
+    /* for verifying output instantly, to be removed */
     hipMemcpy((void*)h_fmtd16_, (void*)d_fmtd16_, sizeof(FimMemTraceData) * MT_NUM, hipMemcpyDeviceToHost);
     FILE* fp2;
     fp2 = fopen("out.txt", "w");

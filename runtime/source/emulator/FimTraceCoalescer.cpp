@@ -34,10 +34,7 @@ void TraceParser::parse(std::string file_name)
     }
 }
 
-void TraceParser::append_data(uint8_t *dst, uint8_t *src, int size)
-{
-    memcpy(dst, src, size);
-}
+void TraceParser::append_data(uint8_t *dst, uint8_t *src, int size) { memcpy(dst, src, size); }
 
 void TraceParser::coalesce_trace(FimMemTraceData *fmtd32, int *fmtd32_size, FimMemTraceData *fmtd16, int fmtd16_size)
 {
@@ -103,11 +100,9 @@ void TraceParser::coalesce_trace(FimMemTraceData *fmtd32, int *fmtd32_size, FimM
                 if (prev_addr != -1 && prev_cmd == 'W') {
                     if ((prev_addr + TRANS_SIZE) == fmtd16[trace_it].addr) {
                         for (int i = 0; i < 16; i++)
-                        append_data(fmtd32[coalesced_trace_it].data + 16, fmtd16[trace_it].data, 16);
+                            append_data(fmtd32[coalesced_trace_it].data + 16, fmtd16[trace_it].data, 16);
                     } else {
-                        for (int i = 0; i < 16; i++)
-
-                        fmtd32[coalesced_trace_it].cmd = 'W';
+                        for (int i = 0; i < 16; i++) fmtd32[coalesced_trace_it].cmd = 'W';
                         fmtd32[coalesced_trace_it].block_id = fmtd16[trace_it].block_id;
                         fmtd32[coalesced_trace_it].thread_id = fmtd16[trace_it].thread_id;
                         fmtd32[coalesced_trace_it].addr = fmtd16[trace_it].addr;
@@ -116,9 +111,7 @@ void TraceParser::coalesce_trace(FimMemTraceData *fmtd32, int *fmtd32_size, FimM
                         prev_addr = fmtd16[trace_it].addr;
                     }
                 } else {
-                    for (int i = 0; i < 16; i++)
-
-                    fmtd32[coalesced_trace_it].cmd = 'W';
+                    for (int i = 0; i < 16; i++) fmtd32[coalesced_trace_it].cmd = 'W';
                     fmtd32[coalesced_trace_it].block_id = fmtd16[trace_it].block_id;
                     fmtd32[coalesced_trace_it].thread_id = fmtd16[trace_it].thread_id;
                     fmtd32[coalesced_trace_it].addr = fmtd16[trace_it].addr;
