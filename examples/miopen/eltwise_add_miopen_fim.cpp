@@ -7,9 +7,13 @@
 #include <thread>
 #include <vector>
 #include "fim_runtime_api.h"
+#include "half.hpp"
 #include "utility/fim_dump.hpp"
 
+using half_float::half;
 #include <utility>
+
+#define LENGTH (64 * 1024)
 
 int fim_elt_add_miopen()
 {
@@ -19,9 +23,9 @@ int fim_elt_add_miopen()
     miopenCreateTensorDescriptor(&b_desc);
     miopenCreateTensorDescriptor(&c_desc);
 
-    std::vector<int> a_len = {2, 3, 4, 1};
-    std::vector<int> b_len = {2, 3, 4, 1};
-    std::vector<int> c_len = {2, 3, 4, 1};
+    std::vector<int> a_len = {LENGTH};
+    std::vector<int> b_len = {LENGTH};
+    std::vector<int> c_len = {LENGTH};
 
     miopenSetTensorDescriptor(a_desc, miopenHalf, 4, a_len.data(), nullptr);
     miopenSetTensorDescriptor(b_desc, miopenHalf, 4, b_len.data(), nullptr);
@@ -31,14 +35,10 @@ int fim_elt_add_miopen()
     float alpha_1 = 1;
     float beta = 0;
 
-    size_t a_sz = a_len[0] * a_len[1] * a_len[2] * a_len[3];
-    size_t b_sz = b_len[0] * b_len[1] * b_len[2] * b_len[3];
-    size_t c_sz = c_len[0] * c_len[1] * c_len[2] * c_len[3];
-
-    FimBo host_input = {.size = a_sz * sizeof(miopenHalf), .mem_type = MEM_TYPE_HOST};
-    FimBo host_weight = {.size = b_sz * sizeof(miopenHalf), .mem_type = MEM_TYPE_HOST};
-    FimBo host_output = {.size = c_sz * sizeof(miopenHalf), .mem_type = MEM_TYPE_HOST};
-    FimBo device_output = {.size = c_sz * sizeof(miopenHalf), .mem_type = MEM_TYPE_DEVICE};
+    FimBo host_input = {.size = LENGTH * sizeof(half), .mem_type = MEM_TYPE_HOST};
+    FimBo host_weight = {.size = LENGTH * sizeof(half), .mem_type = MEM_TYPE_HOST};
+    FimBo host_output = {.size = LENGTH * sizeof(half), .mem_type = MEM_TYPE_HOST};
+    FimBo device_output = {.size = LENGTH * sizeof(half), .mem_type = MEM_TYPE_DEVICE};
 
     /* __FIM_API__ call : Initialize FimRuntime */
     FimInitialize(RT_TYPE_HIP, FIM_FP16);
