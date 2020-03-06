@@ -6,5 +6,7 @@ STAGE=1
 VERSION=0
 
 pushd ${SCRIPT_ROOT}
-docker build -t fim-${STAGE}:${VERSION} ${SCRIPT_ROOT} -f ${SCRIPT_ROOT}/Dockerfile
+docker build --build-arg http_proxy=$http_proxy \
+             --build-arg https_proxy=$http_proxy \
+             -t fim-${STAGE}:${VERSION} ${SCRIPT_ROOT} -f ${SCRIPT_ROOT}/Dockerfile
 popd
