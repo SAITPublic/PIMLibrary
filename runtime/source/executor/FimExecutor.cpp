@@ -7,10 +7,6 @@
 #include "utility/fim_log.h"
 #include "utility/fim_util.h"
 
-#define BLOCKS 32
-#define WIDTH 400
-#define MT_NUM (BLOCKS * WIDTH)
-
 namespace fim
 {
 namespace runtime
@@ -24,6 +20,10 @@ FimExecutor::FimExecutor(FimRuntimeType rt_type, FimPrecision precision)
 
 #ifdef EMULATOR
     fim_emulator_ = fim::runtime::emulator::FimEmulator::get_instance();
+
+    get_fim_block_info(&fbi_);
+    chan_per_fmtd_size_ = 400;
+    max_fmtd_size_ = chan_per_fmtd_size_ * fbi_.num_fim_chan;
 #endif
 }
 
@@ -48,11 +48,7 @@ int FimExecutor::initialize(void)
 
 #ifdef EMULATOR
     int dummy_size = 1;
-#ifndef MULTI_CU
-    int reserved_fmtd_size = 4 * 1024 * 1024;
-#else
-    int reserved_fmtd_size = MT_NUM * sizeof(FimMemTraceData);
-#endif
+    int reserved_fmtd_size = max_fmtd_size_ * sizeof(FimMemTraceData);
     hipMalloc((void**)&fim_base_addr_, dummy_size);
     hipMalloc((void**)&d_fmtd16_, reserved_fmtd_size);
     hipMalloc((void**)&d_fmtd16_size_, sizeof(int));
@@ -135,43 +131,20 @@ int FimExecutor::execute(FimBo* output, FimBo* fim_data, FimOpType op_type)
 
     if (op_type == OP_ELT_ADD) {
         hipMemcpy((void*)fim_base_addr_, fim_data->data, fim_data->size, hipMemcpyHostToDevice);
-#ifndef MULTI_CU
-        hipLaunchKernelGGL(elt_add_fim_1cu_1th_fp16, dim3(1), dim3(1), 0, 0, (uint8_t*)fim_base_addr_,
+        hipLaunchKernelGGL(elt_add_fim_1cu_2th_fp16, dim3(1), dim3(2), 0, 0, (uint8_t*)fim_base_addr_,
                            (uint8_t*)fim_base_addr_, (uint8_t*)output->data, (int)output->size,
                            (FimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_);
-#else
-        const unsigned blocks = BLOCKS;
-        const unsigned threads_per_block = 16;
-        const unsigned input_size = blocks * 1024;
-        hipLaunchKernelGGL(elt_add_fim, dim3(blocks), dim3(threads_per_block), 0, 0, (uint8_t*)fim_base_addr_,
-                           (uint8_t*)fim_base_addr_, (uint8_t*)output->data, input_size, d_fmtd16_,
-                           (int*)d_fmtd16_size_, WIDTH);
-#endif
     } else {
         /* todo:implement other operation function */
         hipLaunchKernelGGL(dummy_kernel, dim3(1), dim3(1), 0, 0);
         return -1;
     }
     hipStreamSynchronize(NULL);
+
 #ifdef EMULATOR
     hipMemcpy((void*)h_fmtd16_size_, (void*)d_fmtd16_size_, sizeof(int), hipMemcpyDeviceToHost);
-#ifndef MULTI_CU
-    hipMemcpy((void*)h_fmtd16_, (void*)d_fmtd16_, sizeof(FimMemTraceData) * h_fmtd16_size_[0], hipMemcpyDeviceToHost);
-#else
-    /* for verifying output instantly, to be removed */
-    hipMemcpy((void*)h_fmtd16_, (void*)d_fmtd16_, sizeof(FimMemTraceData) * MT_NUM, hipMemcpyDeviceToHost);
-    FILE* fp2;
-    fp2 = fopen("out.txt", "w");
-    for (size_t i = 0; i < BLOCKS; i++) {
-        for (size_t j = 0; j < h_fmtd16_size_[0]; j++) {
-            int idx = i * WIDTH + j;
-            fprintf(fp2, "[memt] Block: %d Thread: %d Addr: %lx Data: %lx%lx Cmd: %c\n", h_fmtd16_[idx].block_id,
-                    h_fmtd16_[idx].thread_id, h_fmtd16_[idx].addr, ((uint64_t*)(h_fmtd16_[idx].data))[1],
-                    ((uint64_t*)(h_fmtd16_[idx].data))[0], h_fmtd16_[idx].cmd);
-        }
-    }
-    fclose(fp2);
-#endif
+    hipMemcpy((void*)h_fmtd16_, (void*)d_fmtd16_, sizeof(FimMemTraceData) * max_fmtd_size_, hipMemcpyDeviceToHost);
+
     fim_emulator_->convert_mem_trace_from_16B_to_32B(h_fmtd32_, h_fmtd32_size_, h_fmtd16_, h_fmtd16_size_[0]);
     fim_emulator_->execute_fim(output, fim_data, h_fmtd32_, h_fmtd32_size_[0], op_type);
 #endif
