@@ -4,7 +4,7 @@ aux_source_directory(executor runtime_source)
 aux_source_directory(emulator runtime_source)
 aux_source_directory(utility  runtime_source)
 
-set(CMAKE_CXX_COMPILER "${ROCM_PATH}/hip/bin/hipcc")
+set(CMAKE_CXX_COMPILER "${ROCM_PATH}/bin/hipcc")
 set(HCC_CXX_FLAGS  "-hc --amdgpu-target=gfx900 --amdgpu-target=gfx906 --amdgpu-target=gfx908 ")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HCC_CXX_FLAGS}")
 
@@ -20,4 +20,5 @@ add_library(FimRuntime SHARED ${runtime_source})
 target_link_libraries (FimRuntime glog gflags)
 
 install ( TARGETS FimRuntime LIBRARY DESTINATION /opt/rocm/lib )
-install ( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../include/ DESTINATION /opt/rocm/include )
+install ( FILES ${CMAKE_CURRENT_SOURCE_DIR}/../include/fim_runtime_api.h DESTINATION /opt/rocm/include )
+install ( FILES ${CMAKE_CURRENT_SOURCE_DIR}/../include/fim_data_types.h DESTINATION /opt/rocm/include )
