@@ -37,7 +37,7 @@ uint8_t null_bst[32] = {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 };
 
-__host__ inline int get_fim_block_info(FimBlockInfo* fbi) { memcpy(fbi, &vega20_fbi, sizeof(FimBlockInfo)); }
+__host__ inline void get_fim_block_info(FimBlockInfo* fbi) { memcpy(fbi, &vega20_fbi, sizeof(FimBlockInfo)); }
 
 __host__ __device__ inline uint32_t mask_by_bit(uint32_t value, uint32_t start, uint32_t end)
 {
@@ -139,7 +139,6 @@ __device__ inline void GEN_READ_CMD(volatile uint8_t* __restrict__ dst, volatile
 __device__ inline void BLOCK_SYNC(bool block_all_chan = true)
 {
     __syncthreads();
-
     if (hipThreadIdx_x % 2 == 0) {
         FimBlockInfo* fbi = &vega20_fbi;
         int bid = hipBlockIdx_x;
@@ -284,10 +283,8 @@ __device__ inline void program_crf_1cu_2th(volatile uint8_t* __restrict__ fim_ct
 {
     int i;
 
-    for (i = 0; i < 4; i++) {
-        if (i * 8 >= cmd_size) break;
-        add_transaction_all_1cu_2th(fim_ctr, true, 0, 1, 0x3fff, 0x4 + i, elt_add_crf, offset);
-        elt_add_crf += 32;
+    for (i = 0; i < cmd_size; i += 32) {
+        add_transaction_all_1cu_2th(fim_ctr, true, 0, 1, 0x3fff, 0x4 + i, elt_add_crf + i, offset);
     }
 }
 
@@ -296,10 +293,9 @@ __device__ inline void compute_elt_add_1cu_2th(volatile uint8_t* __restrict__ fi
     FimBlockInfo* fbi = &vega20_fbi;
 
     for (int i = 0; i < num_tile; i++) {
-        add_transaction_all_1cu_2th(fim_data, false, 0, 0, 0, fbi->num_grf * i, null_bst, fbi->num_grf, offset);
-        add_transaction_all_1cu_2th(fim_data, false, 0, 1, 0, fbi->num_grf * i, null_bst, fbi->num_grf, offset);
-        add_transaction_all_1cu_2th(fim_data, true, 0, 1, 0, fbi->num_grf * (num_tile + i), null_bst, fbi->num_grf,
-                                    offset);
+        add_transaction_all_1cu_2th(fim_data, false, 0, 0, 0, fbi->num_grf * i, null_bst, offset, fbi->num_grf);
+        add_transaction_all_1cu_2th(fim_data, false, 0, 1, 0, fbi->num_grf * i, null_bst, offset, fbi->num_grf);
+        add_transaction_all_1cu_2th(fim_data, true, 0, 1, 0, fbi->num_grf * (num_tile + i), null_bst, offset, fbi->num_grf);
     }
 }
 
