@@ -15,6 +15,7 @@ namespace emulator
 {
 // TODO: Define Stride for each FIM configuration
 #define TRANS_SIZE 0x10
+uint64_t MASK = (~((TRANS_SIZE << 1) - 1));
 
 class TraceParser
 {
@@ -23,6 +24,7 @@ class TraceParser
 
    private:
     void append_data(uint8_t *dst, uint8_t *src, int size);
+    void move_data(uint8_t *dst, uint8_t *src, int size);
 };
 
 } /* namespace emulator */

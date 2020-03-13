@@ -7,6 +7,7 @@ namespace runtime
 namespace emulator
 {
 void TraceParser::append_data(uint8_t *dst, uint8_t *src, int size) { memcpy(dst, src, size); }
+void TraceParser::move_data(uint8_t *dst, uint8_t *src, int size) { memcpy(dst, src, size); }
 inline void coalesced_update(FimMemTraceData *fmtd32, int &coalesced_trace_it, FimMemTraceData *fmtd16, int &trace_it,
                              char prev_cmd, uint64_t &prev_addr)
 {
@@ -15,7 +16,7 @@ inline void coalesced_update(FimMemTraceData *fmtd32, int &coalesced_trace_it, F
     fmtd32[coalesced_trace_it].thread_id = fmtd16[trace_it].thread_id;
     fmtd32[coalesced_trace_it].addr = fmtd16[trace_it].addr;
     coalesced_trace_it++;
-    prev_addr = fmtd16[trace_it].addr;
+    prev_addr = fmtd16[trace_it].addr & MASK;
 }
 
 void TraceParser::coalesce_trace(FimMemTraceData *fmtd32, int *fmtd32_size, FimMemTraceData *fmtd16, int fmtd16_size)
@@ -36,9 +37,12 @@ void TraceParser::coalesce_trace(FimMemTraceData *fmtd32, int *fmtd32_size, FimM
                 break;
             case 'R':
                 if (prev_addr != -1 && prev_cmd == 'R') {
-                    if ((prev_addr + TRANS_SIZE) == fmtd16[trace_it].addr)
-                        ;
-                    else
+                    if ((prev_addr) == (fmtd16[trace_it].addr & MASK)) {
+                        if (fmtd16[trace_it].addr < fmtd32[coalesced_trace_it - 1].addr) {
+                            fmtd32[coalesced_trace_it - 1].thread_id = fmtd16[trace_it].thread_id;
+                            fmtd32[coalesced_trace_it - 1].addr = fmtd16[trace_it].addr & MASK;
+                        }
+                    } else
                         coalesced_update(fmtd32, coalesced_trace_it, fmtd16, trace_it, 'R', prev_addr);
                 } else {
                     coalesced_update(fmtd32, coalesced_trace_it, fmtd16, trace_it, 'R', prev_addr);
@@ -47,9 +51,12 @@ void TraceParser::coalesce_trace(FimMemTraceData *fmtd32, int *fmtd32_size, FimM
                 break;
             case 'O':
                 if (prev_addr != -1 && prev_cmd == 'O') {
-                    if ((prev_addr + TRANS_SIZE) == fmtd16[trace_it].addr)
-                        ;
-                    else
+                    if ((prev_addr) == (fmtd16[trace_it].addr & MASK)) {
+                        if (fmtd16[trace_it].addr < fmtd32[coalesced_trace_it - 1].addr) {
+                            fmtd32[coalesced_trace_it - 1].thread_id = fmtd16[trace_it].thread_id;
+                            fmtd32[coalesced_trace_it - 1].addr = fmtd16[trace_it].addr & MASK;
+                        }
+                    } else
                         coalesced_update(fmtd32, coalesced_trace_it, fmtd16, trace_it, 'O', prev_addr);
                 } else {
                     coalesced_update(fmtd32, coalesced_trace_it, fmtd16, trace_it, 'O', prev_addr);
@@ -58,8 +65,16 @@ void TraceParser::coalesce_trace(FimMemTraceData *fmtd32, int *fmtd32_size, FimM
                 break;
             case 'W':
                 if (prev_addr != -1 && prev_cmd == 'W') {
-                    if ((prev_addr + TRANS_SIZE) == fmtd16[trace_it].addr) {
-                        append_data(fmtd32[coalesced_trace_it - 1].data + 16, fmtd16[trace_it].data, 16);
+                    if ((prev_addr) == (fmtd16[trace_it].addr & MASK)) {
+                        // Writes came out of order. Move the data before appending
+                        if (fmtd16[trace_it].addr < fmtd32[coalesced_trace_it - 1].addr) {
+                            move_data(fmtd32[coalesced_trace_it - 1].data + 16, fmtd32[coalesced_trace_it - 1].data, 16);
+                            append_data(fmtd32[coalesced_trace_it - 1].data, fmtd16[trace_it].data, 16);
+                            fmtd32[coalesced_trace_it - 1].thread_id = fmtd16[trace_it].thread_id;
+                            fmtd32[coalesced_trace_it - 1].addr = fmtd16[trace_it].addr & MASK;
+                        } else {
+                            append_data(fmtd32[coalesced_trace_it - 1].data + 16, fmtd16[trace_it].data, 16);
+                        }
                     } else {
                         memcpy(fmtd32[coalesced_trace_it].data, fmtd16[trace_it].data, 16);
                         coalesced_update(fmtd32, coalesced_trace_it, fmtd16, trace_it, 'W', prev_addr);
