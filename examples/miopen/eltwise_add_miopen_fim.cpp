@@ -35,8 +35,8 @@ int fim_elt_add_miopen()
     float alpha_1 = 1;
     float beta = 0;
 
-    FimBo host_input = {.size = LENGTH * sizeof(half), .mem_type = MEM_TYPE_HOST};
-    FimBo host_weight = {.size = LENGTH * sizeof(half), .mem_type = MEM_TYPE_HOST};
+    FimBo host_input0 = {.size = LENGTH * sizeof(half), .mem_type = MEM_TYPE_HOST};
+    FimBo host_input1 = {.size = LENGTH * sizeof(half), .mem_type = MEM_TYPE_HOST};
     FimBo host_output = {.size = LENGTH * sizeof(half), .mem_type = MEM_TYPE_HOST};
     FimBo device_output = {.size = LENGTH * sizeof(half), .mem_type = MEM_TYPE_DEVICE};
 
@@ -44,15 +44,15 @@ int fim_elt_add_miopen()
     FimInitialize(RT_TYPE_HIP, FIM_FP16);
 
     /* __FIM_API__ call : Allocate host(CPU) memory */
-    FimAllocMemory(&host_input);
-    FimAllocMemory(&host_weight);
+    FimAllocMemory(&host_input0);
+    FimAllocMemory(&host_input1);
     FimAllocMemory(&host_output);
     /* __FIM_API__ call : Allocate device(GPU) memory */
     FimAllocMemory(&device_output);
 
     /* Initialize the input, weight, output data */
-    load_data("../test_vectors/load/elt_add_input0_64KB.txt", (char*)host_input.data, host_input.size);
-    load_data("../test_vectors/load/elt_add_input1_64KB.txt", (char*)host_weight.data, host_weight.size);
+    load_data("../test_vectors/load/elt_add_input0_64KB.txt", (char*)host_input0.data, host_input0.size);
+    load_data("../test_vectors/load/elt_add_input1_64KB.txt", (char*)host_input1.data, host_input1.size);
     load_data("../test_vectors/load/elt_add_output_64KB.txt", (char*)host_output.data, host_output.size);
 
     miopenHandle_t handle;
@@ -60,14 +60,14 @@ int fim_elt_add_miopen()
     hipStreamCreate(&s);
     miopenCreateWithStream(&handle, s);
 
-    miopenOpTensor(handle, miopenTensorOpAdd, &alpha_0, a_desc, (void*)&host_input, &alpha_1, b_desc,
-                   (void*)&host_weight, &beta, c_desc, (void*)&device_output);
+    miopenOpTensor(handle, miopenTensorOpAdd, &alpha_0, a_desc, (void*)&host_input0, &alpha_1, b_desc,
+                   (void*)&host_input1, &beta, c_desc, (void*)&device_output);
 
     miopenDestroy(handle);
 
     /* __FIM_API__ call : Free host(CPU) memory */
-    FimFreeMemory(&host_input);
-    FimFreeMemory(&host_weight);
+    FimFreeMemory(&host_input0);
+    FimFreeMemory(&host_input1);
 
     /* __FIM_API__ call : Deinitialize FimRuntime */
     FimDeinitialize();
