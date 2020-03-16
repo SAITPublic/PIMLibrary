@@ -51,9 +51,9 @@ int fim_elt_add_miopen()
     FimAllocMemory(&device_output);
 
     /* Initialize the input, weight, output data */
-    load_data("../test_vectors/load/elt_add_input0_64KB.txt", (char*)host_input0.data, host_input0.size);
-    load_data("../test_vectors/load/elt_add_input1_64KB.txt", (char*)host_input1.data, host_input1.size);
-    load_data("../test_vectors/load/elt_add_output_64KB.txt", (char*)host_output.data, host_output.size);
+    load_data("../test_vectors/load/elt_add/input0_128KB.dat", (char*)host_input0.data, host_input0.size);
+    load_data("../test_vectors/load/elt_add/input1_128KB.dat", (char*)host_input1.data, host_input1.size);
+    load_data("../test_vectors/load/elt_add/output_128KB.dat", (char*)host_output.data, host_output.size);
 
     miopenHandle_t handle;
     hipStream_t s;
