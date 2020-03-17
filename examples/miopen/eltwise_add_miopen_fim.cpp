@@ -27,9 +27,9 @@ int fim_elt_add_miopen()
     std::vector<int> b_len = {LENGTH};
     std::vector<int> c_len = {LENGTH};
 
-    miopenSetTensorDescriptor(a_desc, miopenHalf, 4, a_len.data(), nullptr);
-    miopenSetTensorDescriptor(b_desc, miopenHalf, 4, b_len.data(), nullptr);
-    miopenSetTensorDescriptor(c_desc, miopenHalf, 4, c_len.data(), nullptr);
+    miopenSetTensorDescriptor(a_desc, miopenHalf, 1, a_len.data(), nullptr);
+    miopenSetTensorDescriptor(b_desc, miopenHalf, 1, b_len.data(), nullptr);
+    miopenSetTensorDescriptor(c_desc, miopenHalf, 1, c_len.data(), nullptr);
 
     float alpha_0 = 1;
     float alpha_1 = 1;
@@ -60,8 +60,11 @@ int fim_elt_add_miopen()
     hipStreamCreate(&s);
     miopenCreateWithStream(&handle, s);
 
+    // for test
     miopenOpTensor(handle, miopenTensorOpAdd, &alpha_0, a_desc, (void*)&host_input0, &alpha_1, b_desc,
-                   (void*)&host_input1, &beta, c_desc, (void*)&device_output);
+                   (void*)&host_input1, &beta, c_desc, (void*)&host_output);
+    /*miopenOpTensor(handle, miopenTensorOpAdd, &alpha_0, a_desc, (void*)&host_input0, &alpha_1, b_desc,
+                   (void*)&host_input1, &beta, c_desc, (void*)&host_output);*/
 
     miopenDestroy(handle);
 

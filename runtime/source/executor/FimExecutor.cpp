@@ -4,9 +4,9 @@
 #include <iostream>
 #include "executor/fim_hip_kernels/fim_op_kernels.fimk"
 #include "hip/hip_runtime.h"
+#include "utility/fim_dump.hpp"
 #include "utility/fim_log.h"
 #include "utility/fim_util.h"
-#include "utility/fim_dump.hpp"
 
 namespace fim
 {

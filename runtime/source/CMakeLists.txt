@@ -17,7 +17,7 @@ endif()
 message(STATUS "FIM Log level is " $ENV{FIM_LOG_LEVEL})
 
 add_library(FimRuntime SHARED ${runtime_source})
-target_link_libraries (FimRuntime glog gflags)
+target_link_libraries (FimRuntime dramsim2 glog gflags)
 
 install ( TARGETS FimRuntime LIBRARY DESTINATION /opt/rocm/lib )
 install ( FILES ${CMAKE_CURRENT_SOURCE_DIR}/../include/fim_runtime_api.h DESTINATION /opt/rocm/include )

@@ -44,10 +44,12 @@ int fim_elt_add(void)
     /* __FIM_API__ call : Preload weight data on FIM memory */
     FimConvertDataLayout(&preloaded_fim_input, &host_input0, &host_input1, OP_ELT_ADD);
 
-    dump_data("../test_vectors/dump/elt_add/preloaded_input_256KB.dat", (char*)preloaded_fim_input.data, preloaded_fim_input.size);
+    dump_data("../test_vectors/dump/elt_add/preloaded_input_256KB.dat", (char*)preloaded_fim_input.data,
+              preloaded_fim_input.size);
 
     /* __FIM_API__ call : Execute FIM kernel (ELT_ADD) */
-    FimExecute(&device_output, &preloaded_fim_input, OP_ELT_ADD);
+    FimExecute(&host_output, &preloaded_fim_input, OP_ELT_ADD);  // for test
+    // FimExecute(&device_output, &preloaded_fim_input, OP_ELT_ADD);
 
     /* __FIM_API__ call : Free device(FIM) memory */
     FimFreeMemory(&preloaded_fim_input);

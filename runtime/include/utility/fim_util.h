@@ -295,7 +295,8 @@ __device__ inline void compute_elt_add_1cu_2th(volatile uint8_t* __restrict__ fi
     for (int i = 0; i < num_tile; i++) {
         add_transaction_all_1cu_2th(fim_data, false, 0, 0, 0, fbi->num_grf * i, null_bst, offset, fbi->num_grf);
         add_transaction_all_1cu_2th(fim_data, false, 0, 1, 0, fbi->num_grf * i, null_bst, offset, fbi->num_grf);
-        add_transaction_all_1cu_2th(fim_data, true, 0, 1, 0, fbi->num_grf * (num_tile + i), null_bst, offset, fbi->num_grf);
+        add_transaction_all_1cu_2th(fim_data, true, 0, 1, 0, fbi->num_grf * (num_tile + i), null_bst, offset,
+                                    fbi->num_grf);
     }
 }
 
