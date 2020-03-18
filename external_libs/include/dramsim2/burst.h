@@ -166,7 +166,16 @@ union BurstType {
         return ss.str();
     }
 
-    
+    string hex_tostr_u8() const {
+        stringstream ss;
+        //ss << "[";
+        for (int i = 0; i < 32; i++) {
+            ss << setfill('0') << setw(2) << hex <<  (int)u8_data_[i];
+        }
+        //ss << "]" << dec;
+        return ss.str();
+    }
+
     string hex_tostr2() const {
         stringstream ss;
         //ss << "[";
@@ -177,11 +186,21 @@ union BurstType {
         return ss.str();
     }
 
-     string hex_tostr_reverse(int start, int end) const {
+    string hex_tostr_reverse(int start, int end) const {
         stringstream ss;
         //ss << "[";
-        for (int i = start; i >=end; i--) {
+        for (int i = start; i <=end; i++) {
             ss << setfill('0') << setw(4) << hex << u16_data_[i];
+        }
+        //ss << "]" << dec;
+        return ss.str();
+    }
+
+      string hex_tostr_reverse_u8(int start, int end) const {
+        stringstream ss;
+        //ss << "[";
+        for (int i = start; i <=end; i++) {
+            ss << setfill('0') << setw(2) << hex<< (int)u8_data_[i];
         }
         //ss << "]" << dec;
         return ss.str();
@@ -394,6 +413,19 @@ struct NumpyBurstType {
         }
 
         file.close();
+    }
+
+    void dump_int8(string filename) {
+         ofstream file(filename.c_str());
+         if (file.is_open()) {
+             for (int i = 0; i < bdata.size(); i++) {
+                 for (int j = 0; j < 16; j++) {
+                      char* temp = (char*)&(bdata[i].u16_data_[j]);
+                      file << temp[0] << temp[1];
+                 }
+             }
+         }
+         file.close();
     }
 
     void copy_burst(BurstType* b, unsigned long size) {
