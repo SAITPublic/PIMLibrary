@@ -23,7 +23,7 @@ FimExecutor::FimExecutor(FimRuntimeType rt_type, FimPrecision precision)
     fim_emulator_ = fim::runtime::emulator::FimEmulator::get_instance();
 
     get_fim_block_info(&fbi_);
-    chan_per_fmtd_size_ = 400;
+    chan_per_fmtd_size_ = 4000;
     max_fmtd_size_ = chan_per_fmtd_size_ * fbi_.num_fim_chan;
 #endif
 }
@@ -48,7 +48,7 @@ int FimExecutor::initialize(void)
     std::cout << " hip Device prop succeeded " << std::endl;
 
 #ifdef EMULATOR
-    int dummy_size = 1;
+    int dummy_size = 20 * 1024 * 1024;
     int reserved_fmtd_size = max_fmtd_size_ * sizeof(FimMemTraceData);
     hipMalloc((void**)&fim_base_addr_, dummy_size);
     hipMalloc((void**)&d_fmtd16_, reserved_fmtd_size);
@@ -113,14 +113,38 @@ int FimExecutor::execute(FimBo* output, FimBo* operand0, FimBo* operand1, FimOpT
     DLOG(INFO) << "called";
     int ret = 0;
     size_t size = output->size;
+    FimBo* input = operand0;
+    FimBo* weight = operand1;
 
-    if (op_type == OP_ELT_ADD) {
+    if (op_type == OP_GEMV) {
+        hipMemcpy((void*)fim_base_addr_, weight->data, weight->size, hipMemcpyDeviceToDevice);
+        hipLaunchKernelGGL(gemv_fim_1cu_2th_fp16, dim3(1), dim3(2), 0, 0, (uint8_t*)fim_base_addr_,
+                           (uint8_t*)fim_base_addr_, (uint8_t*)input->data, (uint8_t*)output->data, input->size,
+                           output->size, (FimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_);
     } else {
         /* todo:implement other operation function */
         hipLaunchKernelGGL(dummy_kernel, dim3(1), dim3(1), 0, 0);
         return -1;
     }
     hipStreamSynchronize(NULL);
+
+#ifdef EMULATOR
+    hipMemcpy((void*)h_fmtd16_size_, (void*)d_fmtd16_size_, sizeof(int), hipMemcpyDeviceToHost);
+    hipMemcpy((void*)h_fmtd16_, (void*)d_fmtd16_, sizeof(FimMemTraceData) * max_fmtd_size_, hipMemcpyDeviceToHost);
+
+    if (op_type == OP_GEMV) {
+        char str[256];
+        sprintf(str, "../test_vectors/dump/gemv/fmtd16_1cu_2th.dat");
+        dump_fmtd<16>(str, h_fmtd16_, h_fmtd16_size_[0]);
+
+        fim_emulator_->convert_mem_trace_from_16B_to_32B(h_fmtd32_, h_fmtd32_size_, h_fmtd16_, h_fmtd16_size_[0]);
+
+        sprintf(str, "../test_vectors/dump/gemv/fmtd32_1cu_2th.dat");
+        dump_fmtd<32>(str, h_fmtd32_, h_fmtd32_size_[0]);
+
+        fim_emulator_->execute_fim(output, weight, h_fmtd32_, h_fmtd32_size_[0], op_type);
+    }
+#endif
 
     return ret;
 }

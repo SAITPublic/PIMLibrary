@@ -45,6 +45,57 @@ int FimDeinitialize(void)
     return ret;
 }
 
+FimBo* FimCreateBo(int w, int h, int c, int n, FimPrecision precision, FimMemType mem_type)
+{
+    DLOG(INFO) << "called";
+    FIM_PROFILE_TICK(CreateBo);
+    int ret = 0;
+
+    if (fim_runtime == nullptr) {
+        DLOG(ERROR) << "FimRuntime is not initialized";
+        return nullptr;
+    }
+
+    FimBo* fim_bo = new FimBo;
+    int type_size = (precision == FIM_FP16) ? 2 : 1;
+    size_t size = w * h * c * n * type_size;
+
+    fim_bo->size = size;
+    fim_bo->bshape = {w, h, c, n};
+    fim_bo->mem_type = mem_type;
+    fim_bo->precision = precision;
+
+    ret = fim_runtime->alloc_memory(fim_bo);
+    if (ret != 0) {
+        DLOG(ERROR) << "Fail to alloc memory";
+        return nullptr;
+    }
+    FIM_PROFILE_TOCK(CreateBo);
+
+    return fim_bo;
+}
+
+int FimDestroyBo(FimBo* fim_bo)
+{
+    DLOG(INFO) << "called";
+    FIM_PROFILE_TICK(DestroyBo);
+    int ret = 0;
+
+    if (fim_runtime == nullptr) {
+        DLOG(ERROR) << "FimRuntime is not initialized";
+        return -1;
+    }
+    ret = fim_runtime->free_memory(fim_bo);
+    if (ret != 0) {
+        DLOG(ERROR) << "Fail to alloc memory";
+        return -1;
+    }
+    delete fim_bo;
+    FIM_PROFILE_TOCK(DestroyBo);
+
+    return ret;
+}
+
 int FimAllocMemory(void** ptr, size_t size, FimMemType mem_type)
 {
     DLOG(INFO) << "called";
@@ -57,7 +108,7 @@ int FimAllocMemory(void** ptr, size_t size, FimMemType mem_type)
     ret = fim_runtime->alloc_memory(ptr, size, mem_type);
     FIM_PROFILE_TOCK(AllocMemory);
 
-    if (ptr == 0) return -1;
+    if (ptr == nullptr) return -1;
 
     return ret;
 }
@@ -74,7 +125,7 @@ int FimAllocMemory(FimBo* fim_bo)
     ret = fim_runtime->alloc_memory(fim_bo);
     FIM_PROFILE_TOCK(AllocMemory);
 
-    if (fim_bo->data == 0) return -1;
+    if (fim_bo->data == nullptr) return -1;
 
     return ret;
 }

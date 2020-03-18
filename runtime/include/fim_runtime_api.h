@@ -6,10 +6,13 @@
 __FIM_API__ int FimInitialize(FimRuntimeType rt_type = RT_TYPE_HIP, FimPrecision = FIM_FP16);
 __FIM_API__ int FimDeinitialize(void);
 
-__FIM_API__ int FimAllocMemory(void** ptr, size_t size, FimMemType mem_type = MEM_TYPE_FIM);
+__FIM_API__ FimBo* FimCreateBo(int w, int h, int c, int n, FimPrecision precision, FimMemType mem_type);
+__FIM_API__ int FimDestroyBo(FimBo* fim_bo);
+
+__FIM_API__ int FimAllocMemory(void** ptr, size_t size, FimMemType mem_type);
 __FIM_API__ int FimAllocMemory(FimBo* fim_bo);
 
-__FIM_API__ int FimFreeMemory(void* ptr, FimMemType mem_type = MEM_TYPE_FIM);
+__FIM_API__ int FimFreeMemory(void* ptr, FimMemType mem_type);
 __FIM_API__ int FimFreeMemory(FimBo* fim_bo);
 
 __FIM_API__ int FimConvertDataLayout(void* dst, void* src, size_t size, FimOpType op_type);

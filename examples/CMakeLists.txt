@@ -5,7 +5,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HCC_CXX_FLAGS}")
 include_directories(/opt/rocm/include)
 file(GLOB SOURCES hip/*.cpp)
 add_executable(FimIntegrationTests ${SOURCES})
-
 target_link_libraries(FimIntegrationTests dramsim2 gtest_main gtest FimRuntime)
+
 add_subdirectory(miopen)
 #add_subdirectory(tensorflow)

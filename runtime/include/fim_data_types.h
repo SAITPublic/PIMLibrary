@@ -58,9 +58,18 @@ typedef enum __FimPrecision {
     FIM_INT8,
 } FimPrecision;
 
+typedef struct __FimBShape {
+    int w;
+    int h;
+    int c;
+    int n;
+} FimBShape;
+
 typedef struct __FimBufferObject {
-    size_t size;
     FimMemType mem_type;
+    FimBShape bshape;
+    FimPrecision precision;
+    size_t size;
     void* data;
 } FimBo;
 
@@ -90,6 +99,9 @@ typedef struct __FimBlockInfo {
     int num_col_low_bit;
     int num_offset_bit;
     int num_grf;
+    int num_grf_A;
+    int num_grf_B;
+    int num_srf;
     int num_col;
     int num_row;
     int bl;

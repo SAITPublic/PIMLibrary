@@ -4,7 +4,7 @@
 #include "fim_data_types.h"
 #include "stdio.h"
 
-int load_data(const char* filename, char* data, size_t size)
+inline int load_data(const char* filename, char* data, size_t size)
 {
     FILE* fp = fopen(filename, "r");
 
@@ -21,7 +21,7 @@ int load_data(const char* filename, char* data, size_t size)
     return 0;
 }
 
-int dump_data(const char* filename, char* data, size_t size)
+inline int dump_data(const char* filename, char* data, size_t size)
 {
     FILE* fp = fopen(filename, "wb");
 
@@ -39,7 +39,7 @@ int dump_data(const char* filename, char* data, size_t size)
 }
 
 template <int block_size>
-int dump_fmtd(const char* filename, FimMemTraceData* fmtd, size_t fmtd_size)
+inline int dump_fmtd(const char* filename, FimMemTraceData* fmtd, size_t fmtd_size)
 {
     FILE* fp = fopen(filename, "wb");
 

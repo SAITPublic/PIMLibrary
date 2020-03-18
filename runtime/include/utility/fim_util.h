@@ -24,6 +24,9 @@ FimBlockInfo vega20_fbi = {
     .num_col_low_bit = 2,
     .num_offset_bit = 5,
     .num_grf = 8,
+    .num_grf_A = 8,
+    .num_grf_B = 8,
+    .num_srf = 4,
     .num_col = 128,
     .num_row = 16384,
     .bl = 4,
@@ -31,10 +34,6 @@ FimBlockInfo vega20_fbi = {
     .num_fim_rank = 1,
     .num_fim_chan = 64,
     .trans_size = 32,
-};
-
-uint8_t null_bst[32] = {
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 };
 
 __host__ inline void get_fim_block_info(FimBlockInfo* fbi) { memcpy(fbi, &vega20_fbi, sizeof(FimBlockInfo)); }
@@ -207,29 +206,31 @@ __device__ inline void add_transaction_all_1cu_2th(volatile uint8_t* __restrict_
 }
 
 __device__ inline void change_fim_mode_1cu_2th(volatile uint8_t* __restrict__ fim_ctr, FimMode mode1, FimMode mode2,
-                                               uint64_t offset)
+                                               uint8_t* change_mode_bin, uint64_t offset)
 {
     FimBlockInfo* fbi = &vega20_fbi;
 
     if (mode1 == SB_MODE) {
         if (mode2 == HAB_MODE) {
-            add_transaction_all_1cu_2th(fim_ctr, true, 0, 0, 0x17ff, 0x1f, null_bst, offset);
-            add_transaction_all_1cu_2th(fim_ctr, true, 0, 1, 0x17ff, 0x1f, null_bst, offset);
+            add_transaction_all_1cu_2th(fim_ctr, true, 0, 0, 0x17ff, 0x1f, change_mode_bin, offset);
+            add_transaction_all_1cu_2th(fim_ctr, true, 0, 1, 0x17ff, 0x1f, change_mode_bin, offset);
             if (fbi->num_banks >= 2) {
-                add_transaction_all_1cu_2th(fim_ctr, true, 2, 0, 0x17ff, 0x1f, null_bst, offset);
-                add_transaction_all_1cu_2th(fim_ctr, true, 2, 1, 0x17ff, 0x1f, null_bst, offset);
+                add_transaction_all_1cu_2th(fim_ctr, true, 2, 0, 0x17ff, 0x1f, change_mode_bin, offset);
+                add_transaction_all_1cu_2th(fim_ctr, true, 2, 1, 0x17ff, 0x1f, change_mode_bin, offset);
             }
         }
     } else if (mode1 == HAB_MODE) {
         if (mode2 == SB_MODE) {
-            add_transaction_all_1cu_2th(fim_ctr, true, 0, 0, 0x1fff, 0x1f, null_bst, offset);
-            add_transaction_all_1cu_2th(fim_ctr, true, 0, 1, 0x1fff, 0x1f, null_bst, offset);
+            add_transaction_all_1cu_2th(fim_ctr, true, 0, 0, 0x1fff, 0x1f, change_mode_bin, offset);
+            add_transaction_all_1cu_2th(fim_ctr, true, 0, 1, 0x1fff, 0x1f, change_mode_bin, offset);
         } else if (mode2 == HAB_FIM_MODE) {
-            add_transaction_all_1cu_2th(fim_ctr, true, 0, 0, 0x3fff, 0x0, hab_to_hab_fim, offset);
+            //            add_transaction_all_1cu_2th(fim_ctr, true, 0, 0, 0x3fff, 0x0, hab_to_hab_fim, offset);
+            add_transaction_all_1cu_2th(fim_ctr, true, 0, 0, 0x3fff, 0x0, change_mode_bin, offset);
         }
     } else if (mode1 == HAB_FIM_MODE) {
         if (mode2 == HAB_MODE) {
-            add_transaction_all_1cu_2th(fim_ctr, true, 0, 0, 0x3fff, 0x0, hab_fim_to_hab, offset);
+            //            add_transaction_all_1cu_2th(fim_ctr, true, 0, 0, 0x3fff, 0x0, hab_fim_to_hab, offset);
+            add_transaction_all_1cu_2th(fim_ctr, true, 0, 0, 0x3fff, 0x0, change_mode_bin, offset);
         }
     }
     BLOCK_SYNC();
@@ -278,13 +279,13 @@ __device__ inline void park_out_1cu_2th(volatile uint8_t* __restrict__ fim_ctr, 
     BLOCK_SYNC();
 }
 
-__device__ inline void program_crf_1cu_2th(volatile uint8_t* __restrict__ fim_ctr, uint8_t* elt_add_crf,
-                                           uint32_t cmd_size, uint64_t offset)
+__device__ inline void program_crf_1cu_2th(volatile uint8_t* __restrict__ fim_ctr, uint8_t* crf_bin, uint32_t cmd_size,
+                                           uint64_t offset)
 {
     int i;
 
     for (i = 0; i < cmd_size; i += 32) {
-        add_transaction_all_1cu_2th(fim_ctr, true, 0, 1, 0x3fff, 0x4 + i, elt_add_crf + i, offset);
+        add_transaction_all_1cu_2th(fim_ctr, true, 0, 1, 0x3fff, 0x4 + i, crf_bin + i, offset);
     }
 }
 
@@ -314,6 +315,13 @@ __device__ inline int get_result_col(int dim)
     FimBlockInfo* fbi = &vega20_fbi;
 
     return dim / (fbi->num_fim_blocks * fbi->num_fim_chan * fbi->num_fim_rank);
+}
+
+__device__ inline int gemv_get_result_col(int input_dim, int output_dim, int num_in_tile, int num_out_tile)
+{
+    FimBlockInfo* fbi = &vega20_fbi;
+
+    return num_out_tile * num_in_tile / 2 * fbi->num_grf_A * fbi->num_grf_B;
 }
 
 __device__ inline void read_result_1cu_2th(volatile uint8_t* __restrict__ output,
@@ -357,6 +365,29 @@ __device__ inline void read_result_1cu_2th(volatile uint8_t* __restrict__ output
             s_col = col;
         }
     }
+}
+
+__device__ inline void compute_gemv_2bank_1cu_2th(volatile uint8_t* __restrict__ fim_ctr,
+                                                  volatile uint8_t* __restrict__ fim_weight,
+                                                  volatile uint8_t* __restrict__ fim_input, int num_in_tile,
+                                                  int num_out_tile, int input_tile, int output_tile,
+                                                  FimBankType bank_type, uint64_t offset)
+{
+    FimBlockInfo* fbi = &vega20_fbi;
+    uint64_t addr;
+    uint32_t row = 0;
+    uint32_t col = (fbi->num_grf_A * fbi->num_grf_B) * (input_tile / 2 + output_tile * num_in_tile);
+
+    for (int cidx = 0; cidx < fbi->num_fim_chan; cidx++) {
+        for (int rank = 0; rank < fbi->num_fim_rank; rank++) {
+            for (int gidx = 0; gidx < fbi->num_grf_A; gidx++) {
+                addr = addr_gen(cidx, rank, 0, 1, 0x3fff, 0x8 + gidx);
+                GEN_WRITE_CMD(&fim_ctr[addr + offset], fim_input + offset);
+            }
+            BLOCK_SYNC(false);
+        }
+    }
+    add_transaction_all_1cu_2th(fim_ctr, false, 0, (int)bank_type, row, col, null_bst, offset);
 }
 
 #ifdef EMULATOR
