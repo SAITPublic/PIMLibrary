@@ -42,6 +42,8 @@ void TraceParser::coalesce_trace(FimMemTraceData *fmtd32, int *fmtd32_size, FimM
                             fmtd32[coalesced_trace_it - 1].thread_id = fmtd16[trace_it].thread_id;
                             fmtd32[coalesced_trace_it - 1].addr = fmtd16[trace_it].addr & MASK;
                         }
+                        VLOG(3) << "Coalescing two read on address 0x" << std::hex << prev_addr << " and 0x"
+                                << fmtd16[trace_it].addr << "\n";
                     } else
                         coalesced_update(fmtd32, coalesced_trace_it, fmtd16, trace_it, 'R', prev_addr);
                 } else {
@@ -56,6 +58,8 @@ void TraceParser::coalesce_trace(FimMemTraceData *fmtd32, int *fmtd32_size, FimM
                             fmtd32[coalesced_trace_it - 1].thread_id = fmtd16[trace_it].thread_id;
                             fmtd32[coalesced_trace_it - 1].addr = fmtd16[trace_it].addr & MASK;
                         }
+                        VLOG(3) << "Coalescing two read output on address 0x" << std::hex << prev_addr << " and 0x"
+                                << fmtd16[trace_it].addr << "\n";
                     } else
                         coalesced_update(fmtd32, coalesced_trace_it, fmtd16, trace_it, 'O', prev_addr);
                 } else {
@@ -68,13 +72,16 @@ void TraceParser::coalesce_trace(FimMemTraceData *fmtd32, int *fmtd32_size, FimM
                     if ((prev_addr) == (fmtd16[trace_it].addr & MASK)) {
                         // Writes came out of order. Move the data before appending
                         if (fmtd16[trace_it].addr < fmtd32[coalesced_trace_it - 1].addr) {
-                            move_data(fmtd32[coalesced_trace_it - 1].data + 16, fmtd32[coalesced_trace_it - 1].data, 16);
+                            move_data(fmtd32[coalesced_trace_it - 1].data + 16, fmtd32[coalesced_trace_it - 1].data,
+                                      16);
                             append_data(fmtd32[coalesced_trace_it - 1].data, fmtd16[trace_it].data, 16);
                             fmtd32[coalesced_trace_it - 1].thread_id = fmtd16[trace_it].thread_id;
                             fmtd32[coalesced_trace_it - 1].addr = fmtd16[trace_it].addr & MASK;
                         } else {
                             append_data(fmtd32[coalesced_trace_it - 1].data + 16, fmtd16[trace_it].data, 16);
                         }
+                        VLOG(3) << "Coalescing two writes on address 0x" << std::hex << prev_addr << " and 0x"
+                                << fmtd16[trace_it].addr << "\n";
                     } else {
                         memcpy(fmtd32[coalesced_trace_it].data, fmtd16[trace_it].data, 16);
                         coalesced_update(fmtd32, coalesced_trace_it, fmtd16, trace_it, 'W', prev_addr);
