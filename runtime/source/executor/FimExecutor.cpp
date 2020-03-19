@@ -119,8 +119,8 @@ int FimExecutor::execute(FimBo* output, FimBo* operand0, FimBo* operand1, FimOpT
     if (op_type == OP_GEMV) {
         hipMemcpy((void*)fim_base_addr_, weight->data, weight->size, hipMemcpyDeviceToDevice);
         hipLaunchKernelGGL(gemv_fim_1cu_2th_fp16, dim3(1), dim3(2), 0, 0, (uint8_t*)fim_base_addr_,
-                           (uint8_t*)fim_base_addr_, (uint8_t*)input->data, (uint8_t*)output->data, input->size,
-                           output->size, (FimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_);
+                           (uint8_t*)fim_base_addr_, (uint8_t*)input->data, (uint8_t*)output->data, input->bshape.w,
+                           output->bshape.w, (FimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_);
     } else {
         /* todo:implement other operation function */
         hipLaunchKernelGGL(dummy_kernel, dim3(1), dim3(1), 0, 0);

@@ -135,12 +135,11 @@ __device__ inline void GEN_READ_CMD(volatile uint8_t* __restrict__ dst, volatile
     g_fmtd16[ridx].addr = (uint64_t)src - g_fba;
 }
 
-__device__ inline void BLOCK_SYNC(bool block_all_chan = true)
+__device__ inline void BLOCK_SYNC(int cu_ch_idx = 0, bool block_all_chan = true)
 {
     __syncthreads();
     if (hipThreadIdx_x % 2 == 0) {
         FimBlockInfo* fbi = &vega20_fbi;
-        int bid = hipBlockIdx_x;
         int tid = hipThreadIdx_x;
         int num_chan = fbi->num_fim_chan;
         int ridx;
@@ -155,7 +154,7 @@ __device__ inline void BLOCK_SYNC(bool block_all_chan = true)
             }
         } else {
             ridx = atomicAdd(&g_ridx, 1);
-            g_fmtd16[ridx].block_id = bid;
+            g_fmtd16[ridx].block_id = cu_ch_idx;
             g_fmtd16[ridx].thread_id = tid;
             g_fmtd16[ridx].cmd = 'B';
             g_fmtd16[ridx].addr = 0;
@@ -224,12 +223,10 @@ __device__ inline void change_fim_mode_1cu_2th(volatile uint8_t* __restrict__ fi
             add_transaction_all_1cu_2th(fim_ctr, true, 0, 0, 0x1fff, 0x1f, change_mode_bin, offset);
             add_transaction_all_1cu_2th(fim_ctr, true, 0, 1, 0x1fff, 0x1f, change_mode_bin, offset);
         } else if (mode2 == HAB_FIM_MODE) {
-            //            add_transaction_all_1cu_2th(fim_ctr, true, 0, 0, 0x3fff, 0x0, hab_to_hab_fim, offset);
             add_transaction_all_1cu_2th(fim_ctr, true, 0, 0, 0x3fff, 0x0, change_mode_bin, offset);
         }
     } else if (mode1 == HAB_FIM_MODE) {
         if (mode2 == HAB_MODE) {
-            //            add_transaction_all_1cu_2th(fim_ctr, true, 0, 0, 0x3fff, 0x0, hab_fim_to_hab, offset);
             add_transaction_all_1cu_2th(fim_ctr, true, 0, 0, 0x3fff, 0x0, change_mode_bin, offset);
         }
     }
@@ -282,9 +279,9 @@ __device__ inline void park_out_1cu_2th(volatile uint8_t* __restrict__ fim_ctr, 
 __device__ inline void program_crf_1cu_2th(volatile uint8_t* __restrict__ fim_ctr, uint8_t* crf_bin, uint32_t cmd_size,
                                            uint64_t offset)
 {
-    int i;
+    FimBlockInfo* fbi = &vega20_fbi;
 
-    for (i = 0; i < cmd_size; i += 32) {
+    for (int i = 0; i < cmd_size; i += fbi->trans_size) {
         add_transaction_all_1cu_2th(fim_ctr, true, 0, 1, 0x3fff, 0x4 + i, crf_bin + i, offset);
     }
 }
@@ -382,12 +379,12 @@ __device__ inline void compute_gemv_2bank_1cu_2th(volatile uint8_t* __restrict__
         for (int rank = 0; rank < fbi->num_fim_rank; rank++) {
             for (int gidx = 0; gidx < fbi->num_grf_A; gidx++) {
                 addr = addr_gen(cidx, rank, 0, 1, 0x3fff, 0x8 + gidx);
-                GEN_WRITE_CMD(&fim_ctr[addr + offset], fim_input + offset);
+                GEN_WRITE_CMD(&fim_ctr[addr + offset], fim_input + input_tile * fbi->num_grf_A + gidx + offset);
             }
-            BLOCK_SYNC(false);
+            BLOCK_SYNC(cidx, false);
         }
     }
-    add_transaction_all_1cu_2th(fim_ctr, false, 0, (int)bank_type, row, col, null_bst, offset);
+    add_transaction_all_1cu_2th(fim_ctr, false, 0, (int)bank_type, row, col, null_bst, offset, fbi->num_grf_A * fbi->num_grf_B);
 }
 
 #ifdef EMULATOR
