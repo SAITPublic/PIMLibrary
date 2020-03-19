@@ -16,7 +16,7 @@ inline _Float16 convertF2H(float f_val) { return __float2half(f_val); }
 
 **/
 
-inline float convertH2F(half h_val) { return half_float::detail::half2float<float>(h_val); }
+inline float convertH2F(half_float::half h_val) { return half_float::detail::half2float<float>(h_val); }
 typedef enum __FimRuntimeType {
     RT_TYPE_HIP,
     RT_TYPE_OPENCL,

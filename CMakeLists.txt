@@ -46,3 +46,4 @@ link_directories("${ROCM_PATH}/hsa/lib" "${ROCM_PATH}/libhsakmt/lib" "${PROJECT_
 add_subdirectory(runtime)
 add_subdirectory(examples)
 add_subdirectory(tools)
+add_subdirectory(external_libs)
