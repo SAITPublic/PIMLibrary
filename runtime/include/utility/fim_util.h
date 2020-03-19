@@ -371,20 +371,23 @@ __device__ inline void compute_gemv_2bank_1cu_2th(volatile uint8_t* __restrict__
                                                   FimBankType bank_type, uint64_t offset)
 {
     FimBlockInfo* fbi = &vega20_fbi;
-    uint64_t addr;
+    uint64_t c_addr;
+    uint64_t i_addr;
     uint32_t row = 0;
     uint32_t col = (fbi->num_grf_A * fbi->num_grf_B) * (input_tile / 2 + output_tile * num_in_tile);
 
     for (int cidx = 0; cidx < fbi->num_fim_chan; cidx++) {
         for (int rank = 0; rank < fbi->num_fim_rank; rank++) {
             for (int gidx = 0; gidx < fbi->num_grf_A; gidx++) {
-                addr = addr_gen(cidx, rank, 0, 1, 0x3fff, 0x8 + gidx);
-                GEN_WRITE_CMD(&fim_ctr[addr + offset], fim_input + input_tile * fbi->num_grf_A + gidx + offset);
+                c_addr = addr_gen(cidx, rank, 0, 1, 0x3fff, 0x8 + gidx);
+                i_addr = (input_tile * fbi->num_grf_A + gidx) * fbi->trans_size;
+                GEN_WRITE_CMD(&fim_ctr[c_addr + offset], &fim_input[i_addr + offset]);
             }
             BLOCK_SYNC(cidx, false);
         }
     }
-    add_transaction_all_1cu_2th(fim_ctr, false, 0, (int)bank_type, row, col, null_bst, offset, fbi->num_grf_A * fbi->num_grf_B);
+    add_transaction_all_1cu_2th(fim_ctr, false, 0, (int)bank_type, row, col, null_bst, offset,
+                                fbi->num_grf_A * fbi->num_grf_B);
 }
 
 #ifdef EMULATOR

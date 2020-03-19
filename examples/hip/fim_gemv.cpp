@@ -45,7 +45,7 @@ int fim_gemv(void)
               preloaded_weight->size);
 
     /* __FIM_API__ call : Execute FIM kernel (GEMV) */
-    FimExecute(device_output, device_input, preloaded_weight, OP_GEMV);
+    FimExecute(host_output, device_input, preloaded_weight, OP_GEMV);
 
     /* __FIM_API__ call : Destroy FIM Buffer Object */
     FimDestroyBo(host_input);
