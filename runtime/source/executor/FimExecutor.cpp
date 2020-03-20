@@ -23,8 +23,9 @@ FimExecutor::FimExecutor(FimRuntimeType rt_type, FimPrecision precision)
     fim_emulator_ = fim::runtime::emulator::FimEmulator::get_instance();
 
     get_fim_block_info(&fbi_);
-    chan_per_fmtd_size_ = 4000;
-    max_fmtd_size_ = chan_per_fmtd_size_ * fbi_.num_fim_chan;
+    fmtd_size_per_ch_ = 4000;
+    max_block_size_ = fbi_.num_fim_chan; 
+    max_fmtd_size_ = fmtd_size_per_ch_ * max_block_size_;
 #endif
 }
 
@@ -153,12 +154,14 @@ int FimExecutor::execute(FimBo* output, FimBo* fim_data, FimOpType op_type)
 {
     DLOG(INFO) << "called";
     int ret = 0;
+    const unsigned blocks = max_block_size_;
+    const unsigned threads_per_block = 16;
 
     if (op_type == OP_ELT_ADD) {
         hipMemcpy((void*)fim_base_addr_, fim_data->data, fim_data->size, hipMemcpyHostToDevice);
-        hipLaunchKernelGGL(elt_add_fim_1cu_2th_fp16, dim3(1), dim3(2), 0, 0, (uint8_t*)fim_base_addr_,
+        hipLaunchKernelGGL(elt_add_fim, dim3(blocks), dim3(threads_per_block), 0, 0, (uint8_t*)fim_base_addr_,
                            (uint8_t*)fim_base_addr_, (uint8_t*)output->data, (int)output->size,
-                           (FimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_);
+                           (FimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_);
     } else {
         /* todo:implement other operation function */
         hipLaunchKernelGGL(dummy_kernel, dim3(1), dim3(1), 0, 0);
@@ -171,6 +174,11 @@ int FimExecutor::execute(FimBo* output, FimBo* fim_data, FimOpType op_type)
     hipMemcpy((void*)h_fmtd16_, (void*)d_fmtd16_, sizeof(FimMemTraceData) * max_fmtd_size_, hipMemcpyDeviceToHost);
 
     if (op_type == OP_ELT_ADD) {
+		for (size_t i = 1; i < max_block_size_; i++) {
+			memcpy(&h_fmtd16_[i * h_fmtd16_size_[0]], &h_fmtd16_[i * fmtd_size_per_ch_], h_fmtd16_size_[0] * sizeof(FimMemTraceData));
+		}
+        h_fmtd16_size_[0] *= max_block_size_;
+
         char str[256];
         sprintf(str, "../test_vectors/dump/elt_add/fmtd16_1cu_2th.dat");
         dump_fmtd<16>(str, h_fmtd16_, h_fmtd16_size_[0]);

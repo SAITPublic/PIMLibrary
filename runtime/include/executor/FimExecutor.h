@@ -39,7 +39,7 @@ class FimExecutor
     FimMemTraceData* h_fmtd32_;
     int* h_fmtd16_size_;
     int* h_fmtd32_size_;
-    int chan_per_fmtd_size_;
+    int fmtd_size_per_ch_;
     int max_block_size_;
     int max_fmtd_size_;
     FimBlockInfo fbi_;

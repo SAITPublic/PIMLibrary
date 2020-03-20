@@ -66,7 +66,7 @@ __global__ void gemv_fim_1cu_2th_fp16(volatile uint8_t* __restrict__ fim_ctr, vo
 
 __global__ void elt_add_fim_1cu_2th_fp16(volatile uint8_t* __restrict__ fim_data,
                                          volatile uint8_t* __restrict__ fim_ctr, volatile uint8_t* __restrict__ output,
-                                         int size, FimMemTraceData* fmtd16, int* frd_size)
+                                         int size, FimMemTraceData* fmtd16, int* frd_size, int mt_width)
 {
 #ifdef EMULATOR
     g_fba = (uint64_t)fim_ctr;
@@ -112,10 +112,11 @@ __global__ void elt_add_fim(uint8_t* fim_data, uint8_t* fim_ctr, uint8_t* output
     int num_rank = 1;
     int num_col = 32;
     int g_size = 32;
+    int i_size = input_size / sizeof(short);
     unsigned int start_row = (((uint64_t)fim_ctr - (uint64_t)fim_data) >> 19) & 0x3FFF;
 
     int num_p = num_blk * num_ch * num_g * (g_size / sizeof(short));
-    int num_t = input_size / num_p;
+    int num_t = i_size / num_p;
 
     uint64_t addr;
     uint64_t offset = (hipThreadIdx_x % 2) * 0x10;
@@ -215,9 +216,9 @@ __global__ void elt_add_fim(uint8_t* fim_data, uint8_t* fim_ctr, uint8_t* output
         unsigned int rank = 0;
         unsigned int bg = 0;
         unsigned int ba = 0;
-        unsigned int rst_col = (input_size / 16) / (num_blk * num_ch * num_rank);
+        unsigned int rst_col = (i_size / 16) / (num_blk * num_ch * num_rank);
 
-        for (int x = 0; x < (input_size / 16); x += num_g) {
+        for (int x = 0; x < (i_size / 16); x += num_g) {
             unsigned int row = start_row;
             unsigned int col = rst_col;
 
