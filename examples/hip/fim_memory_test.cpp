@@ -7,10 +7,44 @@
 #include "fim_runtime_api.h"
 #include "half.hpp"
 #include "utility/fim_util.h"
+#include "utility/fim_dump.hpp"
 
 #define LENGTH (1024)
 
 using namespace std;
+
+bool fim_memcpy_test(void)
+{
+    size_t size = 5 * 2;
+    char* data_a;
+    char* data_b;
+    int ret = 0;
+
+    FimInitialize();
+
+    FimAllocMemory((void**)&data_a, size, MEM_TYPE_HOST);
+    FimAllocMemory((void**)&data_b, size, MEM_TYPE_HOST);
+
+    for (int i = 0; i < size; i++) {
+        data_a[i] = 'C';
+        data_b[i] = 'D';
+    }
+
+    FimCopyMemory((void*)data_b, (void*)data_a, size, HOST_TO_HOST);
+
+    ret = compare_data(data_a, data_b, size);
+    if (ret != 0) {
+        std::cout << "data is different" << std::endl;
+        return false;
+    }
+
+    FimFreeMemory(data_a, MEM_TYPE_HOST);
+    FimFreeMemory(data_b, MEM_TYPE_HOST);
+
+    FimDeinitialize();
+
+    return true;
+}
 
 bool simple_fim_alloc_free()
 {
@@ -65,6 +99,7 @@ bool fim_allocate_exceed_blocksize(void)
     return true;
 }
 
+TEST(UnitTest, FimMemCopyTest) { EXPECT_TRUE(fim_memcpy_test()); }
 TEST(UnitTest, simpleFimAllocFree) { EXPECT_TRUE(simple_fim_alloc_free()); }
 TEST(UnitTest, FimRepeatAllocateFree) { EXPECT_TRUE(fim_repeat_allocate_free()); }
 TEST(UnitTest, FimAllocateExceedBlocksize) { EXPECT_FALSE(fim_allocate_exceed_blocksize()); }
