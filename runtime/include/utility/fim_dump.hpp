@@ -61,4 +61,17 @@ inline int dump_fmtd(const char* filename, FimMemTraceData* fmtd, size_t fmtd_si
     return 0;
 }
 
+inline int compare_data(char* data_a, char* data_b, size_t size)
+{
+    int ret = 0;
+
+    for (int i = 0; i < size; i++) {
+        if (data_a[i] != data_b[i]) {
+            ret = -1;
+            break;
+        }
+    }
+    return ret;
+}
+
 #endif /* _FIM_DUMP_HPP_ */

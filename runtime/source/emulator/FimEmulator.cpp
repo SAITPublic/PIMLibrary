@@ -2,6 +2,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <iostream>
+#include "hip/hip_runtime.h"
 #include "utility/fim_log.h"
 
 namespace fim
@@ -52,32 +53,30 @@ int FimEmulator::execute_fim(FimBo* output, FimBo* fim_data, FimMemTraceData* fm
 {
     DLOG(INFO) << "called";
     int ret = 0;
+    int num_element = output->size / sizeof(uint16_t);
+    uint16_t* test_output = new uint16_t[num_element];
 
     if (op_type == OP_ELT_ADD) {
-        int num_element = output->size / sizeof(uint16_t);
-        uint16_t* test_output = new uint16_t[num_element];
-
-        fim_sim_.initialize("../test_vectors/ini/HBM2_samsung_2M_16B_x64.ini", "../test_vectors/ini/system_hbm_vega20.ini",
-                        256 * 64 * 2, 64, 1);
+        fim_sim_.initialize("../test_vectors/ini/HBM2_samsung_2M_16B_x64.ini",
+                            "../test_vectors/ini/system_hbm_vega20.ini", 256 * 64 * 2, 64, 1);
         fim_sim_.alloc_burst(fim_data->size);
         fim_sim_.preload_data(fim_data->data, fim_data->size);
         fim_sim_.execute_kernel((void*)fmtd32, (size_t)fmtd32_size);
         fim_sim_.get_uint16_result(test_output, num_element);
-        compare_output(test_output, output);
-    }
-
-    if (op_type == OP_GEMV) {
-        int num_element = output->size / sizeof(uint16_t);
-        uint16_t* test_output= new uint16_t[num_element];
-
-        fim_sim_.initialize("../test_vectors/ini/HBM2_samsung_2M_16B_x64.ini", "../test_vectors/ini/system_hbm_vega20_gemv.ini", 256 * 64 * 2 , 64, 1);  // 1
+    } else if (op_type == OP_GEMV) {
+        fim_sim_.initialize("../test_vectors/ini/HBM2_samsung_2M_16B_x64.ini",
+                            "../test_vectors/ini/system_hbm_vega20_gemv.ini", 256 * 64 * 2, 64, 1);
         fim_sim_.alloc_burst(fim_data->size);
-        cout << " fim data size :  " << fim_data->size<<endl;
-        fim_sim_.preload_data((void*)fim_data->data, fim_data->size);                                                    // 2
-        fim_sim_.execute_kernel((void*)fmtd32, fmtd32_size);                                               // 3
+        cout << " fim data size :  " << fim_data->size << endl;
+        fim_sim_.preload_data((void*)fim_data->data, fim_data->size);
+        fim_sim_.execute_kernel((void*)fmtd32, fmtd32_size);
         fim_sim_.get_uint16_result_gemv(test_output, num_element);
-        compare_output(test_output, output);
     }
+    if (output->mem_type != MEM_TYPE_HOST)
+        hipMemcpy((void*)output->data, (void*)test_output, num_element * sizeof(short), hipMemcpyHostToDevice);
+
+    delete test_output;
+
     return ret;
 }
 
