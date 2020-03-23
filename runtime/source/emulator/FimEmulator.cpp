@@ -67,10 +67,9 @@ int FimEmulator::execute_fim(FimBo* output, FimBo* fim_data, FimMemTraceData* fm
         fim_sim_.initialize("../test_vectors/ini/HBM2_samsung_2M_16B_x64.ini",
                             "../test_vectors/ini/system_hbm_vega20_gemv.ini", 256 * 64 * 2, 64, 1);
         fim_sim_.alloc_burst(fim_data->size);
-        cout << " fim data size :  " << fim_data->size << endl;
         fim_sim_.preload_data((void*)fim_data->data, fim_data->size);
         fim_sim_.execute_kernel((void*)fmtd32, fmtd32_size);
-        fim_sim_.get_uint16_result_gemv(test_output, num_element);
+        fim_sim_.get_uint16_result(test_output, num_element);
     }
     if (output->mem_type != MEM_TYPE_HOST)
         hipMemcpy((void*)output->data, (void*)test_output, num_element * sizeof(short), hipMemcpyHostToDevice);

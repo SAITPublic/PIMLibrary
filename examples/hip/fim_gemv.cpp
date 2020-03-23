@@ -27,7 +27,7 @@ int fim_gemv(void)
     FimBo* host_weight = FimCreateBo(IN_LENGTH, OUT_LENGTH, 1, 1, FIM_FP16, MEM_TYPE_HOST);
     FimBo* host_reordered_weight = FimCreateBo(IN_LENGTH, OUT_LENGTH, 1, 1, FIM_FP16, MEM_TYPE_FIM);
     FimBo* device_input = FimCreateBo(IN_LENGTH, 1, 1, 1, FIM_FP16, MEM_TYPE_DEVICE);
-    FimBo* device_output = FimCreateBo(OUT_LENGTH, 1, 1, 1, FIM_FP16, MEM_TYPE_DEVICE);
+    FimBo* device_output = FimCreateBo(OUT_LENGTH * 16, 1, 1, 1, FIM_FP16, MEM_TYPE_DEVICE);
     FimBo* preloaded_weight = FimCreateBo(IN_LENGTH, OUT_LENGTH, 1, 1, FIM_FP16, MEM_TYPE_FIM);
     /* TODO: implement reduce sum for gemv output */
     FimBo* host_output = FimCreateBo(OUT_LENGTH * 16, 1, 1, 1, FIM_FP16, MEM_TYPE_HOST);
