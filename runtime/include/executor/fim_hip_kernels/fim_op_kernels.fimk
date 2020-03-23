@@ -29,7 +29,7 @@ __global__ void gemv_fim_1cu_2th_fp16(volatile uint8_t* __restrict__ fim_ctr, vo
     FimBlockInfo* fbi = &vega20_fbi;
     input_dim = input_dim * sizeof(half) / fbi->trans_size;
     int num_parallelism = fbi->num_fim_blocks * fbi->num_fim_chan * fbi->num_fim_rank;
-    int num_output_bst = output_dim/16;
+    int num_output_bst = output_dim / 16;
     int num_out_tile = ceilf((float)num_output_bst / (float)num_parallelism) / fbi->num_grf_B;
     int num_in_tile = ceilf((float)input_dim / (float)fbi->num_grf_A);
     int num_jump_of_even_bank = fbi->num_grf_B * ceilf((float)num_in_tile / 2) - 1;

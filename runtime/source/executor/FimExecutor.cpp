@@ -24,7 +24,7 @@ FimExecutor::FimExecutor(FimRuntimeType rt_type, FimPrecision precision)
 
     get_fim_block_info(&fbi_);
     fmtd_size_per_ch_ = 4000;
-    max_block_size_ = fbi_.num_fim_chan; 
+    max_block_size_ = fbi_.num_fim_chan;
     max_fmtd_size_ = fmtd_size_per_ch_ * max_block_size_;
 #endif
 }
@@ -174,9 +174,10 @@ int FimExecutor::execute(FimBo* output, FimBo* fim_data, FimOpType op_type)
     hipMemcpy((void*)h_fmtd16_, (void*)d_fmtd16_, sizeof(FimMemTraceData) * max_fmtd_size_, hipMemcpyDeviceToHost);
 
     if (op_type == OP_ELT_ADD) {
-		for (size_t i = 1; i < max_block_size_; i++) {
-			memcpy(&h_fmtd16_[i * h_fmtd16_size_[0]], &h_fmtd16_[i * fmtd_size_per_ch_], h_fmtd16_size_[0] * sizeof(FimMemTraceData));
-		}
+        for (size_t i = 1; i < max_block_size_; i++) {
+            memcpy(&h_fmtd16_[i * h_fmtd16_size_[0]], &h_fmtd16_[i * fmtd_size_per_ch_],
+                   h_fmtd16_size_[0] * sizeof(FimMemTraceData));
+        }
         h_fmtd16_size_[0] *= max_block_size_;
 
         char str[256];

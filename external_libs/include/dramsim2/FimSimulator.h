@@ -10,7 +10,7 @@ public:
                     size_t num_fim_chan, size_t num_fim_rank);
     void preload_data(void* data, size_t data_size);
     void execute_kernel(void* trace_data, size_t num_trace);
-    void alloc_burst(size_t data_size);
+    void alloc_burst(size_t preload_size, size_t output_size);
     void get_uint16_result(uint16_t* output_data, size_t num_data);
     void get_uint16_result_gemv(uint16_t* output_data, size_t num_data);
     void run();
@@ -32,7 +32,7 @@ private:
     shared_ptr<FIMController> fim_controller_; // for test
     shared_ptr<MultiChannelMemorySystem> mem_;
 
-    BurstType* input_burst_;
+    BurstType* preload_burst_;
     BurstType* output_burst_;
     int bst_size_;
     size_t cycle_;
