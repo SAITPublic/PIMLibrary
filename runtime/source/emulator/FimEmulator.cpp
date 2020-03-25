@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <iostream>
 #include "hip/hip_runtime.h"
+#include "utility/fim_dump.hpp"
 #include "utility/fim_log.h"
 
 namespace fim
@@ -44,6 +45,14 @@ int FimEmulator::convert_mem_trace_from_16B_to_32B(FimMemTraceData* fmtd32, int*
 
     TraceParser trace_converter;
     trace_converter.coalesce_trace(fmtd32, fmtd32_size, fmtd16, fmtd16_size);
+
+#ifdef DEBUG_FIM
+    char str[256];
+    sprintf(str, "../test_vectors/dump/gemv/fmtd16_1cu_2th.dat");
+    dump_fmtd<16>(str, fmtd16, fmtd16_size);
+    sprintf(str, "../test_vectors/dump/gemv/fmtd32_1cu_2th.dat");
+    dump_fmtd<32>(str, fmtd32, fmtd32_size[0]);
+#endif
 
     return ret;
 }
