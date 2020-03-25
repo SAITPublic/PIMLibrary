@@ -36,23 +36,25 @@
 // Header file for bank class
 //
 
+#include <iostream>
+#include <memory>
 #include "BankState.h"
 #include "BusPacket.h"
 #include "SimulatorObject.h"
 #include "SystemConfiguration.h"
 #include "burst.h"
-#include <iostream>
-#include <memory>
 
-namespace DRAMSim {
-class Bank {
+namespace DRAMSim
+{
+class Bank
+{
     typedef struct _DataStruct {
         unsigned row;
         BurstType data;
         std::shared_ptr<struct _DataStruct> next;
     } DataStruct;
 
-  public:
+   public:
     // functions
     Bank(ostream& dramsim_log_);
 
@@ -60,12 +62,12 @@ class Bank {
     void write(const BusPacket* busPacket);
     BankState currentState;
 
-  private:
+   private:
     // private member
     std::vector<std::shared_ptr<DataStruct>> rowEntries;
     ostream& dramsim_log;
     static std::shared_ptr<DataStruct> searchForRow(unsigned row, std::shared_ptr<DataStruct> head);
 };
-} // namespace DRAMSim
+}  // namespace DRAMSim
 
 #endif

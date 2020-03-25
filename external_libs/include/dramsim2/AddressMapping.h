@@ -35,13 +35,14 @@
 
 #include <cstdint>
 
-namespace DRAMSim {
+namespace DRAMSim
+{
 void addressMapping(uint64_t physicalAddress, unsigned& channel, unsigned& rank, unsigned& bank, unsigned& row,
                     unsigned& col);
 
 unsigned bankgroup_id(int bank);
 bool is_same_bankgroup(int bank0, int bank1);
 
-} // namespace DRAMSim
+}  // namespace DRAMSim
 
 #endif

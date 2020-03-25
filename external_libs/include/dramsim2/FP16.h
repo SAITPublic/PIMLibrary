@@ -3,8 +3,8 @@
 
 #include <cstdint>
 #include <cstring>
-#include "half.h"
 #include <iostream>
+#include "half.h"
 
 using namespace std;
 
@@ -12,19 +12,13 @@ typedef half_float::half fp16;
 float convert_h2f(half_float::half val);
 half_float::half convert_f2h(float val);
 
-typedef union fp16i{
+typedef union fp16i {
     fp16 fval;
     uint16_t ival;
 
-    fp16i(){
-        ival = 0;
-    }
-    fp16i(fp16 x){
-        fval = x;
-    }
-    fp16i(uint16_t x){
-        ival = x;
-    }
+    fp16i() { ival = 0; }
+    fp16i(fp16 x) { fval = x; }
+    fp16i(uint16_t x) { ival = x; }
 };
 
 bool fp16_equal(fp16 A, fp16 B, int maxUlpsDiff);

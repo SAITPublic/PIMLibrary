@@ -1,19 +1,19 @@
 #ifndef __ALU__HPP__
 #define __ALU__HPP__
 
-#include "burst.h"
 #include <cmath>
 #include <cstring>
 #include <iostream>
 #include <string>
+#include "burst.h"
 
 using namespace std;
 
-
-namespace DRAMSim {
-
-class fim_block_t {
-  public:
+namespace DRAMSim
+{
+class fim_block_t
+{
+   public:
     BurstType srf;
     BurstType grfa[8];
     BurstType grfb[8];
@@ -56,5 +56,5 @@ class fim_block {
 };
 #endif
 
-} //namespace DRAMSim
+}  // namespace DRAMSim
 #endif

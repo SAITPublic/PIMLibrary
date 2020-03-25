@@ -39,6 +39,7 @@
 // Header file for memory controller object
 //
 
+#include <map>
 #include "BankState.h"
 #include "BusPacket.h"
 #include "CSVWriter.h"
@@ -47,16 +48,16 @@
 #include "SimulatorObject.h"
 #include "SystemConfiguration.h"
 #include "Transaction.h"
-#include <map>
 
 using namespace std;
 
-namespace DRAMSim {
+namespace DRAMSim
+{
 class Rank;
 class MemorySystem;
-class MemoryController : public SimulatorObject {
-
-  public:
+class MemoryController : public SimulatorObject
+{
+   public:
     // functions
     MemoryController(MemorySystem* ms, CSVWriter& csvOut_, ostream& dramsim_log_);
     virtual ~MemoryController();
@@ -74,7 +75,7 @@ class MemoryController : public SimulatorObject {
     // fields
     vector<Transaction*> transactionQueue;
 
-  private:
+   private:
     ostream& dramsim_log;
     vector<vector<BankState>> bankStates;
 
@@ -91,7 +92,7 @@ class MemoryController : public SimulatorObject {
     vector<unsigned> writeDataCountdown;
     vector<Transaction*> returnTransaction;
     vector<Transaction*> pendingReadTransactions;
-    map<unsigned, unsigned> latencies; // latencyValue -> latencyCount
+    map<unsigned, unsigned> latencies;  // latencyValue -> latencyCount
     vector<bool> powerDown;
 
     vector<Rank*>* ranks;
@@ -133,7 +134,7 @@ class MemoryController : public SimulatorObject {
     vector<unsigned> refreshCountdown;
     vector<unsigned> refreshCountdownBank;
 
-  public:
+   public:
     // energy values are per rank -- SST uses these directly, so make these
     // public
     vector<uint64_t> backgroundEnergy;
@@ -150,7 +151,7 @@ class MemoryController : public SimulatorObject {
     uint64_t totalReads;
     uint64_t totalWrites;
 };
-} // namespace DRAMSim
+}  // namespace DRAMSim
 
 #endif
 

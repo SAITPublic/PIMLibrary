@@ -1,11 +1,11 @@
 #ifndef __FIM_CONTROLLER_HPP__
 #define __FIM_CONTROLLER_HPP__
 
+#include <sstream>
+#include <vector>
 #include "FIMCmd.h"
 #include "MultiChannelMemorySystem.h"
 #include "SystemConfiguration.h"
-#include <sstream>
-#include <vector>
 
 using namespace std;
 using namespace DRAMSim;
@@ -25,9 +25,9 @@ typedef struct _traceDataBst {
     char cmd;
 } TraceDataBst;
 
-
-class FIMController {
-  public:
+class FIMController
+{
+   public:
     int transaction_size_;
     int num_transaction_;
     int num_chan_;
@@ -45,7 +45,7 @@ class FIMController {
     int num_srf_;
     bool use_all_grf_;
 
-  private:
+   private:
     unsigned cycle_;
     int num_chan_bit_;
     int num_rank_bit_;
@@ -67,7 +67,6 @@ class FIMController {
     BurstType grfb_reset;
     BurstType crf_bst[4];
     BurstType* srf_bst;
-    
 
     vector<int> fim_chans_;
     vector<int> fim_ranks_;
@@ -78,12 +77,22 @@ class FIMController {
     vector<MemTraceData> trace_data_;
     vector<TraceDataBst> trace_bst_;
 
-  public:
-    FIMController(shared_ptr<MultiChannelMemorySystem> mem, FIMMode mode, int num_chan, int num_rank, int num_bankgroup, int num_bank, int num_row, int num_col,
-                   int num_fim_chan, int num_fim_rank)
-        :mem_(mem), mode_(mode), num_rank_(num_rank), num_row_(num_row), num_col_(num_col), num_chan_(num_chan),
-          num_bank_(num_bank), num_bankgroup_(num_bankgroup), num_fim_chan_(num_fim_chan), num_fim_rank_(num_fim_rank),
-          num_transaction_(0), cycle_(0) {
+   public:
+    FIMController(shared_ptr<MultiChannelMemorySystem> mem, FIMMode mode, int num_chan, int num_rank, int num_bankgroup,
+                  int num_bank, int num_row, int num_col, int num_fim_chan, int num_fim_rank)
+        : mem_(mem),
+          mode_(mode),
+          num_rank_(num_rank),
+          num_row_(num_row),
+          num_col_(num_col),
+          num_chan_(num_chan),
+          num_bank_(num_bank),
+          num_bankgroup_(num_bankgroup),
+          num_fim_chan_(num_fim_chan),
+          num_fim_rank_(num_fim_rank),
+          num_transaction_(0),
+          cycle_(0)
+    {
         num_bankgroup_bit_ = dramsim_log2(num_bankgroup);
         num_bank_bit_ = dramsim_log2(num_bank) - dramsim_log2(num_bankgroup);
         num_row_bit_ = dramsim_log2(num_row);
@@ -91,7 +100,7 @@ class FIMController {
         num_col_bit_ = dramsim_log2(num_col / BL);
         num_rank_bit_ = dramsim_log2(num_rank);
         num_offset_bit_ = dramsim_log2(BL * JEDEC_DATA_BUS_BITS / 8);
-        transaction_size_ = BL * (JEDEC_DATA_BUS_BITS / 8); // in byte
+        transaction_size_ = BL * (JEDEC_DATA_BUS_BITS / 8);  // in byte
 
         num_col_low_bit_ = 2;
         num_col_high_bit_ = num_col_bit_ - num_col_low_bit_;
@@ -100,13 +109,12 @@ class FIMController {
 
         num_grf_A_ = 8;
         num_grf_B_ = 8;
-        num_srf_   = 4;
+        num_srf_ = 4;
         num_all_grf_ = num_grf_A_ + num_grf_B_;
         num_grf_ = num_grf_A_;
         use_all_grf_ = false;
-        srf_bst=NULL;
-     
-        
+        srf_bst = NULL;
+
         bst_hab_fim.u8_data_[0] = 1;
         bst_hab_fim.u8_data_[16] = 3;
         bst_hab_fim.u8_data_[21] = 1;
@@ -126,7 +134,7 @@ class FIMController {
     }
 
     unsigned mask_by_bit(unsigned value, int starting_bit, int end_bit);
-    void set_fim_cmd(vector<fim_cmd>& fim_cmds, int num_jump_to_be_taken, KernelType ktype );
+    void set_fim_cmd(vector<fim_cmd>& fim_cmds, int num_jump_to_be_taken, KernelType ktype);
     void attach_memory_system(shared_ptr<MultiChannelMemorySystem> mem);
     void add_barrier();
     void run_fim();
@@ -137,29 +145,29 @@ class FIMController {
     uint64_t addr_gen(unsigned chan, unsigned rank, unsigned bankgroup, unsigned bank, unsigned row, unsigned col);
     uint64_t addr_gen_safe(unsigned chan, unsigned rank, unsigned bankgroup, unsigned bank, unsigned& row,
                            unsigned& col);
-    void add_transaction_all(bool is_write, int bg, int bank, int row, int col, std::string tag,
-                                        BurstType* bst, bool use_barrier=false, int loop_counter = 1);
-    void add_transaction_all(bool is_write, int bg, int bank, int row, int col, const char* tag, BurstType* bst, bool use_barrier=false, int loop_counter = 1);
-    void add_transaction_all(bool is_write, int bg, int bank, int row, int col, BurstType* bst, bool use_barrier=false, int loop_counter = 1);
-
+    void add_transaction_all(bool is_write, int bg, int bank, int row, int col, std::string tag, BurstType* bst,
+                             bool use_barrier = false, int loop_counter = 1);
+    void add_transaction_all(bool is_write, int bg, int bank, int row, int col, const char* tag, BurstType* bst,
+                             bool use_barrier = false, int loop_counter = 1);
+    void add_transaction_all(bool is_write, int bg, int bank, int row, int col, BurstType* bst,
+                             bool use_barrier = false, int loop_counter = 1);
 
     void change_fim_mode(fim_mode mode1, fim_mode mode2);
     void change_fim_mode(fim_mode mode1, fim_mode mode2, BurstType& bst);
     void park_in();
     void park_out();
     void program_crf(vector<fim_cmd>& cmds);
-    void set_crf(BurstType* bst, bool fim_op, bool use_all_grf, int crf_toggle_cond, bool grf_a_zero,
-                         bool grf_b_zero);
+    void set_crf(BurstType* bst, bool fim_op, bool use_all_grf, int crf_toggle_cond, bool grf_a_zero, bool grf_b_zero);
 
     unsigned get_result_col(int dim);
     unsigned get_result_col_gemv(int input_dim, int output_dim);
     int get_num_tile(int dim);
     int get_num_jump(int num_tile, KernelType ktype);
     void change_bank(int& cidx, int& rank, int& bg, int& bank, unsigned& starting_row, unsigned& starting_col,
-                                 unsigned& row, unsigned& col);
+                     unsigned& row, unsigned& col);
     int set_toggle_condition(fim_bank_type bank_type);
-    void preprocess_bn(NumpyBurstType* scale_npbst, NumpyBurstType* shift_npbst, NumpyBurstType*gamma_npbst,
-                            NumpyBurstType* beta_npbst, NumpyBurstType* input_npbst, fp16** params);
+    void preprocess_bn(NumpyBurstType* scale_npbst, NumpyBurstType* shift_npbst, NumpyBurstType* gamma_npbst,
+                       NumpyBurstType* beta_npbst, NumpyBurstType* input_npbst, fp16** params);
     void set_srf_buffer(NumpyBurstType* npbst, KernelType ktype);
     void program_srf(int tile_idx);
     void preprocess_srf(NumpyBurstType* input_npbst, fp16** params, int burst_offset, int num_srf_usage);
@@ -168,33 +176,35 @@ class FIMController {
     void execute_gemv_2bank(NumpyBurstType* w_data, NumpyBurstType* i_data);
     void execute_eltwise(int dim, fim_bank_type bank_type, KernelType ktype);
 
-    void preload_operand(NumpyBurstType* operand, fim_bank_type bank_type, KernelType ktype, unsigned starting_row = 0, unsigned starting_col = 0);
+    void preload_operand(NumpyBurstType* operand, fim_bank_type bank_type, KernelType ktype, unsigned starting_row = 0,
+                         unsigned starting_col = 0);
     void preload_gemv(NumpyBurstType* operand, fim_bank_type bank_type, unsigned starting_row, unsigned starting_col);
-    void preload_eltwise(NumpyBurstType* operand, fim_bank_type bank_type, unsigned starting_row, unsigned starting_col);
-    void preload_gemv_2bank(NumpyBurstType* operand, unsigned starting_row=0, unsigned starting_col=0);
+    void preload_eltwise(NumpyBurstType* operand, fim_bank_type bank_type, unsigned starting_row,
+                         unsigned starting_col);
+    void preload_gemv_2bank(NumpyBurstType* operand, unsigned starting_row = 0, unsigned starting_col = 0);
 
     void compute_gemv(NumpyBurstType* data, int num_input_tile, int num_output_tile, int input_tile, int output_tile);
-    void compute_gemv_2bank(NumpyBurstType* data, int num_input_tile, int num_output_tile, int input_tile, int output_tile, fim_bank_type bank_type);
+    void compute_gemv_2bank(NumpyBurstType* data, int num_input_tile, int num_output_tile, int input_tile,
+                            int output_tile, fim_bank_type bank_type);
     void compute_add(int num_tile);
     void compute_bn(int num_tile);
     void compute_relu(int num_tile);
     void compute_resnet50(int num_tile);
 
-    void read_result(BurstType* result_bst, fim_bank_type bank_type, int output_dim, unsigned starting_row = 0, unsigned starting_col = 0);
+    void read_result(BurstType* result_bst, fim_bank_type bank_type, int output_dim, unsigned starting_row = 0,
+                     unsigned starting_col = 0);
     void set_fim_chan(int dim);
     void read_memory_trace(const string& filename);
     void run_trace();
     void convert_to_burst_trace();
 
     void read_data(BurstType* bst_data, size_t bst_cnt);
-    void create_eltwise_vector(NumpyBurstType* operand, uint16_t* data, fim_bank_type bank_type, unsigned starting_row=0,
-                                     unsigned starting_col=0);
-                                     
-    void create_gemv_vector(NumpyBurstType* operand, uint16_t* data, unsigned starting_row=0, unsigned starting_col=0);
+    void create_eltwise_vector(NumpyBurstType* operand, uint16_t* data, fim_bank_type bank_type,
+                               unsigned starting_row = 0, unsigned starting_col = 0);
+
+    void create_gemv_vector(NumpyBurstType* operand, uint16_t* data, unsigned starting_row = 0,
+                            unsigned starting_col = 0);
     void preload_converted_data(uint16_t* data, int data_size, BurstType* test_burst, int bst_cnt);
-
-
-
 };
 
 #endif
