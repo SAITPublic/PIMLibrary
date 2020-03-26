@@ -66,15 +66,25 @@ int FimEmulator::execute_fim(FimBo* output, FimBo* fim_data, FimMemTraceData* fm
     uint16_t* test_output = new uint16_t[num_element];
 
     if (op_type == OP_ELT_ADD) {
-        fim_sim_.initialize("../test_vectors/ini/HBM2_samsung_2M_16B_x64.ini",
-                            "../test_vectors/ini/system_hbm_vega20.ini", 256 * 64 * 2, 64, 1);
+#ifdef DEBUG_FIM
+        fim_sim_.initialize("../external_libs/include/dramsim2/ini/HBM2_samsung_2M_16B_x64.ini",
+                            "../external_libs/include/dramsim2/ini/system_hbm_vega20.ini", 256 * 64 * 2, 64, 1);
+#else
+        fim_sim_.initialize("/opt/rocm/include/dramsim2/ini/HBM2_samsung_2M_16B_x64.ini",
+                            "/opt/rocm/include/dramsim2/ini/system_hbm_vega20.ini", 256 * 64 * 2, 64, 1);
+#endif
         fim_sim_.alloc_burst(fim_data->size, fim_data->size);
         fim_sim_.preload_data(fim_data->data, fim_data->size);
         fim_sim_.execute_kernel((void*)fmtd32, (size_t)fmtd32_size);
         fim_sim_.get_uint16_result(test_output, num_element);
     } else if (op_type == OP_GEMV) {
-        fim_sim_.initialize("../test_vectors/ini/HBM2_samsung_2M_16B_x64.ini",
-                            "../test_vectors/ini/system_hbm_vega20_gemv.ini", 256 * 64 * 2, 64, 1);
+#ifdef DEBUG_FIM
+        fim_sim_.initialize("../external_libs/include/dramsim2/ini/HBM2_samsung_2M_16B_x64.ini",
+                            "../external_libs/include/dramsim2/ini/system_hbm_vega20.ini", 256 * 64 * 2, 64, 1);
+#else
+        fim_sim_.initialize("/opt/rocm/include/dramsim2/ini/HBM2_samsung_2M_16B_x64.ini",
+                            "/opt/rocm/include/dramsim2/ini/system_hbm_vega20_gemv.ini", 256 * 64 * 2, 64, 1);
+#endif
         fim_sim_.alloc_burst(fim_data->size, output->size);
         fim_sim_.preload_data((void*)fim_data->data, fim_data->size);
         fim_sim_.execute_kernel((void*)fmtd32, fmtd32_size);
