@@ -29,9 +29,8 @@ int fim_gemv(void)
     FimBo* device_input = FimCreateBo(IN_LENGTH, 1, 1, 1, FIM_FP16, MEM_TYPE_DEVICE);
     FimBo* device_output = FimCreateBo(OUT_LENGTH * 16, 1, 1, 1, FIM_FP16, MEM_TYPE_DEVICE);
     FimBo* preloaded_weight = FimCreateBo(IN_LENGTH, OUT_LENGTH, 1, 1, FIM_FP16, MEM_TYPE_FIM);
-    /* TODO: implement reduce sum for gemv output */
-    FimBo* host_output = FimCreateBo(OUT_LENGTH * 16, 1, 1, 1, FIM_FP16, MEM_TYPE_HOST);
-    FimBo* golden_output = FimCreateBo(OUT_LENGTH * 16, 1, 1, 1, FIM_FP16, MEM_TYPE_HOST);
+    FimBo* host_output = FimCreateBo(OUT_LENGTH, 1, 1, 1, FIM_FP16, MEM_TYPE_HOST);
+    FimBo* golden_output = FimCreateBo(OUT_LENGTH, 1, 1, 1, FIM_FP16, MEM_TYPE_HOST);
 
     /* Initialize the input, weight, output data */
     load_data("../test_vectors/load/gemv/input_256x1.dat", (char*)host_input->data, host_input->size);

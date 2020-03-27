@@ -31,6 +31,9 @@ class FimEmulator
     int compare_output(uint16_t* test_output, FimBo* output);
 
    private:
+    int reduce_sum_for_gemv(void* inout, int size, int reduce_size);
+
+   private:
     FimBlockInfo fbi_;
     uint64_t fim_base_addr_;
     FimSimulator fim_sim_;

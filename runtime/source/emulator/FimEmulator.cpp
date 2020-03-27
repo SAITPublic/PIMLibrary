@@ -62,10 +62,14 @@ int FimEmulator::execute_fim(FimBo* output, FimBo* fim_data, FimMemTraceData* fm
 {
     DLOG(INFO) << "called";
     int ret = 0;
-    int num_element = output->size / sizeof(uint16_t);
-    uint16_t* test_output = new uint16_t[num_element];
+    int num_element = 0;
+    uint16_t* sim_output = nullptr;
+    int sim_output_size = 0;
 
     if (op_type == OP_ELT_ADD) {
+        num_element = output->size / sizeof(uint16_t);
+        sim_output = new uint16_t[num_element];
+
 #ifdef DEBUG_FIM
         fim_sim_.initialize("../external_libs/include/dramsim2/ini/HBM2_samsung_2M_16B_x64.ini",
                             "../external_libs/include/dramsim2/ini/system_hbm_vega20.ini", 256 * 64 * 2, 64, 1);
@@ -76,8 +80,14 @@ int FimEmulator::execute_fim(FimBo* output, FimBo* fim_data, FimMemTraceData* fm
         fim_sim_.alloc_burst(fim_data->size, fim_data->size);
         fim_sim_.preload_data(fim_data->data, fim_data->size);
         fim_sim_.execute_kernel((void*)fmtd32, (size_t)fmtd32_size);
-        fim_sim_.get_uint16_result(test_output, num_element);
+        fim_sim_.get_uint16_result(sim_output, num_element);
+        if (output->mem_type != MEM_TYPE_HOST)
+            hipMemcpy((void*)output->data, (void*)sim_output, output->size, hipMemcpyHostToDevice);
     } else if (op_type == OP_GEMV) {
+        const int num_of_out_per_grf = 16;
+        num_element = output->size * num_of_out_per_grf / sizeof(uint16_t);
+        sim_output = new uint16_t[num_element];
+        sim_output_size = num_element * sizeof(uint16_t);
 #ifdef DEBUG_FIM
         fim_sim_.initialize("../external_libs/include/dramsim2/ini/HBM2_samsung_2M_16B_x64.ini",
                             "../external_libs/include/dramsim2/ini/system_hbm_vega20.ini", 256 * 64 * 2, 64, 1);
@@ -85,15 +95,35 @@ int FimEmulator::execute_fim(FimBo* output, FimBo* fim_data, FimMemTraceData* fm
         fim_sim_.initialize("/opt/rocm/include/dramsim2/ini/HBM2_samsung_2M_16B_x64.ini",
                             "/opt/rocm/include/dramsim2/ini/system_hbm_vega20_gemv.ini", 256 * 64 * 2, 64, 1);
 #endif
-        fim_sim_.alloc_burst(fim_data->size, output->size);
+        fim_sim_.alloc_burst(fim_data->size, sim_output_size);
         fim_sim_.preload_data((void*)fim_data->data, fim_data->size);
         fim_sim_.execute_kernel((void*)fmtd32, fmtd32_size);
-        fim_sim_.get_uint16_result(test_output, num_element);
+        fim_sim_.get_uint16_result(sim_output, num_element);
+        reduce_sum_for_gemv(sim_output, sim_output_size, num_of_out_per_grf);
+        if (output->mem_type != MEM_TYPE_HOST)
+            hipMemcpy((void*)output->data, (void*)sim_output, output->size, hipMemcpyHostToDevice);
     }
-    if (output->mem_type != MEM_TYPE_HOST)
-        hipMemcpy((void*)output->data, (void*)test_output, output->size, hipMemcpyHostToDevice);
 
-    delete test_output;
+    delete sim_output;
+
+    return ret;
+}
+
+int FimEmulator::reduce_sum_for_gemv(void* inout, int size, int reduce_size)
+{
+    int ret = 0;
+    half t_output;
+    half* output = (half*)inout;
+    half* input = (half*)inout;
+
+    for (int i = 0; i < size / sizeof(half); i++) {
+        t_output = 0;
+        for (int j = 0; j < reduce_size; j++) {
+            t_output += input[j];
+        }
+        output[i] = t_output;
+        input += reduce_size;
+    }
 
     return ret;
 }
