@@ -5,6 +5,7 @@
 #include "hip/hip_runtime.h"
 #include "utility/fim_dump.hpp"
 #include "utility/fim_log.h"
+#include "utility/fim_util.h"
 
 namespace fim
 {
@@ -12,7 +13,12 @@ namespace runtime
 {
 namespace emulator
 {
-FimEmulator::FimEmulator(void) { DLOG(INFO) << "called "; }
+FimEmulator::FimEmulator(void)
+{
+    DLOG(INFO) << "called ";
+    get_fim_block_info(&fbi_);
+}
+
 FimEmulator* FimEmulator::get_instance(void)
 {
     DLOG(INFO) << "Called";
@@ -84,8 +90,7 @@ int FimEmulator::execute_fim(FimBo* output, FimBo* fim_data, FimMemTraceData* fm
         if (output->mem_type != MEM_TYPE_HOST)
             hipMemcpy((void*)output->data, (void*)sim_output, output->size, hipMemcpyHostToDevice);
     } else if (op_type == OP_GEMV) {
-        const int num_of_out_per_grf = 16;
-        num_element = output->size * num_of_out_per_grf / sizeof(uint16_t);
+        num_element = output->size * fbi_.num_out_per_grf / sizeof(uint16_t);
         sim_output = new uint16_t[num_element];
         sim_output_size = num_element * sizeof(uint16_t);
 #ifdef DEBUG_FIM
@@ -99,31 +104,13 @@ int FimEmulator::execute_fim(FimBo* output, FimBo* fim_data, FimMemTraceData* fm
         fim_sim_.preload_data((void*)fim_data->data, fim_data->size);
         fim_sim_.execute_kernel((void*)fmtd32, fmtd32_size);
         fim_sim_.get_uint16_result(sim_output, num_element);
-        reduce_sum_for_gemv(sim_output, sim_output_size, num_of_out_per_grf);
+        reduce_sum_for_gemv((void*)sim_output /* out */, (void*)sim_output /* in */, sim_output_size,
+                            fbi_.num_out_per_grf);
         if (output->mem_type != MEM_TYPE_HOST)
             hipMemcpy((void*)output->data, (void*)sim_output, output->size, hipMemcpyHostToDevice);
     }
 
     delete sim_output;
-
-    return ret;
-}
-
-int FimEmulator::reduce_sum_for_gemv(void* inout, int size, int reduce_size)
-{
-    int ret = 0;
-    half t_output;
-    half* output = (half*)inout;
-    half* input = (half*)inout;
-
-    for (int i = 0; i < size / sizeof(half); i++) {
-        t_output = 0;
-        for (int j = 0; j < reduce_size; j++) {
-            t_output += input[j];
-        }
-        output[i] = t_output;
-        input += reduce_size;
-    }
 
     return ret;
 }

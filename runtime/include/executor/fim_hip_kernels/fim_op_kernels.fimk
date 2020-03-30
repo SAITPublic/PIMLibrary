@@ -16,6 +16,7 @@ int m_width;
 __global__ void dummy_kernel(void) {}
 
 __global__ void gemv_fim_1cu_2th_fp16(volatile uint8_t* __restrict__ fim_ctr, volatile uint8_t* __restrict__ fim_weight,
+                                      volatile uint8_t* __restrict__ fim_gemv_tmp_buffer,
                                       volatile uint8_t* __restrict__ fim_input, volatile uint8_t* __restrict__ output,
                                       int input_dim, int output_dim, FimMemTraceData* fmtd16, int* frd_size)
 {
@@ -29,7 +30,7 @@ __global__ void gemv_fim_1cu_2th_fp16(volatile uint8_t* __restrict__ fim_ctr, vo
     FimBlockInfo* fbi = &vega20_fbi;
     input_dim = input_dim * sizeof(half) / fbi->trans_size;
     int num_parallelism = fbi->num_fim_blocks * fbi->num_fim_chan * fbi->num_fim_rank;
-    int num_output_bst = output_dim / 16;
+    int num_output_bst = output_dim;
     int num_out_tile = ceilf((float)num_output_bst / (float)num_parallelism) / fbi->num_grf_B;
     int num_in_tile = ceilf((float)input_dim / (float)fbi->num_grf_A);
     int num_jump_of_even_bank = fbi->num_grf_B * ceilf((float)num_in_tile / 2) - 1;
@@ -58,10 +59,16 @@ __global__ void gemv_fim_1cu_2th_fp16(volatile uint8_t* __restrict__ fim_ctr, vo
     }
     change_fim_mode_1cu_2th(fim_ctr, HAB_MODE, SB_MODE, null_bst, offset);
     park_out_1cu_2th(fim_ctr, offset);
-    read_result_1cu_2th(output, fim_weight, ODD_BANK, num_output_bst, 0, end_col, offset);
+    read_result_1cu_2th(fim_gemv_tmp_buffer, fim_weight, ODD_BANK, num_output_bst, 0, end_col, offset);
 #ifdef EMULATOR
     __syncthreads();
     frd_size[0] = g_ridx;
+#endif
+
+#if 0 /* TODO: verify reduce sum in Target Mode */
+    if (hipThreadIdx_x == 0) {
+        reduce_sum_for_gemv((void*)output, (void*)fim_gemv_tmp_buffer, output_dim * fbi->num_out_per_grf * 2, fbi->num_out_per_grf);
+    }
 #endif
 }
 

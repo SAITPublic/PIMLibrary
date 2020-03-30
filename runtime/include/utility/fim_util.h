@@ -34,9 +34,29 @@ FimBlockInfo vega20_fbi = {
     .num_fim_rank = 1,
     .num_fim_chan = 64,
     .trans_size = 32,
+    .num_out_per_grf = 16,
 };
 
 __host__ inline void get_fim_block_info(FimBlockInfo* fbi) { memcpy(fbi, &vega20_fbi, sizeof(FimBlockInfo)); }
+
+__host__ __device__ inline void reduce_sum_for_gemv(void* out, void* in, int out_size, int reduce_size)
+{
+    half t_output;
+    half* output = (half*)out;
+    half* input = (half*)in;
+    int out_num = out_size / sizeof(half) / reduce_size;
+
+    printf("out_num:%d,  out_size:%d,  rerduce_size:%d\n", out_num, out_size, reduce_size);
+
+    for (int i = 0; i < out_num; i++) {
+        t_output = 0;
+        for (int j = 0; j < reduce_size; j++) {
+            t_output += input[j];
+        }
+        output[i] = t_output;
+        input += reduce_size;
+    }
+}
 
 __host__ __device__ inline uint32_t mask_by_bit(uint32_t value, uint32_t start, uint32_t end)
 {

@@ -109,6 +109,7 @@ typedef struct __FimBlockInfo {
     int num_fim_rank;
     int num_fim_chan;
     int trans_size;
+    int num_out_per_grf;
 } FimBlockInfo;
 
 typedef struct __FimMemTraceData {
