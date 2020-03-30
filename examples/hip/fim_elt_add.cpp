@@ -58,6 +58,8 @@ int fim_elt_add_1(void)
 
     /* __FIM_API__ call : Deinitialize FimRuntime */
     FimDeinitialize();
+
+    return ret;
 }
 
 int fim_elt_add_2(void)
