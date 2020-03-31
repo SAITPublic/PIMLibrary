@@ -6,11 +6,7 @@ include_directories(/opt/rocm/include)
 file(GLOB SOURCES hip/*.cpp)
 add_executable(FimIntegrationTests ${SOURCES})
 
-if("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
 target_link_libraries(FimIntegrationTests dramsim2 gtest_main gtest FimRuntime)
-elseif("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
-target_link_libraries(FimIntegrationTests dramsim2 gtest_main gtest FimRuntimeDev)
-endif()
 
 add_subdirectory(miopen)
 #add_subdirectory(tensorflow)

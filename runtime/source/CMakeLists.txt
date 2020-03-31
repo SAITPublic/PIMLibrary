@@ -16,13 +16,8 @@ endif()
 
 message(STATUS "FIM Log level is " $ENV{FIM_LOG_LEVEL})
 
-if("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
 add_library(FimRuntime SHARED ${runtime_source})
 target_link_libraries (FimRuntime dramsim2 glog gflags)
-elseif("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
-add_library(FimRuntimeDev SHARED ${runtime_source})
-target_link_libraries (FimRuntimeDev dramsim2 glog gflags)
-endif()
 
 if("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
 install ( TARGETS FimRuntime LIBRARY DESTINATION /opt/rocm/lib/)
