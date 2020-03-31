@@ -13,7 +13,7 @@ git clone git@github.sec.samsung.net:FIM/FIMLibrary.git
 cd FIMLibrary
 mkdir build
 cd build
-cmake -DCMAKE_INSTALL_PREFIX=/opt/rocm ..
+cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/opt/rocm ..
 make -j8
 sudo make install
 
