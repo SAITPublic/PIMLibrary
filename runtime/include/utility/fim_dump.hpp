@@ -4,6 +4,31 @@
 #include "fim_data_types.h"
 #include "stdio.h"
 
+inline const char* get_fim_op_string(FimOpType op_type)
+{
+    const char* op_str;
+
+    switch (op_type) {
+        case OP_GEMV:
+            op_str = "gemv";
+            break;
+        case OP_ELT_ADD:
+            op_str = "elt_add";
+            break;
+        case OP_ELT_MUL:
+            op_str = "elt_mul";
+            break;
+        case OP_BATCH_NORM:
+            op_str = "bn";
+            break;
+        case OP_RELU:
+            op_str = "relu";
+            break;
+    }
+
+    return op_str;
+}
+
 inline int load_data(const char* filename, char* data, size_t size)
 {
     FILE* fp = fopen(filename, "r");

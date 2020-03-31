@@ -140,7 +140,8 @@ int FimExecutor::execute(FimBo* output, FimBo* operand0, FimBo* operand1, FimOpT
     hipMemcpy((void*)h_fmtd16_, (void*)d_fmtd16_, sizeof(FimMemTraceData) * max_fmtd_size_, hipMemcpyDeviceToHost);
 
     if (op_type == OP_GEMV) {
-        fim_emulator_->convert_mem_trace_from_16B_to_32B(h_fmtd32_, h_fmtd32_size_, h_fmtd16_, h_fmtd16_size_[0]);
+        fim_emulator_->convert_mem_trace_from_16B_to_32B(h_fmtd32_, h_fmtd32_size_, h_fmtd16_, h_fmtd16_size_[0],
+                                                         op_type);
         fim_emulator_->execute_fim(output, weight, h_fmtd32_, h_fmtd32_size_[0], op_type);
     }
 #endif
@@ -177,16 +178,8 @@ int FimExecutor::execute(FimBo* output, FimBo* fim_data, FimOpType op_type)
                    h_fmtd16_size_[0] * sizeof(FimMemTraceData));
         }
         h_fmtd16_size_[0] *= max_block_size_;
-
-        char str[256];
-        sprintf(str, "../test_vectors/dump/elt_add/fmtd16_1cu_2th.dat");
-        dump_fmtd<16>(str, h_fmtd16_, h_fmtd16_size_[0]);
-
-        fim_emulator_->convert_mem_trace_from_16B_to_32B(h_fmtd32_, h_fmtd32_size_, h_fmtd16_, h_fmtd16_size_[0]);
-
-        sprintf(str, "../test_vectors/dump/elt_add/fmtd32_1cu_2th.dat");
-        dump_fmtd<32>(str, h_fmtd32_, h_fmtd32_size_[0]);
-
+        fim_emulator_->convert_mem_trace_from_16B_to_32B(h_fmtd32_, h_fmtd32_size_, h_fmtd16_, h_fmtd16_size_[0],
+                                                         op_type);
         fim_emulator_->execute_fim(output, fim_data, h_fmtd32_, h_fmtd32_size_[0], op_type);
     }
 #endif

@@ -44,7 +44,7 @@ int FimEmulator::deinitialize(void)
 }
 
 int FimEmulator::convert_mem_trace_from_16B_to_32B(FimMemTraceData* fmtd32, int* fmtd32_size, FimMemTraceData* fmtd16,
-                                                   int fmtd16_size)
+                                                   int fmtd16_size, FimOpType op_type)
 {
     DLOG(INFO) << "called";
     int ret = 0;
@@ -54,9 +54,10 @@ int FimEmulator::convert_mem_trace_from_16B_to_32B(FimMemTraceData* fmtd32, int*
 
 #ifdef DEBUG_FIM
     char str[256];
-    sprintf(str, "../test_vectors/dump/gemv/fmtd16_1cu_2th.dat");
+    const char* op_str = get_fim_op_string(op_type);
+    sprintf(str, "../test_vectors/dump/%s/fmtd16_1cu_2th.dat", op_str);
     dump_fmtd<16>(str, fmtd16, fmtd16_size);
-    sprintf(str, "../test_vectors/dump/gemv/fmtd32_1cu_2th.dat");
+    sprintf(str, "../test_vectors/dump/%s/fmtd32_1cu_2th.dat", op_str);
     dump_fmtd<32>(str, fmtd32, fmtd32_size[0]);
 #endif
 
