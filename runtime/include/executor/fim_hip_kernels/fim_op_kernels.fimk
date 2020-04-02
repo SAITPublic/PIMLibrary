@@ -92,7 +92,7 @@ __global__ void elt_add_fim_1cu_2th_fp16(volatile uint8_t* __restrict__ fim_data
     change_fim_mode_1cu_2th(fim_ctr, SB_MODE, HAB_MODE, null_bst, offset);
     program_crf_1cu_2th(fim_ctr, elt_add_crf, sizeof(elt_add_crf), offset);
     change_fim_mode_1cu_2th(fim_ctr, HAB_MODE, HAB_FIM_MODE, elt_add_hab_to_hab_fim, offset);
-    compute_elt_add_1cu_2th(fim_data, get_num_tile(out_dim), offset);
+    compute_elt_op_1cu_2th(fim_data, get_num_tile(out_dim), offset);
     change_fim_mode_1cu_2th(fim_ctr, HAB_FIM_MODE, HAB_MODE, elt_add_hab_fim_to_hab, offset);
     change_fim_mode_1cu_2th(fim_ctr, HAB_MODE, SB_MODE, null_bst, offset);
     park_out_1cu_2th(fim_ctr, offset);
@@ -261,4 +261,36 @@ __global__ void elt_add_fim(uint8_t* fim_data, uint8_t* fim_ctr, uint8_t* output
     *frd_size = g_idx[0];
 #endif
 }
+
+__global__ void elt_mul_fim_1cu_2th_fp16(volatile uint8_t* __restrict__ fim_data,
+                                         volatile uint8_t* __restrict__ fim_ctr, volatile uint8_t* __restrict__ output,
+                                         int size, FimMemTraceData* fmtd16, int* frd_size, int mt_width)
+{
+#ifdef EMULATOR
+    g_fba = (uint64_t)fim_ctr;
+    g_fmtd16 = fmtd16;
+    g_ridx = 0;
+    uint64_t offset = (hipThreadIdx_x % 2) * 0x10;
+    __syncthreads();
+#endif
+    FimBlockInfo* fbi = &vega20_fbi;
+    int out_dim = size / fbi->trans_size;
+
+    /* Radeon7(VEGA20) memory is 16GB but our target is 32GB system */
+    /* so program_crf and chagne_fim_mode functions can not access to over 8GB in our system */
+    park_in_1cu_2th(fim_ctr, offset);
+    change_fim_mode_1cu_2th(fim_ctr, SB_MODE, HAB_MODE, null_bst, offset);
+    program_crf_1cu_2th(fim_ctr, elt_mul_crf, sizeof(elt_mul_crf), offset);
+    change_fim_mode_1cu_2th(fim_ctr, HAB_MODE, HAB_FIM_MODE, elt_mul_hab_to_hab_fim, offset);
+    compute_elt_op_1cu_2th(fim_data, get_num_tile(out_dim), offset);
+    change_fim_mode_1cu_2th(fim_ctr, HAB_FIM_MODE, HAB_MODE, elt_mul_hab_fim_to_hab, offset);
+    change_fim_mode_1cu_2th(fim_ctr, HAB_MODE, SB_MODE, null_bst, offset);
+    park_out_1cu_2th(fim_ctr, offset);
+    read_result_1cu_2th(output, fim_data, FimBankType::ODD_BANK, out_dim, 0, get_result_col(out_dim), offset);
+#ifdef EMULATOR
+    __syncthreads();
+    frd_size[0] = g_ridx;
+#endif
+}
+
 #endif /* _FIM_OP_KERNELS_FIMK_ */

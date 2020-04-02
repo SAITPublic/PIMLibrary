@@ -136,6 +136,7 @@ int FimExecutor::execute(FimBo* output, FimBo* operand0, FimBo* operand1, FimOpT
     hipStreamSynchronize(NULL);
 
 #ifdef EMULATOR
+    printf("%s %d d_fmtd16_size : %d\n", __func__, __LINE__, d_fmtd16_size_[0]);
     hipMemcpy((void*)h_fmtd16_size_, (void*)d_fmtd16_size_, sizeof(int), hipMemcpyDeviceToHost);
     hipMemcpy((void*)h_fmtd16_, (void*)d_fmtd16_, sizeof(FimMemTraceData) * max_fmtd_size_, hipMemcpyDeviceToHost);
 
@@ -153,14 +154,21 @@ int FimExecutor::execute(FimBo* output, FimBo* fim_data, FimOpType op_type)
 {
     DLOG(INFO) << "called";
     int ret = 0;
-    const unsigned blocks = max_block_size_;
-    const unsigned threads_per_block = 16;
+    unsigned blocks = max_block_size_;
+    unsigned threads_per_block = 16;
 
     if (op_type == OP_ELT_ADD) {
         hipMemcpy((void*)fim_base_addr_, fim_data->data, fim_data->size, hipMemcpyHostToDevice);
         hipLaunchKernelGGL(elt_add_fim, dim3(blocks), dim3(threads_per_block), 0, 0, (uint8_t*)fim_base_addr_,
                            (uint8_t*)fim_base_addr_, (uint8_t*)output->data, (int)output->size,
                            (FimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_);
+    } else if (op_type == OP_ELT_MUL) {
+        blocks = 1;
+        threads_per_block = 2;
+        hipMemcpy((void*)fim_base_addr_, fim_data->data, fim_data->size, hipMemcpyHostToDevice);
+        hipLaunchKernelGGL(elt_mul_fim_1cu_2th_fp16, dim3(blocks), dim3(threads_per_block), 0, 0,
+                           (uint8_t*)fim_base_addr_, (uint8_t*)fim_base_addr_, (uint8_t*)output->data,
+                           (int)output->size, (FimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_);
     } else {
         /* todo:implement other operation function */
         hipLaunchKernelGGL(dummy_kernel, dim3(1), dim3(1), 0, 0);
@@ -172,12 +180,12 @@ int FimExecutor::execute(FimBo* output, FimBo* fim_data, FimOpType op_type)
     hipMemcpy((void*)h_fmtd16_size_, (void*)d_fmtd16_size_, sizeof(int), hipMemcpyDeviceToHost);
     hipMemcpy((void*)h_fmtd16_, (void*)d_fmtd16_, sizeof(FimMemTraceData) * max_fmtd_size_, hipMemcpyDeviceToHost);
 
-    if (op_type == OP_ELT_ADD) {
-        for (size_t i = 1; i < max_block_size_; i++) {
+    if (op_type == OP_ELT_ADD || op_type == OP_ELT_MUL) {
+        for (size_t i = 1; i < blocks; i++) {
             memcpy(&h_fmtd16_[i * h_fmtd16_size_[0]], &h_fmtd16_[i * fmtd_size_per_ch_],
                    h_fmtd16_size_[0] * sizeof(FimMemTraceData));
         }
-        h_fmtd16_size_[0] *= max_block_size_;
+        h_fmtd16_size_[0] *= blocks;
         fim_emulator_->convert_mem_trace_from_16B_to_32B(h_fmtd32_, h_fmtd32_size_, h_fmtd16_, h_fmtd16_size_[0],
                                                          op_type);
         fim_emulator_->execute_fim(output, fim_data, h_fmtd32_, h_fmtd32_size_[0], op_type);

@@ -306,7 +306,7 @@ __device__ inline void program_crf_1cu_2th(volatile uint8_t* __restrict__ fim_ct
     }
 }
 
-__device__ inline void compute_elt_add_1cu_2th(volatile uint8_t* __restrict__ fim_data, int num_tile, uint64_t offset)
+__device__ inline void compute_elt_op_1cu_2th(volatile uint8_t* __restrict__ fim_data, int num_tile, uint64_t offset)
 {
     FimBlockInfo* fbi = &vega20_fbi;
 

@@ -194,7 +194,7 @@ int FimMemoryManager::convert_data_layout(FimBo* dst, FimBo* src0, FimBo* src1, 
     DLOG(INFO) << "called";
     int ret = 0;
 
-    if (op_type == OP_ELT_ADD) {
+    if (op_type == OP_ELT_ADD || op_type == OP_ELT_MUL) {
         ret = convert_data_layout_for_elt_add(dst, src0, FimBankType::EVEN_BANK);
         ret = convert_data_layout_for_elt_add(dst, src1, FimBankType::ODD_BANK);
     } else {

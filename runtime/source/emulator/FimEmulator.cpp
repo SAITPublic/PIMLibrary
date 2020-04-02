@@ -52,14 +52,16 @@ int FimEmulator::convert_mem_trace_from_16B_to_32B(FimMemTraceData* fmtd32, int*
     TraceParser trace_converter;
     trace_converter.coalesce_trace(fmtd32, fmtd32_size, fmtd16, fmtd16_size);
 
-#ifdef DEBUG_FIM
+    printf("%s %d fmtd16_size : %d\n", __func__, __LINE__, fmtd16_size);
+
+    //#ifdef DEBUG_FIM
     char str[256];
     const char* op_str = get_fim_op_string(op_type);
     sprintf(str, "../test_vectors/dump/%s/fmtd16_1cu_2th.dat", op_str);
     dump_fmtd<16>(str, fmtd16, fmtd16_size);
     sprintf(str, "../test_vectors/dump/%s/fmtd32_1cu_2th.dat", op_str);
     dump_fmtd<32>(str, fmtd32, fmtd32_size[0]);
-#endif
+    //#endif
 
     return ret;
 }
@@ -73,7 +75,7 @@ int FimEmulator::execute_fim(FimBo* output, FimBo* fim_data, FimMemTraceData* fm
     uint16_t* sim_output = nullptr;
     int sim_output_size = 0;
 
-    if (op_type == OP_ELT_ADD) {
+    if (op_type == OP_ELT_ADD || op_type == OP_ELT_MUL) {
         num_element = output->size / sizeof(uint16_t);
         sim_output = new uint16_t[num_element];
 
