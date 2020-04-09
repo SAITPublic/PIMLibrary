@@ -34,27 +34,28 @@
 #ifndef SYSCONFIG_H
 #define SYSCONFIG_H
 
-#include <stdint.h>
+#include "PrintMacros.h"
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
+#include <stdint.h>
 #include <string>
 #include <vector>
-#include "PrintMacros.h"
 
 #ifdef __APPLE__
 #include <sys/types.h>
 #endif
 
+
 // number of latencies per bucket in the latency histogram
 // TODO: move to system ini file
 #define HISTOGRAM_BIN_SIZE 10
 
-extern std::ofstream cmd_verify_out;  // used by BusPacket.cpp if VERIFICATION_OUTPUT is enabled
+extern std::ofstream cmd_verify_out; // used by BusPacket.cpp if VERIFICATION_OUTPUT is enabled
 // extern std::ofstream visDataOut;
 
 // TODO: namespace these to DRAMSim::
-extern bool VERIFICATION_OUTPUT;  // output suitable to feed to modelsim
+extern bool VERIFICATION_OUTPUT; // output suitable to feed to modelsim
 
 extern bool DEBUG_TRANS_Q;
 extern bool DEBUG_CMD_Q;
@@ -155,10 +156,10 @@ extern bool MEM_TRACE_OUTPUT;
 #define READ_AUTOPRE_DELAY (AL + tRTP + tRP)
 #define WRITE_AUTOPRE_DELAY (WL + BL / 2 + tWR + tRP)
 
-#define WRITE_TO_READ_DELAY_B_LONG (WL + BL / 2 + tWTRL)   // interbank
-#define WRITE_TO_READ_DELAY_B_SHORT (WL + BL / 2 + tWTRS)  // interbank
+#define WRITE_TO_READ_DELAY_B_LONG (WL + BL / 2 + tWTRL)  // interbank
+#define WRITE_TO_READ_DELAY_B_SHORT (WL + BL / 2 + tWTRS) // interbank
 
-#define WRITE_TO_READ_DELAY_R max((int)(WL + BL / 2 + tRTRS) - (int)RL, (int)0)  // interrank
+#define WRITE_TO_READ_DELAY_R max((int)(WL + BL / 2 + tRTRS) - (int)RL, (int)0) // interrank
 
 /*
 #define READ_TO_PRE_DELAY_LONG (AL + BL / 2 + max(tRTPL, tCCDL) - tCCDL)
@@ -234,8 +235,8 @@ extern float Vpp;
 extern unsigned Ealu;
 extern unsigned Ereg;
 
-namespace DRAMSim
-{
+namespace DRAMSim {
+    
 enum TraceType { k6, mase, misc };
 
 enum AddressMappingScheme {
@@ -251,6 +252,8 @@ enum AddressMappingScheme {
     VegaScheme
 };
 
+
+
 // used in MemoryController and CommandQueue
 enum RowBufferPolicy { OpenPage, ClosePage };
 
@@ -264,21 +267,11 @@ enum FIMPrecision { FP16, INT8, FP32 };
 enum class fim_mode { SB, HAB, HAB_FIM };
 
 enum class fim_bank_type { EVEN_BANK, ODD_BANK, ALL_BANK };
-enum TestKernelType {
-    ADD_16,
-    ADD_16_NOP,
-    ADD_8,
-    ADD_8_NOP,
-    BN_16,
-    BN_8,
-    ADD_ONE_BANK_8,
-    ADD_ONE_BANK_8_NOP,
-    ADD_ONE_BANK_16,
-    RELU_8
-};
-enum KernelType { ADD, BN, RELU, GEMV, RESNET50 };
+enum TestKernelType{ ADD_16, ADD_16_NOP, ADD_8, ADD_8_NOP, BN_16, BN_8, ADD_ONE_BANK_8, ADD_ONE_BANK_8_NOP, ADD_ONE_BANK_16, RELU_8 };
+enum KernelType{ ADD, BN, RELU, GEMV, RESNET50, MUL, RELU_2BANK};
 // set by IniReader.cpp
 
+    
 typedef void (*returnCallBack_t)(unsigned id, uint64_t addr, uint64_t clockcycle);
 typedef void (*powerCallBack_t)(double bgpower, double burstpower, double refreshpower, double actprepower);
 
@@ -294,8 +287,7 @@ extern int fimDataLength;
 // FUNCTIONS
 //
 
-unsigned inline dramsim_log2(unsigned value)
-{
+unsigned inline dramsim_log2(unsigned value) {
     unsigned logbase2 = 0;
     unsigned orig = value;
     value >>= 1;
@@ -303,10 +295,11 @@ unsigned inline dramsim_log2(unsigned value)
         value >>= 1;
         logbase2++;
     }
-    if ((unsigned)1 << logbase2 < orig) logbase2++;
+    if ((unsigned)1 << logbase2 < orig)
+        logbase2++;
     return logbase2;
 }
 inline bool isPowerOfTwo(unsigned long x) { return (1UL << dramsim_log2(x)) == x; }
-};  // namespace DRAMSim
+}; // namespace DRAMSim
 
 #endif
