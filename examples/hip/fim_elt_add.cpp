@@ -116,5 +116,5 @@ int fim_elt_add_2(void)
 
     return ret;
 }
-TEST(IntegrationTest, FimEltAdd1) { EXPECT_TRUE(fim_elt_add_1() == 0); }
-TEST(IntegrationTest, FimEltAdd2) { EXPECT_TRUE(fim_elt_add_2() == 0); }
+TEST(HIPIntegrationTest, FimEltAdd1) { EXPECT_TRUE(fim_elt_add_1() == 0); }
+TEST(HIPIntegrationTest, FimEltAdd2) { EXPECT_TRUE(fim_elt_add_2() == 0); }

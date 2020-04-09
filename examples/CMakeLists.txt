@@ -3,10 +3,8 @@ set(HCC_CXX_FLAGS  "-hc --amdgpu-target=gfx900 --amdgpu-target=gfx906 --amdgpu-t
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HCC_CXX_FLAGS}")
 
 include_directories(/opt/rocm/include)
-file(GLOB SOURCES hip/*.cpp)
+file(GLOB SOURCES hip/*.cpp miopen/*.cpp)
+
 add_executable(FimIntegrationTests ${SOURCES})
 
-target_link_libraries(FimIntegrationTests gtest_main gtest FimRuntime)
-
-add_subdirectory(miopen)
-#add_subdirectory(tensorflow)
+target_link_libraries(FimIntegrationTests MIOpen gtest_main gtest FimRuntime hip_hcc)

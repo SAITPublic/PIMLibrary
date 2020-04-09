@@ -11,7 +11,7 @@
 #include "utility/fim_dump.hpp"
 #define LENGTH (64 * 1024)
 
-int miopen_elt_add()
+int miopen_elt_mul()
 {
     int ret = 0;
     void *a_data, *b_data, *c_data, *ref_data;
@@ -39,14 +39,14 @@ int miopen_elt_add()
     hipMalloc(&c_data, sizeof(half) * LENGTH);
     hipMalloc(&ref_data, sizeof(half) * LENGTH);
 
-    load_data("../test_vectors/load/elt_add/input0_128KB.dat", (char *)a_data, sizeof(half) * LENGTH);
-    load_data("../test_vectors/load/elt_add/input1_128KB.dat", (char *)b_data, sizeof(half) * LENGTH);
-    load_data("../test_vectors/load/elt_add/output_128KB.dat", (char *)ref_data, sizeof(half) * LENGTH);
+    load_data("../test_vectors/load/elt_mul/input0_128KB.dat", (char *)a_data, sizeof(half) * LENGTH);
+    load_data("../test_vectors/load/elt_mul/input1_128KB.dat", (char *)b_data, sizeof(half) * LENGTH);
+    load_data("../test_vectors/load/elt_mul/output_128KB.dat", (char *)ref_data, sizeof(half) * LENGTH);
 
     miopenHandle_t handle;
     miopenCreate(&handle);
 
-    miopenOpTensor(handle, miopenTensorOpAdd, &alpha_0, a_desc, a_data, &alpha_1, b_desc, b_data, &beta, c_desc,
+    miopenOpTensor(handle, miopenTensorOpMul, &alpha_0, a_desc, a_data, &alpha_1, b_desc, b_data, &beta, c_desc,
                    c_data);
     miopenDestroy(handle);
 
@@ -56,8 +56,7 @@ int miopen_elt_add()
     hipFree(c_data);
     hipFree(b_data);
     hipFree(a_data);
-
     return ret;
 }
 
-TEST(MIOpenIntegrationTest, MIOpenFimEltAdd) { EXPECT_TRUE(miopen_elt_add() == 0); }
+TEST(MIOpenIntegrationTest, MIOpenFimEltMul) { EXPECT_TRUE(miopen_elt_mul() == 0); }

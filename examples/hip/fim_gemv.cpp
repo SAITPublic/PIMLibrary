@@ -66,4 +66,4 @@ int fim_gemv(void)
 
     return ret;
 }
-TEST(IntegrationTest, FimGEMV) { EXPECT_TRUE(fim_gemv() == 0); }
+TEST(HIPIntegrationTest, FimGEMV) { EXPECT_TRUE(fim_gemv() == 0); }
