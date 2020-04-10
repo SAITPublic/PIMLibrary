@@ -318,6 +318,20 @@ __device__ inline void compute_elt_op_1cu_2th(volatile uint8_t* __restrict__ fim
     }
 }
 
+__device__ inline void compute_relu_1cu_2th(volatile uint8_t* __restrict__ fim_data, int num_tile, uint64_t offset)
+{
+    FimBlockInfo* fbi = &vega20_fbi;
+
+    for (int i = 0; i < num_tile; i++) {
+        add_transaction_all_1cu_2th(fim_data, false, 0, 0, 0, fbi->num_grf * i, null_bst, offset, fbi->num_grf);
+        add_transaction_all_1cu_2th(fim_data, true, 0, 0, 0, fbi->num_grf * (num_tile + i), null_bst, offset,
+                                    fbi->num_grf);
+        add_transaction_all_1cu_2th(fim_data, false, 0, 1, 0, fbi->num_grf * i, null_bst, offset, fbi->num_grf);
+        add_transaction_all_1cu_2th(fim_data, true, 0, 1, 0, fbi->num_grf * (num_tile + i), null_bst, offset,
+                                    fbi->num_grf);
+    }
+}
+
 __device__ inline int get_num_tile(int dim)
 {
     FimBlockInfo* fbi = &vega20_fbi;
@@ -364,6 +378,51 @@ __device__ inline void read_result_1cu_2th(volatile uint8_t* __restrict__ output
         }
 
         bank += (fbi->num_banks / fbi->num_fim_blocks);
+        if (bank >= (fbi->num_banks / fbi->num_bank_groups)) {
+            bg++;
+            bank = 0;
+        }
+        if (bg >= fbi->num_bank_groups) {
+            bg = 0;
+            rank++;
+        }
+        if (rank >= fbi->num_fim_rank) {
+            rank = 0;
+            cidx++;
+        }
+        if (cidx >= fbi->num_fim_chan) {
+            cidx = 0;
+            s_row = row;
+            s_col = col;
+        }
+    }
+}
+
+__device__ inline void read_result_2bank_1cu_2th(volatile uint8_t* __restrict__ output,
+                                                 volatile uint8_t* __restrict__ fim_data, int out_dim, uint32_t s_row,
+                                                 uint32_t s_col, uint64_t offset)
+{
+    FimBlockInfo* fbi = &vega20_fbi;
+    uint32_t cidx = 0;
+    uint32_t rank = 0;
+    uint32_t bg = 0;
+    uint32_t bank = 0;
+    uint32_t row = 0;
+    uint32_t col = 0;
+    uint64_t t_addr;
+
+    for (int x = 0; x < out_dim; x += fbi->num_grf) {
+        row = s_row;
+        col = s_col;
+
+        for (int grf_idx = 0; grf_idx < fbi->num_grf; grf_idx++) {
+            t_addr = addr_gen_safe(cidx, rank, bg, bank, row, col);
+            GEN_READ_CMD(output + x + grf_idx + offset, &fim_data[t_addr + offset], true);
+            col++;
+        }
+
+        bank++;
+
         if (bank >= (fbi->num_banks / fbi->num_bank_groups)) {
             bg++;
             bank = 0;

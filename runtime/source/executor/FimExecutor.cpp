@@ -169,6 +169,13 @@ int FimExecutor::execute(FimBo* output, FimBo* fim_data, FimOpType op_type)
         hipLaunchKernelGGL(elt_mul_fim_1cu_2th_fp16, dim3(blocks), dim3(threads_per_block), 0, 0,
                            (uint8_t*)fim_base_addr_, (uint8_t*)fim_base_addr_, (uint8_t*)output->data,
                            (int)output->size, (FimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_);
+    } else if (op_type == OP_RELU) {
+        blocks = 1;
+        threads_per_block = 2;
+        hipMemcpy((void*)fim_base_addr_, fim_data->data, fim_data->size, hipMemcpyHostToDevice);
+        hipLaunchKernelGGL(relu_fim_1cu_2th_fp16, dim3(blocks), dim3(threads_per_block), 0, 0, (uint8_t*)fim_base_addr_,
+                           (uint8_t*)fim_base_addr_, (uint8_t*)output->data, (int)output->size,
+                           (FimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_);
     } else {
         /* todo:implement other operation function */
         hipLaunchKernelGGL(dummy_kernel, dim3(1), dim3(1), 0, 0);
@@ -180,7 +187,7 @@ int FimExecutor::execute(FimBo* output, FimBo* fim_data, FimOpType op_type)
     hipMemcpy((void*)h_fmtd16_size_, (void*)d_fmtd16_size_, sizeof(int), hipMemcpyDeviceToHost);
     hipMemcpy((void*)h_fmtd16_, (void*)d_fmtd16_, sizeof(FimMemTraceData) * max_fmtd_size_, hipMemcpyDeviceToHost);
 
-    if (op_type == OP_ELT_ADD || op_type == OP_ELT_MUL) {
+    if (op_type == OP_ELT_ADD || op_type == OP_ELT_MUL || op_type == OP_RELU) {
         for (size_t i = 1; i < blocks; i++) {
             memcpy(&h_fmtd16_[i * h_fmtd16_size_[0]], &h_fmtd16_[i * fmtd_size_per_ch_],
                    h_fmtd16_size_[0] * sizeof(FimMemTraceData));

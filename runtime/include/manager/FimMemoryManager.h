@@ -32,8 +32,9 @@ class FimMemoryManager
     int convert_data_layout(FimBo* dst, FimBo* src0, FimBo* src1, FimOpType op_type);
 
    private:
-    int convert_data_layout_for_elt_add(FimBo* dst, FimBo* src, FimBankType fim_bank_type);
+    int convert_data_layout_for_elt_op(FimBo* dst, FimBo* src, FimBankType fim_bank_type);
     int convert_data_layout_for_gemv_weight(FimBo* dst, FimBo* src);
+    int convert_data_layout_for_relu(FimBo* dst, FimBo* src);
 
    private:
     FimDevice* fim_device_;

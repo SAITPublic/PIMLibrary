@@ -75,10 +75,9 @@ int FimEmulator::execute_fim(FimBo* output, FimBo* fim_data, FimMemTraceData* fm
     uint16_t* sim_output = nullptr;
     int sim_output_size = 0;
 
-    if (op_type == OP_ELT_ADD || op_type == OP_ELT_MUL) {
+    if (op_type == OP_ELT_ADD || op_type == OP_ELT_MUL || op_type == OP_RELU) {
         num_element = output->size / sizeof(uint16_t);
         sim_output = new uint16_t[num_element];
-
 #ifdef DEBUG_FIM
         fim_sim_.initialize("../external_libs/include/dramsim2/ini/HBM2_samsung_2M_16B_x64.ini",
                             "../external_libs/include/dramsim2/ini/system_hbm_vega20.ini", 256 * 64 * 2, 64, 1);
@@ -92,6 +91,7 @@ int FimEmulator::execute_fim(FimBo* output, FimBo* fim_data, FimMemTraceData* fm
         fim_sim_.get_uint16_result(sim_output, num_element);
         if (output->mem_type != MEM_TYPE_HOST)
             hipMemcpy((void*)output->data, (void*)sim_output, output->size, hipMemcpyHostToDevice);
+
     } else if (op_type == OP_GEMV) {
         num_element = output->size * fbi_.num_out_per_grf / sizeof(uint16_t);
         sim_output = new uint16_t[num_element];

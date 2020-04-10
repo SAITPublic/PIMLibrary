@@ -178,10 +178,11 @@ int FimMemoryManager::convert_data_layout(FimBo* dst, FimBo* src, FimOpType op_t
 {
     DLOG(INFO) << "called";
     int ret = 0;
-    size_t size = dst->size;
 
     if (op_type == OP_GEMV) {
         ret = convert_data_layout_for_gemv_weight(dst, src);
+    } else if (op_type == OP_RELU) {
+        ret = convert_data_layout_for_relu(dst, src);
     } else {
         DLOG(ERROR) << "not yet implemented";
     }
@@ -195,10 +196,71 @@ int FimMemoryManager::convert_data_layout(FimBo* dst, FimBo* src0, FimBo* src1, 
     int ret = 0;
 
     if (op_type == OP_ELT_ADD || op_type == OP_ELT_MUL) {
-        ret = convert_data_layout_for_elt_add(dst, src0, FimBankType::EVEN_BANK);
-        ret = convert_data_layout_for_elt_add(dst, src1, FimBankType::ODD_BANK);
+        ret = convert_data_layout_for_elt_op(dst, src0, FimBankType::EVEN_BANK);
+        ret = convert_data_layout_for_elt_op(dst, src1, FimBankType::ODD_BANK);
     } else {
         DLOG(ERROR) << "not yet implemented";
+    }
+
+    return ret;
+}
+
+int FimMemoryManager::convert_data_layout_for_relu(FimBo* dst, FimBo* src)
+{
+    DLOG(INFO) << "called";
+    int ret = 0;
+
+    uint32_t cidx = 0;
+    uint32_t rank = 0;
+    uint32_t bg = 0;
+    uint32_t bank = 0;
+    uint32_t s_row = 0;
+    uint32_t s_col = 0;
+    uint32_t trans_size = fbi_.trans_size;
+    uint32_t type_size = (precision_ == FIM_FP16) ? sizeof(half) : sizeof(char);
+    uint64_t addr_op = 0x0;
+    uint32_t dim_operand = dst->size / trans_size;
+    char* dst_data = (char*)dst->data;
+    char* src_data = (char*)src->data;
+    int num_grf = fbi_.num_grf;
+    int num_banks = fbi_.num_banks;
+    int num_fim_blocks = fbi_.num_fim_blocks;
+    int num_bank_groups = fbi_.num_bank_groups;
+    int num_fim_rank = fbi_.num_fim_rank;
+    int num_fim_chan = fbi_.num_fim_chan;
+
+    for (int x = 0; x < dim_operand; x += num_grf) {
+        uint32_t row = s_row;
+        uint32_t col = s_col;
+
+        for (int grf_idx = 0; grf_idx < num_grf; grf_idx++) {
+            addr_op = addr_gen_safe(cidx, rank, bg, bank, row, col);
+            memcpy(dst_data + addr_op, src_data + (x + grf_idx) * trans_size, trans_size);
+            col++;
+        }
+
+        bank++;
+
+        if (bank >= (num_banks / num_bank_groups)) {
+            bg++;
+            bank = 0;
+        }
+
+        if (bg >= num_bank_groups) {
+            bg = 0;
+            rank++;
+        }
+
+        if (rank >= num_fim_rank) {
+            rank = 0;
+            cidx++;
+        }
+
+        if (cidx >= num_fim_chan) {
+            cidx = 0;
+            s_row = row;
+            s_col = col;
+        }
     }
 
     return ret;
@@ -322,7 +384,7 @@ int FimMemoryManager::convert_data_layout_for_gemv_weight(FimBo* dst, FimBo* src
     return ret;
 }
 
-int FimMemoryManager::convert_data_layout_for_elt_add(FimBo* dst, FimBo* src, FimBankType fim_bank_type)
+int FimMemoryManager::convert_data_layout_for_elt_op(FimBo* dst, FimBo* src, FimBankType fim_bank_type)
 {
     DLOG(INFO) << "called";
     int ret = 0;
