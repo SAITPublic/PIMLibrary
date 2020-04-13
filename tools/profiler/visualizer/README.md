@@ -7,9 +7,10 @@ performance debugging.
 
 
 Requirements-
-The modules depend on bokeh python library for generating visualizations. To install use-
+The modules depend on bokeh and pandas python library for generating visualizations. To install use-
 ```
 pip install bokeh
+pip intsall pandas
 ```
 
 Testing - 
