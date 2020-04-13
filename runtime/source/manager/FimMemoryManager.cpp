@@ -409,8 +409,8 @@ int FimMemoryManager::convert_data_layout_for_elt_op(FimBo* dst, FimBo* src, Fim
     int num_fim_chan = fbi_.num_fim_chan;
 
     for (int x = 0; x < dim_operand; x += num_grf) {
-        uint32_t row = 0;
-        uint32_t col = 0;
+        uint32_t row = s_row;
+        uint32_t col = s_col;
 
         for (int grf_idx = 0; grf_idx < num_grf; grf_idx++) {
             addr_op = addr_gen_safe(cidx, rank, bg, bank + (int)fim_bank_type, row, col);
