@@ -5,6 +5,7 @@
 #include "fim_data_types.h"
 #include "half.hpp"
 #include "hip/hip_runtime.h"
+#include "manager/FimManager.h"
 
 namespace fim
 {
@@ -26,6 +27,9 @@ class FimExecutor
     int execute(FimBo* output, FimBo* fim_data, FimOpType op_type);
 
    private:
+    fim::runtime::manager::FimManager* fim_manager_;
+    uint8_t* d_binary_buffer_;
+
     FimRuntimeType rt_type_;
     FimPrecision precision_;
     hipDeviceProp_t dev_prop_;

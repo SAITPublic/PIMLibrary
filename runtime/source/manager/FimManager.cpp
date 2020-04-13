@@ -2,7 +2,9 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <iostream>
+#include "executor/fim_hip_kernels/fim_crf_bins.h"
 #include "utility/fim_log.h"
+#include "utility/fim_util.h"
 
 namespace fim
 {
@@ -16,6 +18,7 @@ FimManager::FimManager(FimRuntimeType rt_type, FimPrecision precision) : rt_type
     fim_device_ = new FimDevice(precision_);
     fim_control_manager_ = new FimControlManager(fim_device_, rt_type_, precision_);
     fim_memory_manager_ = new FimMemoryManager(fim_device_, rt_type_, precision_);
+    fim_crf_generator_ = new FimCrfBinGen();
 }
 
 FimManager::~FimManager(void)
@@ -24,6 +27,7 @@ FimManager::~FimManager(void)
     delete fim_device_;
     delete fim_control_manager_;
     delete fim_memory_manager_;
+    delete fim_crf_generator_;
 }
 
 FimManager* FimManager::get_instance(FimRuntimeType rt_type, FimPrecision precision)
@@ -147,6 +151,26 @@ int FimManager::convert_data_layout(FimBo* dst, FimBo* src0, FimBo* src1, FimOpT
 
     return ret;
 }
+
+int FimManager::create_crf_binary(FimOpType op_type, int input_size, int output_size)
+{
+    DLOG(INFO) << "called";
+    int ret = 0;
+
+    get_fim_block_info(&fbi_);
+    fim_crf_generator_->gen_binary(op_type, input_size, output_size, &fbi_, h_binary_buffer_, &crf_size_);
+
+    int num_command_per_register = 8;
+    crf_size_ = ceil((double)crf_size_ / num_command_per_register);
+    // std::cout <<" crf_size : " << crf_size_<<std::endl;
+    // for (int i=0; i<32; i++) {
+    //     std::cout << "g : "<< (int)elt_add_crf[i] << " t : " << (int)h_binary_buffer_[i] << std::endl;
+    // }
+}
+
+uint8_t* FimManager::get_crf_binary() { return h_binary_buffer_; }
+
+int FimManager::get_crf_size() { return crf_size_; }
 
 } /* namespace manager */
 } /* namespace runtime */

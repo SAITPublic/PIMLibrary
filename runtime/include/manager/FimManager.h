@@ -3,6 +3,7 @@
 
 #include "fim_data_types.h"
 #include "manager/FimControlManager.h"
+#include "manager/FimCrfBinGen.h"
 #include "manager/FimDevice.h"
 #include "manager/FimMemoryManager.h"
 
@@ -35,15 +36,26 @@ class FimManager
     int convert_data_layout(FimBo* dst, FimBo* src, FimOpType);
     int convert_data_layout(FimBo* dst, FimBo* src0, FimBo* src1, FimOpType op_type);
 
+    int create_crf_binary(FimOpType op_type, int input_size, int output_size);
+    uint8_t* get_crf_binary();
+    int get_crf_size();
+
    private:
     FimManager(FimRuntimeType rt_type, FimPrecision precision);
 
     FimDevice* fim_device_;
     FimControlManager* fim_control_manager_;
     FimMemoryManager* fim_memory_manager_;
+    FimCrfBinGen* fim_crf_generator_;
 
     FimRuntimeType rt_type_;
     FimPrecision precision_;
+
+    uint8_t h_binary_buffer_[128] = {
+        0,
+    };
+    int crf_size_;
+    FimBlockInfo fbi_;
 };
 
 } /* namespace manager */

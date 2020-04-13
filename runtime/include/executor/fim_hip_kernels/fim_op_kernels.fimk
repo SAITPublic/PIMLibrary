@@ -18,7 +18,8 @@ __global__ void dummy_kernel(void) {}
 __global__ void gemv_fim_1cu_2th_fp16(volatile uint8_t* __restrict__ fim_ctr, volatile uint8_t* __restrict__ fim_weight,
                                       volatile uint8_t* __restrict__ fim_gemv_tmp_buffer,
                                       volatile uint8_t* __restrict__ fim_input, volatile uint8_t* __restrict__ output,
-                                      int input_dim, int output_dim, FimMemTraceData* fmtd16, int* frd_size)
+                                      int input_dim, int output_dim, FimMemTraceData* fmtd16, int* frd_size,
+                                      uint8_t* crf_binary, int crf_size)
 {
 #ifdef EMULATOR
     g_fba = (uint64_t)fim_ctr;
@@ -42,7 +43,7 @@ __global__ void gemv_fim_1cu_2th_fp16(volatile uint8_t* __restrict__ fim_ctr, vo
     /* so program_crf and chagne_fim_mode functions can not access to over 8GB in our system */
     park_in_1cu_2th(fim_ctr, offset);
     change_fim_mode_1cu_2th(fim_ctr, SB_MODE, HAB_MODE, null_bst, offset);
-    program_crf_1cu_2th(fim_ctr, gemv_crf, sizeof(gemv_crf), offset);
+    program_crf_1cu_2th(fim_ctr, crf_binary, crf_size, offset);
     for (int j = 0; j < num_out_tile; j++) {
         change_fim_mode_1cu_2th(fim_ctr, HAB_MODE, HAB_FIM_MODE, gemv_hab_to_hab_fim, offset);
         for (int i = 0; i < num_in_tile; i += 2) {
@@ -104,7 +105,7 @@ __global__ void elt_add_fim_1cu_2th_fp16(volatile uint8_t* __restrict__ fim_data
 }
 
 __global__ void elt_add_fim(uint8_t* fim_data, uint8_t* fim_ctr, uint8_t* output, unsigned int input_size,
-                            FimMemTraceData* fmtd, int* frd_size, int mt_width)
+                            FimMemTraceData* fmtd, int* frd_size, int mt_width, uint8_t* crf_binary, int crf_size)
 {
 #ifdef EMULATOR
     g_idx[hipBlockIdx_x] = 0;
@@ -161,12 +162,9 @@ __global__ void elt_add_fim(uint8_t* fim_data, uint8_t* fim_ctr, uint8_t* output
     }
     B_CMD(0);
 
-    if (hipThreadIdx_x == 0) {
-        addr = addr_gen(hipBlockIdx_x, 0, 0, 1, 0x3fff, 0x4);
-        W_CMD_R(&fim_ctr[addr + offset], elt_add_crf);
-    } else if (hipThreadIdx_x == 1) {
-        addr = addr_gen(hipBlockIdx_x, 0, 0, 1, 0x3fff, 0x4);
-        W_CMD_R(&fim_ctr[addr + offset], elt_add_crf + 16);
+    if (hipThreadIdx_x < 2 * crf_size) {
+        addr = addr_gen(hipBlockIdx_x, 0, 0, 1, 0x3fff, 0x4 + hipThreadIdx_x / 2);
+        W_CMD_R(&fim_ctr[addr + offset], crf_binary + hipThreadIdx_x * 16);
     }
     B_CMD(0);
 
@@ -265,7 +263,8 @@ __global__ void elt_add_fim(uint8_t* fim_data, uint8_t* fim_ctr, uint8_t* output
 
 __global__ void elt_mul_fim_1cu_2th_fp16(volatile uint8_t* __restrict__ fim_data,
                                          volatile uint8_t* __restrict__ fim_ctr, volatile uint8_t* __restrict__ output,
-                                         int size, FimMemTraceData* fmtd16, int* frd_size, int mt_width)
+                                         int size, FimMemTraceData* fmtd16, int* frd_size, int mt_width,
+                                         uint8_t* crf_binary, int crf_size)
 {
 #ifdef EMULATOR
     g_fba = (uint64_t)fim_ctr;
@@ -281,7 +280,7 @@ __global__ void elt_mul_fim_1cu_2th_fp16(volatile uint8_t* __restrict__ fim_data
     /* so program_crf and chagne_fim_mode functions can not access to over 8GB in our system */
     park_in_1cu_2th(fim_ctr, offset);
     change_fim_mode_1cu_2th(fim_ctr, SB_MODE, HAB_MODE, null_bst, offset);
-    program_crf_1cu_2th(fim_ctr, elt_mul_crf, sizeof(elt_mul_crf), offset);
+    program_crf_1cu_2th(fim_ctr, crf_binary, crf_size, offset);
     change_fim_mode_1cu_2th(fim_ctr, HAB_MODE, HAB_FIM_MODE, elt_mul_hab_to_hab_fim, offset);
     compute_elt_op_1cu_2th(fim_data, get_num_tile(out_dim), offset);
     change_fim_mode_1cu_2th(fim_ctr, HAB_FIM_MODE, HAB_MODE, elt_mul_hab_fim_to_hab, offset);
@@ -296,7 +295,7 @@ __global__ void elt_mul_fim_1cu_2th_fp16(volatile uint8_t* __restrict__ fim_data
 
 __global__ void relu_fim_1cu_2th_fp16(volatile uint8_t* __restrict__ fim_data, volatile uint8_t* __restrict__ fim_ctr,
                                       volatile uint8_t* __restrict__ output, int size, FimMemTraceData* fmtd16,
-                                      int* frd_size, int mt_width)
+                                      int* frd_size, int mt_width, uint8_t* crf_binary, int crf_size)
 {
 #ifdef EMULATOR
     g_fba = (uint64_t)fim_ctr;
@@ -313,7 +312,7 @@ __global__ void relu_fim_1cu_2th_fp16(volatile uint8_t* __restrict__ fim_data, v
     /* so program_crf and chagne_fim_mode functions can not access to over 8GB in our system */
     park_in_1cu_2th(fim_ctr, offset);
     change_fim_mode_1cu_2th(fim_ctr, SB_MODE, HAB_MODE, null_bst, offset);
-    program_crf_1cu_2th(fim_ctr, relu_crf, sizeof(relu_crf), offset);
+    program_crf_1cu_2th(fim_ctr, crf_binary, crf_size, offset);
     change_fim_mode_1cu_2th(fim_ctr, HAB_MODE, HAB_FIM_MODE, relu_hab_to_hab_fim, offset);
     compute_relu_1cu_2th(fim_data, get_num_tile(out_dim) / 2, offset);
     change_fim_mode_1cu_2th(fim_ctr, HAB_FIM_MODE, HAB_MODE, relu_hab_fim_to_hab, offset);
