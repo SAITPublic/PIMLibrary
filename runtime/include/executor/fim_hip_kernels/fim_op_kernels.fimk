@@ -107,6 +107,7 @@ __global__ void elt_add_fim(uint8_t* fim_data, uint8_t* fim_ctr, uint8_t* output
                             FimMemTraceData* fmtd, int* frd_size, int mt_width)
 {
 #ifdef EMULATOR
+    g_idx[hipBlockIdx_x] = 0;
     g_fba = (uint64_t)fim_ctr;
     g_fmtd16 = fmtd;
     m_width = mt_width;
