@@ -52,7 +52,7 @@ class FimMemoryManager
     class FimBlockAllocator
     {
        private:
-        static const size_t block_size_ = 2 * 1024 * 1024;  // 2MB blocks.
+        static const size_t block_size_ = 100 * 1024 * 1024;  // 100MB block.
 
        public:
         explicit FimBlockAllocator() {}

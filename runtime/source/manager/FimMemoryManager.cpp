@@ -452,9 +452,9 @@ void* FimMemoryManager::FimBlockAllocator::alloc(size_t request_size, size_t& al
     size_t bsize = block_size();
 
     /* todo:implement fimalloc function */
-    ret = (void*)malloc(bsize);
-
-    assert(ret != nullptr && "Region returned nullptr on success.");
+    if (hipMalloc((void**)&ret, bsize) != hipSuccess) {
+        return NULL;
+    }
 
     allocated_size = block_size();
     return ret;
