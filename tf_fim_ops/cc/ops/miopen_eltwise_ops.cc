@@ -1,6 +1,7 @@
 #include <iostream>
 #include "tensorflow/core/framework/op.h"
 #include "tensorflow/core/framework/op_kernel.h"
+#include "tensorflow/core/framework/shape_inference.h"
 
 using namespace tensorflow;  // NOLINT(build/namespaces)
 
@@ -11,12 +12,6 @@ REGISTER_OP("MiopenEltwise")
     .Input("third: int32")
     .Output("ans: float16")
     .SetShapeFn([](::tensorflow::shape_inference::InferenceContext* c) {
-        // shape_inference::ShapeHandle out_shape;
-        // out_shape = c->MakeShape({1});
-        // TF_RETURN_IF_ERROR(c->Subshape(c->input(0),0 ,0 , &out_shape));
-        // std::cout << "out shape " << out_shape(0) << std::endl;
-        // c->set_output(0,c->UnknownShape());
-        // c->set_output(0,out_shape);
-        // c->set_output(0, c->input(0));
+        c->set_output(0, c->input(0));
         return Status::OK();
     });

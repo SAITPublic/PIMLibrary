@@ -37,6 +37,10 @@ void KernelLauncher(const void* a_data, const void* b_data, const int N, void* c
     else
         miopenOpTensor(handle, miopenTensorOpMul, &alpha_0, a_desc, a_data, &alpha_1, b_desc, b_data, &beta, c_desc,
                        c_data);
+
+    miopenDestroyTensorDescriptor(a_desc);
+    miopenDestroyTensorDescriptor(b_desc);
+    miopenDestroyTensorDescriptor(c_desc);
     miopenDestroy(handle);
 }
 
