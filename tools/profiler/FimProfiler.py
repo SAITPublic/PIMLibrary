@@ -1,20 +1,20 @@
-import sys
 from bokeh.io import show, output_file
 from bokeh.layouts import column
 
 from visualizer.TableViz import create_table
+from parser.ArgParser import arg_parser
 from parser.FileParser import parse_csv_file
 
 if __name__=='__main__':
 
-	file_name = "test/fim_add_prof.stats.csv" #default file
-	if(len(sys.argv)>1):
-		file_name = sys.argv[1]
+	#Parse the Arguments
+	args = arg_parser()
+	input_file = args.input_file
 
-	output_file(filename='Output_Viz.html', title='Table Visualization', mode='inline')
+	output_file(filename=args.output_file, title='Table Visualization', mode='inline')
 
 	#Read Stat File
-	df_stat=parse_csv_file(file_name, ['Name', 'TotalDurationNs',  'AverageNs'])
+	df_stat=parse_csv_file(input_file, ['Name', 'TotalDurationNs',  'AverageNs'])
 
 	#Produce Tabular Output
 	heading, table_plot = create_table(df_stat)
