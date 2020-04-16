@@ -1,6 +1,6 @@
 Profiler
 
-FimProfiler.py API is used to generate visualizations. It uses parser and visualizer modules for the same.
+FimProfiler.py API is used to generate visualizations. It uses parser, analyser and visualizer modules for the same.
 
 
 Requirements-
@@ -11,12 +11,17 @@ pip intsall pandas
 ```
 
 Testing - 
-Execute FimProfiler using sample stat file in test folder and generate tabular visualization by directly calling it:
+To execute FimProfiler using sample csv file(containing Kernel Calls) in test folder and generate timeline and summarized tabular visualization, directly call it:
 ```
 python FimProfiler.py
 ```
 
-To execute FimProfiler for any other file, provide name of the file with path as the first argument:
+To execute FimProfiler for any other file, provide name of the file with path in the -i flag and to provide the output file name use the -o flag:
 ```
-python FimProfiler.py <name_of_csv_file_with_path>
+python FimProfiler.py -i <name_of_csv_file_with_path> -o <output_file_name>
+```
+
+Use -h flag to view help with command line arguments.
+```
+python FimProfiler.py -h
 ```
