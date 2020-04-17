@@ -34,6 +34,9 @@ int FimRuntime::deinitialize(void)
     DLOG(INFO) << "called";
     int ret = 0;
 
+    fim_manager_->deinitialize();
+    fim_executor_->deinitialize();
+
     return ret;
 }
 
