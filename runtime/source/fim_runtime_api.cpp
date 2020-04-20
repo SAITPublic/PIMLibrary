@@ -13,8 +13,9 @@ static bool log_initialized = false;
 int FimInitialize(FimRuntimeType rt_type, FimPrecision precision)
 {
     if (!log_initialized) {
-        google::InitGoogleLogging("FIMRuntime");
+        FLAGS_logtostderr = true;
         FLAGS_minloglevel = FIM_LOG_LEVEL;
+        google::InitGoogleLogging("FIMRuntime");
         log_initialized = true;
     }
 

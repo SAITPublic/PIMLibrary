@@ -11,7 +11,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HCC_CXX_FLAGS}")
 if(DEFINED ENV{FIM_LOG_LEVEL})
     add_definitions(-DFIM_LOG_LEVEL=$ENV{FIM_LOG_LEVEL})
 else()
-    add_definitions(-DFIM_LOG_LEVEL=0)
+    add_definitions(-DFIM_LOG_LEVEL=1)
 endif()
 
 message(STATUS "FIM Log level is " $ENV{FIM_LOG_LEVEL})
