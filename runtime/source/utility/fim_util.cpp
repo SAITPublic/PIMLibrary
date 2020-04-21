@@ -258,6 +258,26 @@ __device__ void park_out_1cu_2th(volatile uint8_t* __restrict__ fim_ctr, uint64_
     BLOCK_SYNC();
 }
 
+__device__ void program_srf_1cu_2th(volatile uint8_t* __restrict__ fim_ctr, uint8_t* srf_bin, uint32_t srf_bin_size,
+                                    uint64_t offset)
+{
+    uint32_t cidx;
+    uint32_t rank;
+    uint64_t t_ctr_addr;
+    uint64_t t_srf_addr;
+    FimBlockInfo* fbi = &vega20_fbi;
+    uint32_t trans_size = fbi->trans_size;
+
+    for (cidx = 0; cidx < fbi->num_fim_chan; cidx++) {
+        for (rank = 0; rank < fbi->num_fim_rank; rank++) {
+            t_ctr_addr = addr_gen(cidx, rank, 0, 0, 0x3fff, 0x1);
+            t_srf_addr = (cidx * fbi->num_fim_rank + rank) * trans_size;
+            GEN_WRITE_CMD(&fim_ctr[t_ctr_addr + offset], srf_bin + t_srf_addr + offset);
+        }
+    }
+    BLOCK_SYNC();
+}
+
 __device__ void program_crf_1cu_2th(volatile uint8_t* __restrict__ fim_ctr, uint8_t* crf_bin, uint32_t cmd_size,
                                     uint64_t offset)
 {
@@ -291,6 +311,23 @@ __device__ void compute_relu_1cu_2th(volatile uint8_t* __restrict__ fim_data, in
         add_transaction_all_1cu_2th(fim_data, false, 0, 1, 0, fbi->num_grf * i, null_bst, offset, fbi->num_grf);
         add_transaction_all_1cu_2th(fim_data, true, 0, 1, 0, fbi->num_grf * (num_tile + i), null_bst, offset,
                                     fbi->num_grf);
+    }
+}
+
+__device__ void compute_bn_1cu_2th(volatile uint8_t* __restrict__ fim_data, int num_tile, uint64_t offset)
+{
+    FimBlockInfo* fbi = &vega20_fbi;
+    for (int i = 0; i < num_tile; i++) {
+        add_transaction_all_1cu_2th(fim_data, false, 0, 0, 0, fbi->num_grf * i, null_bst, offset, fbi->num_grf);
+        add_transaction_all_1cu_2th(fim_data, false, 0, 0, 0, fbi->num_grf * i, null_bst, offset, fbi->num_grf);
+        add_transaction_all_1cu_2th(fim_data, true, 0, 0, 0, fbi->num_grf * (num_tile + i), null_bst, offset,
+                                    fbi->num_grf);
+        add_transaction_all_1cu_2th(fim_data, false, 0, 1, 0, fbi->num_grf * i, null_bst, offset, fbi->num_grf);
+        add_transaction_all_1cu_2th(fim_data, false, 0, 1, 0, fbi->num_grf * i, null_bst, offset, fbi->num_grf);
+        add_transaction_all_1cu_2th(fim_data, true, 0, 1, 0, fbi->num_grf * (num_tile + i), null_bst, offset,
+                                    fbi->num_grf);
+        add_transaction_all_1cu_2th(fim_data, true, 0, 1, 0, fbi->num_grf * (num_tile + i) + fbi->num_grf - 1, null_bst,
+                                    offset, 1);
     }
 }
 
@@ -400,6 +437,62 @@ __device__ void read_result_2bank_1cu_2th(volatile uint8_t* __restrict__ output,
             cidx = 0;
             s_row = row;
             s_col = col;
+        }
+    }
+}
+
+__device__ void read_result_bn_1cu_2th(volatile uint8_t* __restrict__ output, volatile uint8_t* __restrict__ fim_data,
+                                       int num_batch, int num_ch, int num_width, uint32_t s_row, uint32_t s_col,
+                                       uint64_t offset)
+{
+    FimBlockInfo* fbi = &vega20_fbi;
+    int cidx = 0;
+    int rank = 0;
+    int bg = 0;
+    int bank = 0;
+    uint64_t t_fim_addr;
+    uint64_t t_out_addr;
+    unsigned row;
+    unsigned col;
+    unsigned s_row_ch = s_row;
+    unsigned s_col_ch = s_col;
+
+    for (int ch = 0; ch < num_ch; ch++) {
+        s_row = s_row_ch;
+        s_col = s_col_ch;
+        for (int b = 0; b < num_batch; b++) {
+            for (int w = 0; w < num_width; w += fbi->num_grf) {
+                row = s_row;
+                col = s_col;
+                for (int grf_idx = 0; grf_idx < fbi->num_grf; grf_idx++) {
+                    t_fim_addr = addr_gen_safe(cidx, rank, bg, bank, row, col);
+                    t_out_addr = (b * num_ch * num_width + ch * num_width + w + grf_idx) * fbi->trans_size;
+                    GEN_READ_CMD(output + t_out_addr + offset, &fim_data[t_fim_addr + offset], true);
+                    col++;
+                }
+                bank++;
+
+                if (bank >= (fbi->num_banks / fbi->num_bank_groups)) {
+                    bg++;
+                    bank = 0;
+                }
+                if (bg >= fbi->num_bank_groups) {
+                    bg = 0;
+                    s_row = row;
+                    s_col = col;
+                }
+            }
+        }
+
+        rank++;
+        if (rank >= fbi->num_fim_rank) {
+            rank = 0;
+            cidx++;
+        }
+        if (cidx >= fbi->num_fim_chan) {
+            cidx = 0;
+            s_row_ch = row;
+            s_col_ch = col;
         }
     }
 }

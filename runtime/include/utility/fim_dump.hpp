@@ -18,7 +18,7 @@ inline const char* get_fim_op_string(FimOpType op_type)
         case OP_ELT_MUL:
             op_str = "elt_mul";
             break;
-        case OP_BATCH_NORM:
+        case OP_BN:
             op_str = "bn";
             break;
         case OP_RELU:
@@ -57,6 +57,23 @@ inline int dump_data(const char* filename, char* data, size_t size)
 
     for (int i = 0; i < size; i++) {
         fprintf(fp, "%c", data[i]);
+    }
+    fclose(fp);
+
+    return 0;
+}
+
+inline int dump_hexa_array(const char* filename, char* data, size_t size)
+{
+    FILE* fp = fopen(filename, "wb");
+
+    if (fp == nullptr) {
+        printf("fopen error : %s\n", filename);
+        return -1;
+    }
+
+    for (int i = 0; i < size; i++) {
+        fprintf(fp, "0x%X, ", (unsigned char)data[i]);
     }
     fclose(fp);
 

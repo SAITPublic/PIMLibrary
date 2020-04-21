@@ -326,4 +326,38 @@ __global__ void relu_fim_1cu_2th_fp16(volatile uint8_t* __restrict__ fim_data, v
 #endif
 }
 
+__global__ void bn_fim_1cu_2th_fp16(volatile uint8_t* __restrict__ fim_data, volatile uint8_t* __restrict__ fim_ctr,
+                                    volatile uint8_t* __restrict__ output, int size, int num_ba, int num_ch, int num_w,
+                                    uint8_t* crf_binary, int crf_size, uint8_t* srf_binary, int srf_size,
+                                    FimMemTraceData* fmtd16, int* frd_size, int mt_width)
+{
+#ifdef EMULATOR
+    g_fba = (uint64_t)fim_ctr;
+    g_fmtd16 = fmtd16;
+    g_ridx = 0;
+    uint64_t offset = (hipThreadIdx_x % 2) * 0x10;
+    __syncthreads();
+#endif
+    FimBlockInfo* fbi = &vega20_fbi;
+    int out_dim = size / fbi->trans_size;
+    int end_col = get_result_col(out_dim / 2);
+
+    /* Radeon7(VEGA20) memory is 16GB but our target is 32GB system */
+    /* so program_crf and chagne_fim_mode functions can not access to over 8GB in our system */
+    park_in_1cu_2th(fim_ctr, offset);
+    change_fim_mode_1cu_2th(fim_ctr, SB_MODE, HAB_MODE, null_bst, offset);
+    program_crf_1cu_2th(fim_ctr, crf_binary, crf_size, offset);
+    change_fim_mode_1cu_2th(fim_ctr, HAB_MODE, HAB_FIM_MODE, bn_hab_to_hab_fim, offset);
+    program_srf_1cu_2th(fim_ctr, srf_binary, srf_size, offset);
+    compute_bn_1cu_2th(fim_data, get_num_tile(out_dim) / 2, offset);
+    change_fim_mode_1cu_2th(fim_ctr, HAB_FIM_MODE, HAB_MODE, bn_hab_fim_to_hab, offset);
+    change_fim_mode_1cu_2th(fim_ctr, HAB_MODE, SB_MODE, null_bst, offset);
+    park_out_1cu_2th(fim_ctr, offset);
+    read_result_bn_1cu_2th(output, fim_data, num_ba, num_ch, num_w / 16, 0, end_col, offset);
+#ifdef EMULATOR
+    __syncthreads();
+    frd_size[0] = g_ridx;
+#endif
+}
+
 #endif /* _FIM_OP_KERNELS_FIMK_ */

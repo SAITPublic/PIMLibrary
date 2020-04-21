@@ -51,7 +51,9 @@ int FimExecutor::initialize(void)
     fim_manager_ = fim::runtime::manager::FimManager::get_instance(rt_type_, precision_);
 
     int max_crf_size = 128;
-    hipMalloc((void**)&d_binary_buffer_, max_crf_size);
+    int max_srf_size = 2048;
+    hipMalloc((void**)&d_crf_bin_buffer_, max_crf_size);
+    hipMalloc((void**)&d_srf_bin_buffer_, max_srf_size);
 
 #ifdef EMULATOR
     int dummy_size = 20 * 1024 * 1024;
@@ -88,7 +90,8 @@ int FimExecutor::deinitialize(void)
 {
     DLOG(INFO) << "called";
     int ret = 0;
-    hipFree((void*)d_binary_buffer_);
+    hipFree((void*)d_crf_bin_buffer_);
+    hipFree((void*)d_srf_bin_buffer_);
 #ifdef EMULATOR
     hipFree((void*)fim_base_addr_);
     hipFree((void*)d_fmtd16_);
@@ -131,7 +134,7 @@ int FimExecutor::execute(FimBo* output, FimBo* operand0, FimBo* operand1, FimOpT
     int crf_size = fim_manager_->get_crf_size();
 
     // FIXME : change 128 to a meaningful variable.
-    hipMemcpy((void*)d_binary_buffer_, (void*)crf_binary, sizeof(uint8_t) * 128, hipMemcpyHostToDevice);
+    hipMemcpy((void*)d_crf_bin_buffer_, (void*)crf_binary, sizeof(uint8_t) * 128, hipMemcpyHostToDevice);
 
     if (op_type == OP_GEMV) {
         hipMemcpy((void*)fim_base_addr_, weight->data, weight->size, hipMemcpyDeviceToDevice);
@@ -139,7 +142,7 @@ int FimExecutor::execute(FimBo* output, FimBo* operand0, FimBo* operand1, FimOpT
             gemv_fim_1cu_2th_fp16, dim3(1), dim3(2), 0, 0, (uint8_t*)fim_base_addr_ /* fim control base */,
             (uint8_t*)fim_base_addr_ /* fim weight base */, (uint8_t*)fim_gemv_tmp_buffer_, /* fim hw output buffer */
             (uint8_t*)input->data, (uint8_t*)output->data, input->bshape.w, output->bshape.w,
-            (FimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, (uint8_t*)d_binary_buffer_, crf_size);
+            (FimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, (uint8_t*)d_crf_bin_buffer_, crf_size);
     } else {
         /* todo:implement other operation function */
         hipLaunchKernelGGL(dummy_kernel, dim3(1), dim3(1), 0, 0);
@@ -174,20 +177,16 @@ int FimExecutor::execute(FimBo* output, FimBo* fim_data, FimOpType op_type)
     int crf_size = fim_manager_->get_crf_size();
 
     // FIXME : change 128 to a meaningful variable.
-    hipMemcpy((void*)d_binary_buffer_, (void*)crf_binary, sizeof(uint8_t) * 128, hipMemcpyHostToDevice);
+    hipMemcpy((void*)d_crf_bin_buffer_, (void*)crf_binary, sizeof(uint8_t) * 128, hipMemcpyHostToDevice);
 
     if (op_type == OP_ELT_ADD) {
         blocks = 1;
         threads_per_block = 2;
         hipMemcpy((void*)fim_base_addr_, fim_data->data, fim_data->size, hipMemcpyHostToDevice);
-        // hipLaunchKernelGGL(elt_add_fim, dim3(blocks), dim3(threads_per_block), 0, 0, (uint8_t*)fim_base_addr_,
-        //                    (uint8_t*)fim_base_addr_, (uint8_t*)output->data, (int)output->size,
-        //                    (FimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_,
-        //                    (uint8_t*)d_binary_buffer_, crf_size);
         hipLaunchKernelGGL(elt_add_fim_1cu_2th_fp16, dim3(blocks), dim3(threads_per_block), 0, 0,
                            (uint8_t*)fim_base_addr_, (uint8_t*)fim_base_addr_, (uint8_t*)output->data,
                            (int)output->size, (FimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_,
-                           (uint8_t*)d_binary_buffer_, crf_size);
+                           (uint8_t*)d_crf_bin_buffer_, crf_size);
 
     } else if (op_type == OP_ELT_MUL) {
         blocks = 1;
@@ -196,7 +195,7 @@ int FimExecutor::execute(FimBo* output, FimBo* fim_data, FimOpType op_type)
         hipLaunchKernelGGL(elt_mul_fim_1cu_2th_fp16, dim3(blocks), dim3(threads_per_block), 0, 0,
                            (uint8_t*)fim_base_addr_, (uint8_t*)fim_base_addr_, (uint8_t*)output->data,
                            (int)output->size, (FimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_,
-                           (uint8_t*)d_binary_buffer_, crf_size);
+                           (uint8_t*)d_crf_bin_buffer_, crf_size);
     } else if (op_type == OP_RELU) {
         blocks = 1;
         threads_per_block = 2;
@@ -204,7 +203,7 @@ int FimExecutor::execute(FimBo* output, FimBo* fim_data, FimOpType op_type)
         hipLaunchKernelGGL(relu_fim_1cu_2th_fp16, dim3(blocks), dim3(threads_per_block), 0, 0, (uint8_t*)fim_base_addr_,
                            (uint8_t*)fim_base_addr_, (uint8_t*)output->data, (int)output->size,
                            (FimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_,
-                           (uint8_t*)d_binary_buffer_, crf_size);
+                           (uint8_t*)d_crf_bin_buffer_, crf_size);
     } else {
         /* todo:implement other operation function */
         hipLaunchKernelGGL(dummy_kernel, dim3(1), dim3(1), 0, 0);
@@ -226,6 +225,51 @@ int FimExecutor::execute(FimBo* output, FimBo* fim_data, FimOpType op_type)
                                                          op_type);
         fim_emulator_->execute_fim(output, fim_data, h_fmtd32_, h_fmtd32_size_[0], op_type);
     }
+#endif
+
+    return ret;
+}
+
+int FimExecutor::execute_bn(FimBo* output, FimBo* fim_data, FimBo* beta, FimBo* gamma, FimBo* scale, FimBo* shift)
+{
+    DLOG(INFO) << "called";
+    int ret = 0;
+
+    unsigned blocks = 1;
+    unsigned threads_per_block = 2;
+
+    /* TODO: implement srf bin generator */
+    uint8_t* crf_binary = bn_crf;
+    uint8_t* srf_binary = bn_srf_data;
+    int crf_size = sizeof(bn_crf);
+    int srf_size = sizeof(bn_srf_data);
+
+    hipMemcpy((void*)d_crf_bin_buffer_, (void*)crf_binary, crf_size, hipMemcpyHostToDevice);
+    hipMemcpy((void*)d_srf_bin_buffer_, (void*)srf_binary, srf_size, hipMemcpyHostToDevice);
+    hipMemcpy((void*)fim_base_addr_, fim_data->data, fim_data->size, hipMemcpyHostToDevice);
+
+    printf("crf_size:%d, srf_size:%d, output->size:%d\n", crf_size, srf_size, output->size);
+    printf("bshaped(%d,%d,%d,%d)\n", output->bshape.w, output->bshape.h, output->bshape.c, output->bshape.n);
+
+    hipLaunchKernelGGL(bn_fim_1cu_2th_fp16, dim3(blocks), dim3(threads_per_block), 0, 0, (uint8_t*)fim_base_addr_,
+                       (uint8_t*)fim_base_addr_, (uint8_t*)output->data, (int)output->size, output->bshape.n,
+                       output->bshape.c, output->bshape.w, (uint8_t*)d_crf_bin_buffer_, crf_size,
+                       (uint8_t*)d_srf_bin_buffer_, srf_size, (FimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_,
+                       fmtd_size_per_ch_);
+
+    hipStreamSynchronize(NULL);
+
+#ifdef EMULATOR
+    hipMemcpy((void*)h_fmtd16_size_, (void*)d_fmtd16_size_, sizeof(int), hipMemcpyDeviceToHost);
+    hipMemcpy((void*)h_fmtd16_, (void*)d_fmtd16_, sizeof(FimMemTraceData) * max_fmtd_size_, hipMemcpyDeviceToHost);
+
+    for (size_t i = 1; i < blocks; i++) {
+        memcpy(&h_fmtd16_[i * h_fmtd16_size_[0]], &h_fmtd16_[i * fmtd_size_per_ch_],
+               h_fmtd16_size_[0] * sizeof(FimMemTraceData));
+    }
+    h_fmtd16_size_[0] *= blocks;
+    fim_emulator_->convert_mem_trace_from_16B_to_32B(h_fmtd32_, h_fmtd32_size_, h_fmtd16_, h_fmtd16_size_[0], OP_BN);
+    fim_emulator_->execute_fim(output, fim_data, h_fmtd32_, h_fmtd32_size_[0], OP_BN);
 #endif
 
     return ret;

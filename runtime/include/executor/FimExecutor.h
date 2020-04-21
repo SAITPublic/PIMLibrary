@@ -25,10 +25,12 @@ class FimExecutor
     int execute(void* output, void* operand0, void* operand1, size_t size, FimOpType op_type);
     int execute(FimBo* output, FimBo* operand0, FimBo* operand1, FimOpType op_type);
     int execute(FimBo* output, FimBo* fim_data, FimOpType op_type);
+    int execute_bn(FimBo* output, FimBo* fim_data, FimBo* beta, FimBo* gamma, FimBo* scale, FimBo* shift);
 
    private:
     fim::runtime::manager::FimManager* fim_manager_;
-    uint8_t* d_binary_buffer_;
+    uint8_t* d_crf_bin_buffer_;
+    uint8_t* d_srf_bin_buffer_;
 
     FimRuntimeType rt_type_;
     FimPrecision precision_;
@@ -36,9 +38,10 @@ class FimExecutor
     size_t thread_cnt_;
     uint64_t fim_base_addr_;
     uint8_t* fim_gemv_tmp_buffer_;
+    FimBlockInfo fbi_;
+#ifdef EMULATOR
     FimMemTraceData* d_fmtd16_;
     int* d_fmtd16_size_;
-#ifdef EMULATOR
     fim::runtime::emulator::FimEmulator* fim_emulator_;
     FimMemTraceData* h_fmtd16_;
     FimMemTraceData* h_fmtd32_;
@@ -47,7 +50,6 @@ class FimExecutor
     int fmtd_size_per_ch_;
     int max_block_size_;
     int max_fmtd_size_;
-    FimBlockInfo fbi_;
 #endif
 };
 

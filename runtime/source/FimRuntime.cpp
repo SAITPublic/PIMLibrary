@@ -160,5 +160,15 @@ int FimRuntime::execute(FimBo* output, FimBo* fim_data, FimOpType op_type)
     return ret;
 }
 
+int FimRuntime::execute_bn(FimBo* output, FimBo* fim_data, FimBo* beta, FimBo* gamma, FimBo* scale, FimBo* shift)
+{
+    DLOG(INFO) << "called";
+    int ret = 0;
+
+    ret = fim_executor_->execute_bn(output, fim_data, beta, gamma, scale, shift);
+
+    return ret;
+}
+
 } /* namespace runtime */
 } /* namespace fim */

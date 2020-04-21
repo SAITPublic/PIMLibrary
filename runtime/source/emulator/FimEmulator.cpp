@@ -75,7 +75,7 @@ int FimEmulator::execute_fim(FimBo* output, FimBo* fim_data, FimMemTraceData* fm
     uint16_t* sim_output = nullptr;
     int sim_output_size = 0;
 
-    if (op_type == OP_ELT_ADD || op_type == OP_ELT_MUL || op_type == OP_RELU) {
+    if (op_type == OP_ELT_ADD || op_type == OP_ELT_MUL || op_type == OP_RELU || op_type == OP_BN) {
         num_element = output->size / sizeof(uint16_t);
         sim_output = new uint16_t[num_element];
 #ifdef DEBUG_FIM

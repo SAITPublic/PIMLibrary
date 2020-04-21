@@ -48,8 +48,8 @@ typedef enum __FimOpType {
     OP_GEMV,
     OP_ELT_ADD,
     OP_ELT_MUL,
-    OP_BATCH_NORM,
     OP_RELU,
+    OP_BN,
     OP_DUMMY,
 } FimOpType;
 
@@ -59,10 +59,10 @@ typedef enum __FimPrecision {
 } FimPrecision;
 
 typedef struct __FimBShape {
-    int w;
-    int h;
-    int c;
-    int n;
+    uint32_t w;
+    uint32_t h;
+    uint32_t c;
+    uint32_t n;
 } FimBShape;
 
 typedef struct __FimBufferObject {

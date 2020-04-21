@@ -62,7 +62,7 @@ FimBo* FimCreateBo(int w, int h, int c, int n, FimPrecision precision, FimMemTyp
     size_t size = w * h * c * n * type_size;
 
     fim_bo->size = size;
-    fim_bo->bshape = {w, h, c, n};
+    fim_bo->bshape = {(uint32_t)w, (uint32_t)h, (uint32_t)c, (uint32_t)n};
     fim_bo->mem_type = mem_type;
     fim_bo->precision = precision;
 
@@ -277,6 +277,21 @@ int FimExecute(FimBo* output, FimBo* fim_data, FimOpType op_type)
     }
     ret = fim_runtime->execute(output, fim_data, op_type);
     FIM_PROFILE_TOCK(Execute);
+
+    return ret;
+}
+
+int FimExecuteBN(FimBo* output, FimBo* fim_data, FimBo* beta, FimBo* gamma, FimBo* scale, FimBo* shift)
+{
+    DLOG(INFO) << "called";
+    FIM_PROFILE_TICK(ExecuteBN);
+    int ret = 0;
+
+    if (fim_runtime == nullptr) {
+        return -1;
+    }
+    ret = fim_runtime->execute_bn(output, fim_data, beta, gamma, scale, shift);
+    FIM_PROFILE_TOCK(ExecuteBN);
 
     return ret;
 }

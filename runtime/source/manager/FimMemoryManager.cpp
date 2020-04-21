@@ -183,6 +183,8 @@ int FimMemoryManager::convert_data_layout(FimBo* dst, FimBo* src, FimOpType op_t
         ret = convert_data_layout_for_gemv_weight(dst, src);
     } else if (op_type == OP_RELU) {
         ret = convert_data_layout_for_relu(dst, src);
+    } else if (op_type == OP_BN) {
+        ret = convert_data_layout_for_bn(dst, src);
     } else {
         DLOG(ERROR) << "not yet implemented";
     }
@@ -200,6 +202,83 @@ int FimMemoryManager::convert_data_layout(FimBo* dst, FimBo* src0, FimBo* src1, 
         ret = convert_data_layout_for_elt_op(dst, src1, FimBankType::ODD_BANK);
     } else {
         DLOG(ERROR) << "not yet implemented";
+    }
+
+    return ret;
+}
+
+int FimMemoryManager::convert_data_layout_for_bn(FimBo* dst, FimBo* src)
+{
+    DLOG(INFO) << "called";
+    int ret = 0;
+
+    int cidx = 0;
+    int rank = 0;
+    int bg = 0;
+    int bank = 0;
+    uint64_t addr_op;
+
+    unsigned row;
+    unsigned col;
+    uint32_t trans_size = fbi_.trans_size;
+    char* dst_data = (char*)dst->data;
+    char* src_data = (char*)src->data;
+    int num_grf = fbi_.num_grf;
+    int num_banks = fbi_.num_banks;
+    int num_fim_blocks = fbi_.num_fim_blocks;
+    int num_bank_groups = fbi_.num_bank_groups;
+    int num_fim_rank = fbi_.num_fim_rank;
+    int num_fim_chan = fbi_.num_fim_chan;
+
+    int burst_width = dst->bshape.w / 16;
+
+    /* TODO: calculate both start row and col address from FimBo */
+    unsigned s_row = 0;
+    unsigned s_col = 0;
+    unsigned s_row_ch = s_row;
+    unsigned s_col_ch = s_col;
+
+    for (int ch = 0; ch < dst->bshape.c; ch++) {
+        s_row = s_row_ch;
+        s_col = s_col_ch;
+
+        for (int b = 0; b < dst->bshape.n; b++) {
+            for (int w = 0; w < burst_width; w += num_grf) {
+                row = s_row;
+                col = s_col;
+                for (int grf_idx = 0; grf_idx < num_grf; grf_idx++) {
+                    addr_op = addr_gen_safe(cidx, rank, bg, bank, row, col);
+                    int arr_idx = b * burst_width * dst->bshape.c + ch * burst_width + w + grf_idx;
+                    memcpy(dst_data + addr_op, src_data + arr_idx * trans_size, trans_size);
+                    col++;
+                }
+
+                bank++;
+
+                if (bank >= (num_banks / num_bank_groups)) {
+                    bg++;
+                    bank = 0;
+                }
+
+                if (bg >= num_bank_groups) {
+                    bg = 0;
+                    s_row = row;
+                    s_col = col;
+                }
+            }
+        }
+
+        rank++;
+        if (rank >= num_fim_rank) {
+            rank = 0;
+            cidx++;
+        }
+
+        if (cidx >= num_fim_chan) {
+            cidx = 0;
+            s_row_ch = row;
+            s_col_ch = col;
+        }
     }
 
     return ret;
