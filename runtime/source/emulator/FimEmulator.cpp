@@ -74,6 +74,7 @@ int FimEmulator::execute_fim(FimBo* output, FimBo* fim_data, FimMemTraceData* fm
     int num_element = 0;
     uint16_t* sim_output = nullptr;
     int sim_output_size = 0;
+    int fp16_burst_size = 16;
 
     if (op_type == OP_ELT_ADD || op_type == OP_ELT_MUL || op_type == OP_RELU || op_type == OP_BN) {
         num_element = output->size / sizeof(uint16_t);
@@ -87,7 +88,12 @@ int FimEmulator::execute_fim(FimBo* output, FimBo* fim_data, FimMemTraceData* fm
 #endif
         fim_sim_.alloc_burst(fim_data->size, fim_data->size);
         fim_sim_.preload_data(fim_data->data, fim_data->size);
-        fim_sim_.execute_kernel((void*)fmtd32, (size_t)fmtd32_size);
+        if (op_type == OP_BN) {
+            fim_sim_.execute_kernel_bn((void*)fmtd32, (size_t)fmtd32_size, output->bshape.n, output->bshape.c,
+                                       output->bshape.w / fp16_burst_size);
+        } else {
+            fim_sim_.execute_kernel((void*)fmtd32, (size_t)fmtd32_size);
+        }
         fim_sim_.get_uint16_result(sim_output, num_element);
         if (output->mem_type != MEM_TYPE_HOST)
             hipMemcpy((void*)output->data, (void*)sim_output, output->size, hipMemcpyHostToDevice);
