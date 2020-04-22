@@ -170,7 +170,7 @@ int FimEmulator::set_input_for_test(uint16_t* test_input, int test_size)
     input0_npbst.load_fp16("../test_vectors/data/resadd_input0_65536.npy");
     input1_npbst.load_fp16("../test_vectors/data/resadd_input1_65536.npy");
 
-    fim_sim_.set_data_for_test(&input0_npbst, &input1_npbst, test_input);
+    fim_sim_.set_data_for_eltwise(&input0_npbst, &input1_npbst, test_input);
     fim_sim_.alloc_burst(test_size, test_size);
     fim_sim_.preload_data((void*)test_input, test_size);
 }

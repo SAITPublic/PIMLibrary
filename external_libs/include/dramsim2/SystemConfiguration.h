@@ -276,7 +276,7 @@ enum TestKernelType {
     ADD_ONE_BANK_16,
     RELU_8
 };
-enum KernelType { ADD, BN, RELU, GEMV, RESNET50, MUL, RELU_2BANK };
+enum KernelType { ADD, BN, RELU, GEMV, MUL };
 // set by IniReader.cpp
 
 typedef void (*returnCallBack_t)(unsigned id, uint64_t addr, uint64_t clockcycle);

@@ -163,40 +163,30 @@ class FIMController
     unsigned get_result_col_gemv(int input_dim, int output_dim);
     int get_num_tile(int dim);
     int get_num_jump(int num_tile, KernelType ktype);
-    void change_bank(int& cidx, int& rank, int& bg, int& bank, unsigned& starting_row, unsigned& starting_col,
-                     unsigned& row, unsigned& col);
+    void change_bank(fim_bank_type bank_type, int& cidx, int& rank, int& bg, int& bank, unsigned& starting_row,
+                     unsigned& starting_col, unsigned& row, unsigned& col);
     int set_toggle_condition(fim_bank_type bank_type);
     void preprocess_bn(NumpyBurstType* scale_npbst, NumpyBurstType* shift_npbst, NumpyBurstType* gamma_npbst,
                        NumpyBurstType* beta_npbst, NumpyBurstType* input_npbst, fp16** params);
-    void set_srf_buffer(NumpyBurstType* npbst, KernelType ktype);
-    void program_srf(int tile_idx);
-    void preprocess_srf(NumpyBurstType* input_npbst, fp16** params, int burst_offset, int num_srf_usage);
 
     void execute_gemv(NumpyBurstType* w_data, NumpyBurstType* i_data);
-    void execute_gemv_2bank(NumpyBurstType* w_data, NumpyBurstType* i_data);
     void execute_eltwise(int dim, fim_bank_type bank_type, KernelType ktype);
 
     void preload_operand(NumpyBurstType* operand, fim_bank_type bank_type, KernelType ktype, unsigned starting_row = 0,
                          unsigned starting_col = 0);
-    void preload_gemv(NumpyBurstType* operand, fim_bank_type bank_type, unsigned starting_row, unsigned starting_col);
+    void preload_gemv(NumpyBurstType* operand, unsigned starting_row = 0, unsigned starting_col = 0);
     void preload_eltwise(NumpyBurstType* operand, fim_bank_type bank_type, unsigned starting_row,
                          unsigned starting_col);
-    void preload_gemv_2bank(NumpyBurstType* operand, unsigned starting_row = 0, unsigned starting_col = 0);
-    void preload_relu(NumpyBurstType* operand, unsigned starting_row = 0, unsigned starting_col = 0);
 
-    void compute_gemv(NumpyBurstType* data, int num_input_tile, int num_output_tile, int input_tile, int output_tile);
-    void compute_gemv_2bank(NumpyBurstType* data, int num_input_tile, int num_output_tile, int input_tile,
-                            int output_tile, fim_bank_type bank_type);
+    void compute_gemv(NumpyBurstType* data, int num_input_tile, int num_output_tile, int input_tile, int output_tile,
+                      fim_bank_type bank_type);
     void compute_add(int num_tile);
     void compute_mul(int num_tile);
     void compute_bn(int num_tile);
     void compute_relu(int num_tile);
-    void compute_relu_2bank(int num_tile);
-    void compute_resnet50(int num_tile);
 
     void read_result(BurstType* result_bst, fim_bank_type bank_type, int output_dim, unsigned starting_row = 0,
                      unsigned starting_col = 0);
-    void read_result_2bank(BurstType* result_bst, int output_dim, unsigned starting_row = 0, unsigned starting_col = 0);
     void set_fim_chan(int dim);
     void read_memory_trace(const string& filename);
     void run_trace();
@@ -206,9 +196,17 @@ class FIMController
     void create_eltwise_vector(NumpyBurstType* operand, uint16_t* data, fim_bank_type bank_type,
                                unsigned starting_row = 0, unsigned starting_col = 0);
 
+    void create_bn_vector(NumpyBurstType* operand, uint16_t* data, unsigned starting_row = 0,
+                          unsigned starting_col = 0);
     void create_gemv_vector(NumpyBurstType* operand, uint16_t* data, unsigned starting_row = 0,
                             unsigned starting_col = 0);
     void preload_converted_data(uint16_t* data, int data_size, BurstType* test_burst, int bst_cnt);
+
+    void preload_bn(NumpyBurstType* operand, unsigned starting_row = 0, unsigned starting_col = 0);
+    void preprocess_srf(NumpyBurstType* input_npbst, fp16** params, int burst_offset, int num_srf_usage);
+    void program_srf();
+    void read_result_bn(BurstType* result_bst, int num_ba, int num_ch, int num_w, unsigned starting_row = 0,
+                        unsigned starting_col = 0);
 };
 
 #endif

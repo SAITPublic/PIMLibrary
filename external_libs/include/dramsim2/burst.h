@@ -444,9 +444,12 @@ struct NumpyBurstType {
         ofstream file(filename.c_str());
         if (file.is_open()) {
             for (int i = 0; i < bdata.size(); i++) {
-                for (int j = 0; j < 16; j++) {
-                    char* temp = (char*)&(bdata[i].u16_data_[j]);
-                    file << temp[0] << temp[1];
+                //  for (int j = 0; j < 16; j++) {
+                //       char* temp = (char*)&(bdata[i].u16_data_[j]);
+                //       file << temp[0] << temp[1];
+                //  }
+                for (int j = 0; j < 32; j++) {
+                    file << bdata[i].u8_data_[j];
                 }
             }
         }
