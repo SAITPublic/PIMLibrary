@@ -23,6 +23,9 @@ set(MIOPEN_ELT_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/cc/kernels/miopen_eltwise.cc
 
 set(MIOPEN_ACT_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/cc/kernels/miopen_activation.cc
             ${CMAKE_CURRENT_SOURCE_DIR}/cc/ops/miopen_activation_ops.cc)
+
+set(MIOPEN_BN_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/cc/kernels/miopen_bn.cc
+            ${CMAKE_CURRENT_SOURCE_DIR}/cc/ops/miopen_bn_ops.cc)
 include_directories(/opt/rocm/include)
 
 add_library(fim_gemv SHARED ${FIM_GEMV_SOURCES})
@@ -34,9 +37,14 @@ target_link_libraries(miopen_eltwise MIOpen ${TF_LFLAGS})
 add_library(miopen_activation SHARED ${MIOPEN_ACT_SOURCES})
 target_link_libraries(miopen_activation MIOpen ${TF_LFLAGS})
 
+add_library(miopen_bn SHARED ${MIOPEN_BN_SOURCES})
+target_link_libraries(miopen_bn MIOpen ${TF_LFLAGS})
+
 install ( TARGETS fim_gemv LIBRARY DESTINATION
            ${CMAKE_CURRENT_SOURCE_DIR}/python/ops/)
 install ( TARGETS miopen_eltwise LIBRARY DESTINATION
            ${CMAKE_CURRENT_SOURCE_DIR}/python/ops/)
 install ( TARGETS miopen_activation LIBRARY DESTINATION
+           ${CMAKE_CURRENT_SOURCE_DIR}/python/ops/)
+install ( TARGETS miopen_bn LIBRARY DESTINATION
            ${CMAKE_CURRENT_SOURCE_DIR}/python/ops/)
