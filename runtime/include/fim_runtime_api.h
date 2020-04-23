@@ -25,6 +25,10 @@ __FIM_API__ int FimCopyMemory(FimBo* dst, FimBo* src, FimMemCpyType cpy_type);
 __FIM_API__ int FimExecute(void* output, void* operand0, void* operand1, size_t size, FimOpType op_type);
 __FIM_API__ int FimExecute(FimBo* output, FimBo* operand0, FimBo* operand1, FimOpType op_type);
 __FIM_API__ int FimExecute(FimBo* output, FimBo* fim_data, FimOpType op_type);
+__FIM_API__ int FimExecuteAdd(FimBo* output, FimBo* fim_data);
+__FIM_API__ int FimExecuteMul(FimBo* output, FimBo* fim_data);
+__FIM_API__ int FimExecuteRelu(FimBo* output, FimBo* fim_data);
+__FIM_API__ int FimExecuteGEMV(FimBo* output, FimBo* operand0, FimBo* operand1);
 __FIM_API__ int FimExecuteBN(FimBo* output, FimBo* fim_data, FimBo* beta, FimBo* gamma, FimBo* scale, FimBo* shift);
 
 #endif /* _FIM_RUNTIME_API_H_ */

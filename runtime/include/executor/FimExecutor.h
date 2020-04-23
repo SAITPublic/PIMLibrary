@@ -25,6 +25,11 @@ class FimExecutor
     int execute(void* output, void* operand0, void* operand1, size_t size, FimOpType op_type);
     int execute(FimBo* output, FimBo* operand0, FimBo* operand1, FimOpType op_type);
     int execute(FimBo* output, FimBo* fim_data, FimOpType op_type);
+
+    int execute_add(FimBo* output, FimBo* fim_data);
+    int execute_mul(FimBo* output, FimBo* fim_data);
+    int execute_relu(FimBo* output, FimBo* fim_data);
+    int execute_gemv(FimBo* output, FimBo* operand0, FimBo* operand1);
     int execute_bn(FimBo* output, FimBo* fim_data, FimBo* beta, FimBo* gamma, FimBo* scale, FimBo* shift);
 
    private:

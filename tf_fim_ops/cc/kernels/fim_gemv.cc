@@ -38,7 +38,7 @@ void KernelLauncher(const void* i_data, const void* w_data, const int IN_LENGTH,
     FimCopyMemory(preloaded_weight, host_reordered_weight, HOST_TO_DEVICE);
 
     /* __FIM_API__ call : Execute FIM kernel (GEMV) */
-    FimExecute(device_output, device_input, preloaded_weight, OP_GEMV);
+    FimExecuteGEMV(device_output, device_input, preloaded_weight);
 
     FimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
     FimCopyMemory((void*)o_data, (void*)host_output->data, 2 * OUT_LENGTH, HOST_TO_HOST);

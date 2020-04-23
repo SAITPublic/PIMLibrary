@@ -38,7 +38,7 @@ int fim_elt_mul_1(void)
     FimConvertDataLayout(preloaded_fim_input, host_input0, host_input1, OP_ELT_MUL);
 
     /* __FIM_API__ call : Execute FIM kernel (ELT_MUL) */
-    FimExecute(device_output, preloaded_fim_input, OP_ELT_MUL);
+    FimExecuteMul(device_output, preloaded_fim_input);
 
     FimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
 
@@ -93,7 +93,7 @@ int fim_elt_mul_2(void)
     FimConvertDataLayout(&preloaded_fim_input, &host_input0, &host_input1, OP_ELT_MUL);
 
     /* __FIM_API__ call : Execute FIM kernel (ELT_MUL) */
-    FimExecute(&device_output, &preloaded_fim_input, OP_ELT_MUL);
+    FimExecuteMul(&device_output, &preloaded_fim_input);
 
     FimCopyMemory(&host_output, &device_output, DEVICE_TO_HOST);
 
@@ -141,7 +141,7 @@ int fim_elt_mul_3(void)
     FimConvertDataLayout(preloaded_fim_input, host_input0, host_input1, OP_ELT_MUL);
 
     /* __FIM_API__ call : Execute FIM kernel (ELT_MUL) */
-    FimExecute(device_output, preloaded_fim_input, OP_ELT_MUL);
+    FimExecuteMul(device_output, preloaded_fim_input);
 
     FimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
 

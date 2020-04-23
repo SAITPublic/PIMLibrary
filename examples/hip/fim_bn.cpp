@@ -75,4 +75,3 @@ int fim_bn_1(void)
     return ret;
 }
 TEST(IntegrationTest, FimBN1) { EXPECT_TRUE(fim_bn_1() == 0); }
-

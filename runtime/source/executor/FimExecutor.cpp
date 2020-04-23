@@ -230,6 +230,153 @@ int FimExecutor::execute(FimBo* output, FimBo* fim_data, FimOpType op_type)
     return ret;
 }
 
+int FimExecutor::execute_add(FimBo* output, FimBo* fim_data)
+{
+    DLOG(INFO) << "called";
+    int ret = 0;
+    unsigned blocks = 1;
+    unsigned threads_per_block = 2;
+
+    fim_manager_->create_crf_binary(OP_ELT_ADD, output->size, output->size);
+    uint8_t* crf_binary = fim_manager_->get_crf_binary();
+    int crf_size = fim_manager_->get_crf_size();
+
+    // FIXME : change 128 to a meaningful variable.
+    hipMemcpy((void*)d_crf_bin_buffer_, (void*)crf_binary, sizeof(uint8_t) * 128, hipMemcpyHostToDevice);
+    hipMemcpy((void*)fim_base_addr_, fim_data->data, fim_data->size, hipMemcpyHostToDevice);
+
+    hipLaunchKernelGGL(elt_add_fim_1cu_2th_fp16, dim3(blocks), dim3(threads_per_block), 0, 0, (uint8_t*)fim_base_addr_,
+                       (uint8_t*)fim_base_addr_, (uint8_t*)output->data, (int)output->size, (FimMemTraceData*)d_fmtd16_,
+                       (int*)d_fmtd16_size_, fmtd_size_per_ch_, (uint8_t*)d_crf_bin_buffer_, crf_size);
+
+    hipStreamSynchronize(NULL);
+
+#ifdef EMULATOR
+    hipMemcpy((void*)h_fmtd16_size_, (void*)d_fmtd16_size_, sizeof(int), hipMemcpyDeviceToHost);
+    hipMemcpy((void*)h_fmtd16_, (void*)d_fmtd16_, sizeof(FimMemTraceData) * max_fmtd_size_, hipMemcpyDeviceToHost);
+
+    for (size_t i = 1; i < blocks; i++) {
+        memcpy(&h_fmtd16_[i * h_fmtd16_size_[0]], &h_fmtd16_[i * fmtd_size_per_ch_],
+               h_fmtd16_size_[0] * sizeof(FimMemTraceData));
+    }
+    h_fmtd16_size_[0] *= blocks;
+    fim_emulator_->convert_mem_trace_from_16B_to_32B(h_fmtd32_, h_fmtd32_size_, h_fmtd16_, h_fmtd16_size_[0],
+                                                     OP_ELT_ADD);
+    fim_emulator_->execute_fim(output, fim_data, h_fmtd32_, h_fmtd32_size_[0], OP_ELT_ADD);
+#endif
+
+    return ret;
+}
+
+int FimExecutor::execute_mul(FimBo* output, FimBo* fim_data)
+{
+    DLOG(INFO) << "called";
+    int ret = 0;
+    unsigned blocks = 1;
+    unsigned threads_per_block = 2;
+
+    fim_manager_->create_crf_binary(OP_ELT_MUL, output->size, output->size);
+    uint8_t* crf_binary = fim_manager_->get_crf_binary();
+    int crf_size = fim_manager_->get_crf_size();
+
+    // FIXME : change 128 to a meaningful variable.
+    hipMemcpy((void*)d_crf_bin_buffer_, (void*)crf_binary, sizeof(uint8_t) * 128, hipMemcpyHostToDevice);
+    hipMemcpy((void*)fim_base_addr_, fim_data->data, fim_data->size, hipMemcpyHostToDevice);
+
+    hipLaunchKernelGGL(elt_mul_fim_1cu_2th_fp16, dim3(blocks), dim3(threads_per_block), 0, 0, (uint8_t*)fim_base_addr_,
+                       (uint8_t*)fim_base_addr_, (uint8_t*)output->data, (int)output->size, (FimMemTraceData*)d_fmtd16_,
+                       (int*)d_fmtd16_size_, fmtd_size_per_ch_, (uint8_t*)d_crf_bin_buffer_, crf_size);
+
+    hipStreamSynchronize(NULL);
+
+#ifdef EMULATOR
+    hipMemcpy((void*)h_fmtd16_size_, (void*)d_fmtd16_size_, sizeof(int), hipMemcpyDeviceToHost);
+    hipMemcpy((void*)h_fmtd16_, (void*)d_fmtd16_, sizeof(FimMemTraceData) * max_fmtd_size_, hipMemcpyDeviceToHost);
+
+    for (size_t i = 1; i < blocks; i++) {
+        memcpy(&h_fmtd16_[i * h_fmtd16_size_[0]], &h_fmtd16_[i * fmtd_size_per_ch_],
+               h_fmtd16_size_[0] * sizeof(FimMemTraceData));
+    }
+    h_fmtd16_size_[0] *= blocks;
+    fim_emulator_->convert_mem_trace_from_16B_to_32B(h_fmtd32_, h_fmtd32_size_, h_fmtd16_, h_fmtd16_size_[0],
+                                                     OP_ELT_MUL);
+    fim_emulator_->execute_fim(output, fim_data, h_fmtd32_, h_fmtd32_size_[0], OP_ELT_MUL);
+#endif
+
+    return ret;
+}
+
+int FimExecutor::execute_gemv(FimBo* output, FimBo* operand0, FimBo* operand1)
+{
+    DLOG(INFO) << "called";
+    int ret = 0;
+    size_t size = output->size;
+    FimBo* input = operand0;
+    FimBo* weight = operand1;
+
+    fim_manager_->create_crf_binary(OP_GEMV, input->size, output->size);
+    uint8_t* crf_binary = fim_manager_->get_crf_binary();
+    int crf_size = fim_manager_->get_crf_size();
+
+    // FIXME : change 128 to a meaningful variable.
+    hipMemcpy((void*)d_crf_bin_buffer_, (void*)crf_binary, sizeof(uint8_t) * 128, hipMemcpyHostToDevice);
+
+    hipMemcpy((void*)fim_base_addr_, weight->data, weight->size, hipMemcpyDeviceToDevice);
+    hipLaunchKernelGGL(gemv_fim_1cu_2th_fp16, dim3(1), dim3(2), 0, 0, (uint8_t*)fim_base_addr_ /* fim control base */,
+                       (uint8_t*)fim_base_addr_ /* fim weight base */,
+                       (uint8_t*)fim_gemv_tmp_buffer_, /* fim hw output buffer */
+                       (uint8_t*)input->data, (uint8_t*)output->data, input->bshape.w, output->bshape.w,
+                       (FimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, (uint8_t*)d_crf_bin_buffer_, crf_size);
+
+    hipStreamSynchronize(NULL);
+
+#ifdef EMULATOR
+    printf("%s %d d_fmtd16_size : %d\n", __func__, __LINE__, d_fmtd16_size_[0]);
+    hipMemcpy((void*)h_fmtd16_size_, (void*)d_fmtd16_size_, sizeof(int), hipMemcpyDeviceToHost);
+    hipMemcpy((void*)h_fmtd16_, (void*)d_fmtd16_, sizeof(FimMemTraceData) * max_fmtd_size_, hipMemcpyDeviceToHost);
+
+    fim_emulator_->convert_mem_trace_from_16B_to_32B(h_fmtd32_, h_fmtd32_size_, h_fmtd16_, h_fmtd16_size_[0], OP_GEMV);
+    fim_emulator_->execute_fim(output, weight, h_fmtd32_, h_fmtd32_size_[0], OP_GEMV);
+#endif
+
+    return ret;
+}
+
+int FimExecutor::execute_relu(FimBo* output, FimBo* fim_data)
+{
+    DLOG(INFO) << "called";
+    int ret = 0;
+    unsigned blocks = 1;
+    unsigned threads_per_block = 2;
+
+    fim_manager_->create_crf_binary(OP_RELU, output->size, output->size);
+    uint8_t* crf_binary = fim_manager_->get_crf_binary();
+    int crf_size = fim_manager_->get_crf_size();
+
+    // FIXME : change 128 to a meaningful variable.
+    hipMemcpy((void*)d_crf_bin_buffer_, (void*)crf_binary, sizeof(uint8_t) * 128, hipMemcpyHostToDevice);
+    hipMemcpy((void*)fim_base_addr_, fim_data->data, fim_data->size, hipMemcpyHostToDevice);
+    hipLaunchKernelGGL(relu_fim_1cu_2th_fp16, dim3(blocks), dim3(threads_per_block), 0, 0, (uint8_t*)fim_base_addr_,
+                       (uint8_t*)fim_base_addr_, (uint8_t*)output->data, (int)output->size, (FimMemTraceData*)d_fmtd16_,
+                       (int*)d_fmtd16_size_, fmtd_size_per_ch_, (uint8_t*)d_crf_bin_buffer_, crf_size);
+    hipStreamSynchronize(NULL);
+
+#ifdef EMULATOR
+    hipMemcpy((void*)h_fmtd16_size_, (void*)d_fmtd16_size_, sizeof(int), hipMemcpyDeviceToHost);
+    hipMemcpy((void*)h_fmtd16_, (void*)d_fmtd16_, sizeof(FimMemTraceData) * max_fmtd_size_, hipMemcpyDeviceToHost);
+
+    for (size_t i = 1; i < blocks; i++) {
+        memcpy(&h_fmtd16_[i * h_fmtd16_size_[0]], &h_fmtd16_[i * fmtd_size_per_ch_],
+               h_fmtd16_size_[0] * sizeof(FimMemTraceData));
+    }
+    h_fmtd16_size_[0] *= blocks;
+    fim_emulator_->convert_mem_trace_from_16B_to_32B(h_fmtd32_, h_fmtd32_size_, h_fmtd16_, h_fmtd16_size_[0], OP_RELU);
+    fim_emulator_->execute_fim(output, fim_data, h_fmtd32_, h_fmtd32_size_[0], OP_RELU);
+#endif
+
+    return ret;
+}
+
 int FimExecutor::execute_bn(FimBo* output, FimBo* fim_data, FimBo* beta, FimBo* gamma, FimBo* scale, FimBo* shift)
 {
     DLOG(INFO) << "called";

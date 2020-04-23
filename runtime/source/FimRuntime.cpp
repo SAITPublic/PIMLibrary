@@ -160,6 +160,46 @@ int FimRuntime::execute(FimBo* output, FimBo* fim_data, FimOpType op_type)
     return ret;
 }
 
+int FimRuntime::execute_add(FimBo* output, FimBo* fim_data)
+{
+    DLOG(INFO) << "called";
+    int ret = 0;
+
+    ret = fim_executor_->execute_add(output, fim_data);
+
+    return ret;
+}
+
+int FimRuntime::execute_mul(FimBo* output, FimBo* fim_data)
+{
+    DLOG(INFO) << "called";
+    int ret = 0;
+
+    ret = fim_executor_->execute_mul(output, fim_data);
+
+    return ret;
+}
+
+int FimRuntime::execute_gemv(FimBo* output, FimBo* operand0, FimBo* operand1)
+{
+    DLOG(INFO) << "called";
+    int ret = 0;
+
+    ret = fim_executor_->execute_gemv(output, operand0, operand1);
+
+    return ret;
+}
+
+int FimRuntime::execute_relu(FimBo* output, FimBo* fim_data)
+{
+    DLOG(INFO) << "called";
+    int ret = 0;
+
+    ret = fim_executor_->execute_relu(output, fim_data);
+
+    return ret;
+}
+
 int FimRuntime::execute_bn(FimBo* output, FimBo* fim_data, FimBo* beta, FimBo* gamma, FimBo* scale, FimBo* shift)
 {
     DLOG(INFO) << "called";

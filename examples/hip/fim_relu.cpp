@@ -36,7 +36,7 @@ int fim_relu_1(void)
     FimConvertDataLayout(preloaded_fim_input, host_input, OP_RELU);
 
     /* __FIM_API__ call : Execute FIM kernel */
-    FimExecute(device_output, preloaded_fim_input, OP_RELU);
+    FimExecuteRelu(device_output, preloaded_fim_input);
 
     FimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
 
@@ -87,7 +87,7 @@ int fim_relu_2(void)
     FimConvertDataLayout(&preloaded_fim_input, &host_input, OP_RELU);
 
     /* __FIM_API__ call : Execute FIM kernel */
-    FimExecute(&device_output, &preloaded_fim_input, OP_RELU);
+    FimExecuteRelu(&device_output, &preloaded_fim_input);
 
     FimCopyMemory(&host_output, &device_output, DEVICE_TO_HOST);
 

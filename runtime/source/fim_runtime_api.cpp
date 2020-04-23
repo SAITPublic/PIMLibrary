@@ -281,6 +281,66 @@ int FimExecute(FimBo* output, FimBo* fim_data, FimOpType op_type)
     return ret;
 }
 
+int FimExecuteAdd(FimBo* output, FimBo* fim_data)
+{
+    DLOG(INFO) << "called";
+    FIM_PROFILE_TICK(ExecuteAdd);
+    int ret = 0;
+
+    if (fim_runtime == nullptr) {
+        return -1;
+    }
+    ret = fim_runtime->execute_add(output, fim_data);
+    FIM_PROFILE_TOCK(ExecuteAdd);
+
+    return ret;
+}
+
+int FimExecuteMul(FimBo* output, FimBo* fim_data)
+{
+    DLOG(INFO) << "called";
+    FIM_PROFILE_TICK(ExecuteMul);
+    int ret = 0;
+
+    if (fim_runtime == nullptr) {
+        return -1;
+    }
+    ret = fim_runtime->execute_mul(output, fim_data);
+    FIM_PROFILE_TOCK(ExecuteMul);
+
+    return ret;
+}
+
+int FimExecuteGEMV(FimBo* output, FimBo* operand0, FimBo* operand1)
+{
+    DLOG(INFO) << "called";
+    FIM_PROFILE_TICK(ExecuteGEMV);
+    int ret = 0;
+
+    if (fim_runtime == nullptr) {
+        return -1;
+    }
+    ret = fim_runtime->execute_gemv(output, operand0, operand1);
+    FIM_PROFILE_TOCK(ExecuteGEMV);
+
+    return ret;
+}
+
+int FimExecuteRelu(FimBo* output, FimBo* fim_data)
+{
+    DLOG(INFO) << "called";
+    FIM_PROFILE_TICK(ExecuteRelu);
+    int ret = 0;
+
+    if (fim_runtime == nullptr) {
+        return -1;
+    }
+    ret = fim_runtime->execute_relu(output, fim_data);
+    FIM_PROFILE_TOCK(ExecuteRelu);
+
+    return ret;
+}
+
 int FimExecuteBN(FimBo* output, FimBo* fim_data, FimBo* beta, FimBo* gamma, FimBo* scale, FimBo* shift)
 {
     DLOG(INFO) << "called";
