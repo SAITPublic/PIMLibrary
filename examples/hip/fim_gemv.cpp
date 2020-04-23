@@ -66,4 +66,58 @@ int fim_gemv(void)
 
     return ret;
 }
+
+int fim_gemv2(void)
+{
+    int ret = 0;
+
+    /* __FIM_API__ call : Initialize FimRuntime */
+    FimInitialize(RT_TYPE_HIP, FIM_FP16);
+
+    /* __FIM_API__ call : Create FIM Buffer Object */
+    FimBo* host_input = FimCreateBo(IN_LENGTH * 2, 1, 1, 1, FIM_FP16, MEM_TYPE_HOST);
+    FimBo* host_weight = FimCreateBo(IN_LENGTH * 2, OUT_LENGTH, 1, 1, FIM_FP16, MEM_TYPE_HOST);
+    FimBo* host_reordered_weight = FimCreateBo(IN_LENGTH * 2, OUT_LENGTH, 1, 1, FIM_FP16, MEM_TYPE_FIM);
+    FimBo* device_input = FimCreateBo(IN_LENGTH * 2, 1, 1, 1, FIM_FP16, MEM_TYPE_DEVICE);
+    FimBo* device_output = FimCreateBo(OUT_LENGTH, 1, 1, 1, FIM_FP16, MEM_TYPE_DEVICE);
+    FimBo* preloaded_weight = FimCreateBo(IN_LENGTH * 2, OUT_LENGTH, 1, 1, FIM_FP16, MEM_TYPE_FIM);
+    FimBo* host_output = FimCreateBo(OUT_LENGTH, 1, 1, 1, FIM_FP16, MEM_TYPE_HOST);
+    FimBo* golden_output = FimCreateBo(OUT_LENGTH, 1, 1, 1, FIM_FP16, MEM_TYPE_HOST);
+
+    /* Initialize the input, weight, output data */
+    load_data("../test_vectors/load/gemv/input_512x1.dat", (char*)host_input->data, host_input->size);
+    load_data("../test_vectors/load/gemv/weight_512x4096.dat", (char*)host_weight->data, host_weight->size);
+    load_data("../test_vectors/load/gemv/output_4096x1_512.dat", (char*)golden_output->data, golden_output->size);
+    FimCopyMemory(device_input, host_input, HOST_TO_DEVICE);
+
+    /* __FIM_API__ call : Preload weight data on FIM memory */
+    FimConvertDataLayout(host_reordered_weight, host_weight, OP_GEMV);
+    FimCopyMemory(preloaded_weight, host_reordered_weight, HOST_TO_DEVICE);
+
+    /* __FIM_API__ call : Execute FIM kernel (GEMV) */
+    FimExecute(device_output, device_input, preloaded_weight, OP_GEMV);
+
+    FimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
+    dump_data("../test_vectors/dump/gemv/preloaded_weight_512x4096.dat", (char*)preloaded_weight->data,
+              preloaded_weight->size);
+    dump_data("../test_vectors/dump/gemv/output_4096x1_512.dat", (char*)host_output->data, host_output->size);
+
+    ret = compare_data((char*)golden_output->data, (char*)host_output->data, host_output->size);
+
+    /* __FIM_API__ call : Destroy FIM Buffer Object */
+    FimDestroyBo(host_input);
+    FimDestroyBo(host_weight);
+    FimDestroyBo(host_output);
+    FimDestroyBo(device_input);
+    FimDestroyBo(device_output);
+    FimDestroyBo(preloaded_weight);
+    FimDestroyBo(host_reordered_weight);
+
+    /* __FIM_API__ call : Deinitialize FimRuntime */
+    FimDeinitialize();
+
+    return ret;
+}
+
 TEST(HIPIntegrationTest, FimGEMV) { EXPECT_TRUE(fim_gemv() == 0); }
+TEST(HIPIntegrationTest, FimGEMV2) { EXPECT_TRUE(fim_gemv2() == 0); }

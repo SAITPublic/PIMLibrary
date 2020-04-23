@@ -109,5 +109,52 @@ int fim_relu_2(void)
 
     return ret;
 }
+
+int fim_relu_3(void)
+{
+    int ret = 0;
+
+    /* __FIM_API__ call : Initialize FimRuntime */
+    FimInitialize(RT_TYPE_HIP, FIM_FP16);
+
+    /* __FIM_API__ call : Create FIM Buffer Object */
+    FimBo* host_input = FimCreateBo(LENGTH * 2, 1, 1, 1, FIM_FP16, MEM_TYPE_HOST);
+    FimBo* host_output = FimCreateBo(LENGTH * 2, 1, 1, 1, FIM_FP16, MEM_TYPE_HOST);
+    FimBo* golden_output = FimCreateBo(LENGTH * 2, 1, 1, 1, FIM_FP16, MEM_TYPE_HOST);
+    FimBo* device_output = FimCreateBo(LENGTH * 2, 1, 1, 1, FIM_FP16, MEM_TYPE_DEVICE);
+    FimBo* preloaded_fim_input = FimCreateBo(LENGTH * 2, 1, 1, 1, FIM_FP16, MEM_TYPE_FIM);
+
+    /* Initialize the input, output data */
+    load_data("../test_vectors/load/relu/input_512KB.dat", (char*)host_input->data, host_input->size);
+    load_data("../test_vectors/load/relu/output_512KB.dat", (char*)golden_output->data, golden_output->size);
+
+    /* __FIM_API__ call : Preload weight data on FIM memory */
+    FimConvertDataLayout(preloaded_fim_input, host_input, OP_RELU);
+
+    /* __FIM_API__ call : Execute FIM kernel */
+    FimExecute(device_output, preloaded_fim_input, OP_RELU);
+
+    FimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
+
+    ret = compare_data((char*)golden_output->data, (char*)host_output->data, host_output->size);
+
+    dump_data("../test_vectors/dump/relu/preloaded_input_512KB.dat", (char*)preloaded_fim_input->data,
+              preloaded_fim_input->size);
+    dump_data("../test_vectors/dump/relu/output_512KB.dat", (char*)host_output->data, host_output->size);
+
+    /* __FIM_API__ call : Free memory */
+    FimDestroyBo(host_input);
+    FimDestroyBo(host_output);
+    FimDestroyBo(golden_output);
+    FimDestroyBo(device_output);
+    FimDestroyBo(preloaded_fim_input);
+
+    /* __FIM_API__ call : Deinitialize FimRuntime */
+    FimDeinitialize();
+
+    return ret;
+}
+
 TEST(IntegrationTest, FimRelu1) { EXPECT_TRUE(fim_relu_1() == 0); }
 TEST(IntegrationTest, FimRelu2) { EXPECT_TRUE(fim_relu_2() == 0); }
+TEST(IntegrationTest, FimRelu3) { EXPECT_TRUE(fim_relu_3() == 0); }
