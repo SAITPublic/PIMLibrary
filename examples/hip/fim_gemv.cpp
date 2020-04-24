@@ -60,6 +60,7 @@ int fim_gemv(void)
     FimDestroyBo(device_output);
     FimDestroyBo(preloaded_weight);
     FimDestroyBo(host_reordered_weight);
+    FimDestroyBo(golden_output);
 
     /* __FIM_API__ call : Deinitialize FimRuntime */
     FimDeinitialize();
@@ -95,7 +96,7 @@ int fim_gemv2(void)
     FimCopyMemory(preloaded_weight, host_reordered_weight, HOST_TO_DEVICE);
 
     /* __FIM_API__ call : Execute FIM kernel (GEMV) */
-    FimExecute(device_output, device_input, preloaded_weight, OP_GEMV);
+    FimExecuteGEMV(device_output, device_input, preloaded_weight);
 
     FimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
     dump_data("../test_vectors/dump/gemv/preloaded_weight_512x4096.dat", (char*)preloaded_weight->data,
@@ -112,6 +113,7 @@ int fim_gemv2(void)
     FimDestroyBo(device_output);
     FimDestroyBo(preloaded_weight);
     FimDestroyBo(host_reordered_weight);
+    FimDestroyBo(golden_output);
 
     /* __FIM_API__ call : Deinitialize FimRuntime */
     FimDeinitialize();
