@@ -1,0 +1,103 @@
+Log file created at: 2020/04/15 12:44:33
+Running on machine: sait-Z390-AORUS-PRO
+Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg
+I0415 12:44:33.067243 18169 fim_runtime_api.cpp:24] called
+I0415 12:44:33.091373 18169 FimRuntime.cpp:15] called
+I0415 12:44:33.091375 18169 FimManager.cpp:31] called
+I0415 12:44:33.091377 18169 FimManager.cpp:15] called
+I0415 12:44:33.091379 18169 FimDevice.cpp:13] called
+I0415 12:44:33.091380 18169 FimControlManager.cpp:17] called
+I0415 12:44:33.091382 18169 FimMemoryManager.cpp:17] called
+I0415 12:44:33.091385 18169 FimExecutor.cpp:34] Called
+I0415 12:44:33.091387 18169 FimExecutor.cpp:20] called 
+I0415 12:44:33.091390 18169 FimEmulator.cpp:24] Called
+I0415 12:44:33.091392 18169 FimEmulator.cpp:18] called 
+I0415 12:44:33.091393 18169 FimRuntime.cpp:23] called
+I0415 12:44:33.091394 18169 FimManager.cpp:39] called
+I0415 12:44:33.091395 18169 FimDevice.cpp:17] called
+I0415 12:44:33.091397 18169 FimDevice.cpp:50] called
+I0415 12:44:33.091398 18169 FimControlManager.cpp:23] called
+I0415 12:44:33.091398 18169 FimMemoryManager.cpp:24] called
+I0415 12:44:33.091399 18169 FimExecutor.cpp:42] Intialization done 
+I0415 12:44:33.130131 18169 fim_runtime_api.cpp:30] Initialize time (us) : 38764.1
+I0415 12:44:33.130151 18169 fim_runtime_api.cpp:53] called
+I0415 12:44:33.130153 18169 FimRuntime.cpp:52] called
+I0415 12:44:33.130154 18169 FimManager.cpp:73] called
+I0415 12:44:33.130156 18169 FimMemoryManager.cpp:58] called
+I0415 12:44:33.130157 18169 fim_runtime_api.cpp:76] CreateBo time (us) : 5.71
+I0415 12:44:33.130159 18169 fim_runtime_api.cpp:53] called
+I0415 12:44:33.130161 18169 FimRuntime.cpp:52] called
+I0415 12:44:33.130162 18169 FimManager.cpp:73] called
+I0415 12:44:33.130162 18169 FimMemoryManager.cpp:58] called
+I0415 12:44:33.130162 18169 fim_runtime_api.cpp:76] CreateBo time (us) : 3.465
+I0415 12:44:33.130164 18169 fim_runtime_api.cpp:53] called
+I0415 12:44:33.130165 18169 FimRuntime.cpp:52] called
+I0415 12:44:33.130165 18169 FimManager.cpp:73] called
+I0415 12:44:33.130167 18169 FimMemoryManager.cpp:58] called
+I0415 12:44:33.130167 18169 fim_runtime_api.cpp:76] CreateBo time (us) : 3.325
+I0415 12:44:33.130168 18169 fim_runtime_api.cpp:53] called
+I0415 12:44:33.130169 18169 FimRuntime.cpp:52] called
+I0415 12:44:33.130170 18169 FimManager.cpp:73] called
+I0415 12:44:33.130172 18169 FimMemoryManager.cpp:58] called
+I0415 12:44:33.130172 18169 fim_runtime_api.cpp:76] CreateBo time (us) : 3.299
+I0415 12:44:33.130173 18169 fim_runtime_api.cpp:53] called
+I0415 12:44:33.130174 18169 FimRuntime.cpp:52] called
+I0415 12:44:33.130175 18169 FimManager.cpp:73] called
+I0415 12:44:33.130175 18169 FimMemoryManager.cpp:58] called
+I0415 12:44:33.130179 18169 fim_runtime_api.cpp:76] CreateBo time (us) : 5.76
+I0415 12:44:33.130180 18169 fim_runtime_api.cpp:53] called
+I0415 12:44:33.130182 18169 FimRuntime.cpp:52] called
+I0415 12:44:33.130182 18169 FimManager.cpp:73] called
+I0415 12:44:33.130183 18169 FimMemoryManager.cpp:58] called
+I0415 12:44:33.130189 18169 fim_runtime_api.cpp:76] CreateBo time (us) : 8.54
+I0415 12:44:33.142292 18169 fim_runtime_api.cpp:198] called
+I0415 12:44:33.142295 18169 FimRuntime.cpp:102] called
+I0415 12:44:33.142297 18169 FimManager.cpp:143] called
+I0415 12:44:33.142297 18169 FimMemoryManager.cpp:195] called
+I0415 12:44:33.142299 18169 FimMemoryManager.cpp:389] called
+I0415 12:44:33.142341 18169 FimMemoryManager.cpp:389] called
+I0415 12:44:33.142383 18169 fim_runtime_api.cpp:206] ConvertDataLayout time (us) : 89.294
+I0415 12:44:33.142386 18169 fim_runtime_api.cpp:273] called
+I0415 12:44:33.142387 18169 FimRuntime.cpp:152] called
+I0415 12:44:33.142388 18169 FimExecutor.cpp:155] called
+I0415 12:44:33.956996 18169 FimEmulator.cpp:49] called
+I0415 12:44:33.966123 18169 FimEmulator.cpp:72] called
+I0415 12:44:34.093446 18169 fim_runtime_api.cpp:281] Execute time (us) : 951062
+I0415 12:44:34.093456 18169 fim_runtime_api.cpp:228] called
+I0415 12:44:34.093457 18169 FimRuntime.cpp:122] called
+I0415 12:44:34.093459 18169 FimManager.cpp:113] called
+I0415 12:44:34.093461 18169 FimMemoryManager.cpp:139] called
+I0415 12:44:34.093502 18169 fim_runtime_api.cpp:236] CopyMemory time (us) : 46.501
+I0415 12:44:34.094250 18169 fim_runtime_api.cpp:83] called
+I0415 12:44:34.094254 18169 FimRuntime.cpp:72] called
+I0415 12:44:34.094259 18169 FimManager.cpp:93] called
+I0415 12:44:34.094261 18169 FimMemoryManager.cpp:94] called
+I0415 12:44:34.094264 18169 fim_runtime_api.cpp:97] DestroyBo time (us) : 12.142
+I0415 12:44:34.094266 18169 fim_runtime_api.cpp:83] called
+I0415 12:44:34.094266 18169 FimRuntime.cpp:72] called
+I0415 12:44:34.094267 18169 FimManager.cpp:93] called
+I0415 12:44:34.094269 18169 FimMemoryManager.cpp:94] called
+I0415 12:44:34.094269 18169 fim_runtime_api.cpp:97] DestroyBo time (us) : 2.979
+I0415 12:44:34.094270 18169 fim_runtime_api.cpp:83] called
+I0415 12:44:34.094271 18169 FimRuntime.cpp:72] called
+I0415 12:44:34.094271 18169 FimManager.cpp:93] called
+I0415 12:44:34.094272 18169 FimMemoryManager.cpp:94] called
+I0415 12:44:34.094274 18169 fim_runtime_api.cpp:97] DestroyBo time (us) : 2.978
+I0415 12:44:34.094274 18169 fim_runtime_api.cpp:83] called
+I0415 12:44:34.094275 18169 FimRuntime.cpp:72] called
+I0415 12:44:34.094276 18169 FimManager.cpp:93] called
+I0415 12:44:34.094276 18169 FimMemoryManager.cpp:94] called
+I0415 12:44:34.094277 18169 fim_runtime_api.cpp:97] DestroyBo time (us) : 3.02
+I0415 12:44:34.094278 18169 fim_runtime_api.cpp:83] called
+I0415 12:44:34.094280 18169 FimRuntime.cpp:72] called
+I0415 12:44:34.094280 18169 FimManager.cpp:93] called
+I0415 12:44:34.094281 18169 FimMemoryManager.cpp:94] called
+I0415 12:44:34.094297 18169 fim_runtime_api.cpp:97] DestroyBo time (us) : 18.718
+I0415 12:44:34.094300 18169 fim_runtime_api.cpp:83] called
+I0415 12:44:34.094300 18169 FimRuntime.cpp:72] called
+I0415 12:44:34.094300 18169 FimManager.cpp:93] called
+I0415 12:44:34.094301 18169 FimMemoryManager.cpp:94] called
+I0415 12:44:34.094305 18169 fim_runtime_api.cpp:97] DestroyBo time (us) : 6.298
+I0415 12:44:34.094307 18169 fim_runtime_api.cpp:37] called
+I0415 12:44:34.094308 18169 FimRuntime.cpp:34] called
+I0415 12:44:34.094310 18169 fim_runtime_api.cpp:46] Deinitialize time (us) : 1.95
