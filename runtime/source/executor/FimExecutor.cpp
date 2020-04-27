@@ -246,7 +246,7 @@ int FimExecutor::execute_add(FimBo* output, FimBo* fim_data)
     hipMemcpy((void*)fim_base_addr_, fim_data->data, fim_data->size, hipMemcpyHostToDevice);
 
     hipLaunchKernelGGL(elt_add_fim_1cu_2th_fp16, dim3(blocks), dim3(threads_per_block), 0, 0, (uint8_t*)fim_base_addr_,
-                       (uint8_t*)fim_base_addr_, (uint8_t*)output->data, (int)output->size, (FimMemTraceData*)d_fmtd16_,
+                       (uint8_t*)fim_base_addr_, (uint8_t*)output->data, output->size, (FimMemTraceData*)d_fmtd16_,
                        (int*)d_fmtd16_size_, fmtd_size_per_ch_, (uint8_t*)d_crf_bin_buffer_, crf_size);
 
     hipStreamSynchronize(NULL);
