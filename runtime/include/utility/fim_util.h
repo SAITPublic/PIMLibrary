@@ -108,4 +108,6 @@ __device__ void W_CMD_R(uint8_t* addr, uint8_t* src);
 __device__ void B_CMD(int type);
 #endif
 
+size_t GetPaddedSize(FimDesc* fim_desc, FimMemFlag mem_flag);
+void PadInputData(void* input, int in_size, int in_nsize, FimMemFlag mem_flag);
 #endif /* _FIM_UTIL_H_ */

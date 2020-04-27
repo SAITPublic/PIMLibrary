@@ -4,6 +4,7 @@
 #include "hip/hip_runtime.h"
 #include "utility/fim_log.h"
 #include "utility/fim_profile.h"
+#include "utility/fim_util.h"
 
 using namespace fim::runtime;
 
@@ -76,6 +77,56 @@ FimBo* FimCreateBo(int w, int h, int c, int n, FimPrecision precision, FimMemTyp
     return fim_bo;
 }
 
+FimBo* FimCreateBo(FimDesc* fim_desc, FimMemType mem_type, FimMemFlag mem_flag)
+{
+    DLOG(INFO) << "called";
+    FIM_PROFILE_TICK(CreateBo);
+
+    int data_type = fim_desc->precision;
+    int ret = 0;
+
+    FimBo* fim_bo = new FimBo;
+    int type_size = (data_type == FIM_FP16) ? 2 : 1;
+    size_t size = GetPaddedSize(fim_desc, mem_flag) * type_size;
+
+    fim_bo->size = size;
+    fim_bo->mem_type = mem_type;
+
+    ret = fim_runtime->alloc_memory(fim_bo);
+    if (ret != 0) {
+        DLOG(ERROR) << "Fail to alloc memory";
+        return nullptr;
+    }
+
+    if (mem_flag == GEMV_INPUT) {
+        PadInputData(fim_bo->data, fim_desc->bshape_r.w, fim_desc->bshape.w, mem_flag);
+    }
+
+    return fim_bo;
+}
+
+FimDesc* FimCreateDesc(int n, int c, int h, int w, FimPrecision precision, FimOpType op_type)
+{
+    DLOG(INFO) << "called";
+    FIM_PROFILE_TICK(CreateDesc);
+
+    if (fim_runtime == nullptr) {
+        DLOG(ERROR) << "FimRuntime is not initialized";
+        return nullptr;
+    }
+
+    FimDesc* fim_desc = new FimDesc;
+
+    fim_desc->op_type = op_type;
+    fim_desc->bshape_r = {(uint32_t)w, (uint32_t)h, (uint32_t)c, (uint32_t)n};
+    fim_desc->bshape = {(uint32_t)w, (uint32_t)h, (uint32_t)c, (uint32_t)n};
+    fim_desc->precision = precision;
+
+    FIM_PROFILE_TOCK(CreateDesc);
+
+    return fim_desc;
+}
+
 int FimDestroyBo(FimBo* fim_bo)
 {
     DLOG(INFO) << "called";
@@ -92,6 +143,22 @@ int FimDestroyBo(FimBo* fim_bo)
         return -1;
     }
     delete fim_bo;
+    FIM_PROFILE_TOCK(DestroyBo);
+
+    return ret;
+}
+
+int FimDestroyDesc(FimDesc* fim_desc)
+{
+    DLOG(INFO) << "called";
+    FIM_PROFILE_TICK(DestroyBo);
+    int ret = 0;
+
+    if (fim_runtime == nullptr) {
+        DLOG(ERROR) << "FimRuntime is not initialized";
+        return -1;
+    }
+    delete fim_desc;
     FIM_PROFILE_TOCK(DestroyBo);
 
     return ret;
@@ -176,7 +243,7 @@ int FimConvertDataLayout(void* dst, void* src, size_t size, FimOpType op_type)
     return ret;
 }
 
-int FimConvertDataLayout(FimBo* dst, FimBo* src, FimOpType op_type)
+int FimConvertDataLayout(FimBo* dst, FimBo* src, FimOpType op_type, FimDesc* fim_desc)
 {
     DLOG(INFO) << "called";
     FIM_PROFILE_TICK(ConvertDataLayout);
@@ -185,7 +252,7 @@ int FimConvertDataLayout(FimBo* dst, FimBo* src, FimOpType op_type)
     if (fim_runtime == nullptr) {
         return -1;
     }
-    ret = fim_runtime->convert_data_layout(dst, src, op_type);
+    ret = fim_runtime->convert_data_layout(dst, src, op_type, fim_desc);
     FIM_PROFILE_TOCK(ConvertDataLayout);
 
     return ret;
@@ -311,7 +378,7 @@ int FimExecuteMul(FimBo* output, FimBo* fim_data)
     return ret;
 }
 
-int FimExecuteGEMV(FimBo* output, FimBo* operand0, FimBo* operand1)
+int FimExecuteGEMV(FimBo* output, FimBo* operand0, FimBo* operand1, FimDesc* fim_desc)
 {
     DLOG(INFO) << "called";
     FIM_PROFILE_TICK(ExecuteGEMV);
@@ -320,7 +387,7 @@ int FimExecuteGEMV(FimBo* output, FimBo* operand0, FimBo* operand1)
     if (fim_runtime == nullptr) {
         return -1;
     }
-    ret = fim_runtime->execute_gemv(output, operand0, operand1);
+    ret = fim_runtime->execute_gemv(output, operand0, operand1, fim_desc);
     FIM_PROFILE_TOCK(ExecuteGEMV);
 
     return ret;

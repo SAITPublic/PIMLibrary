@@ -306,13 +306,22 @@ int FimExecutor::execute_mul(FimBo* output, FimBo* fim_data)
     return ret;
 }
 
-int FimExecutor::execute_gemv(FimBo* output, FimBo* operand0, FimBo* operand1)
+int FimExecutor::execute_gemv(FimBo* output, FimBo* operand0, FimBo* operand1, FimDesc* fim_desc)
 {
     DLOG(INFO) << "called";
     int ret = 0;
+    int in_size, out_size;
     size_t size = output->size;
     FimBo* input = operand0;
     FimBo* weight = operand1;
+
+    if (fim_desc) {
+        in_size = fim_desc->bshape.w;
+        out_size = fim_desc->bshape.h;
+    } else {
+        in_size = input->bshape.w;
+        out_size = output->bshape.w;
+    }
 
     fim_manager_->create_crf_binary(OP_GEMV, input->size, output->size);
     uint8_t* crf_binary = fim_manager_->get_crf_binary();
@@ -325,7 +334,7 @@ int FimExecutor::execute_gemv(FimBo* output, FimBo* operand0, FimBo* operand1)
     hipLaunchKernelGGL(gemv_fim_1cu_2th_fp16, dim3(1), dim3(2), 0, 0, (uint8_t*)fim_base_addr_ /* fim control base */,
                        (uint8_t*)fim_base_addr_ /* fim weight base */,
                        (uint8_t*)fim_gemv_tmp_buffer_, /* fim hw output buffer */
-                       (uint8_t*)input->data, (uint8_t*)output->data, input->bshape.w, output->bshape.w,
+                       (uint8_t*)input->data, (uint8_t*)output->data, in_size, out_size,
                        (FimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, (uint8_t*)d_crf_bin_buffer_, crf_size);
 
     hipStreamSynchronize(NULL);
@@ -336,7 +345,7 @@ int FimExecutor::execute_gemv(FimBo* output, FimBo* operand0, FimBo* operand1)
     hipMemcpy((void*)h_fmtd16_, (void*)d_fmtd16_, sizeof(FimMemTraceData) * max_fmtd_size_, hipMemcpyDeviceToHost);
 
     fim_emulator_->convert_mem_trace_from_16B_to_32B(h_fmtd32_, h_fmtd32_size_, h_fmtd16_, h_fmtd16_size_[0], OP_GEMV);
-    fim_emulator_->execute_fim(output, weight, h_fmtd32_, h_fmtd32_size_[0], OP_GEMV);
+    fim_emulator_->execute_fim(output, weight, h_fmtd32_, h_fmtd32_size_[0], OP_GEMV, fim_desc);
 #endif
 
     return ret;

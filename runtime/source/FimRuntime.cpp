@@ -90,12 +90,12 @@ int FimRuntime::convert_data_layout(void* dst, void* src, size_t size, FimOpType
     return ret;
 }
 
-int FimRuntime::convert_data_layout(FimBo* dst, FimBo* src, FimOpType op_type)
+int FimRuntime::convert_data_layout(FimBo* dst, FimBo* src, FimOpType op_type, FimDesc* fim_desc)
 {
     DLOG(INFO) << "called";
     int ret = 0;
 
-    ret = fim_manager_->convert_data_layout(dst, src, op_type);
+    ret = fim_manager_->convert_data_layout(dst, src, op_type, fim_desc);
 
     return ret;
 }
@@ -180,12 +180,12 @@ int FimRuntime::execute_mul(FimBo* output, FimBo* fim_data)
     return ret;
 }
 
-int FimRuntime::execute_gemv(FimBo* output, FimBo* operand0, FimBo* operand1)
+int FimRuntime::execute_gemv(FimBo* output, FimBo* operand0, FimBo* operand1, FimDesc* fim_desc)
 {
     DLOG(INFO) << "called";
     int ret = 0;
 
-    ret = fim_executor_->execute_gemv(output, operand0, operand1);
+    ret = fim_executor_->execute_gemv(output, operand0, operand1, fim_desc);
 
     return ret;
 }

@@ -617,3 +617,36 @@ __device__ void B_CMD(int type)
         __threadfence();
 }
 #endif
+
+size_t GetPaddedSize(FimDesc* fim_desc, FimMemFlag mem_flag)
+{
+    int n = fim_desc->bshape_r.n;
+    int c = fim_desc->bshape_r.c;
+    int h = fim_desc->bshape_r.h;
+    int w = fim_desc->bshape_r.w;
+    size_t size;
+
+    if (mem_flag == GEMV_INPUT) {
+        w = 256 * ceil((float)w / 256);
+        h = 1;
+        fim_desc->bshape.w = w;
+    } else if (mem_flag == GEMV_WEIGHT) {
+        w = 256 * ceil((float)w / 256);
+        h = 4096 * ceil((float)h / 4096);
+        fim_desc->bshape.w = w;
+        fim_desc->bshape.h = h;
+    } else if (mem_flag == GEMV_OUTPUT) {
+        w = 1;
+    }
+
+    size = n * c * h * w;
+
+    return size;
+}
+
+void PadInputData(void* input, int in_size, int in_nsize, FimMemFlag mem_flag)
+{
+    if (mem_flag == GEMV_INPUT) {
+        for (int i = in_size; i < in_nsize; i++) ((half*)input)[i] = half(0);
+    }
+}

@@ -52,7 +52,7 @@ __global__ void elt_add_fim(uint8_t* fim_data, uint8_t* fim_ctr, uint8_t* output
     int num_col = 32;
     int g_size = 32;
     int i_size = input_size / sizeof(short);
-    unsigned int start_row = (((uint64_t)fim_ctr - (uint64_t)fim_data) >> 19) & 0x3FFF;
+    unsigned int start_row = (((uint64_t)fim_data - (uint64_t)fim_ctr) >> 19) & 0x3FFF;
 
     int num_p = num_blk * num_ch * num_g * (g_size / sizeof(short));
     int num_t = i_size / num_p;
@@ -97,12 +97,9 @@ __global__ void elt_add_fim(uint8_t* fim_data, uint8_t* fim_ctr, uint8_t* output
     }
     B_CMD(0);
 
-    if (hipThreadIdx_x == 0) {
+    if (hipThreadIdx_x < 2 * crf_size) {
         addr = addr_gen(hipBlockIdx_x, 0, 0, 0, 0x3fff, 0x0);
-        W_CMD_R(&fim_ctr[addr + offset], elt_add_hab_to_hab_fim);
-    } else if (hipThreadIdx_x == 1) {
-        addr = addr_gen(hipBlockIdx_x, 0, 0, 0, 0x3fff, 0x0);
-        W_CMD_R(&fim_ctr[addr + offset], elt_add_hab_to_hab_fim + 16);
+        W_CMD_R(&fim_ctr[addr + offset], elt_add_hab_to_hab_fim + hipThreadIdx_x * 16);
     }
     B_CMD(0);
 
@@ -127,12 +124,9 @@ __global__ void elt_add_fim(uint8_t* fim_data, uint8_t* fim_ctr, uint8_t* output
         B_CMD(1);
     }
 
-    if (hipThreadIdx_x == 0) {
+    if (hipThreadIdx_x < 2 * crf_size) {
         addr = addr_gen(hipBlockIdx_x, 0, 0, 0, 0x3fff, 0x0);
-        W_CMD_R(&fim_ctr[addr + offset], elt_add_hab_fim_to_hab);
-    } else if (hipThreadIdx_x == 1) {
-        addr = addr_gen(hipBlockIdx_x, 0, 0, 0, 0x3fff, 0x0);
-        W_CMD_R(&fim_ctr[addr + offset], elt_add_hab_fim_to_hab + 16);
+        W_CMD_R(&fim_ctr[addr + offset], elt_add_hab_fim_to_hab + hipThreadIdx_x * 16);
     }
     B_CMD(0);
 

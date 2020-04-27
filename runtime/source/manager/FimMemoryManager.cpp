@@ -174,13 +174,13 @@ int FimMemoryManager::convert_data_layout(void* dst, void* src, size_t size, Fim
     return ret;
 }
 
-int FimMemoryManager::convert_data_layout(FimBo* dst, FimBo* src, FimOpType op_type)
+int FimMemoryManager::convert_data_layout(FimBo* dst, FimBo* src, FimOpType op_type, FimDesc* fim_desc)
 {
     DLOG(INFO) << "called";
     int ret = 0;
 
     if (op_type == OP_GEMV) {
-        ret = convert_data_layout_for_gemv_weight(dst, src);
+        ret = convert_data_layout_for_gemv_weight(dst, src, fim_desc);
     } else if (op_type == OP_RELU) {
         ret = convert_data_layout_for_relu(dst, src);
     } else if (op_type == OP_BN) {
@@ -345,7 +345,7 @@ int FimMemoryManager::convert_data_layout_for_relu(FimBo* dst, FimBo* src)
     return ret;
 }
 
-int FimMemoryManager::convert_data_layout_for_gemv_weight(FimBo* dst, FimBo* src)
+int FimMemoryManager::convert_data_layout_for_gemv_weight(FimBo* dst, FimBo* src, FimDesc* fim_desc)
 {
     DLOG(INFO) << "called";
     int ret = 0;
@@ -363,6 +363,7 @@ int FimMemoryManager::convert_data_layout_for_gemv_weight(FimBo* dst, FimBo* src
     int out_tile_size = num_grf_B * num_fim_blocks * num_fim_chan * num_fim_rank;
     char* dst_data = (char*)dst->data;
     char* src_data = (char*)src->data;
+    char* src_temp;
 
     int cidx = 0;
     int rank = 0;
@@ -376,9 +377,27 @@ int FimMemoryManager::convert_data_layout_for_gemv_weight(FimBo* dst, FimBo* src
     uint32_t odd_s_row = 0;   // starting_row;
     uint32_t odd_s_col = 0;   // starting_col;
 
-    int type_size = (src->precision == FIM_FP16) ? 2 : 1;
-    int out_cnt = src->bshape.h;
-    int in_cnt = src->bshape.w * type_size / trans_size;
+    int type_size;
+    int out_cnt;
+    int in_cnt;
+
+    if (fim_desc) {
+        type_size = (fim_desc->precision == FIM_FP16) ? 2 : 1;
+        out_cnt = fim_desc->bshape.h;
+        in_cnt = fim_desc->bshape.w * type_size / trans_size;
+
+        src_temp = (char*)calloc(src->size / sizeof(half), sizeof(half));
+        for (int i = 0; i < fim_desc->bshape_r.h; i++) {
+            memcpy((half*)src_temp + i * fim_desc->bshape.w, (half*)src_data + i * fim_desc->bshape_r.w,
+                   fim_desc->bshape_r.w * sizeof(half));
+        }
+        memcpy(src_data, src_temp, src->size);
+        free(src_temp);
+    } else {
+        type_size = (src->precision == FIM_FP16) ? 2 : 1;
+        out_cnt = src->bshape.h;
+        in_cnt = src->bshape.w * type_size / trans_size;
+    }
 
     for (int y = 0; y < out_cnt; y += out_tile_size) {
         for (int x = 0; x < in_cnt; x += in_tile_size) {

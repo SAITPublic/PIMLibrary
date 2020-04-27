@@ -32,6 +32,14 @@ typedef enum __FimMemType {
     MEM_TYPE_FIM,
 } FimMemType;
 
+typedef enum __FimMemFlag {
+    ELT_OP,
+    ELT_FIM_INPUT,
+    GEMV_INPUT,
+    GEMV_WEIGHT,
+    GEMV_OUTPUT
+} FimMemFlag;
+
 typedef enum __FimMemCpyType {
     HOST_TO_HOST,
     HOST_TO_DEVICE,
@@ -72,6 +80,13 @@ typedef struct __FimBufferObject {
     size_t size;
     void* data;
 } FimBo;
+
+typedef struct __FimDescriptor {
+    FimBShape bshape;
+    FimBShape bshape_r;
+    FimPrecision precision;
+    FimOpType op_type;
+} FimDesc;
 
 typedef enum __FimBankType {
     EVEN_BANK,

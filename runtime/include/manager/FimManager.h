@@ -33,7 +33,7 @@ class FimManager
     int copy_memory(void* dst, void* src, size_t size, FimMemCpyType cpy_type);
     int copy_memory(FimBo* dst, FimBo* src, FimMemCpyType);
     int convert_data_layout(void* dst, void* src, size_t size, FimOpType op_type);
-    int convert_data_layout(FimBo* dst, FimBo* src, FimOpType);
+    int convert_data_layout(FimBo* dst, FimBo* src, FimOpType, FimDesc* fim_desc = nullptr);
     int convert_data_layout(FimBo* dst, FimBo* src0, FimBo* src1, FimOpType op_type);
 
     int create_crf_binary(FimOpType op_type, int input_size, int output_size);
