@@ -76,6 +76,7 @@ typedef struct __FimBShape {
 typedef struct __FimBufferObject {
     FimMemType mem_type;
     FimBShape bshape;
+    FimBShape bshape_r;
     FimPrecision precision;
     size_t size;
     void* data;

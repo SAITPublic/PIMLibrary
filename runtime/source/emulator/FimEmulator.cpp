@@ -67,7 +67,7 @@ int FimEmulator::convert_mem_trace_from_16B_to_32B(FimMemTraceData* fmtd32, int*
 }
 
 int FimEmulator::execute_fim(FimBo* output, FimBo* fim_data, FimMemTraceData* fmtd32, int fmtd32_size,
-                             FimOpType op_type, FimDesc* fim_desc)
+                             FimOpType op_type)
 {
     DLOG(INFO) << "called";
     int ret = 0;
@@ -99,14 +99,7 @@ int FimEmulator::execute_fim(FimBo* output, FimBo* fim_data, FimMemTraceData* fm
             hipMemcpy((void*)output->data, (void*)sim_output, output->size, hipMemcpyHostToDevice);
 
     } else if (op_type == OP_GEMV) {
-        int out_size;
-
-        if (fim_desc) {
-            out_size = fim_desc->bshape.h * sizeof(half);
-        } else {
-            out_size = output->size;
-        }
-
+        int out_size = fim_data->bshape.h * sizeof(half);
         num_element = out_size * fbi_.num_out_per_grf / sizeof(uint16_t);
         sim_output = new uint16_t[num_element];
         sim_output_size = num_element * sizeof(uint16_t);

@@ -23,7 +23,7 @@ class FimEmulator
     int deinitialize(void);
     int convert_mem_trace_from_16B_to_32B(FimMemTraceData* fmtd32, int* fmtd32_size, FimMemTraceData* fmtd16,
                                           int fmtd16_size, FimOpType op_type);
-    int execute_fim(FimBo* output, FimBo* fim_data, FimMemTraceData* fmtd32, int fmtd32_size, FimOpType op_type, FimDesc* fim_desc = nullptr);
+    int execute_fim(FimBo* output, FimBo* fim_data, FimMemTraceData* fmtd32, int fmtd32_size, FimOpType op_type);
 
     int set_input_for_test(uint16_t* test_input, int test_size);
     int set_kernel_trace_for_test(FimMemTraceData* fmtd32, int* num_trace);

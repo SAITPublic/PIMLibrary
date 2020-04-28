@@ -132,12 +132,12 @@ int FimManager::convert_data_layout(void* dst, void* src, size_t size, FimOpType
     return ret;
 }
 
-int FimManager::convert_data_layout(FimBo* dst, FimBo* src, FimOpType op_type, FimDesc* fim_desc)
+int FimManager::convert_data_layout(FimBo* dst, FimBo* src, FimOpType op_type)
 {
     DLOG(INFO) << "called";
     int ret = 0;
 
-    ret = fim_memory_manager_->convert_data_layout(dst, src, op_type, fim_desc);
+    ret = fim_memory_manager_->convert_data_layout(dst, src, op_type);
 
     return ret;
 }

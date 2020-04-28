@@ -28,12 +28,12 @@ class FimMemoryManager
     int copy_memory(void* dst, void* src, size_t size, FimMemCpyType cpy_type);
     int copy_memory(FimBo* dst, FimBo* src, FimMemCpyType cpy_type);
     int convert_data_layout(void* dst, void* src, size_t size, FimOpType op_type);
-    int convert_data_layout(FimBo* dst, FimBo* src, FimOpType op_type, FimDesc* fim_desc = nullptr);
+    int convert_data_layout(FimBo* dst, FimBo* src, FimOpType op_type);
     int convert_data_layout(FimBo* dst, FimBo* src0, FimBo* src1, FimOpType op_type);
 
    private:
     int convert_data_layout_for_elt_op(FimBo* dst, FimBo* src, FimBankType fim_bank_type);
-    int convert_data_layout_for_gemv_weight(FimBo* dst, FimBo* src, FimDesc* fim_desc = nullptr);
+    int convert_data_layout_for_gemv_weight(FimBo* dst, FimBo* src);
     int convert_data_layout_for_relu(FimBo* dst, FimBo* src);
     int convert_data_layout_for_bn(FimBo* dst, FimBo* src);
 

@@ -130,7 +130,7 @@ int fim_gemv3(void)
     /* __FIM_API__ call : Initialize FimRuntime */
     FimInitialize(RT_TYPE_HIP, FIM_FP16);
 
-    FimDesc* fim_desc = FimCreateDesc(1, 1, out_size, in_size, FIM_FP16, OP_GEMV);
+    FimDesc* fim_desc = FimCreateDesc(1, 1, out_size, in_size, FIM_FP16);
     /* __FIM_API__ call : Create FIM Buffer Object */
     FimBo* host_input = FimCreateBo(fim_desc, MEM_TYPE_HOST, GEMV_INPUT);
     FimBo* host_weight = FimCreateBo(fim_desc, MEM_TYPE_HOST, GEMV_WEIGHT);
@@ -156,11 +156,11 @@ int fim_gemv3(void)
     FimCopyMemory(device_input, host_input, HOST_TO_DEVICE);
 
     /* __FIM_API__ call : Preload weight data on FIM memory */
-    FimConvertDataLayout(host_reordered_weight, host_weight, OP_GEMV, fim_desc);
+    FimConvertDataLayout(host_reordered_weight, host_weight, OP_GEMV);
     FimCopyMemory(preloaded_weight, host_reordered_weight, HOST_TO_DEVICE);
 
     /* __FIM_API__ call : Execute FIM kernel (GEMV) */
-    FimExecuteGEMV(device_output, device_input, preloaded_weight, fim_desc);
+    FimExecuteGEMV(device_output, device_input, preloaded_weight);
 
     FimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
     dump_data("../test_vectors/dump/gemv/gemv_preloaded_weight_1024x4096.dat", (char*)preloaded_weight->data,

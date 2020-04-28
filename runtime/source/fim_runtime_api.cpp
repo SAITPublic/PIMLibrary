@@ -64,6 +64,7 @@ FimBo* FimCreateBo(int w, int h, int c, int n, FimPrecision precision, FimMemTyp
 
     fim_bo->size = size;
     fim_bo->bshape = {(uint32_t)w, (uint32_t)h, (uint32_t)c, (uint32_t)n};
+    fim_bo->bshape_r = {(uint32_t)w, (uint32_t)h, (uint32_t)c, (uint32_t)n};
     fim_bo->mem_type = mem_type;
     fim_bo->precision = precision;
 
@@ -82,15 +83,15 @@ FimBo* FimCreateBo(FimDesc* fim_desc, FimMemType mem_type, FimMemFlag mem_flag)
     DLOG(INFO) << "called";
     FIM_PROFILE_TICK(CreateBo);
 
-    int data_type = fim_desc->precision;
     int ret = 0;
 
     FimBo* fim_bo = new FimBo;
-    int type_size = (data_type == FIM_FP16) ? 2 : 1;
-    size_t size = GetPaddedSize(fim_desc, mem_flag) * type_size;
+    int type_size = (fim_desc->precision == FIM_FP16) ? 2 : 1;
+    size_t size = get_aligned_size(fim_desc, mem_flag, fim_bo) * type_size;
 
     fim_bo->size = size;
     fim_bo->mem_type = mem_type;
+    fim_bo->precision = fim_desc->precision;
 
     ret = fim_runtime->alloc_memory(fim_bo);
     if (ret != 0) {
@@ -99,13 +100,13 @@ FimBo* FimCreateBo(FimDesc* fim_desc, FimMemType mem_type, FimMemFlag mem_flag)
     }
 
     if (mem_flag == GEMV_INPUT) {
-        PadInputData(fim_bo->data, fim_desc->bshape_r.w, fim_desc->bshape.w, mem_flag);
+        pad_data(fim_bo->data, fim_desc->bshape_r.w, fim_desc->bshape.w, mem_flag);
     }
 
     return fim_bo;
 }
 
-FimDesc* FimCreateDesc(int n, int c, int h, int w, FimPrecision precision, FimOpType op_type)
+FimDesc* FimCreateDesc(int n, int c, int h, int w, FimPrecision precision)
 {
     DLOG(INFO) << "called";
     FIM_PROFILE_TICK(CreateDesc);
@@ -117,7 +118,6 @@ FimDesc* FimCreateDesc(int n, int c, int h, int w, FimPrecision precision, FimOp
 
     FimDesc* fim_desc = new FimDesc;
 
-    fim_desc->op_type = op_type;
     fim_desc->bshape_r = {(uint32_t)w, (uint32_t)h, (uint32_t)c, (uint32_t)n};
     fim_desc->bshape = {(uint32_t)w, (uint32_t)h, (uint32_t)c, (uint32_t)n};
     fim_desc->precision = precision;
@@ -243,7 +243,7 @@ int FimConvertDataLayout(void* dst, void* src, size_t size, FimOpType op_type)
     return ret;
 }
 
-int FimConvertDataLayout(FimBo* dst, FimBo* src, FimOpType op_type, FimDesc* fim_desc)
+int FimConvertDataLayout(FimBo* dst, FimBo* src, FimOpType op_type)
 {
     DLOG(INFO) << "called";
     FIM_PROFILE_TICK(ConvertDataLayout);
@@ -252,7 +252,7 @@ int FimConvertDataLayout(FimBo* dst, FimBo* src, FimOpType op_type, FimDesc* fim
     if (fim_runtime == nullptr) {
         return -1;
     }
-    ret = fim_runtime->convert_data_layout(dst, src, op_type, fim_desc);
+    ret = fim_runtime->convert_data_layout(dst, src, op_type);
     FIM_PROFILE_TOCK(ConvertDataLayout);
 
     return ret;
@@ -378,7 +378,7 @@ int FimExecuteMul(FimBo* output, FimBo* fim_data)
     return ret;
 }
 
-int FimExecuteGEMV(FimBo* output, FimBo* operand0, FimBo* operand1, FimDesc* fim_desc)
+int FimExecuteGEMV(FimBo* output, FimBo* operand0, FimBo* operand1)
 {
     DLOG(INFO) << "called";
     FIM_PROFILE_TICK(ExecuteGEMV);
@@ -387,7 +387,7 @@ int FimExecuteGEMV(FimBo* output, FimBo* operand0, FimBo* operand1, FimDesc* fim
     if (fim_runtime == nullptr) {
         return -1;
     }
-    ret = fim_runtime->execute_gemv(output, operand0, operand1, fim_desc);
+    ret = fim_runtime->execute_gemv(output, operand0, operand1);
     FIM_PROFILE_TOCK(ExecuteGEMV);
 
     return ret;

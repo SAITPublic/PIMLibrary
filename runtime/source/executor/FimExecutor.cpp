@@ -306,24 +306,17 @@ int FimExecutor::execute_mul(FimBo* output, FimBo* fim_data)
     return ret;
 }
 
-int FimExecutor::execute_gemv(FimBo* output, FimBo* operand0, FimBo* operand1, FimDesc* fim_desc)
+int FimExecutor::execute_gemv(FimBo* output, FimBo* operand0, FimBo* operand1)
 {
     DLOG(INFO) << "called";
     int ret = 0;
-    int in_size, out_size;
-    size_t size = output->size;
     FimBo* input = operand0;
     FimBo* weight = operand1;
 
-    if (fim_desc) {
-        in_size = fim_desc->bshape.w;
-        out_size = fim_desc->bshape.h;
-    } else {
-        in_size = input->bshape.w;
-        out_size = output->bshape.w;
-    }
+    int in_size = weight->bshape.w;
+    int out_size = weight->bshape.h;
 
-    fim_manager_->create_crf_binary(OP_GEMV, input->size, output->size);
+    fim_manager_->create_crf_binary(OP_GEMV, in_size * sizeof(half), out_size * sizeof(half));
     uint8_t* crf_binary = fim_manager_->get_crf_binary();
     int crf_size = fim_manager_->get_crf_size();
 
@@ -345,7 +338,7 @@ int FimExecutor::execute_gemv(FimBo* output, FimBo* operand0, FimBo* operand1, F
     hipMemcpy((void*)h_fmtd16_, (void*)d_fmtd16_, sizeof(FimMemTraceData) * max_fmtd_size_, hipMemcpyDeviceToHost);
 
     fim_emulator_->convert_mem_trace_from_16B_to_32B(h_fmtd32_, h_fmtd32_size_, h_fmtd16_, h_fmtd16_size_[0], OP_GEMV);
-    fim_emulator_->execute_fim(output, weight, h_fmtd32_, h_fmtd32_size_[0], OP_GEMV, fim_desc);
+    fim_emulator_->execute_fim(output, weight, h_fmtd32_, h_fmtd32_size_[0], OP_GEMV);
 #endif
 
     return ret;

@@ -618,7 +618,7 @@ __device__ void B_CMD(int type)
 }
 #endif
 
-size_t GetPaddedSize(FimDesc* fim_desc, FimMemFlag mem_flag)
+size_t get_aligned_size(FimDesc* fim_desc, FimMemFlag mem_flag, FimBo* fim_bo)
 {
     int n = fim_desc->bshape_r.n;
     int c = fim_desc->bshape_r.c;
@@ -631,10 +631,12 @@ size_t GetPaddedSize(FimDesc* fim_desc, FimMemFlag mem_flag)
         h = 1;
         fim_desc->bshape.w = w;
     } else if (mem_flag == GEMV_WEIGHT) {
+        fim_bo->bshape_r = {(uint32_t)w, (uint32_t)h, (uint32_t)c, (uint32_t)n};
         w = 256 * ceil((float)w / 256);
         h = 4096 * ceil((float)h / 4096);
         fim_desc->bshape.w = w;
         fim_desc->bshape.h = h;
+        fim_bo->bshape = {(uint32_t)w, (uint32_t)h, (uint32_t)c, (uint32_t)n};
     } else if (mem_flag == GEMV_OUTPUT) {
         w = 1;
     } else if (mem_flag == ELT_OP) {
@@ -649,7 +651,7 @@ size_t GetPaddedSize(FimDesc* fim_desc, FimMemFlag mem_flag)
     return size;
 }
 
-void PadInputData(void* input, int in_size, int in_nsize, FimMemFlag mem_flag)
+void pad_data(void* input, int in_size, int in_nsize, FimMemFlag mem_flag)
 {
     if (mem_flag == GEMV_INPUT) {
         for (int i = in_size; i < in_nsize; i++) ((half*)input)[i] = half(0);

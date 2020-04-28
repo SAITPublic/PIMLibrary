@@ -23,7 +23,6 @@ class FimRuntime
     int free_memory(FimBo* fimBo);
     int convert_data_layout(void* dst, void* src, size_t size, FimOpType op_type);
     int convert_data_layout(FimBo* dst, FimBo* src, FimOpType op_type);
-    int convert_data_layout(FimBo* dst, FimBo* src, FimOpType op_type, FimDesc* fim_desc = nullptr);
     int convert_data_layout(FimBo* dst, FimBo* src0, FimBo* src1, FimOpType op_type);
     int copy_memory(void* dst, void* src, size_t size, FimMemCpyType cpy_type);
     int copy_memory(FimBo* dst, FimBo* src, FimMemCpyType cpy_type);
@@ -34,7 +33,7 @@ class FimRuntime
     int execute_add(FimBo* output, FimBo* fim_data);
     int execute_mul(FimBo* output, FimBo* fim_data);
     int execute_relu(FimBo* output, FimBo* fim_data);
-    int execute_gemv(FimBo* output, FimBo* operand0, FimBo* operand1, FimDesc* fim_desc = nullptr);
+    int execute_gemv(FimBo* output, FimBo* operand0, FimBo* operand1);
     int execute_bn(FimBo* output, FimBo* fim_data, FimBo* beta, FimBo* gamma, FimBo* scale, FimBo* shift);
 
    private:
