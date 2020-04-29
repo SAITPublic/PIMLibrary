@@ -19,7 +19,7 @@ if __name__=='__main__':
 	df_gpu=parse_csv_file(args.gpu_file)
 	#Produce timeline plot
 	event_names, start_times, end_times = get_start_end_times(df_gpu)
-	timeline_plot = create(event_names, start_times, end_times, title = 'Timeline Plot', plot_height = 500, plot_width=1200)
+	timeline_plot = create(event_names, start_times, end_times, title = 'Timeline Plot', plot_height = 500, plot_width=1200, x_axis_label = 'Time (in ns)', y_axis_label = 'GPU Kernels')
 	#Produce Tabular plot
 	df_gpu_table = get_table_stats(df_gpu)
 	heading, table_plot = create_table(df_gpu_table, heading = 'GPU Calls Summary')
@@ -32,7 +32,7 @@ if __name__=='__main__':
 	df_cpu=parse_log_file(args.cpu_file)
 	#Produce timeline plot
 	event_names, start_times, end_times = get_start_end_times(df_cpu, 'ModuleName', 'BeginTime_us', 'EndTime_us')
-	timeline_plot = create(event_names, start_times, end_times, title = 'Timeline Plot', plot_height = 500, plot_width=1200)
+	timeline_plot = create(event_names, start_times, end_times, title = 'Timeline Plot', plot_height = 500, plot_width=1200, x_axis_label = 'Time (in us)', y_axis_label = 'FIM Modules')
 	#Produce Tabular plot for Module
 	df_cpu_module = get_table_stats(df_cpu, 'ModuleName', 'Duration_us', avg_col = 'Average_us', total_col = 'TotalDuration_us')
 	heading_m, table_plot_m = create_table(df_cpu_module, heading = 'Module Summary')
