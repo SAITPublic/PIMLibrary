@@ -327,8 +327,8 @@ int FimExecutor::execute_gemv(FimBo* output, FimBo* operand0, FimBo* operand1)
     hipLaunchKernelGGL(gemv_fim_1cu_2th_fp16, dim3(1), dim3(2), 0, 0, (uint8_t*)fim_base_addr_ /* fim control base */,
                        (uint8_t*)fim_base_addr_ /* fim weight base */,
                        (uint8_t*)fim_gemv_tmp_buffer_, /* fim hw output buffer */
-                       (uint8_t*)input->data, (uint8_t*)output->data, in_size, out_size,
-                       (FimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, (uint8_t*)d_crf_bin_buffer_, crf_size);
+                       (uint8_t*)input->data, (uint8_t*)output->data, in_size, out_size, (FimMemTraceData*)d_fmtd16_,
+                       (int*)d_fmtd16_size_, (uint8_t*)d_crf_bin_buffer_, crf_size);
 
     hipStreamSynchronize(NULL);
 

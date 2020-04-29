@@ -14,20 +14,8 @@ namespace runtime
 {
 namespace manager
 {
-enum class FimCmdTableType { MUL, ADD, MAC, MAD, ETC };
-enum class FimCamTableType { NOP, ALL, CAM, NO_CAM };
-enum class FimOpdTableType { GRF_A, GRF_B, EVEN_BANK, ODD_BANK, SRF_M, SRF_A, ETC };
-
 enum class FimCmdType { NOP, ADD, MUL, MAC, MAD, REV0, REV1, REV2, MOV, FILL, REV3, REV4, REV5, REV6, JUMP, EXIT };
 enum class FimOpdType { A_OUT, M_OUT, EVEN_BANK, ODD_BANK, GRF_A, GRF_B, SRF_M, SRF_A };
-
-static const int src_pair_table[6][6][4] = {
-    {{0, 0, 0, 0}, {1, 1, 2, 1}, {1, 1, 1, 1}, {1, 1, 1, 1}, {0, 0, 0, 1}, {0, 1, 0, 0}},
-    {{1, 1, 2, 1}, {0, 0, 0, 0}, {1, 1, 2, 1}, {1, 1, 2, 1}, {0, 0, 2, 1}, {0, 1, 0, 0}},
-    {{1, 1, 1, 0}, {1, 1, 2, 1}, {1, 1, 1, 3}, {0, 0, 0, 0}, {0, 0, 0, 1}, {0, 1, 0, 0}},
-    {{1, 1, 1, 0}, {1, 1, 2, 1}, {0, 0, 0, 0}, {1, 1, 1, 3}, {0, 0, 0, 1}, {0, 1, 0, 0}},
-    {{0, 0, 0, 0}, {0, 0, 2, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}},
-    {{0, 1, 0, 0}, {0, 1, 0, 0}, {0, 1, 0, 0}, {0, 1, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}}};
 
 class FimCommand
 {
@@ -197,14 +185,8 @@ class FimCommand
     }
 
     void from_int(uint32_t val);
-    int is_register(FimOpdType opd_type);
-    int get_opcode_idx();
-    int is_read_register();
-    int validation_check(std::ofstream& src_pair_log) const;
     uint32_t to_int() const;
     std::string to_str() const;
-    FimCmdTableType change_cmd_type(FimCmdType cmd_type) const;
-    FimOpdTableType change_opd_type(FimOpdType opd_type) const;
 };
 
 bool operator==(const FimCommand& lhs, const FimCommand& rhs);

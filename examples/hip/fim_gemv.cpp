@@ -186,7 +186,6 @@ int fim_gemv3(void)
     return ret;
 }
 
-
 TEST(HIPIntegrationTest, FimGEMV) { EXPECT_TRUE(fim_gemv() == 0); }
 TEST(HIPIntegrationTest, FimGEMV2) { EXPECT_TRUE(fim_gemv2() == 0); }
 TEST(HIPIntegrationTest, FimGEMV3) { EXPECT_TRUE(fim_gemv3() == 0); }

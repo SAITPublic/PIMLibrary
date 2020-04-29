@@ -108,6 +108,6 @@ __device__ void W_CMD_R(uint8_t* addr, uint8_t* src);
 __device__ void B_CMD(int type);
 #endif
 
-size_t get_aligned_size(FimDesc* fim_desc, FimMemFlag mem_flag, FimBo * fim_bo);
+size_t get_aligned_size(FimDesc* fim_desc, FimMemFlag mem_flag, FimBo* fim_bo);
 void pad_data(void* input, int in_size, int in_nsize, FimMemFlag mem_flag);
 #endif /* _FIM_UTIL_H_ */
