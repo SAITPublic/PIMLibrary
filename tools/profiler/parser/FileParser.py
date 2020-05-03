@@ -1,5 +1,5 @@
 import pandas as pd
-
+import numpy as np
 def parse_csv_file(file_name, cols=None):
 	'''Parses csv file
 		file_name = name of the file
@@ -19,30 +19,34 @@ def parse_log_file(file_name, cols=None):
 		Returns pandas dataframe
 	'''
 	df = pd.DataFrame([],columns = ['ModuleName', 'APIName','BeginTime_us','EndTime_us', 'Duration_us'])
-	first_line=True
-
 	with open(file_name, 'r') as f:
 		for line in f:
 			if(line[0] == 'I'):
 				log  = line.split()
-				begin_time = log[1].split(':')
-				begin_time_s = int(begin_time[0])*3600+int(begin_time[1])*60+float(begin_time[2])
-				begin_time_us = begin_time_s*(10**6)
-				log_data = {'BeginTime_us':begin_time_us, 'APIName':log[3][:-1], 'ModuleName':log[3].split(':')[0]}
-				if(first_line):
-					first_line=False
+				if(log[4] != '[START]' and log[4] != '[END]'):
+					continue
+
+				log_time = log[1].split(':')
+				log_time_s = int(log_time[0])*3600+int(log_time[1])*60+float(log_time[2])
+				log_time_us = log_time_s*(10**6)
+				module_name = log[3].split(':')[0]
+				api_name = module_name + ':' + log[5]
+
+				if(log[4] =='[START]'):
+					log_data = {'BeginTime_us':log_time_us, 'APIName':api_name, 'ModuleName':module_name}
+					df =df.append(log_data, ignore_index=True)
 				else:
-					prev_log_data['EndTime_us'] = log_data['BeginTime_us']
-					prev_log_data['Duration_us'] = prev_log_data['EndTime_us'] - prev_log_data['BeginTime_us']
-					df =df.append(prev_log_data, ignore_index=True)
-				prev_log_data = log_data
-		prev_log_data['EndTime_us'] = log_data['BeginTime_us']
-		prev_log_data['Duration_us'] = prev_log_data['EndTime_us'] - prev_log_data['BeginTime_us']
-		df =df.append(prev_log_data, ignore_index=True)
+					row_idx = (df.index[(df.APIName == api_name) & (pd.isna(df.EndTime_us))].tolist()[-1])
+					df.at[row_idx, 'EndTime_us'] = log_time_us #set end time
+
+	#Set EndTime = BeginTime wherever Endtime is nan (not in log file)
+	df['EndTime_us'] = np.where(pd.isna(df.EndTime_us), df['BeginTime_us'], df['EndTime_us'])
+	df['Duration_us'] = df['EndTime_us'] - df['BeginTime_us'] #set duration
 
 	return df
 
 if(__name__=='__main__'):
 	#Test the parser with default file
-	df = parse_log_file('../test/fim.log')
+	df = parse_log_file('../test/FIM.INFO')
 	print (df)
+	print (df.info())
