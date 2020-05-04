@@ -16,9 +16,9 @@ To execute FimProfiler using sample csv file(containing GPU Kernel Calls) and sa
 python FimProfiler.py
 ```
 
-To execute FimProfiler for any other file, provide name of the files with path in the -g and -c flag and to provide the output file name use the -a and -b flag:
+To execute FimProfiler for any other file, provide name of the files with path in the -g and -c flag and to provide the output file name use the -o flag:
 ```
-python FimProfiler.py -g <name_of_csv_file_with_path> -c <name_of_log_file_with_path> -a <output_file_name_for_csv_visualizations> -b <output_file_name_for_log_visualizations>
+python FimProfiler.py -g <name_of_csv_file_with_path> -c <name_of_log_file_with_path> -o <output_file_nam>
 ```
 
 Use -h flag to view help with all command line arguments.
