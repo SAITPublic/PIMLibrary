@@ -29,13 +29,13 @@ int miopen_rnn_lstm()
     miopenCreateTensorDescriptor(&output_tensor);
     miopenCreateRNNDescriptor(&rnnDesc);
 
-    int nseq = 10;                                            // Number of iterations to unroll over
-    int in_h = 1024;                                          // Input Length
-    std::vector<int> in_len({4, 4, 4, 3, 3, 3, 2, 2, 2, 1});  // input tensor length
+    int nseq = 1;                  // Number of iterations to unroll over
+    int in_h = 1024;               // Input Length
+    std::vector<int> in_len({1});  // input tensor length
     in_len.push_back(in_h);
 
     int hid_h = 512;                           // Hidden State Length
-    int hid_l = 3 * 2;                         // Number of hidden stacks, *2 for bidirection
+    int hid_l = 1 * 2;                         // Number of hidden stacks, *2 for bidirection
     std::vector<int> hid_len({hid_l, hid_h});  // hidden tensor length
 
     int out_h = hid_h * 2;              // for bidirection
@@ -56,7 +56,7 @@ int miopen_rnn_lstm()
     std::array<int, 3> hid_lens = {{hid_len[0], in_len[0], hid_len[1]}};
     miopenSetTensorDescriptor(hidden_tensor, miopenHalf, 3, hid_lens.data(), nullptr);
 
-    int layer = 3;     // Number of hidden stacks
+    int layer = 1;     // Number of hidden stacks
     int wei_hh = 512;  // Hidden state length
     miopenRNNMode_t mode = miopenLSTM;
     miopenRNNBiasMode_t biasMode = miopenRNNNoBias;
@@ -159,6 +159,12 @@ int miopen_rnn_lstm()
     miopenRNNForwardInference(handle, rnnDesc, nseq, input_tensors.data(), in_dev, hidden_tensor, hx_dev, hidden_tensor,
                               cx_dev, weight_tensor, wei_dev, output_tensors.data(), out_dev, hidden_tensor, hy_dev,
                               hidden_tensor, cy_dev, workspace_dev, workSpace_sz * sizeof(half));
+
+    hipMemcpy(out.data(), out_dev, sizeof(half) * out_sz, hipMemcpyDeviceToHost);
+
+    half *golden = new half[out_sz];
+    load_data("../test_vectors/dump/gemv/miopen_lstm.dat", reinterpret_cast<char *>(golden), sizeof(half) * out_sz);
+    ret = compare_data_round_off(golden, out.data(), out_sz);
 
     miopenDestroyTensorDescriptor(output_tensor);
     miopenDestroyTensorDescriptor(weight_tensor);

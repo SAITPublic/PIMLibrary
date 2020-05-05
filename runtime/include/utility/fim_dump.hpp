@@ -116,4 +116,14 @@ inline int compare_data(char* data_a, char* data_b, size_t size)
     return ret;
 }
 
+inline int compare_data_round_off(half* data_a, half* data_b, size_t size, double epsilon = 0.001)
+{
+    for (int i = 0; i < size; i++) {
+        if (!(std::abs(data_a[i] - data_b[i]) < epsilon)) {
+            return -1;
+        }
+    }
+    return 0;
+}
+
 #endif /* _FIM_DUMP_HPP_ */
