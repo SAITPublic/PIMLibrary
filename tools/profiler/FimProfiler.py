@@ -33,7 +33,7 @@ if __name__=='__main__':
 	#CPU File Visualization
 	output_file(filename=cpu_output, title='CPU Visualization', mode='inline')
 	#Read File
-	df_cpu=parse_log_file(args.cpu_file)
+	df_cpu,df_cpu_buf=parse_log_file(args.cpu_file)
 	#Produce timeline plot
 	event_names, start_times, end_times = get_start_end_times(df_cpu, 'ModuleName', 'BeginTime_us', 'EndTime_us')
 	timeline_plot = create(event_names, start_times, end_times, title = 'Timeline Plot', plot_height = 500, plot_width=1200, x_axis_label = 'Time (in us)', y_axis_label = 'FIM Modules')
@@ -43,8 +43,10 @@ if __name__=='__main__':
 	#Produce Tabular plot for APIs
 	df_cpu_api = get_table_stats(df_cpu, 'APIName', 'Duration_us', avg_col = 'Average_us', total_col = 'TotalDuration_us')
 	heading_a, table_plot_a = create_table(df_cpu_api, heading = 'API Summary')
+	#Produce Tabular plot for Buffers
+	heading_b, table_plot_b = create_table(df_cpu_buf, heading = 'FIM Buffers Summary')
 	#Output all CPU calls Plots
-	save(column(timeline_plot, heading_m, table_plot_m, heading_a, table_plot_a))
+	save(column(timeline_plot, heading_m, table_plot_m, heading_a, table_plot_a, heading_b, table_plot_b))
 
 	#Main Page
 	output_file(filename=output_name, title='Profiler Visualization', mode='inline')
