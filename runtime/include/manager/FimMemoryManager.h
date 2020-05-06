@@ -53,8 +53,8 @@ class FimMemoryManager
     class FimBlockAllocator
     {
        private:
-        static const size_t block_size_ = 100 * 1024 * 1024;  // 100MB block.
-
+        // TODO: Revert it back to 100MB
+        static const size_t block_size_ = 201326592;
        public:
         explicit FimBlockAllocator() {}
         void* alloc(size_t request_size, size_t& allocated_size) const;

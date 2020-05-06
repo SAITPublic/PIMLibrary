@@ -5,6 +5,7 @@
 #include <iostream>
 #include "utility/fim_util.h"
 
+extern "C" uint64_t fmm_map_fim(uint32_t, uint32_t, uint64_t);
 namespace fim
 {
 namespace runtime
@@ -538,16 +539,19 @@ int FimMemoryManager::convert_data_layout_for_elt_op(FimBo* dst, FimBo* src, Fim
 void* FimMemoryManager::FimBlockAllocator::alloc(size_t request_size, size_t& allocated_size) const
 {
     assert(request_size <= block_size() && "BlockAllocator alloc request exceeds block size.");
-    void* ret = nullptr;
+    uint64_t ret = 0;
     size_t bsize = block_size();
 
-    /* todo:implement fimalloc function */
-    if (hipMalloc((void**)&ret, bsize) != hipSuccess) {
+    /********************************************
+      ARG1 : node-id
+      ARG2 : gpu-id
+      ARG3 : block size
+    ********************************************/
+    ret = fmm_map_fim(1, 57585, bsize);
+    if(ret == 0)
         return NULL;
-    }
-
     allocated_size = block_size();
-    return ret;
+    return (void*)ret;
 }
 
 void FimMemoryManager::FimBlockAllocator::free(void* ptr, size_t length) const

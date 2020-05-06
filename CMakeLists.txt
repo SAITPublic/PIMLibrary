@@ -41,7 +41,7 @@ include_directories("${PROJECT_SOURCE_DIR}/runtime/include"
                     "${PROJECT_SOURCE_DIR}/tools/crfcodegen/include"
                     "${PROJECT_SOURCE_DIR}/tools/profiler/include"
                     "${ROCM_PATH}/include")
-link_directories("${ROCM_PATH}/hsa/lib" "${ROCM_PATH}/libhsakmt/lib" "${PROJECT_SOURCE_DIR}/external_libs")
+link_directories("${ROCM_PATH}/hsa/lib" "${ROCM_PATH}/libhsakmt/lib" "${ROCM_PATH}/lib" "${PROJECT_SOURCE_DIR}/external_libs")
 
 add_subdirectory(runtime)
 add_subdirectory(examples)
