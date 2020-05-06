@@ -12,6 +12,9 @@ def get_content(plot_type):
 	elif plot_type == 'gpu' :
 		name = 'GPU Profile Data'
 		desc = ['Timeline plot of kernel operations', 'Stats of kernel execution']
+	elif plot_type == 'mi' :
+		name = 'MIOpen APIs Profile Data'
+		desc = ['MIOpen API trace and parameters']
 	return (name,desc)
 
 def create_main(pages, heading = 'Profiler Plots', width=1200):

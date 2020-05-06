@@ -1,0 +1,1194 @@
+enabel eager execution, bert config  True
+enabel eager execution, bert model  False
+Model training time is 26 seconds.
+tf.compat.v1.estimator.tpu.InputPipelineConfig instead.
+
+W0505 13:01:23.295969 140081799423744 module_wrapper.py:138] From run_classifier.py:834: The name tf.estimator.tpu.InputPipelineConfig is deprecated. Please use tf.compat.v1.estimator.tpu.InputPipelineConfig instead.
+
+WARNING:tensorflow:From run_classifier.py:835: The name tf.estimator.tpu.RunConfig is deprecated. Please use tf.compat.v1.estimator.tpu.RunConfig instead.
+
+W0505 13:01:23.296246 140081799423744 module_wrapper.py:138] From run_classifier.py:835: The name tf.estimator.tpu.RunConfig is deprecated. Please use tf.compat.v1.estimator.tpu.RunConfig instead.
+
+WARNING:tensorflow:From run_classifier.py:840: The name tf.estimator.tpu.TPUConfig is deprecated. Please use tf.compat.v1.estimator.tpu.TPUConfig instead.
+
+W0505 13:01:23.296426 140081799423744 module_wrapper.py:138] From run_classifier.py:840: The name tf.estimator.tpu.TPUConfig is deprecated. Please use tf.compat.v1.estimator.tpu.TPUConfig instead.
+
+WARNING:tensorflow:From run_classifier.py:866: The name tf.estimator.tpu.TPUEstimator is deprecated. Please use tf.compat.v1.estimator.tpu.TPUEstimator instead.
+
+W0505 13:01:23.296794 140081799423744 module_wrapper.py:138] From run_classifier.py:866: The name tf.estimator.tpu.TPUEstimator is deprecated. Please use tf.compat.v1.estimator.tpu.TPUEstimator instead.
+
+WARNING:tensorflow:Estimator's model_fn (<function model_fn_builder.<locals>.model_fn at 0x7f66fae341e0>) includes params argument, but params are not passed to Estimator.
+W0505 13:01:23.297002 140081799423744 estimator.py:1998] Estimator's model_fn (<function model_fn_builder.<locals>.model_fn at 0x7f66fae341e0>) includes params argument, but params are not passed to Estimator.
+INFO:tensorflow:Using config: {'_cluster_spec': ClusterSpec({}), '_tf_random_seed': None, '_service': None, '_num_worker_replicas': 1, '_is_chief': True, '_task_type': 'worker', '_train_distribute': None, '_keep_checkpoint_every_n_hours': 10000, '_save_checkpoints_secs': None, '_evaluation_master': '', '_session_creation_timeout_secs': 7200, '_task_id': 0, '_tpu_config': TPUConfig(iterations_per_loop=1000, num_shards=8, num_cores_per_replica=None, per_host_input_for_training=3, tpu_job_name=None, initial_infeed_sleep_secs=None, input_partition_dims=None, eval_training_input_configuration=2, experimental_host_call_every_n_steps=1), '_save_summary_steps': 100, '_eval_distribute': None, '_session_config': allow_soft_placement: true
+graph_options {
+  rewrite_options {
+    meta_optimizer_iterations: ONE
+  }
+}
+, '_master': '', '_experimental_max_worker_delay_secs': None, '_global_id_in_cluster': 0, '_keep_checkpoint_max': 5, '_save_checkpoints_steps': 1000, '_model_dir': '/home/user/fim-workspace/downloads/models/bert/bert_fim/output/', '_experimental_distribute': None, '_protocol': None, '_device_fn': None, '_num_ps_replicas': 0, '_cluster': None, '_log_step_count_steps': None}
+I0505 13:01:23.297942 140081799423744 estimator.py:216] Using config: {'_cluster_spec': ClusterSpec({}), '_tf_random_seed': None, '_service': None, '_num_worker_replicas': 1, '_is_chief': True, '_task_type': 'worker', '_train_distribute': None, '_keep_checkpoint_every_n_hours': 10000, '_save_checkpoints_secs': None, '_evaluation_master': '', '_session_creation_timeout_secs': 7200, '_task_id': 0, '_tpu_config': TPUConfig(iterations_per_loop=1000, num_shards=8, num_cores_per_replica=None, per_host_input_for_training=3, tpu_job_name=None, initial_infeed_sleep_secs=None, input_partition_dims=None, eval_training_input_configuration=2, experimental_host_call_every_n_steps=1), '_save_summary_steps': 100, '_eval_distribute': None, '_session_config': allow_soft_placement: true
+graph_options {
+  rewrite_options {
+    meta_optimizer_iterations: ONE
+  }
+}
+, '_master': '', '_experimental_max_worker_delay_secs': None, '_global_id_in_cluster': 0, '_keep_checkpoint_max': 5, '_save_checkpoints_steps': 1000, '_model_dir': '/home/user/fim-workspace/downloads/models/bert/bert_fim/output/', '_experimental_distribute': None, '_protocol': None, '_device_fn': None, '_num_ps_replicas': 0, '_cluster': None, '_log_step_count_steps': None}
+INFO:tensorflow:_TPUContext: eval_on_tpu True
+I0505 13:01:23.298372 140081799423744 tpu_context.py:221] _TPUContext: eval_on_tpu True
+WARNING:tensorflow:eval_on_tpu ignored because use_tpu is False.
+W0505 13:01:23.298683 140081799423744 tpu_context.py:223] eval_on_tpu ignored because use_tpu is False.
+INFO:tensorflow:Writing example 0 of 2
+I0505 13:01:23.299108 140081799423744 run_classifier.py:488] Writing example 0 of 2
+INFO:tensorflow:*** Example ***
+I0505 13:01:23.300463 140081799423744 run_classifier.py:462] *** Example ***
+INFO:tensorflow:guid: dev-1
+I0505 13:01:23.300572 140081799423744 run_classifier.py:463] guid: dev-1
+INFO:tensorflow:tokens: [CLS] bush also hoped to polish his anti - aids credentials in uganda , which has been hailed as an african pioneer in fighting the killer disease . [SEP] president bush flies to uganda friday hoping to polish his anti - aids credentials in a country hailed as an african pioneer in fighting the epidemic . [SEP]
+I0505 13:01:23.300695 140081799423744 run_classifier.py:465] tokens: [CLS] bush also hoped to polish his anti - aids credentials in uganda , which has been hailed as an african pioneer in fighting the killer disease . [SEP] president bush flies to uganda friday hoping to polish his anti - aids credentials in a country hailed as an african pioneer in fighting the epidemic . [SEP]
+INFO:tensorflow:input_ids: 101 5747 2036 5113 2000 3907 2010 3424 1011 8387 22496 1999 10031 1010 2029 2038 2042 16586 2004 2019 3060 7156 1999 3554 1996 6359 4295 1012 102 2343 5747 10029 2000 10031 5958 5327 2000 3907 2010 3424 1011 8387 22496 1999 1037 2406 16586 2004 2019 3060 7156 1999 3554 1996 16311 1012 102 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+I0505 13:01:23.300827 140081799423744 run_classifier.py:466] input_ids: 101 5747 2036 5113 2000 3907 2010 3424 1011 8387 22496 1999 10031 1010 2029 2038 2042 16586 2004 2019 3060 7156 1999 3554 1996 6359 4295 1012 102 2343 5747 10029 2000 10031 5958 5327 2000 3907 2010 3424 1011 8387 22496 1999 1037 2406 16586 2004 2019 3060 7156 1999 3554 1996 16311 1012 102 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+INFO:tensorflow:input_mask: 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+I0505 13:01:23.300951 140081799423744 run_classifier.py:467] input_mask: 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+INFO:tensorflow:segment_ids: 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+I0505 13:01:23.301072 140081799423744 run_classifier.py:468] segment_ids: 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+INFO:tensorflow:label: 1 (id = 1)
+I0505 13:01:23.301164 140081799423744 run_classifier.py:469] label: 1 (id = 1)
+INFO:tensorflow:*** Example ***
+I0505 13:01:23.303801 140081799423744 run_classifier.py:462] *** Example ***
+INFO:tensorflow:guid: dev-2
+I0505 13:01:23.303972 140081799423744 run_classifier.py:463] guid: dev-2
+INFO:tensorflow:tokens: [CLS] he added : ` ` i ' ve never heard of more rep ##re ##hen ##sible ##be ##ha ##vio ##ur by a doctor . [SEP] the harrison ##s \u2019 lawyer paul li ##cal ##si said : \u201c i \u2019 ve never heard of more rep ##re ##hen ##sible behaviour by a doctor . [SEP]
+I0505 13:01:23.304109 140081799423744 run_classifier.py:465] tokens: [CLS] he added : ` ` i ' ve never heard of more rep ##re ##hen ##sible ##be ##ha ##vio ##ur by a doctor . [SEP] the harrison ##s \u2019 lawyer paul li ##cal ##si said : \u201c i \u2019 ve never heard of more rep ##re ##hen ##sible behaviour by a doctor . [SEP]
+INFO:tensorflow:input_ids: 101 2002 2794 1024 1036 1036 1045 1005 2310 2196 2657 1997 2062 16360 2890 10222 19307 4783 3270 25500 3126 2011 1037 3460 1012 102 1996 6676 2015 1521 5160 2703 5622 9289 5332 2056 1024 1523 1045 1521 2310 2196 2657 1997 2062 16360 2890 10222 19307 9164 2011 1037 3460 1012 102 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+I0505 13:01:23.304266 140081799423744 run_classifier.py:466] input_ids: 101 2002 2794 1024 1036 1036 1045 1005 2310 2196 2657 1997 2062 16360 2890 10222 19307 4783 3270 25500 3126 2011 1037 3460 1012 102 1996 6676 2015 1521 5160 2703 5622 9289 5332 2056 1024 1523 1045 1521 2310 2196 2657 1997 2062 16360 2890 10222 19307 9164 2011 1037 3460 1012 102 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+INFO:tensorflow:input_mask: 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+I0505 13:01:23.304391 140081799423744 run_classifier.py:467] input_mask: 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+INFO:tensorflow:segment_ids: 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+I0505 13:01:23.304512 140081799423744 run_classifier.py:468] segment_ids: 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+INFO:tensorflow:label: 1 (id = 1)
+I0505 13:01:23.304606 140081799423744 run_classifier.py:469] label: 1 (id = 1)
+INFO:tensorflow:***** Running evaluation *****
+I0505 13:01:23.304989 140081799423744 run_classifier.py:906] ***** Running evaluation *****
+INFO:tensorflow:  Num examples = 2 (2 actual, 0 padding)
+I0505 13:01:23.305092 140081799423744 run_classifier.py:909]   Num examples = 2 (2 actual, 0 padding)
+INFO:tensorflow:  Batch size = 4
+I0505 13:01:23.305194 140081799423744 run_classifier.py:910]   Batch size = 4
+INFO:tensorflow:Could not find trained model in model_dir: /home/user/fim-workspace/downloads/models/bert/bert_fim/output/, running initialization to evaluate.
+I0505 13:01:23.305648 140081799423744 estimator.py:503] Could not find trained model in model_dir: /home/user/fim-workspace/downloads/models/bert/bert_fim/output/, running initialization to evaluate.
+WARNING:tensorflow:From /usr/local/lib/python3.5/dist-packages/tensorflow_core/python/ops/resource_variable_ops.py:1635: calling BaseResourceVariable.__init__ (from tensorflow.python.ops.resource_variable_ops) with constraint is deprecated and will be removed in a future version.
+Instructions for updating:
+If using Keras pass *_constraint arguments to layers.
+W0505 13:01:23.310265 140081799423744 deprecation.py:506] From /usr/local/lib/python3.5/dist-packages/tensorflow_core/python/ops/resource_variable_ops.py:1635: calling BaseResourceVariable.__init__ (from tensorflow.python.ops.resource_variable_ops) with constraint is deprecated and will be removed in a future version.
+Instructions for updating:
+If using Keras pass *_constraint arguments to layers.
+WARNING:tensorflow:From run_classifier.py:551: map_and_batch (from tensorflow.python.data.experimental.ops.batching) is deprecated and will be removed in a future version.
+Instructions for updating:
+Use `tf.data.Dataset.map(map_func, num_parallel_calls)` followed by `tf.data.Dataset.batch(batch_size, drop_remainder)`. Static tf.data optimizations will take care of using the fused implementation.
+W0505 13:01:23.327329 140081799423744 deprecation.py:323] From run_classifier.py:551: map_and_batch (from tensorflow.python.data.experimental.ops.batching) is deprecated and will be removed in a future version.
+Instructions for updating:
+Use `tf.data.Dataset.map(map_func, num_parallel_calls)` followed by `tf.data.Dataset.batch(batch_size, drop_remainder)`. Static tf.data optimizations will take care of using the fused implementation.
+INFO:tensorflow:Calling model_fn.
+I0505 13:01:23.626544 140081799423744 estimator.py:1151] Calling model_fn.
+INFO:tensorflow:Running eval on CPU
+I0505 13:01:23.626766 140081799423744 tpu_estimator.py:3124] Running eval on CPU
+INFO:tensorflow:*** Features ***
+I0505 13:01:23.627150 140081799423744 run_classifier.py:630] *** Features ***
+INFO:tensorflow:  name = input_ids, shape = (None, 128)
+I0505 13:01:23.627287 140081799423744 run_classifier.py:632]   name = input_ids, shape = (None, 128)
+INFO:tensorflow:  name = input_mask, shape = (None, 128)
+I0505 13:01:23.627409 140081799423744 run_classifier.py:632]   name = input_mask, shape = (None, 128)
+INFO:tensorflow:  name = is_real_example, shape = (None,)
+I0505 13:01:23.627522 140081799423744 run_classifier.py:632]   name = is_real_example, shape = (None,)
+INFO:tensorflow:  name = label_ids, shape = (None,)
+I0505 13:01:23.627632 140081799423744 run_classifier.py:632]   name = label_ids, shape = (None,)
+INFO:tensorflow:  name = segment_ids, shape = (None, 128)
+I0505 13:01:23.627757 140081799423744 run_classifier.py:632]   name = segment_ids, shape = (None, 128)
+WARNING:tensorflow:From /home/user/fim-workspace/downloads/models/bert/bert_fim/modeling.py:382: Layer.apply (from tensorflow.python.keras.engine.base_layer) is deprecated and will be removed in a future version.
+Instructions for updating:
+Please use `layer.__call__` method instead.
+W0505 13:01:23.672412 140081799423744 deprecation.py:323] From /home/user/fim-workspace/downloads/models/bert/bert_fim/modeling.py:382: Layer.apply (from tensorflow.python.keras.engine.base_layer) is deprecated and will be removed in a future version.
+Instructions for updating:
+Please use `layer.__call__` method instead.
+WARNING:tensorflow:From /home/user/fim-workspace/downloads/models/bert/bert_fim/modeling.py:701: dense (from tensorflow.python.layers.core) is deprecated and will be removed in a future version.
+Instructions for updating:
+Use keras.layers.Dense instead.
+W0505 13:01:23.714618 140081799423744 deprecation.py:323] From /home/user/fim-workspace/downloads/models/bert/bert_fim/modeling.py:701: dense (from tensorflow.python.layers.core) is deprecated and will be removed in a future version.
+Instructions for updating:
+Use keras.layers.Dense instead.
+2020-05-05 13:01:23.756090: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library libhip_hcc.so
+2020-05-05 13:01:23.821914: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1573] Found device 0 with properties: 
+pciBusID: 0000:0b:00.0 name: Vega 10 XT [Radeon RX Vega 64]     ROCm AMD GPU ISA: gfx900
+coreClock: 1.63GHz coreCount: 64 deviceMemorySize: 7.80GiB deviceMemoryBandwidth: -1B/s
+2020-05-05 13:01:23.822083: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library librocblas.so
+2020-05-05 13:01:23.822215: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library libMIOpen.so
+2020-05-05 13:01:23.823528: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library librocfft.so
+2020-05-05 13:01:23.823812: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library librocrand.so
+2020-05-05 13:01:23.823868: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1697] Adding visible gpu devices: 0
+2020-05-05 13:01:23.824151: I tensorflow/core/platform/cpu_feature_guard.cc:142] Your CPU supports instructions that this TensorFlow binary was not compiled to use: SSE3 SSE4.1 SSE4.2 AVX
+2020-05-05 13:01:23.832291: I tensorflow/core/platform/profile_utils/cpu_utils.cc:94] CPU Frequency: 2394395000 Hz
+2020-05-05 13:01:23.834116: I tensorflow/compiler/xla/service/service.cc:168] XLA service 0x7f46e90 initialized for platform Host (this does not guarantee that XLA will be used). Devices:
+2020-05-05 13:01:23.834160: I tensorflow/compiler/xla/service/service.cc:176]   StreamExecutor device (0): Host, Default Version
+2020-05-05 13:01:23.836466: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1573] Found device 0 with properties: 
+pciBusID: 0000:0b:00.0 name: Vega 10 XT [Radeon RX Vega 64]     ROCm AMD GPU ISA: gfx900
+coreClock: 1.63GHz coreCount: 64 deviceMemorySize: 7.80GiB deviceMemoryBandwidth: -1B/s
+2020-05-05 13:01:23.836533: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library librocblas.so
+2020-05-05 13:01:23.836562: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library libMIOpen.so
+2020-05-05 13:01:23.836589: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library librocfft.so
+2020-05-05 13:01:23.836615: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library librocrand.so
+2020-05-05 13:01:23.836678: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1697] Adding visible gpu devices: 0
+2020-05-05 13:01:23.836782: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1096] Device interconnect StreamExecutor with strength 1 edge matrix:
+2020-05-05 13:01:23.836806: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1102]      0 
+2020-05-05 13:01:23.836820: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1115] 0:   N 
+2020-05-05 13:01:23.836959: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1241] Created TensorFlow device (/job:localhost/replica:0/task:0/device:GPU:0 with 7341 MB memory) -> physical GPU (device: 0, name: Vega 10 XT [Radeon RX Vega 64], pci bus id: 0000:0b:00.0)
+INFO:tensorflow:**** Trainable Variables ****
+I0505 13:01:26.619602 140081799423744 run_classifier.py:666] **** Trainable Variables ****
+INFO:tensorflow:  name = bert/embeddings/word_embeddings:0, shape = (30522, 768), *INIT_FROM_CKPT*
+I0505 13:01:26.619817 140081799423744 run_classifier.py:672]   name = bert/embeddings/word_embeddings:0, shape = (30522, 768), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/embeddings/token_type_embeddings:0, shape = (2, 768), *INIT_FROM_CKPT*
+I0505 13:01:26.619948 140081799423744 run_classifier.py:672]   name = bert/embeddings/token_type_embeddings:0, shape = (2, 768), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/embeddings/position_embeddings:0, shape = (512, 768), *INIT_FROM_CKPT*
+I0505 13:01:26.620072 140081799423744 run_classifier.py:672]   name = bert/embeddings/position_embeddings:0, shape = (512, 768), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/embeddings/layer_normalization/gamma:0, shape = (768,)
+I0505 13:01:26.620193 140081799423744 run_classifier.py:672]   name = bert/embeddings/layer_normalization/gamma:0, shape = (768,)
+INFO:tensorflow:  name = bert/embeddings/layer_normalization/beta:0, shape = (768,)
+I0505 13:01:26.620301 140081799423744 run_classifier.py:672]   name = bert/embeddings/layer_normalization/beta:0, shape = (768,)
+INFO:tensorflow:  name = bert/encoder/layer_0/attention/self/query/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+I0505 13:01:26.620406 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_0/attention/self/query/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_0/attention/self/query/bias:0, shape = (768,), *INIT_FROM_CKPT*
+I0505 13:01:26.620529 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_0/attention/self/query/bias:0, shape = (768,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_0/attention/self/key/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+I0505 13:01:26.620633 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_0/attention/self/key/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_0/attention/self/key/bias:0, shape = (768,), *INIT_FROM_CKPT*
+I0505 13:01:26.620745 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_0/attention/self/key/bias:0, shape = (768,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_0/attention/self/value/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+I0505 13:01:26.620847 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_0/attention/self/value/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_0/attention/self/value/bias:0, shape = (768,), *INIT_FROM_CKPT*
+I0505 13:01:26.620957 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_0/attention/self/value/bias:0, shape = (768,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_0/attention/output/dense/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+I0505 13:01:26.621058 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_0/attention/output/dense/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_0/attention/output/dense/bias:0, shape = (768,), *INIT_FROM_CKPT*
+I0505 13:01:26.621167 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_0/attention/output/dense/bias:0, shape = (768,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_0/intermediate/dense/kernel:0, shape = (768, 3072), *INIT_FROM_CKPT*
+I0505 13:01:26.621267 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_0/intermediate/dense/kernel:0, shape = (768, 3072), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_0/intermediate/dense/bias:0, shape = (3072,), *INIT_FROM_CKPT*
+I0505 13:01:26.621375 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_0/intermediate/dense/bias:0, shape = (3072,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_0/output/dense/kernel:0, shape = (3072, 768), *INIT_FROM_CKPT*
+I0505 13:01:26.621474 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_0/output/dense/kernel:0, shape = (3072, 768), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_0/output/dense/bias:0, shape = (768,), *INIT_FROM_CKPT*
+I0505 13:01:26.621581 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_0/output/dense/bias:0, shape = (768,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_0/output/layer_normalization_1/gamma:0, shape = (768,)
+I0505 13:01:26.621680 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_0/output/layer_normalization_1/gamma:0, shape = (768,)
+INFO:tensorflow:  name = bert/encoder/layer_0/output/layer_normalization_1/beta:0, shape = (768,)
+I0505 13:01:26.621779 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_0/output/layer_normalization_1/beta:0, shape = (768,)
+INFO:tensorflow:  name = bert/encoder/layer_1/attention/self/query/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+I0505 13:01:26.621878 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_1/attention/self/query/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_1/attention/self/query/bias:0, shape = (768,), *INIT_FROM_CKPT*
+I0505 13:01:26.621985 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_1/attention/self/query/bias:0, shape = (768,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_1/attention/self/key/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+I0505 13:01:26.622085 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_1/attention/self/key/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_1/attention/self/key/bias:0, shape = (768,), *INIT_FROM_CKPT*
+I0505 13:01:26.622198 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_1/attention/self/key/bias:0, shape = (768,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_1/attention/self/value/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+I0505 13:01:26.622297 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_1/attention/self/value/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_1/attention/self/value/bias:0, shape = (768,), *INIT_FROM_CKPT*
+I0505 13:01:26.622403 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_1/attention/self/value/bias:0, shape = (768,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_1/attention/output/dense/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+I0505 13:01:26.622502 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_1/attention/output/dense/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_1/attention/output/dense/bias:0, shape = (768,), *INIT_FROM_CKPT*
+I0505 13:01:26.622609 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_1/attention/output/dense/bias:0, shape = (768,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_1/intermediate/dense/kernel:0, shape = (768, 3072), *INIT_FROM_CKPT*
+I0505 13:01:26.622708 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_1/intermediate/dense/kernel:0, shape = (768, 3072), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_1/intermediate/dense/bias:0, shape = (3072,), *INIT_FROM_CKPT*
+I0505 13:01:26.622815 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_1/intermediate/dense/bias:0, shape = (3072,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_1/output/dense/kernel:0, shape = (3072, 768), *INIT_FROM_CKPT*
+I0505 13:01:26.622914 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_1/output/dense/kernel:0, shape = (3072, 768), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_1/output/dense/bias:0, shape = (768,), *INIT_FROM_CKPT*
+I0505 13:01:26.623020 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_1/output/dense/bias:0, shape = (768,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_1/output/layer_normalization_2/gamma:0, shape = (768,)
+I0505 13:01:26.623119 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_1/output/layer_normalization_2/gamma:0, shape = (768,)
+INFO:tensorflow:  name = bert/encoder/layer_1/output/layer_normalization_2/beta:0, shape = (768,)
+I0505 13:01:26.623218 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_1/output/layer_normalization_2/beta:0, shape = (768,)
+INFO:tensorflow:  name = bert/encoder/layer_2/attention/self/query/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+I0505 13:01:26.623317 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_2/attention/self/query/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_2/attention/self/query/bias:0, shape = (768,), *INIT_FROM_CKPT*
+I0505 13:01:26.623423 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_2/attention/self/query/bias:0, shape = (768,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_2/attention/self/key/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+I0505 13:01:26.623522 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_2/attention/self/key/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_2/attention/self/key/bias:0, shape = (768,), *INIT_FROM_CKPT*
+I0505 13:01:26.623629 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_2/attention/self/key/bias:0, shape = (768,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_2/attention/self/value/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+I0505 13:01:26.623740 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_2/attention/self/value/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_2/attention/self/value/bias:0, shape = (768,), *INIT_FROM_CKPT*
+I0505 13:01:26.623851 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_2/attention/self/value/bias:0, shape = (768,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_2/attention/output/dense/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+I0505 13:01:26.623950 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_2/attention/output/dense/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_2/attention/output/dense/bias:0, shape = (768,), *INIT_FROM_CKPT*
+I0505 13:01:26.624056 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_2/attention/output/dense/bias:0, shape = (768,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_2/intermediate/dense/kernel:0, shape = (768, 3072), *INIT_FROM_CKPT*
+I0505 13:01:26.624156 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_2/intermediate/dense/kernel:0, shape = (768, 3072), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_2/intermediate/dense/bias:0, shape = (3072,), *INIT_FROM_CKPT*
+I0505 13:01:26.624263 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_2/intermediate/dense/bias:0, shape = (3072,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_2/output/dense/kernel:0, shape = (3072, 768), *INIT_FROM_CKPT*
+I0505 13:01:26.624361 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_2/output/dense/kernel:0, shape = (3072, 768), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_2/output/dense/bias:0, shape = (768,), *INIT_FROM_CKPT*
+I0505 13:01:26.624469 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_2/output/dense/bias:0, shape = (768,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_2/output/layer_normalization_3/gamma:0, shape = (768,)
+I0505 13:01:26.624568 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_2/output/layer_normalization_3/gamma:0, shape = (768,)
+INFO:tensorflow:  name = bert/encoder/layer_2/output/layer_normalization_3/beta:0, shape = (768,)
+I0505 13:01:26.624667 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_2/output/layer_normalization_3/beta:0, shape = (768,)
+INFO:tensorflow:  name = bert/encoder/layer_3/attention/self/query/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+I0505 13:01:26.624766 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_3/attention/self/query/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_3/attention/self/query/bias:0, shape = (768,), *INIT_FROM_CKPT*
+I0505 13:01:26.624873 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_3/attention/self/query/bias:0, shape = (768,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_3/attention/self/key/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+I0505 13:01:26.624972 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_3/attention/self/key/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_3/attention/self/key/bias:0, shape = (768,), *INIT_FROM_CKPT*
+I0505 13:01:26.625079 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_3/attention/self/key/bias:0, shape = (768,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_3/attention/self/value/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+I0505 13:01:26.625178 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_3/attention/self/value/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_3/attention/self/value/bias:0, shape = (768,), *INIT_FROM_CKPT*
+I0505 13:01:26.625284 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_3/attention/self/value/bias:0, shape = (768,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_3/attention/output/dense/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+I0505 13:01:26.625389 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_3/attention/output/dense/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_3/attention/output/dense/bias:0, shape = (768,), *INIT_FROM_CKPT*
+I0505 13:01:26.625498 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_3/attention/output/dense/bias:0, shape = (768,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_3/intermediate/dense/kernel:0, shape = (768, 3072), *INIT_FROM_CKPT*
+I0505 13:01:26.625597 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_3/intermediate/dense/kernel:0, shape = (768, 3072), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_3/intermediate/dense/bias:0, shape = (3072,), *INIT_FROM_CKPT*
+I0505 13:01:26.625705 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_3/intermediate/dense/bias:0, shape = (3072,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_3/output/dense/kernel:0, shape = (3072, 768), *INIT_FROM_CKPT*
+I0505 13:01:26.625803 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_3/output/dense/kernel:0, shape = (3072, 768), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_3/output/dense/bias:0, shape = (768,), *INIT_FROM_CKPT*
+I0505 13:01:26.625910 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_3/output/dense/bias:0, shape = (768,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_3/output/layer_normalization_4/gamma:0, shape = (768,)
+I0505 13:01:26.626008 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_3/output/layer_normalization_4/gamma:0, shape = (768,)
+INFO:tensorflow:  name = bert/encoder/layer_3/output/layer_normalization_4/beta:0, shape = (768,)
+I0505 13:01:26.626106 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_3/output/layer_normalization_4/beta:0, shape = (768,)
+INFO:tensorflow:  name = bert/encoder/layer_4/attention/self/query/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+I0505 13:01:26.626205 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_4/attention/self/query/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_4/attention/self/query/bias:0, shape = (768,), *INIT_FROM_CKPT*
+I0505 13:01:26.626312 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_4/attention/self/query/bias:0, shape = (768,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_4/attention/self/key/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+I0505 13:01:26.626410 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_4/attention/self/key/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_4/attention/self/key/bias:0, shape = (768,), *INIT_FROM_CKPT*
+I0505 13:01:26.626516 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_4/attention/self/key/bias:0, shape = (768,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_4/attention/self/value/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+I0505 13:01:26.626615 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_4/attention/self/value/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_4/attention/self/value/bias:0, shape = (768,), *INIT_FROM_CKPT*
+I0505 13:01:26.626721 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_4/attention/self/value/bias:0, shape = (768,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_4/attention/output/dense/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+I0505 13:01:26.626821 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_4/attention/output/dense/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_4/attention/output/dense/bias:0, shape = (768,), *INIT_FROM_CKPT*
+I0505 13:01:26.626927 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_4/attention/output/dense/bias:0, shape = (768,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_4/intermediate/dense/kernel:0, shape = (768, 3072), *INIT_FROM_CKPT*
+I0505 13:01:26.627034 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_4/intermediate/dense/kernel:0, shape = (768, 3072), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_4/intermediate/dense/bias:0, shape = (3072,), *INIT_FROM_CKPT*
+I0505 13:01:26.627141 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_4/intermediate/dense/bias:0, shape = (3072,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_4/output/dense/kernel:0, shape = (3072, 768), *INIT_FROM_CKPT*
+I0505 13:01:26.627241 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_4/output/dense/kernel:0, shape = (3072, 768), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_4/output/dense/bias:0, shape = (768,), *INIT_FROM_CKPT*
+I0505 13:01:26.627347 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_4/output/dense/bias:0, shape = (768,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_4/output/layer_normalization_5/gamma:0, shape = (768,)
+I0505 13:01:26.627446 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_4/output/layer_normalization_5/gamma:0, shape = (768,)
+INFO:tensorflow:  name = bert/encoder/layer_4/output/layer_normalization_5/beta:0, shape = (768,)
+I0505 13:01:26.627546 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_4/output/layer_normalization_5/beta:0, shape = (768,)
+INFO:tensorflow:  name = bert/encoder/layer_5/attention/self/query/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+I0505 13:01:26.627644 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_5/attention/self/query/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_5/attention/self/query/bias:0, shape = (768,), *INIT_FROM_CKPT*
+I0505 13:01:26.627766 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_5/attention/self/query/bias:0, shape = (768,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_5/attention/self/key/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+I0505 13:01:26.627869 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_5/attention/self/key/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_5/attention/self/key/bias:0, shape = (768,), *INIT_FROM_CKPT*
+I0505 13:01:26.627976 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_5/attention/self/key/bias:0, shape = (768,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_5/attention/self/value/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+I0505 13:01:26.628075 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_5/attention/self/value/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_5/attention/self/value/bias:0, shape = (768,), *INIT_FROM_CKPT*
+I0505 13:01:26.628181 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_5/attention/self/value/bias:0, shape = (768,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_5/attention/output/dense/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+I0505 13:01:26.628280 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_5/attention/output/dense/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_5/attention/output/dense/bias:0, shape = (768,), *INIT_FROM_CKPT*
+I0505 13:01:26.628387 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_5/attention/output/dense/bias:0, shape = (768,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_5/intermediate/dense/kernel:0, shape = (768, 3072), *INIT_FROM_CKPT*
+I0505 13:01:26.628486 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_5/intermediate/dense/kernel:0, shape = (768, 3072), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_5/intermediate/dense/bias:0, shape = (3072,), *INIT_FROM_CKPT*
+I0505 13:01:26.628597 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_5/intermediate/dense/bias:0, shape = (3072,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_5/output/dense/kernel:0, shape = (3072, 768), *INIT_FROM_CKPT*
+I0505 13:01:26.628698 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_5/output/dense/kernel:0, shape = (3072, 768), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_5/output/dense/bias:0, shape = (768,), *INIT_FROM_CKPT*
+I0505 13:01:26.628805 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_5/output/dense/bias:0, shape = (768,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_5/output/layer_normalization_6/gamma:0, shape = (768,)
+I0505 13:01:26.628905 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_5/output/layer_normalization_6/gamma:0, shape = (768,)
+INFO:tensorflow:  name = bert/encoder/layer_5/output/layer_normalization_6/beta:0, shape = (768,)
+I0505 13:01:26.629004 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_5/output/layer_normalization_6/beta:0, shape = (768,)
+INFO:tensorflow:  name = bert/encoder/layer_6/attention/self/query/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+I0505 13:01:26.629103 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_6/attention/self/query/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_6/attention/self/query/bias:0, shape = (768,), *INIT_FROM_CKPT*
+I0505 13:01:26.629210 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_6/attention/self/query/bias:0, shape = (768,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_6/attention/self/key/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+I0505 13:01:26.629309 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_6/attention/self/key/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_6/attention/self/key/bias:0, shape = (768,), *INIT_FROM_CKPT*
+I0505 13:01:26.629415 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_6/attention/self/key/bias:0, shape = (768,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_6/attention/self/value/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+I0505 13:01:26.629514 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_6/attention/self/value/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_6/attention/self/value/bias:0, shape = (768,), *INIT_FROM_CKPT*
+I0505 13:01:26.629620 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_6/attention/self/value/bias:0, shape = (768,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_6/attention/output/dense/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+I0505 13:01:26.629719 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_6/attention/output/dense/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_6/attention/output/dense/bias:0, shape = (768,), *INIT_FROM_CKPT*
+I0505 13:01:26.629826 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_6/attention/output/dense/bias:0, shape = (768,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_6/intermediate/dense/kernel:0, shape = (768, 3072), *INIT_FROM_CKPT*
+I0505 13:01:26.629926 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_6/intermediate/dense/kernel:0, shape = (768, 3072), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_6/intermediate/dense/bias:0, shape = (3072,), *INIT_FROM_CKPT*
+I0505 13:01:26.630058 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_6/intermediate/dense/bias:0, shape = (3072,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_6/output/dense/kernel:0, shape = (3072, 768), *INIT_FROM_CKPT*
+I0505 13:01:26.630158 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_6/output/dense/kernel:0, shape = (3072, 768), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_6/output/dense/bias:0, shape = (768,), *INIT_FROM_CKPT*
+I0505 13:01:26.630269 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_6/output/dense/bias:0, shape = (768,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_6/output/layer_normalization_7/gamma:0, shape = (768,)
+I0505 13:01:26.630370 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_6/output/layer_normalization_7/gamma:0, shape = (768,)
+INFO:tensorflow:  name = bert/encoder/layer_6/output/layer_normalization_7/beta:0, shape = (768,)
+I0505 13:01:26.630468 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_6/output/layer_normalization_7/beta:0, shape = (768,)
+INFO:tensorflow:  name = bert/encoder/layer_7/attention/self/query/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+I0505 13:01:26.630568 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_7/attention/self/query/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_7/attention/self/query/bias:0, shape = (768,), *INIT_FROM_CKPT*
+I0505 13:01:26.630674 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_7/attention/self/query/bias:0, shape = (768,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_7/attention/self/key/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+I0505 13:01:26.630773 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_7/attention/self/key/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_7/attention/self/key/bias:0, shape = (768,), *INIT_FROM_CKPT*
+I0505 13:01:26.630880 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_7/attention/self/key/bias:0, shape = (768,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_7/attention/self/value/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+I0505 13:01:26.630980 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_7/attention/self/value/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_7/attention/self/value/bias:0, shape = (768,), *INIT_FROM_CKPT*
+I0505 13:01:26.631086 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_7/attention/self/value/bias:0, shape = (768,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_7/attention/output/dense/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+I0505 13:01:26.631185 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_7/attention/output/dense/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_7/attention/output/dense/bias:0, shape = (768,), *INIT_FROM_CKPT*
+I0505 13:01:26.631292 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_7/attention/output/dense/bias:0, shape = (768,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_7/intermediate/dense/kernel:0, shape = (768, 3072), *INIT_FROM_CKPT*
+I0505 13:01:26.631391 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_7/intermediate/dense/kernel:0, shape = (768, 3072), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_7/intermediate/dense/bias:0, shape = (3072,), *INIT_FROM_CKPT*
+I0505 13:01:26.631501 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_7/intermediate/dense/bias:0, shape = (3072,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_7/output/dense/kernel:0, shape = (3072, 768), *INIT_FROM_CKPT*
+I0505 13:01:26.631600 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_7/output/dense/kernel:0, shape = (3072, 768), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_7/output/dense/bias:0, shape = (768,), *INIT_FROM_CKPT*
+I0505 13:01:26.631706 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_7/output/dense/bias:0, shape = (768,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_7/output/layer_normalization_8/gamma:0, shape = (768,)
+I0505 13:01:26.631825 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_7/output/layer_normalization_8/gamma:0, shape = (768,)
+INFO:tensorflow:  name = bert/encoder/layer_7/output/layer_normalization_8/beta:0, shape = (768,)
+I0505 13:01:26.631932 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_7/output/layer_normalization_8/beta:0, shape = (768,)
+INFO:tensorflow:  name = bert/encoder/layer_8/attention/self/query/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+I0505 13:01:26.632030 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_8/attention/self/query/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_8/attention/self/query/bias:0, shape = (768,), *INIT_FROM_CKPT*
+I0505 13:01:26.632137 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_8/attention/self/query/bias:0, shape = (768,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_8/attention/self/key/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+I0505 13:01:26.632236 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_8/attention/self/key/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_8/attention/self/key/bias:0, shape = (768,), *INIT_FROM_CKPT*
+I0505 13:01:26.632343 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_8/attention/self/key/bias:0, shape = (768,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_8/attention/self/value/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+I0505 13:01:26.632441 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_8/attention/self/value/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_8/attention/self/value/bias:0, shape = (768,), *INIT_FROM_CKPT*
+I0505 13:01:26.632547 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_8/attention/self/value/bias:0, shape = (768,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_8/attention/output/dense/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+I0505 13:01:26.632646 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_8/attention/output/dense/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_8/attention/output/dense/bias:0, shape = (768,), *INIT_FROM_CKPT*
+I0505 13:01:26.632752 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_8/attention/output/dense/bias:0, shape = (768,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_8/intermediate/dense/kernel:0, shape = (768, 3072), *INIT_FROM_CKPT*
+I0505 13:01:26.632851 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_8/intermediate/dense/kernel:0, shape = (768, 3072), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_8/intermediate/dense/bias:0, shape = (3072,), *INIT_FROM_CKPT*
+I0505 13:01:26.632957 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_8/intermediate/dense/bias:0, shape = (3072,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_8/output/dense/kernel:0, shape = (3072, 768), *INIT_FROM_CKPT*
+I0505 13:01:26.633055 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_8/output/dense/kernel:0, shape = (3072, 768), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_8/output/dense/bias:0, shape = (768,), *INIT_FROM_CKPT*
+I0505 13:01:26.633162 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_8/output/dense/bias:0, shape = (768,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_8/output/layer_normalization_9/gamma:0, shape = (768,)
+I0505 13:01:26.633260 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_8/output/layer_normalization_9/gamma:0, shape = (768,)
+INFO:tensorflow:  name = bert/encoder/layer_8/output/layer_normalization_9/beta:0, shape = (768,)
+I0505 13:01:26.633358 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_8/output/layer_normalization_9/beta:0, shape = (768,)
+INFO:tensorflow:  name = bert/encoder/layer_9/attention/self/query/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+I0505 13:01:26.633457 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_9/attention/self/query/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_9/attention/self/query/bias:0, shape = (768,), *INIT_FROM_CKPT*
+I0505 13:01:26.633570 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_9/attention/self/query/bias:0, shape = (768,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_9/attention/self/key/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+I0505 13:01:26.633669 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_9/attention/self/key/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_9/attention/self/key/bias:0, shape = (768,), *INIT_FROM_CKPT*
+I0505 13:01:26.633775 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_9/attention/self/key/bias:0, shape = (768,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_9/attention/self/value/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+I0505 13:01:26.633875 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_9/attention/self/value/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_9/attention/self/value/bias:0, shape = (768,), *INIT_FROM_CKPT*
+I0505 13:01:26.633981 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_9/attention/self/value/bias:0, shape = (768,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_9/attention/output/dense/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+I0505 13:01:26.634079 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_9/attention/output/dense/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_9/attention/output/dense/bias:0, shape = (768,), *INIT_FROM_CKPT*
+I0505 13:01:26.634186 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_9/attention/output/dense/bias:0, shape = (768,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_9/intermediate/dense/kernel:0, shape = (768, 3072), *INIT_FROM_CKPT*
+I0505 13:01:26.634284 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_9/intermediate/dense/kernel:0, shape = (768, 3072), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_9/intermediate/dense/bias:0, shape = (3072,), *INIT_FROM_CKPT*
+I0505 13:01:26.634390 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_9/intermediate/dense/bias:0, shape = (3072,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_9/output/dense/kernel:0, shape = (3072, 768), *INIT_FROM_CKPT*
+I0505 13:01:26.634489 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_9/output/dense/kernel:0, shape = (3072, 768), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_9/output/dense/bias:0, shape = (768,), *INIT_FROM_CKPT*
+I0505 13:01:26.634594 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_9/output/dense/bias:0, shape = (768,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_9/output/layer_normalization_10/gamma:0, shape = (768,)
+I0505 13:01:26.634694 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_9/output/layer_normalization_10/gamma:0, shape = (768,)
+INFO:tensorflow:  name = bert/encoder/layer_9/output/layer_normalization_10/beta:0, shape = (768,)
+I0505 13:01:26.634795 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_9/output/layer_normalization_10/beta:0, shape = (768,)
+INFO:tensorflow:  name = bert/encoder/layer_10/attention/self/query/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+I0505 13:01:26.634894 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_10/attention/self/query/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_10/attention/self/query/bias:0, shape = (768,), *INIT_FROM_CKPT*
+I0505 13:01:26.635000 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_10/attention/self/query/bias:0, shape = (768,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_10/attention/self/key/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+I0505 13:01:26.635104 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_10/attention/self/key/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_10/attention/self/key/bias:0, shape = (768,), *INIT_FROM_CKPT*
+I0505 13:01:26.635212 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_10/attention/self/key/bias:0, shape = (768,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_10/attention/self/value/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+I0505 13:01:26.635311 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_10/attention/self/value/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_10/attention/self/value/bias:0, shape = (768,), *INIT_FROM_CKPT*
+I0505 13:01:26.635416 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_10/attention/self/value/bias:0, shape = (768,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_10/attention/output/dense/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+I0505 13:01:26.635516 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_10/attention/output/dense/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_10/attention/output/dense/bias:0, shape = (768,), *INIT_FROM_CKPT*
+I0505 13:01:26.635622 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_10/attention/output/dense/bias:0, shape = (768,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_10/intermediate/dense/kernel:0, shape = (768, 3072), *INIT_FROM_CKPT*
+I0505 13:01:26.635721 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_10/intermediate/dense/kernel:0, shape = (768, 3072), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_10/intermediate/dense/bias:0, shape = (3072,), *INIT_FROM_CKPT*
+I0505 13:01:26.635837 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_10/intermediate/dense/bias:0, shape = (3072,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_10/output/dense/kernel:0, shape = (3072, 768), *INIT_FROM_CKPT*
+I0505 13:01:26.635936 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_10/output/dense/kernel:0, shape = (3072, 768), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_10/output/dense/bias:0, shape = (768,), *INIT_FROM_CKPT*
+I0505 13:01:26.636042 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_10/output/dense/bias:0, shape = (768,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_10/output/layer_normalization_11/gamma:0, shape = (768,)
+I0505 13:01:26.636142 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_10/output/layer_normalization_11/gamma:0, shape = (768,)
+INFO:tensorflow:  name = bert/encoder/layer_10/output/layer_normalization_11/beta:0, shape = (768,)
+I0505 13:01:26.636240 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_10/output/layer_normalization_11/beta:0, shape = (768,)
+INFO:tensorflow:  name = bert/encoder/layer_11/attention/self/query/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+I0505 13:01:26.636339 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_11/attention/self/query/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_11/attention/self/query/bias:0, shape = (768,), *INIT_FROM_CKPT*
+I0505 13:01:26.636446 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_11/attention/self/query/bias:0, shape = (768,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_11/attention/self/key/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+I0505 13:01:26.636545 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_11/attention/self/key/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_11/attention/self/key/bias:0, shape = (768,), *INIT_FROM_CKPT*
+I0505 13:01:26.636651 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_11/attention/self/key/bias:0, shape = (768,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_11/attention/self/value/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+I0505 13:01:26.636756 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_11/attention/self/value/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_11/attention/self/value/bias:0, shape = (768,), *INIT_FROM_CKPT*
+I0505 13:01:26.636862 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_11/attention/self/value/bias:0, shape = (768,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_11/attention/output/dense/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+I0505 13:01:26.636961 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_11/attention/output/dense/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_11/attention/output/dense/bias:0, shape = (768,), *INIT_FROM_CKPT*
+I0505 13:01:26.637067 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_11/attention/output/dense/bias:0, shape = (768,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_11/intermediate/dense/kernel:0, shape = (768, 3072), *INIT_FROM_CKPT*
+I0505 13:01:26.637166 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_11/intermediate/dense/kernel:0, shape = (768, 3072), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_11/intermediate/dense/bias:0, shape = (3072,), *INIT_FROM_CKPT*
+I0505 13:01:26.637273 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_11/intermediate/dense/bias:0, shape = (3072,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_11/output/dense/kernel:0, shape = (3072, 768), *INIT_FROM_CKPT*
+I0505 13:01:26.637372 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_11/output/dense/kernel:0, shape = (3072, 768), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_11/output/dense/bias:0, shape = (768,), *INIT_FROM_CKPT*
+I0505 13:01:26.637479 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_11/output/dense/bias:0, shape = (768,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/encoder/layer_11/output/layer_normalization_12/gamma:0, shape = (768,)
+I0505 13:01:26.637578 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_11/output/layer_normalization_12/gamma:0, shape = (768,)
+INFO:tensorflow:  name = bert/encoder/layer_11/output/layer_normalization_12/beta:0, shape = (768,)
+I0505 13:01:26.637675 140081799423744 run_classifier.py:672]   name = bert/encoder/layer_11/output/layer_normalization_12/beta:0, shape = (768,)
+INFO:tensorflow:  name = bert/pooler/dense/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+I0505 13:01:26.637773 140081799423744 run_classifier.py:672]   name = bert/pooler/dense/kernel:0, shape = (768, 768), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = bert/pooler/dense/bias:0, shape = (768,), *INIT_FROM_CKPT*
+I0505 13:01:26.637879 140081799423744 run_classifier.py:672]   name = bert/pooler/dense/bias:0, shape = (768,), *INIT_FROM_CKPT*
+INFO:tensorflow:  name = output_weights:0, shape = (2, 768)
+I0505 13:01:26.637979 140081799423744 run_classifier.py:672]   name = output_weights:0, shape = (2, 768)
+INFO:tensorflow:  name = output_bias:0, shape = (2,)
+I0505 13:01:26.638086 140081799423744 run_classifier.py:672]   name = output_bias:0, shape = (2,)
+WARNING:tensorflow:From run_classifier.py:699: The name tf.estimator.tpu.TPUEstimatorSpec is deprecated. Please use tf.compat.v1.estimator.tpu.TPUEstimatorSpec instead.
+
+W0505 13:01:26.638258 140081799423744 module_wrapper.py:138] From run_classifier.py:699: The name tf.estimator.tpu.TPUEstimatorSpec is deprecated. Please use tf.compat.v1.estimator.tpu.TPUEstimatorSpec instead.
+
+INFO:tensorflow:Done calling model_fn.
+I0505 13:01:26.740138 140081799423744 estimator.py:1153] Done calling model_fn.
+INFO:tensorflow:Starting evaluation at 2020-05-05T13:01:26Z
+I0505 13:01:26.759505 140081799423744 evaluation.py:255] Starting evaluation at 2020-05-05T13:01:26Z
+INFO:tensorflow:Graph was finalized.
+I0505 13:01:27.066140 140081799423744 monitored_session.py:246] Graph was finalized.
+2020-05-05 13:01:27.066658: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1573] Found device 0 with properties: 
+pciBusID: 0000:0b:00.0 name: Vega 10 XT [Radeon RX Vega 64]     ROCm AMD GPU ISA: gfx900
+coreClock: 1.63GHz coreCount: 64 deviceMemorySize: 7.80GiB deviceMemoryBandwidth: -1B/s
+2020-05-05 13:01:27.066707: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library librocblas.so
+2020-05-05 13:01:27.066727: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library libMIOpen.so
+2020-05-05 13:01:27.066746: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library librocfft.so
+2020-05-05 13:01:27.066764: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library librocrand.so
+2020-05-05 13:01:27.066808: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1697] Adding visible gpu devices: 0
+2020-05-05 13:01:27.066829: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1096] Device interconnect StreamExecutor with strength 1 edge matrix:
+2020-05-05 13:01:27.066839: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1102]      0 
+2020-05-05 13:01:27.066848: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1115] 0:   N 
+2020-05-05 13:01:27.066912: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1241] Created TensorFlow device (/job:localhost/replica:0/task:0/device:GPU:0 with 7341 MB memory) -> physical GPU (device: 0, name: Vega 10 XT [Radeon RX Vega 64], pci bus id: 0000:0b:00.0)
+INFO:tensorflow:Running local_init_op.
+I0505 13:01:33.995912 140081799423744 session_manager.py:504] Running local_init_op.
+INFO:tensorflow:Done running local_init_op.
+I0505 13:01:34.044307 140081799423744 session_manager.py:507] Done running local_init_op.
+2020-05-05 13:01:34.743188: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library librocblas.so
+2020-05-05 13:01:39.144455: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library libMIOpen.so
+MIOpen(HIP): Info [Handle] stream: 0, device_id: 0
+MIOpen(HIP): miopenStatus_t miopenCreateTensorDescriptor(miopenTensorDescriptor_t *){
+MIOpen(HIP): 	tensorDesc = 0
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenSetTensorDescriptor(miopenTensorDescriptor_t, miopenDataType_t, int, int *, int *){
+MIOpen(HIP): 	tensorDesc = 
+MIOpen(HIP): 	dataType = 1
+MIOpen(HIP): 	nbDims = 4
+MIOpen(HIP): 	dim.values = { 1 256 768 1 }
+MIOpen(HIP): 	stride.values = { 196608 768 1 1 }
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenCreateTensorDescriptor(miopenTensorDescriptor_t *){
+MIOpen(HIP): 	tensorDesc = 0
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenSetTensorDescriptor(miopenTensorDescriptor_t, miopenDataType_t, int, int *, int *){
+MIOpen(HIP): 	tensorDesc = 
+MIOpen(HIP): 	dataType = 1
+MIOpen(HIP): 	nbDims = 4
+MIOpen(HIP): 	dim.values = { 1 256 1 1 }
+MIOpen(HIP): 	stride.values = { 256 1 1 1 }
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenBatchNormalizationForwardTraining(miopenHandle_t, miopenBatchNormMode_t, void *, void *, const miopenTensorDescriptor_t, const void *, const miopenTensorDescriptor_t, void *, const miopenTensorDescriptor_t, void *, void *, double, void *, void *, double, void *, void *){
+MIOpen(HIP): 	handle = stream: 0x7fadb50, device_id: 0
+MIOpen(HIP): 	bn_mode = 1
+MIOpen(HIP): 	xDesc = 1, 256, 768, 1
+MIOpen(HIP): 	x = 0x7f62b7244b00
+MIOpen(HIP): 	yDesc = 1, 256, 768, 1
+MIOpen(HIP): 	y = 0x7f62b7244b00
+MIOpen(HIP): 	bnScaleBiasMeanVarDesc = 1, 256, 1, 1
+MIOpen(HIP): 	bnScale = 0x7f62b7183900
+MIOpen(HIP): 	bnBias = 0x7f62b7183d00
+MIOpen(HIP): 	expAvgFactor = 1
+MIOpen(HIP): 	resultRunningMean = 0x7f62b7184300
+MIOpen(HIP): 	resultRunningVariance = 0x7f62b7184700
+MIOpen(HIP): 	epsilon = 0.001
+MIOpen(HIP): 	resultSaveMean = 0x7f62b7184b00
+MIOpen(HIP): 	resultSaveInvVariance = 0x7f62b7184f00
+MIOpen(HIP): }
+MIOpen(HIP): Command [miopenBatchNormalizationForwardTraining] ./bin/MIOpenDriver bnorm -n 1 -c 256 -H 768 -W 1 -m 1 -s 1 -r 1
+MIOpen(HIP): miopenStatus_t miopenGetTensorDescriptorSize(miopenTensorDescriptor_t, int *){
+MIOpen(HIP): 	tensorDesc = 1, 256, 768, 1
+MIOpen(HIP): 	size = 0
+MIOpen(HIP): }
+MIOpen(HIP): Info2 [HipGetHccVersionImpl] Running: '/opt/rocm/hcc/bin/hcc --version'
+MIOpen(HIP): Info2 [HipGetHccVersionImpl] HCC clang version 10.0.0 (/data/jenkins-workspace/compute-rocm-rel-3.0/external/hcc-tot/llvm-project/clang 40756364719e83a2ddd5abe0affe700723cdd852) (based on HCC 3.0.19493-75ea952-4075636 )
+MIOpen(HIP): Info [HipGetHccVersionImpl] HCC base: 3.0.19493
+MIOpen(HIP): Info [AmdRocmMetadataVersionDetect] ROCm MD version AMDHSA_COv2, MIOpen version 2.2.0.7617-rocm-rel-3.0-6-948938d
+MIOpen(HIP): Info2 [ValidateGcnAssemblerImpl] Running: '/opt/rocm/opencl/bin/x86_64/clang --version'
+MIOpen(HIP): Info2 [ValidateGcnAssemblerImpl] clang version 10.0.0 
+MIOpen(HIP): Info2 [ValidateGcnAssemblerImpl] Target: amdgcn-unknown-amdhsa
+MIOpen(HIP): Info2 [GetKernels] 0 kernels for key: miopenGcnAsmBNFwdTrainSpatial "variant3gx196608gy1xl768yl1ldsgcn12rs1rr1fp160fp321single1n1c256hw768"
+MIOpen(HIP): Info2 [BatchNormForwardTraining] MIOpenBatchNormFwdTrainSpatial:: miopenGcnAsmBNFwdTrainSpatial
+MIOpen(HIP): Info2 [BatchNormForwardTraining] ... -DMIOPEN_USE_FP16=0 -DMIOPEN_USE_FP32=1 -DMIOPEN_USE_FPMIX=0 -DMIO_SAVE_MEAN_VARIANCE=1 -DMIO_RUNNING_RESULT=1 -DMIO_BN_N=1 -DMIO_BN_C=256 -DMIO_BN_HW=768 -DMIO_BN_NHW=768 -DMIO_BN_CHW=196608 -DMIO_BN_NCHW=196608 -DMIO_BN_LDS_SIZE=768 -DMIO_BN_LDSGCN_SIZE=12 -DMIO_BN_VARIANT=3 -DMIO_BN_GRP0=768 -DMIO_BN_GRP1=1 -DMIO_BN_GRP2=1
+MIOpen(HIP): Info2 [BatchNormForwardTraining] ...variant3gx196608gy1xl768yl1ldsgcn12rs1rr1fp160fp321single1n1c256hw768
+MIOpen(HIP): Info2 [AddKernel] Key: miopenGcnAsmBNFwdTrainSpatial "variant3gx196608gy1xl768yl1ldsgcn12rs1rr1fp160fp321single1n1c256hw768"
+MIOpen(HIP): Info2 [AddKernelDumpKernelParams] runcl MIOpenBatchNormFwdTrainSpatial.cl -k MIOpenBatchNormFwdTrainSpatial -dumpilisa -r 10 if#0: if#0: if#0: iv#0 196608,1,1/768,1,1  -DMIOPEN_USE_FP16=0 -DMIOPEN_USE_FP32=1 -DMIOPEN_USE_FPMIX=0 -DMIO_SAVE_MEAN_VARIANCE=1 -DMIO_RUNNING_RESULT=1 -DMIO_BN_N=1 -DMIO_BN_C=256 -DMIO_BN_HW=768 -DMIO_BN_NHW=768 -DMIO_BN_CHW=196608 -DMIO_BN_NCHW=196608 -DMIO_BN_LDS_SIZE=768 -DMIO_BN_LDSGCN_SIZE=12 -DMIO_BN_VARIANT=3 -DMIO_BN_GRP0=768 -DMIO_BN_GRP1=1 -DMIO_BN_GRP2=1
+MIOpen(HIP): miopenStatus_t miopenDestroyTensorDescriptor(miopenTensorDescriptor_t){
+MIOpen(HIP): 	tensorDesc = 1, 256, 1, 1
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenDestroyTensorDescriptor(miopenTensorDescriptor_t){
+MIOpen(HIP): 	tensorDesc = 1, 256, 768, 1
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenCreateTensorDescriptor(miopenTensorDescriptor_t *){
+MIOpen(HIP): 	tensorDesc = 0
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenSetTensorDescriptor(miopenTensorDescriptor_t, miopenDataType_t, int, int *, int *){
+MIOpen(HIP): 	tensorDesc = 
+MIOpen(HIP): 	dataType = 1
+MIOpen(HIP): 	nbDims = 4
+MIOpen(HIP): 	dim.values = { 1 256 768 1 }
+MIOpen(HIP): 	stride.values = { 196608 768 1 1 }
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenCreateTensorDescriptor(miopenTensorDescriptor_t *){
+MIOpen(HIP): 	tensorDesc = 0
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenSetTensorDescriptor(miopenTensorDescriptor_t, miopenDataType_t, int, int *, int *){
+MIOpen(HIP): 	tensorDesc = 
+MIOpen(HIP): 	dataType = 1
+MIOpen(HIP): 	nbDims = 4
+MIOpen(HIP): 	dim.values = { 1 256 1 1 }
+MIOpen(HIP): 	stride.values = { 256 1 1 1 }
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenBatchNormalizationForwardTraining(miopenHandle_t, miopenBatchNormMode_t, void *, void *, const miopenTensorDescriptor_t, const void *, const miopenTensorDescriptor_t, void *, const miopenTensorDescriptor_t, void *, void *, double, void *, void *, double, void *, void *){
+MIOpen(HIP): 	handle = stream: 0x7fadb50, device_id: 0
+MIOpen(HIP): 	bn_mode = 1
+MIOpen(HIP): 	xDesc = 1, 256, 768, 1
+MIOpen(HIP): 	x = 0x7f62b7184300
+MIOpen(HIP): 	yDesc = 1, 256, 768, 1
+MIOpen(HIP): 	y = 0x7f62b7184300
+MIOpen(HIP): 	bnScaleBiasMeanVarDesc = 1, 256, 1, 1
+MIOpen(HIP): 	bnScale = 0x7f62b7183900
+MIOpen(HIP): 	bnBias = 0x7f62b7183d00
+MIOpen(HIP): 	expAvgFactor = 1
+MIOpen(HIP): 	resultRunningMean = 0x7f62b7244b00
+MIOpen(HIP): 	resultRunningVariance = 0x7f62b7244f00
+MIOpen(HIP): 	epsilon = 0.001
+MIOpen(HIP): 	resultSaveMean = 0x7f62b7245300
+MIOpen(HIP): 	resultSaveInvVariance = 0x7f62b7245700
+MIOpen(HIP): }
+MIOpen(HIP): Command [miopenBatchNormalizationForwardTraining] ./bin/MIOpenDriver bnorm -n 1 -c 256 -H 768 -W 1 -m 1 -s 1 -r 1
+MIOpen(HIP): miopenStatus_t miopenGetTensorDescriptorSize(miopenTensorDescriptor_t, int *){
+MIOpen(HIP): 	tensorDesc = 1, 256, 768, 1
+MIOpen(HIP): 	size = 0
+MIOpen(HIP): }
+MIOpen(HIP): Info2 [GetKernels] 1 kernels for key: miopenGcnAsmBNFwdTrainSpatial "variant3gx196608gy1xl768yl1ldsgcn12rs1rr1fp160fp321single1n1c256hw768"
+MIOpen(HIP): miopenStatus_t miopenDestroyTensorDescriptor(miopenTensorDescriptor_t){
+MIOpen(HIP): 	tensorDesc = 1, 256, 1, 1
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenDestroyTensorDescriptor(miopenTensorDescriptor_t){
+MIOpen(HIP): 	tensorDesc = 1, 256, 768, 1
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenCreateTensorDescriptor(miopenTensorDescriptor_t *){
+MIOpen(HIP): 	tensorDesc = 0
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenSetTensorDescriptor(miopenTensorDescriptor_t, miopenDataType_t, int, int *, int *){
+MIOpen(HIP): 	tensorDesc = 
+MIOpen(HIP): 	dataType = 1
+MIOpen(HIP): 	nbDims = 4
+MIOpen(HIP): 	dim.values = { 1 256 768 1 }
+MIOpen(HIP): 	stride.values = { 196608 768 1 1 }
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenCreateTensorDescriptor(miopenTensorDescriptor_t *){
+MIOpen(HIP): 	tensorDesc = 0
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenSetTensorDescriptor(miopenTensorDescriptor_t, miopenDataType_t, int, int *, int *){
+MIOpen(HIP): 	tensorDesc = 
+MIOpen(HIP): 	dataType = 1
+MIOpen(HIP): 	nbDims = 4
+MIOpen(HIP): 	dim.values = { 1 256 1 1 }
+MIOpen(HIP): 	stride.values = { 256 1 1 1 }
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenBatchNormalizationForwardTraining(miopenHandle_t, miopenBatchNormMode_t, void *, void *, const miopenTensorDescriptor_t, const void *, const miopenTensorDescriptor_t, void *, const miopenTensorDescriptor_t, void *, void *, double, void *, void *, double, void *, void *){
+MIOpen(HIP): 	handle = stream: 0x7fadb50, device_id: 0
+MIOpen(HIP): 	bn_mode = 1
+MIOpen(HIP): 	xDesc = 1, 256, 768, 1
+MIOpen(HIP): 	x = 0x7f62b7184300
+MIOpen(HIP): 	yDesc = 1, 256, 768, 1
+MIOpen(HIP): 	y = 0x7f62b7184300
+MIOpen(HIP): 	bnScaleBiasMeanVarDesc = 1, 256, 1, 1
+MIOpen(HIP): 	bnScale = 0x7f62b7183900
+MIOpen(HIP): 	bnBias = 0x7f62b7183d00
+MIOpen(HIP): 	expAvgFactor = 1
+MIOpen(HIP): 	resultRunningMean = 0x7f62b7244300
+MIOpen(HIP): 	resultRunningVariance = 0x7f62b7244700
+MIOpen(HIP): 	epsilon = 0.001
+MIOpen(HIP): 	resultSaveMean = 0x7f62b7244b00
+MIOpen(HIP): 	resultSaveInvVariance = 0x7f62b7244f00
+MIOpen(HIP): }
+MIOpen(HIP): Command [miopenBatchNormalizationForwardTraining] ./bin/MIOpenDriver bnorm -n 1 -c 256 -H 768 -W 1 -m 1 -s 1 -r 1
+MIOpen(HIP): miopenStatus_t miopenGetTensorDescriptorSize(miopenTensorDescriptor_t, int *){
+MIOpen(HIP): 	tensorDesc = 1, 256, 768, 1
+MIOpen(HIP): 	size = 0
+MIOpen(HIP): }
+MIOpen(HIP): Info2 [GetKernels] 1 kernels for key: miopenGcnAsmBNFwdTrainSpatial "variant3gx196608gy1xl768yl1ldsgcn12rs1rr1fp160fp321single1n1c256hw768"
+MIOpen(HIP): miopenStatus_t miopenDestroyTensorDescriptor(miopenTensorDescriptor_t){
+MIOpen(HIP): 	tensorDesc = 1, 256, 1, 1
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenDestroyTensorDescriptor(miopenTensorDescriptor_t){
+MIOpen(HIP): 	tensorDesc = 1, 256, 768, 1
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenCreateTensorDescriptor(miopenTensorDescriptor_t *){
+MIOpen(HIP): 	tensorDesc = 0
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenSetTensorDescriptor(miopenTensorDescriptor_t, miopenDataType_t, int, int *, int *){
+MIOpen(HIP): 	tensorDesc = 
+MIOpen(HIP): 	dataType = 1
+MIOpen(HIP): 	nbDims = 4
+MIOpen(HIP): 	dim.values = { 1 256 768 1 }
+MIOpen(HIP): 	stride.values = { 196608 768 1 1 }
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenCreateTensorDescriptor(miopenTensorDescriptor_t *){
+MIOpen(HIP): 	tensorDesc = 0
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenSetTensorDescriptor(miopenTensorDescriptor_t, miopenDataType_t, int, int *, int *){
+MIOpen(HIP): 	tensorDesc = 
+MIOpen(HIP): 	dataType = 1
+MIOpen(HIP): 	nbDims = 4
+MIOpen(HIP): 	dim.values = { 1 256 1 1 }
+MIOpen(HIP): 	stride.values = { 256 1 1 1 }
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenBatchNormalizationForwardTraining(miopenHandle_t, miopenBatchNormMode_t, void *, void *, const miopenTensorDescriptor_t, const void *, const miopenTensorDescriptor_t, void *, const miopenTensorDescriptor_t, void *, void *, double, void *, void *, double, void *, void *){
+MIOpen(HIP): 	handle = stream: 0x7fadb50, device_id: 0
+MIOpen(HIP): 	bn_mode = 1
+MIOpen(HIP): 	xDesc = 1, 256, 768, 1
+MIOpen(HIP): 	x = 0x7f62b7184300
+MIOpen(HIP): 	yDesc = 1, 256, 768, 1
+MIOpen(HIP): 	y = 0x7f62b7184300
+MIOpen(HIP): 	bnScaleBiasMeanVarDesc = 1, 256, 1, 1
+MIOpen(HIP): 	bnScale = 0x7f62b7183900
+MIOpen(HIP): 	bnBias = 0x7f62b7183d00
+MIOpen(HIP): 	expAvgFactor = 1
+MIOpen(HIP): 	resultRunningMean = 0x7f62b7244300
+MIOpen(HIP): 	resultRunningVariance = 0x7f62b7244700
+MIOpen(HIP): 	epsilon = 0.001
+MIOpen(HIP): 	resultSaveMean = 0x7f62b7244b00
+MIOpen(HIP): 	resultSaveInvVariance = 0x7f62b7244f00
+MIOpen(HIP): }
+MIOpen(HIP): Command [miopenBatchNormalizationForwardTraining] ./bin/MIOpenDriver bnorm -n 1 -c 256 -H 768 -W 1 -m 1 -s 1 -r 1
+MIOpen(HIP): miopenStatus_t miopenGetTensorDescriptorSize(miopenTensorDescriptor_t, int *){
+MIOpen(HIP): 	tensorDesc = 1, 256, 768, 1
+MIOpen(HIP): 	size = 0
+MIOpen(HIP): }
+MIOpen(HIP): Info2 [GetKernels] 1 kernels for key: miopenGcnAsmBNFwdTrainSpatial "variant3gx196608gy1xl768yl1ldsgcn12rs1rr1fp160fp321single1n1c256hw768"
+MIOpen(HIP): miopenStatus_t miopenDestroyTensorDescriptor(miopenTensorDescriptor_t){
+MIOpen(HIP): 	tensorDesc = 1, 256, 1, 1
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenDestroyTensorDescriptor(miopenTensorDescriptor_t){
+MIOpen(HIP): 	tensorDesc = 1, 256, 768, 1
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenCreateTensorDescriptor(miopenTensorDescriptor_t *){
+MIOpen(HIP): 	tensorDesc = 0
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenSetTensorDescriptor(miopenTensorDescriptor_t, miopenDataType_t, int, int *, int *){
+MIOpen(HIP): 	tensorDesc = 
+MIOpen(HIP): 	dataType = 1
+MIOpen(HIP): 	nbDims = 4
+MIOpen(HIP): 	dim.values = { 1 256 768 1 }
+MIOpen(HIP): 	stride.values = { 196608 768 1 1 }
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenCreateTensorDescriptor(miopenTensorDescriptor_t *){
+MIOpen(HIP): 	tensorDesc = 0
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenSetTensorDescriptor(miopenTensorDescriptor_t, miopenDataType_t, int, int *, int *){
+MIOpen(HIP): 	tensorDesc = 
+MIOpen(HIP): 	dataType = 1
+MIOpen(HIP): 	nbDims = 4
+MIOpen(HIP): 	dim.values = { 1 256 1 1 }
+MIOpen(HIP): 	stride.values = { 256 1 1 1 }
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenBatchNormalizationForwardTraining(miopenHandle_t, miopenBatchNormMode_t, void *, void *, const miopenTensorDescriptor_t, const void *, const miopenTensorDescriptor_t, void *, const miopenTensorDescriptor_t, void *, void *, double, void *, void *, double, void *, void *){
+MIOpen(HIP): 	handle = stream: 0x7fadb50, device_id: 0
+MIOpen(HIP): 	bn_mode = 1
+MIOpen(HIP): 	xDesc = 1, 256, 768, 1
+MIOpen(HIP): 	x = 0x7f62b7184300
+MIOpen(HIP): 	yDesc = 1, 256, 768, 1
+MIOpen(HIP): 	y = 0x7f62b7184300
+MIOpen(HIP): 	bnScaleBiasMeanVarDesc = 1, 256, 1, 1
+MIOpen(HIP): 	bnScale = 0x7f62b7183900
+MIOpen(HIP): 	bnBias = 0x7f62b7183d00
+MIOpen(HIP): 	expAvgFactor = 1
+MIOpen(HIP): 	resultRunningMean = 0x7f62b7244300
+MIOpen(HIP): 	resultRunningVariance = 0x7f62b7244700
+MIOpen(HIP): 	epsilon = 0.001
+MIOpen(HIP): 	resultSaveMean = 0x7f62b7244b00
+MIOpen(HIP): 	resultSaveInvVariance = 0x7f62b7244f00
+MIOpen(HIP): }
+MIOpen(HIP): Command [miopenBatchNormalizationForwardTraining] ./bin/MIOpenDriver bnorm -n 1 -c 256 -H 768 -W 1 -m 1 -s 1 -r 1
+MIOpen(HIP): miopenStatus_t miopenGetTensorDescriptorSize(miopenTensorDescriptor_t, int *){
+MIOpen(HIP): 	tensorDesc = 1, 256, 768, 1
+MIOpen(HIP): 	size = 0
+MIOpen(HIP): }
+MIOpen(HIP): Info2 [GetKernels] 1 kernels for key: miopenGcnAsmBNFwdTrainSpatial "variant3gx196608gy1xl768yl1ldsgcn12rs1rr1fp160fp321single1n1c256hw768"
+MIOpen(HIP): miopenStatus_t miopenDestroyTensorDescriptor(miopenTensorDescriptor_t){
+MIOpen(HIP): 	tensorDesc = 1, 256, 1, 1
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenDestroyTensorDescriptor(miopenTensorDescriptor_t){
+MIOpen(HIP): 	tensorDesc = 1, 256, 768, 1
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenCreateTensorDescriptor(miopenTensorDescriptor_t *){
+MIOpen(HIP): 	tensorDesc = 0
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenSetTensorDescriptor(miopenTensorDescriptor_t, miopenDataType_t, int, int *, int *){
+MIOpen(HIP): 	tensorDesc = 
+MIOpen(HIP): 	dataType = 1
+MIOpen(HIP): 	nbDims = 4
+MIOpen(HIP): 	dim.values = { 1 256 768 1 }
+MIOpen(HIP): 	stride.values = { 196608 768 1 1 }
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenCreateTensorDescriptor(miopenTensorDescriptor_t *){
+MIOpen(HIP): 	tensorDesc = 0
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenSetTensorDescriptor(miopenTensorDescriptor_t, miopenDataType_t, int, int *, int *){
+MIOpen(HIP): 	tensorDesc = 
+MIOpen(HIP): 	dataType = 1
+MIOpen(HIP): 	nbDims = 4
+MIOpen(HIP): 	dim.values = { 1 256 1 1 }
+MIOpen(HIP): 	stride.values = { 256 1 1 1 }
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenBatchNormalizationForwardTraining(miopenHandle_t, miopenBatchNormMode_t, void *, void *, const miopenTensorDescriptor_t, const void *, const miopenTensorDescriptor_t, void *, const miopenTensorDescriptor_t, void *, void *, double, void *, void *, double, void *, void *){
+MIOpen(HIP): 	handle = stream: 0x7fadb50, device_id: 0
+MIOpen(HIP): 	bn_mode = 1
+MIOpen(HIP): 	xDesc = 1, 256, 768, 1
+MIOpen(HIP): 	x = 0x7f62b7184300
+MIOpen(HIP): 	yDesc = 1, 256, 768, 1
+MIOpen(HIP): 	y = 0x7f62b7184300
+MIOpen(HIP): 	bnScaleBiasMeanVarDesc = 1, 256, 1, 1
+MIOpen(HIP): 	bnScale = 0x7f62b7183900
+MIOpen(HIP): 	bnBias = 0x7f62b7183d00
+MIOpen(HIP): 	expAvgFactor = 1
+MIOpen(HIP): 	resultRunningMean = 0x7f62b7244300
+MIOpen(HIP): 	resultRunningVariance = 0x7f62b7244700
+MIOpen(HIP): 	epsilon = 0.001
+MIOpen(HIP): 	resultSaveMean = 0x7f62b7244b00
+MIOpen(HIP): 	resultSaveInvVariance = 0x7f62b7244f00
+MIOpen(HIP): }
+MIOpen(HIP): Command [miopenBatchNormalizationForwardTraining] ./bin/MIOpenDriver bnorm -n 1 -c 256 -H 768 -W 1 -m 1 -s 1 -r 1
+MIOpen(HIP): miopenStatus_t miopenGetTensorDescriptorSize(miopenTensorDescriptor_t, int *){
+MIOpen(HIP): 	tensorDesc = 1, 256, 768, 1
+MIOpen(HIP): 	size = 0
+MIOpen(HIP): }
+MIOpen(HIP): Info2 [GetKernels] 1 kernels for key: miopenGcnAsmBNFwdTrainSpatial "variant3gx196608gy1xl768yl1ldsgcn12rs1rr1fp160fp321single1n1c256hw768"
+MIOpen(HIP): miopenStatus_t miopenDestroyTensorDescriptor(miopenTensorDescriptor_t){
+MIOpen(HIP): 	tensorDesc = 1, 256, 1, 1
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenDestroyTensorDescriptor(miopenTensorDescriptor_t){
+MIOpen(HIP): 	tensorDesc = 1, 256, 768, 1
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenCreateTensorDescriptor(miopenTensorDescriptor_t *){
+MIOpen(HIP): 	tensorDesc = 0
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenSetTensorDescriptor(miopenTensorDescriptor_t, miopenDataType_t, int, int *, int *){
+MIOpen(HIP): 	tensorDesc = 
+MIOpen(HIP): 	dataType = 1
+MIOpen(HIP): 	nbDims = 4
+MIOpen(HIP): 	dim.values = { 1 256 768 1 }
+MIOpen(HIP): 	stride.values = { 196608 768 1 1 }
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenCreateTensorDescriptor(miopenTensorDescriptor_t *){
+MIOpen(HIP): 	tensorDesc = 0
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenSetTensorDescriptor(miopenTensorDescriptor_t, miopenDataType_t, int, int *, int *){
+MIOpen(HIP): 	tensorDesc = 
+MIOpen(HIP): 	dataType = 1
+MIOpen(HIP): 	nbDims = 4
+MIOpen(HIP): 	dim.values = { 1 256 1 1 }
+MIOpen(HIP): 	stride.values = { 256 1 1 1 }
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenBatchNormalizationForwardTraining(miopenHandle_t, miopenBatchNormMode_t, void *, void *, const miopenTensorDescriptor_t, const void *, const miopenTensorDescriptor_t, void *, const miopenTensorDescriptor_t, void *, void *, double, void *, void *, double, void *, void *){
+MIOpen(HIP): 	handle = stream: 0x7fadb50, device_id: 0
+MIOpen(HIP): 	bn_mode = 1
+MIOpen(HIP): 	xDesc = 1, 256, 768, 1
+MIOpen(HIP): 	x = 0x7f62b7184300
+MIOpen(HIP): 	yDesc = 1, 256, 768, 1
+MIOpen(HIP): 	y = 0x7f62b7184300
+MIOpen(HIP): 	bnScaleBiasMeanVarDesc = 1, 256, 1, 1
+MIOpen(HIP): 	bnScale = 0x7f62b7183900
+MIOpen(HIP): 	bnBias = 0x7f62b7183d00
+MIOpen(HIP): 	expAvgFactor = 1
+MIOpen(HIP): 	resultRunningMean = 0x7f62b7244300
+MIOpen(HIP): 	resultRunningVariance = 0x7f62b7244700
+MIOpen(HIP): 	epsilon = 0.001
+MIOpen(HIP): 	resultSaveMean = 0x7f62b7244b00
+MIOpen(HIP): 	resultSaveInvVariance = 0x7f62b7244f00
+MIOpen(HIP): }
+MIOpen(HIP): Command [miopenBatchNormalizationForwardTraining] ./bin/MIOpenDriver bnorm -n 1 -c 256 -H 768 -W 1 -m 1 -s 1 -r 1
+MIOpen(HIP): miopenStatus_t miopenGetTensorDescriptorSize(miopenTensorDescriptor_t, int *){
+MIOpen(HIP): 	tensorDesc = 1, 256, 768, 1
+MIOpen(HIP): 	size = 0
+MIOpen(HIP): }
+MIOpen(HIP): Info2 [GetKernels] 1 kernels for key: miopenGcnAsmBNFwdTrainSpatial "variant3gx196608gy1xl768yl1ldsgcn12rs1rr1fp160fp321single1n1c256hw768"
+MIOpen(HIP): miopenStatus_t miopenDestroyTensorDescriptor(miopenTensorDescriptor_t){
+MIOpen(HIP): 	tensorDesc = 1, 256, 1, 1
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenDestroyTensorDescriptor(miopenTensorDescriptor_t){
+MIOpen(HIP): 	tensorDesc = 1, 256, 768, 1
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenCreateTensorDescriptor(miopenTensorDescriptor_t *){
+MIOpen(HIP): 	tensorDesc = 0
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenSetTensorDescriptor(miopenTensorDescriptor_t, miopenDataType_t, int, int *, int *){
+MIOpen(HIP): 	tensorDesc = 
+MIOpen(HIP): 	dataType = 1
+MIOpen(HIP): 	nbDims = 4
+MIOpen(HIP): 	dim.values = { 1 256 768 1 }
+MIOpen(HIP): 	stride.values = { 196608 768 1 1 }
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenCreateTensorDescriptor(miopenTensorDescriptor_t *){
+MIOpen(HIP): 	tensorDesc = 0
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenSetTensorDescriptor(miopenTensorDescriptor_t, miopenDataType_t, int, int *, int *){
+MIOpen(HIP): 	tensorDesc = 
+MIOpen(HIP): 	dataType = 1
+MIOpen(HIP): 	nbDims = 4
+MIOpen(HIP): 	dim.values = { 1 256 1 1 }
+MIOpen(HIP): 	stride.values = { 256 1 1 1 }
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenBatchNormalizationForwardTraining(miopenHandle_t, miopenBatchNormMode_t, void *, void *, const miopenTensorDescriptor_t, const void *, const miopenTensorDescriptor_t, void *, const miopenTensorDescriptor_t, void *, void *, double, void *, void *, double, void *, void *){
+MIOpen(HIP): 	handle = stream: 0x7fadb50, device_id: 0
+MIOpen(HIP): 	bn_mode = 1
+MIOpen(HIP): 	xDesc = 1, 256, 768, 1
+MIOpen(HIP): 	x = 0x7f62b7184300
+MIOpen(HIP): 	yDesc = 1, 256, 768, 1
+MIOpen(HIP): 	y = 0x7f62b7184300
+MIOpen(HIP): 	bnScaleBiasMeanVarDesc = 1, 256, 1, 1
+MIOpen(HIP): 	bnScale = 0x7f62b7183900
+MIOpen(HIP): 	bnBias = 0x7f62b7183d00
+MIOpen(HIP): 	expAvgFactor = 1
+MIOpen(HIP): 	resultRunningMean = 0x7f62b7244300
+MIOpen(HIP): 	resultRunningVariance = 0x7f62b7244700
+MIOpen(HIP): 	epsilon = 0.001
+MIOpen(HIP): 	resultSaveMean = 0x7f62b7244b00
+MIOpen(HIP): 	resultSaveInvVariance = 0x7f62b7244f00
+MIOpen(HIP): }
+MIOpen(HIP): Command [miopenBatchNormalizationForwardTraining] ./bin/MIOpenDriver bnorm -n 1 -c 256 -H 768 -W 1 -m 1 -s 1 -r 1
+MIOpen(HIP): miopenStatus_t miopenGetTensorDescriptorSize(miopenTensorDescriptor_t, int *){
+MIOpen(HIP): 	tensorDesc = 1, 256, 768, 1
+MIOpen(HIP): 	size = 0
+MIOpen(HIP): }
+MIOpen(HIP): Info2 [GetKernels] 1 kernels for key: miopenGcnAsmBNFwdTrainSpatial "variant3gx196608gy1xl768yl1ldsgcn12rs1rr1fp160fp321single1n1c256hw768"
+MIOpen(HIP): miopenStatus_t miopenDestroyTensorDescriptor(miopenTensorDescriptor_t){
+MIOpen(HIP): 	tensorDesc = 1, 256, 1, 1
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenDestroyTensorDescriptor(miopenTensorDescriptor_t){
+MIOpen(HIP): 	tensorDesc = 1, 256, 768, 1
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenCreateTensorDescriptor(miopenTensorDescriptor_t *){
+MIOpen(HIP): 	tensorDesc = 0
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenSetTensorDescriptor(miopenTensorDescriptor_t, miopenDataType_t, int, int *, int *){
+MIOpen(HIP): 	tensorDesc = 
+MIOpen(HIP): 	dataType = 1
+MIOpen(HIP): 	nbDims = 4
+MIOpen(HIP): 	dim.values = { 1 256 768 1 }
+MIOpen(HIP): 	stride.values = { 196608 768 1 1 }
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenCreateTensorDescriptor(miopenTensorDescriptor_t *){
+MIOpen(HIP): 	tensorDesc = 0
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenSetTensorDescriptor(miopenTensorDescriptor_t, miopenDataType_t, int, int *, int *){
+MIOpen(HIP): 	tensorDesc = 
+MIOpen(HIP): 	dataType = 1
+MIOpen(HIP): 	nbDims = 4
+MIOpen(HIP): 	dim.values = { 1 256 1 1 }
+MIOpen(HIP): 	stride.values = { 256 1 1 1 }
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenBatchNormalizationForwardTraining(miopenHandle_t, miopenBatchNormMode_t, void *, void *, const miopenTensorDescriptor_t, const void *, const miopenTensorDescriptor_t, void *, const miopenTensorDescriptor_t, void *, void *, double, void *, void *, double, void *, void *){
+MIOpen(HIP): 	handle = stream: 0x7fadb50, device_id: 0
+MIOpen(HIP): 	bn_mode = 1
+MIOpen(HIP): 	xDesc = 1, 256, 768, 1
+MIOpen(HIP): 	x = 0x7f62b7184300
+MIOpen(HIP): 	yDesc = 1, 256, 768, 1
+MIOpen(HIP): 	y = 0x7f62b7184300
+MIOpen(HIP): 	bnScaleBiasMeanVarDesc = 1, 256, 1, 1
+MIOpen(HIP): 	bnScale = 0x7f62b7183900
+MIOpen(HIP): 	bnBias = 0x7f62b7183d00
+MIOpen(HIP): 	expAvgFactor = 1
+MIOpen(HIP): 	resultRunningMean = 0x7f62b7244300
+MIOpen(HIP): 	resultRunningVariance = 0x7f62b7244700
+MIOpen(HIP): 	epsilon = 0.001
+MIOpen(HIP): 	resultSaveMean = 0x7f62b7244b00
+MIOpen(HIP): 	resultSaveInvVariance = 0x7f62b7244f00
+MIOpen(HIP): }
+MIOpen(HIP): Command [miopenBatchNormalizationForwardTraining] ./bin/MIOpenDriver bnorm -n 1 -c 256 -H 768 -W 1 -m 1 -s 1 -r 1
+MIOpen(HIP): miopenStatus_t miopenGetTensorDescriptorSize(miopenTensorDescriptor_t, int *){
+MIOpen(HIP): 	tensorDesc = 1, 256, 768, 1
+MIOpen(HIP): 	size = 0
+MIOpen(HIP): }
+MIOpen(HIP): Info2 [GetKernels] 1 kernels for key: miopenGcnAsmBNFwdTrainSpatial "variant3gx196608gy1xl768yl1ldsgcn12rs1rr1fp160fp321single1n1c256hw768"
+MIOpen(HIP): miopenStatus_t miopenDestroyTensorDescriptor(miopenTensorDescriptor_t){
+MIOpen(HIP): 	tensorDesc = 1, 256, 1, 1
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenDestroyTensorDescriptor(miopenTensorDescriptor_t){
+MIOpen(HIP): 	tensorDesc = 1, 256, 768, 1
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenCreateTensorDescriptor(miopenTensorDescriptor_t *){
+MIOpen(HIP): 	tensorDesc = 0
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenSetTensorDescriptor(miopenTensorDescriptor_t, miopenDataType_t, int, int *, int *){
+MIOpen(HIP): 	tensorDesc = 
+MIOpen(HIP): 	dataType = 1
+MIOpen(HIP): 	nbDims = 4
+MIOpen(HIP): 	dim.values = { 1 256 768 1 }
+MIOpen(HIP): 	stride.values = { 196608 768 1 1 }
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenCreateTensorDescriptor(miopenTensorDescriptor_t *){
+MIOpen(HIP): 	tensorDesc = 0
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenSetTensorDescriptor(miopenTensorDescriptor_t, miopenDataType_t, int, int *, int *){
+MIOpen(HIP): 	tensorDesc = 
+MIOpen(HIP): 	dataType = 1
+MIOpen(HIP): 	nbDims = 4
+MIOpen(HIP): 	dim.values = { 1 256 1 1 }
+MIOpen(HIP): 	stride.values = { 256 1 1 1 }
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenBatchNormalizationForwardTraining(miopenHandle_t, miopenBatchNormMode_t, void *, void *, const miopenTensorDescriptor_t, const void *, const miopenTensorDescriptor_t, void *, const miopenTensorDescriptor_t, void *, void *, double, void *, void *, double, void *, void *){
+MIOpen(HIP): 	handle = stream: 0x7fadb50, device_id: 0
+MIOpen(HIP): 	bn_mode = 1
+MIOpen(HIP): 	xDesc = 1, 256, 768, 1
+MIOpen(HIP): 	x = 0x7f62b7184300
+MIOpen(HIP): 	yDesc = 1, 256, 768, 1
+MIOpen(HIP): 	y = 0x7f62b7184300
+MIOpen(HIP): 	bnScaleBiasMeanVarDesc = 1, 256, 1, 1
+MIOpen(HIP): 	bnScale = 0x7f62b7183900
+MIOpen(HIP): 	bnBias = 0x7f62b7183d00
+MIOpen(HIP): 	expAvgFactor = 1
+MIOpen(HIP): 	resultRunningMean = 0x7f62b7244300
+MIOpen(HIP): 	resultRunningVariance = 0x7f62b7244700
+MIOpen(HIP): 	epsilon = 0.001
+MIOpen(HIP): 	resultSaveMean = 0x7f62b7244b00
+MIOpen(HIP): 	resultSaveInvVariance = 0x7f62b7244f00
+MIOpen(HIP): }
+MIOpen(HIP): Command [miopenBatchNormalizationForwardTraining] ./bin/MIOpenDriver bnorm -n 1 -c 256 -H 768 -W 1 -m 1 -s 1 -r 1
+MIOpen(HIP): miopenStatus_t miopenGetTensorDescriptorSize(miopenTensorDescriptor_t, int *){
+MIOpen(HIP): 	tensorDesc = 1, 256, 768, 1
+MIOpen(HIP): 	size = 0
+MIOpen(HIP): }
+MIOpen(HIP): Info2 [GetKernels] 1 kernels for key: miopenGcnAsmBNFwdTrainSpatial "variant3gx196608gy1xl768yl1ldsgcn12rs1rr1fp160fp321single1n1c256hw768"
+MIOpen(HIP): miopenStatus_t miopenDestroyTensorDescriptor(miopenTensorDescriptor_t){
+MIOpen(HIP): 	tensorDesc = 1, 256, 1, 1
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenDestroyTensorDescriptor(miopenTensorDescriptor_t){
+MIOpen(HIP): 	tensorDesc = 1, 256, 768, 1
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenCreateTensorDescriptor(miopenTensorDescriptor_t *){
+MIOpen(HIP): 	tensorDesc = 0
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenSetTensorDescriptor(miopenTensorDescriptor_t, miopenDataType_t, int, int *, int *){
+MIOpen(HIP): 	tensorDesc = 
+MIOpen(HIP): 	dataType = 1
+MIOpen(HIP): 	nbDims = 4
+MIOpen(HIP): 	dim.values = { 1 256 768 1 }
+MIOpen(HIP): 	stride.values = { 196608 768 1 1 }
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenCreateTensorDescriptor(miopenTensorDescriptor_t *){
+MIOpen(HIP): 	tensorDesc = 0
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenSetTensorDescriptor(miopenTensorDescriptor_t, miopenDataType_t, int, int *, int *){
+MIOpen(HIP): 	tensorDesc = 
+MIOpen(HIP): 	dataType = 1
+MIOpen(HIP): 	nbDims = 4
+MIOpen(HIP): 	dim.values = { 1 256 1 1 }
+MIOpen(HIP): 	stride.values = { 256 1 1 1 }
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenBatchNormalizationForwardTraining(miopenHandle_t, miopenBatchNormMode_t, void *, void *, const miopenTensorDescriptor_t, const void *, const miopenTensorDescriptor_t, void *, const miopenTensorDescriptor_t, void *, void *, double, void *, void *, double, void *, void *){
+MIOpen(HIP): 	handle = stream: 0x7fadb50, device_id: 0
+MIOpen(HIP): 	bn_mode = 1
+MIOpen(HIP): 	xDesc = 1, 256, 768, 1
+MIOpen(HIP): 	x = 0x7f62b7184300
+MIOpen(HIP): 	yDesc = 1, 256, 768, 1
+MIOpen(HIP): 	y = 0x7f62b7184300
+MIOpen(HIP): 	bnScaleBiasMeanVarDesc = 1, 256, 1, 1
+MIOpen(HIP): 	bnScale = 0x7f62b7183900
+MIOpen(HIP): 	bnBias = 0x7f62b7183d00
+MIOpen(HIP): 	expAvgFactor = 1
+MIOpen(HIP): 	resultRunningMean = 0x7f62b7244300
+MIOpen(HIP): 	resultRunningVariance = 0x7f62b7244700
+MIOpen(HIP): 	epsilon = 0.001
+MIOpen(HIP): 	resultSaveMean = 0x7f62b7244b00
+MIOpen(HIP): 	resultSaveInvVariance = 0x7f62b7244f00
+MIOpen(HIP): }
+MIOpen(HIP): Command [miopenBatchNormalizationForwardTraining] ./bin/MIOpenDriver bnorm -n 1 -c 256 -H 768 -W 1 -m 1 -s 1 -r 1
+MIOpen(HIP): miopenStatus_t miopenGetTensorDescriptorSize(miopenTensorDescriptor_t, int *){
+MIOpen(HIP): 	tensorDesc = 1, 256, 768, 1
+MIOpen(HIP): 	size = 0
+MIOpen(HIP): }
+MIOpen(HIP): Info2 [GetKernels] 1 kernels for key: miopenGcnAsmBNFwdTrainSpatial "variant3gx196608gy1xl768yl1ldsgcn12rs1rr1fp160fp321single1n1c256hw768"
+MIOpen(HIP): miopenStatus_t miopenDestroyTensorDescriptor(miopenTensorDescriptor_t){
+MIOpen(HIP): 	tensorDesc = 1, 256, 1, 1
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenDestroyTensorDescriptor(miopenTensorDescriptor_t){
+MIOpen(HIP): 	tensorDesc = 1, 256, 768, 1
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenCreateTensorDescriptor(miopenTensorDescriptor_t *){
+MIOpen(HIP): 	tensorDesc = 0
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenSetTensorDescriptor(miopenTensorDescriptor_t, miopenDataType_t, int, int *, int *){
+MIOpen(HIP): 	tensorDesc = 
+MIOpen(HIP): 	dataType = 1
+MIOpen(HIP): 	nbDims = 4
+MIOpen(HIP): 	dim.values = { 1 256 768 1 }
+MIOpen(HIP): 	stride.values = { 196608 768 1 1 }
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenCreateTensorDescriptor(miopenTensorDescriptor_t *){
+MIOpen(HIP): 	tensorDesc = 0
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenSetTensorDescriptor(miopenTensorDescriptor_t, miopenDataType_t, int, int *, int *){
+MIOpen(HIP): 	tensorDesc = 
+MIOpen(HIP): 	dataType = 1
+MIOpen(HIP): 	nbDims = 4
+MIOpen(HIP): 	dim.values = { 1 256 1 1 }
+MIOpen(HIP): 	stride.values = { 256 1 1 1 }
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenBatchNormalizationForwardTraining(miopenHandle_t, miopenBatchNormMode_t, void *, void *, const miopenTensorDescriptor_t, const void *, const miopenTensorDescriptor_t, void *, const miopenTensorDescriptor_t, void *, void *, double, void *, void *, double, void *, void *){
+MIOpen(HIP): 	handle = stream: 0x7fadb50, device_id: 0
+MIOpen(HIP): 	bn_mode = 1
+MIOpen(HIP): 	xDesc = 1, 256, 768, 1
+MIOpen(HIP): 	x = 0x7f62b7184300
+MIOpen(HIP): 	yDesc = 1, 256, 768, 1
+MIOpen(HIP): 	y = 0x7f62b7184300
+MIOpen(HIP): 	bnScaleBiasMeanVarDesc = 1, 256, 1, 1
+MIOpen(HIP): 	bnScale = 0x7f62b7183900
+MIOpen(HIP): 	bnBias = 0x7f62b7183d00
+MIOpen(HIP): 	expAvgFactor = 1
+MIOpen(HIP): 	resultRunningMean = 0x7f62b7244300
+MIOpen(HIP): 	resultRunningVariance = 0x7f62b7244700
+MIOpen(HIP): 	epsilon = 0.001
+MIOpen(HIP): 	resultSaveMean = 0x7f62b7244b00
+MIOpen(HIP): 	resultSaveInvVariance = 0x7f62b7244f00
+MIOpen(HIP): }
+MIOpen(HIP): Command [miopenBatchNormalizationForwardTraining] ./bin/MIOpenDriver bnorm -n 1 -c 256 -H 768 -W 1 -m 1 -s 1 -r 1
+MIOpen(HIP): miopenStatus_t miopenGetTensorDescriptorSize(miopenTensorDescriptor_t, int *){
+MIOpen(HIP): 	tensorDesc = 1, 256, 768, 1
+MIOpen(HIP): 	size = 0
+MIOpen(HIP): }
+MIOpen(HIP): Info2 [GetKernels] 1 kernels for key: miopenGcnAsmBNFwdTrainSpatial "variant3gx196608gy1xl768yl1ldsgcn12rs1rr1fp160fp321single1n1c256hw768"
+MIOpen(HIP): miopenStatus_t miopenDestroyTensorDescriptor(miopenTensorDescriptor_t){
+MIOpen(HIP): 	tensorDesc = 1, 256, 1, 1
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenDestroyTensorDescriptor(miopenTensorDescriptor_t){
+MIOpen(HIP): 	tensorDesc = 1, 256, 768, 1
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenCreateTensorDescriptor(miopenTensorDescriptor_t *){
+MIOpen(HIP): 	tensorDesc = 0
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenSetTensorDescriptor(miopenTensorDescriptor_t, miopenDataType_t, int, int *, int *){
+MIOpen(HIP): 	tensorDesc = 
+MIOpen(HIP): 	dataType = 1
+MIOpen(HIP): 	nbDims = 4
+MIOpen(HIP): 	dim.values = { 1 256 768 1 }
+MIOpen(HIP): 	stride.values = { 196608 768 1 1 }
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenCreateTensorDescriptor(miopenTensorDescriptor_t *){
+MIOpen(HIP): 	tensorDesc = 0
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenSetTensorDescriptor(miopenTensorDescriptor_t, miopenDataType_t, int, int *, int *){
+MIOpen(HIP): 	tensorDesc = 
+MIOpen(HIP): 	dataType = 1
+MIOpen(HIP): 	nbDims = 4
+MIOpen(HIP): 	dim.values = { 1 256 1 1 }
+MIOpen(HIP): 	stride.values = { 256 1 1 1 }
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenBatchNormalizationForwardTraining(miopenHandle_t, miopenBatchNormMode_t, void *, void *, const miopenTensorDescriptor_t, const void *, const miopenTensorDescriptor_t, void *, const miopenTensorDescriptor_t, void *, void *, double, void *, void *, double, void *, void *){
+MIOpen(HIP): 	handle = stream: 0x7fadb50, device_id: 0
+MIOpen(HIP): 	bn_mode = 1
+MIOpen(HIP): 	xDesc = 1, 256, 768, 1
+MIOpen(HIP): 	x = 0x7f62b7184300
+MIOpen(HIP): 	yDesc = 1, 256, 768, 1
+MIOpen(HIP): 	y = 0x7f62b7184300
+MIOpen(HIP): 	bnScaleBiasMeanVarDesc = 1, 256, 1, 1
+MIOpen(HIP): 	bnScale = 0x7f62b7183900
+MIOpen(HIP): 	bnBias = 0x7f62b7183d00
+MIOpen(HIP): 	expAvgFactor = 1
+MIOpen(HIP): 	resultRunningMean = 0x7f62b7244300
+MIOpen(HIP): 	resultRunningVariance = 0x7f62b7244700
+MIOpen(HIP): 	epsilon = 0.001
+MIOpen(HIP): 	resultSaveMean = 0x7f62b7244b00
+MIOpen(HIP): 	resultSaveInvVariance = 0x7f62b7244f00
+MIOpen(HIP): }
+MIOpen(HIP): Command [miopenBatchNormalizationForwardTraining] ./bin/MIOpenDriver bnorm -n 1 -c 256 -H 768 -W 1 -m 1 -s 1 -r 1
+MIOpen(HIP): miopenStatus_t miopenGetTensorDescriptorSize(miopenTensorDescriptor_t, int *){
+MIOpen(HIP): 	tensorDesc = 1, 256, 768, 1
+MIOpen(HIP): 	size = 0
+MIOpen(HIP): }
+MIOpen(HIP): Info2 [GetKernels] 1 kernels for key: miopenGcnAsmBNFwdTrainSpatial "variant3gx196608gy1xl768yl1ldsgcn12rs1rr1fp160fp321single1n1c256hw768"
+MIOpen(HIP): miopenStatus_t miopenDestroyTensorDescriptor(miopenTensorDescriptor_t){
+MIOpen(HIP): 	tensorDesc = 1, 256, 1, 1
+MIOpen(HIP): }
+MIOpen(HIP): miopenStatus_t miopenDestroyTensorDescriptor(miopenTensorDescriptor_t){
+MIOpen(HIP): 	tensorDesc = 1, 256, 768, 1
+MIOpen(HIP): }
+INFO:tensorflow:Inference Time : 18.14868s
+I0505 13:01:44.908403 140081799423744 evaluation.py:273] Inference Time : 18.14868s
+INFO:tensorflow:Finished evaluation at 2020-05-05-13:01:44
+I0505 13:01:44.908891 140081799423744 evaluation.py:276] Finished evaluation at 2020-05-05-13:01:44
+INFO:tensorflow:Saving dict for global step 0: eval_accuracy = 0.0, eval_loss = 1.0975535, global_step = 0, loss = 1.0975535
+I0505 13:01:44.909142 140081799423744 estimator.py:2053] Saving dict for global step 0: eval_accuracy = 0.0, eval_loss = 1.0975535, global_step = 0, loss = 1.0975535
+INFO:tensorflow:evaluation_loop marked as finished
+I0505 13:01:45.709924 140081799423744 error_handling.py:108] evaluation_loop marked as finished
+INFO:tensorflow:***** Eval results *****
+I0505 13:01:45.710277 140081799423744 run_classifier.py:932] ***** Eval results *****
+INFO:tensorflow:  eval_accuracy = 0.0
+I0505 13:01:45.710428 140081799423744 run_classifier.py:934]   eval_accuracy = 0.0
+INFO:tensorflow:  eval_loss = 1.0975535
+I0505 13:01:45.710696 140081799423744 run_classifier.py:934]   eval_loss = 1.0975535
+INFO:tensorflow:  global_step = 0
+I0505 13:01:45.710861 140081799423744 run_classifier.py:934]   global_step = 0
+INFO:tensorflow:  loss = 1.0975535
+I0505 13:01:45.711010 140081799423744 run_classifier.py:934]   loss = 1.0975535
