@@ -26,7 +26,7 @@ class MIopenMulTestConstant(tf.test.TestCase):
         input1  =  tf.constant([50.,5.,5.,5.,0.],dtype = np.float16)
         t_input1   = tf.convert_to_tensor(input1, np.float16)
 
-        mul = tf.constant([0],dtype = np.int32)
+        mul = tf.constant([1],dtype = np.int32)
         result = miopen_elt(t_input0,t_input1,mul)
         self.assertAllEqual(result, [50.,10.,15.,20.,0.])
 
@@ -40,7 +40,7 @@ class MIopenMulTestRandom(tf.test.TestCase):
         input1 = tf.random.uniform(shape=[65536], minval=0, maxval=64, dtype = np.float16)
         t_input1   = tf.convert_to_tensor(input1, np.float16)
 
-        mul = tf.constant([0],dtype = np.int32)
+        mul = tf.constant([1],dtype = np.int32)
         result_custom = miopen_elt(t_input0, t_input1,mul)
         result_math_add = tf.math.multiply(t_input0, t_input1)
 
@@ -50,20 +50,16 @@ class MIopenMulTestFile(tf.test.TestCase):
 
   def test(self):
       with self.test_session():
-        cuda_op = tf.load_op_library('./fim_mul.so')
-
         input0  =  np.fromfile("../test_vectors/load/elt_mul/input0_128KB.dat", dtype = np.float16)
         t_input0   = tf.convert_to_tensor(input0, np.float16)
 
         input1  =  np.fromfile("../test_vectors/load/elt_mul/input1_128KB.dat", dtype = np.float16)
         t_input1   = tf.convert_to_tensor(input1, np.float16)
 
-        mul = tf.constant([0],dtype = np.int32)
+        mul = tf.constant([1],dtype = np.int32)
         result = miopen_elt(t_input0,t_input1,mul)
         golden  =  np.fromfile("../test_vectors/load/elt_mul/output_128KB.dat", dtype = np.float16)
         self.assertAllEqual(result, golden)
 
 if __name__ == '__main__':
   tf.test.main()
-
-
