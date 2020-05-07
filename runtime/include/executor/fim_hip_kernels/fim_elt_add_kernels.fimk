@@ -41,6 +41,9 @@ __global__ void elt_add_fim(uint8_t* fim_data, uint8_t* fim_ctr, uint8_t* output
     g_fba = (uint64_t)fim_ctr;
     g_fmtd16 = fmtd;
     m_width = mt_width;
+    row_addr = 0x17ff;
+#else
+    row_addr = 0x27ff;
 #endif
     FimBlockInfo* fbi = &vega20_fbi;
     int num_blk = fbi->num_fim_blocks;
@@ -77,16 +80,16 @@ __global__ void elt_add_fim(uint8_t* fim_data, uint8_t* fim_ctr, uint8_t* output
     B_CMD(0);
 
     if (hipThreadIdx_x < 2) {
-        addr = addr_gen(hipBlockIdx_x, 0, 0, 0, 0x17ff, 0x1f);
+        addr = addr_gen(hipBlockIdx_x, 0, 0, 0, row_addr, 0x1f);
         W_CMD(&fim_ctr[addr + offset]);
 
-        addr = addr_gen(hipBlockIdx_x, 0, 0, 1, 0x17ff, 0x1f);
+        addr = addr_gen(hipBlockIdx_x, 0, 0, 1, row_addr, 0x1f);
         W_CMD(&fim_ctr[addr + offset]);
 
-        addr = addr_gen(hipBlockIdx_x, 0, 2, 0, 0x17ff, 0x1f);
+        addr = addr_gen(hipBlockIdx_x, 0, 2, 0, row_addr, 0x1f);
         W_CMD(&fim_ctr[addr + offset]);
 
-        addr = addr_gen(hipBlockIdx_x, 0, 2, 1, 0x17ff, 0x1f);
+        addr = addr_gen(hipBlockIdx_x, 0, 2, 1, row_addr, 0x1f);
         W_CMD(&fim_ctr[addr + offset]);
     }
     B_CMD(0);
