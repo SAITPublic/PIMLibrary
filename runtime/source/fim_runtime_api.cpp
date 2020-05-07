@@ -20,7 +20,7 @@ int FimInitialize(FimRuntimeType rt_type, FimPrecision precision)
         log_initialized = true;
     }
 
-    DLOG(INFO) << "called";
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     FIM_PROFILE_TICK(Initialize);
     int ret = 0;
 
@@ -28,12 +28,13 @@ int FimInitialize(FimRuntimeType rt_type, FimPrecision precision)
     ret = fim_runtime->initialize();
     FIM_PROFILE_TOCK(Initialize);
 
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
 
 int FimDeinitialize(void)
 {
-    DLOG(INFO) << "called";
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     FIM_PROFILE_TICK(Deinitialize);
     int ret = 0;
 
@@ -44,17 +45,19 @@ int FimDeinitialize(void)
     }
     FIM_PROFILE_TOCK(Deinitialize);
 
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
 
 FimBo* FimCreateBo(int w, int h, int c, int n, FimPrecision precision, FimMemType mem_type)
 {
-    DLOG(INFO) << "called";
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     FIM_PROFILE_TICK(CreateBo);
     int ret = 0;
 
     if (fim_runtime == nullptr) {
         DLOG(ERROR) << "FimRuntime is not initialized";
+        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
         return nullptr;
     }
 
@@ -71,10 +74,12 @@ FimBo* FimCreateBo(int w, int h, int c, int n, FimPrecision precision, FimMemTyp
     ret = fim_runtime->alloc_memory(fim_bo);
     if (ret != 0) {
         DLOG(ERROR) << "Fail to alloc memory";
+        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
         return nullptr;
     }
     FIM_PROFILE_TOCK(CreateBo);
 
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return fim_bo;
 }
 
@@ -129,22 +134,25 @@ FimDesc* FimCreateDesc(int n, int c, int h, int w, FimPrecision precision)
 
 int FimDestroyBo(FimBo* fim_bo)
 {
-    DLOG(INFO) << "called";
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     FIM_PROFILE_TICK(DestroyBo);
     int ret = 0;
 
     if (fim_runtime == nullptr) {
         DLOG(ERROR) << "FimRuntime is not initialized";
+        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
         return -1;
     }
     ret = fim_runtime->free_memory(fim_bo);
     if (ret != 0) {
         DLOG(ERROR) << "Fail to alloc memory";
+        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
         return -1;
     }
     delete fim_bo;
     FIM_PROFILE_TOCK(DestroyBo);
 
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
 
@@ -166,41 +174,50 @@ int FimDestroyDesc(FimDesc* fim_desc)
 
 int FimAllocMemory(void** ptr, size_t size, FimMemType mem_type)
 {
-    DLOG(INFO) << "called";
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     FIM_PROFILE_TICK(AllocMemory);
     int ret = 0;
 
     if (fim_runtime == nullptr) {
+        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
         return -1;
     }
     ret = fim_runtime->alloc_memory(ptr, size, mem_type);
     FIM_PROFILE_TOCK(AllocMemory);
 
-    if (ptr == nullptr) return -1;
+    if (ptr == nullptr) {
+        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+        return -1;
+    }
 
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
 
 int FimAllocMemory(FimBo* fim_bo)
 {
-    DLOG(INFO) << "called";
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     FIM_PROFILE_TICK(AllocMemory);
     int ret = 0;
 
     if (fim_runtime == nullptr) {
+        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
         return -1;
     }
     ret = fim_runtime->alloc_memory(fim_bo);
     FIM_PROFILE_TOCK(AllocMemory);
 
-    if (fim_bo->data == nullptr) return -1;
-
+    if (fim_bo->data == nullptr) {
+        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+        return -1;
+    }
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
 
 int FimFreeMemory(void* ptr, FimMemType mem_type)
 {
-    DLOG(INFO) << "called";
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     FIM_PROFILE_TICK(FreeMemory);
     int ret = 0;
 
@@ -215,191 +232,216 @@ int FimFreeMemory(void* ptr, FimMemType mem_type)
 
 int FimFreeMemory(FimBo* fim_bo)
 {
-    DLOG(INFO) << "called";
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     FIM_PROFILE_TICK(FreeMemory);
     int ret = 0;
 
     if (fim_runtime == nullptr) {
+        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
         return -1;
     }
     ret = fim_runtime->free_memory(fim_bo);
     FIM_PROFILE_TOCK(FreeMemory);
 
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
 
 int FimConvertDataLayout(void* dst, void* src, size_t size, FimOpType op_type)
 {
-    DLOG(INFO) << "called";
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     FIM_PROFILE_TICK(ConvertDataLayout);
     int ret = 0;
 
     if (fim_runtime == nullptr) {
+        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
         return -1;
     }
     ret = fim_runtime->convert_data_layout(dst, src, size, op_type);
     FIM_PROFILE_TOCK(ConvertDataLayout);
 
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
 
 int FimConvertDataLayout(FimBo* dst, FimBo* src, FimOpType op_type)
 {
-    DLOG(INFO) << "called";
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     FIM_PROFILE_TICK(ConvertDataLayout);
     int ret = 0;
 
     if (fim_runtime == nullptr) {
+        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
         return -1;
     }
     ret = fim_runtime->convert_data_layout(dst, src, op_type);
     FIM_PROFILE_TOCK(ConvertDataLayout);
 
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
 
 int FimConvertDataLayout(FimBo* dst, FimBo* src0, FimBo* src1, FimOpType op_type)
 {
-    DLOG(INFO) << "called";
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     FIM_PROFILE_TICK(ConvertDataLayout);
     int ret = 0;
 
     if (fim_runtime == nullptr) {
+        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
         return -1;
     }
     ret = fim_runtime->convert_data_layout(dst, src0, src1, op_type);
     FIM_PROFILE_TOCK(ConvertDataLayout);
 
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
 
 int FimCopyMemory(void* dst, void* src, size_t size, FimMemCpyType cpy_type)
 {
-    DLOG(INFO) << "called";
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     FIM_PROFILE_TICK(CopyMemory);
     int ret = 0;
 
     if (fim_runtime == nullptr) {
+        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
         return -1;
     }
     ret = fim_runtime->copy_memory(dst, src, size, cpy_type);
     FIM_PROFILE_TOCK(CopyMemory);
 
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
 
 int FimCopyMemory(FimBo* dst, FimBo* src, FimMemCpyType cpy_type)
 {
-    DLOG(INFO) << "called";
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     FIM_PROFILE_TICK(CopyMemory);
     int ret = 0;
 
     if (fim_runtime == nullptr) {
+        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
         return -1;
     }
     ret = fim_runtime->copy_memory(dst, src, cpy_type);
     FIM_PROFILE_TOCK(CopyMemory);
 
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
 
 int FimExecute(void* output, void* operand0, void* operand1, size_t size, FimOpType op_type)
 {
-    DLOG(INFO) << "called";
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     FIM_PROFILE_TICK(Execute);
     int ret = 0;
 
     if (fim_runtime == nullptr) {
+        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
         return -1;
     }
     ret = fim_runtime->execute(output, operand0, operand1, size, op_type);
     FIM_PROFILE_TOCK(Execute);
 
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
 
 int FimExecute(FimBo* output, FimBo* operand0, FimBo* operand1, FimOpType op_type)
 {
-    DLOG(INFO) << "called";
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     FIM_PROFILE_TICK(Execute);
     int ret = 0;
 
     if (fim_runtime == nullptr) {
+        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
         return -1;
     }
     ret = fim_runtime->execute(output, operand0, operand1, op_type);
     FIM_PROFILE_TOCK(Execute);
 
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
 
 int FimExecute(FimBo* output, FimBo* fim_data, FimOpType op_type)
 {
-    DLOG(INFO) << "called";
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     FIM_PROFILE_TICK(Execute);
     int ret = 0;
 
     if (fim_runtime == nullptr) {
+        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
         return -1;
     }
     ret = fim_runtime->execute(output, fim_data, op_type);
     FIM_PROFILE_TOCK(Execute);
 
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
 
 int FimExecuteAdd(FimBo* output, FimBo* fim_data)
 {
-    DLOG(INFO) << "called";
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     FIM_PROFILE_TICK(ExecuteAdd);
     int ret = 0;
 
     if (fim_runtime == nullptr) {
+        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
         return -1;
     }
     ret = fim_runtime->execute_add(output, fim_data);
     FIM_PROFILE_TOCK(ExecuteAdd);
 
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
 
 int FimExecuteMul(FimBo* output, FimBo* fim_data)
 {
-    DLOG(INFO) << "called";
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     FIM_PROFILE_TICK(ExecuteMul);
     int ret = 0;
 
     if (fim_runtime == nullptr) {
+        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
         return -1;
     }
     ret = fim_runtime->execute_mul(output, fim_data);
     FIM_PROFILE_TOCK(ExecuteMul);
 
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
 
 int FimExecuteGEMV(FimBo* output, FimBo* operand0, FimBo* operand1)
 {
-    DLOG(INFO) << "called";
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     FIM_PROFILE_TICK(ExecuteGEMV);
     int ret = 0;
 
     if (fim_runtime == nullptr) {
+        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
         return -1;
     }
     ret = fim_runtime->execute_gemv(output, operand0, operand1);
     FIM_PROFILE_TOCK(ExecuteGEMV);
 
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
 
 int FimExecuteRelu(FimBo* output, FimBo* fim_data)
 {
-    DLOG(INFO) << "called";
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     FIM_PROFILE_TICK(ExecuteRelu);
     int ret = 0;
 
     if (fim_runtime == nullptr) {
+        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
         return -1;
     }
     ret = fim_runtime->execute_relu(output, fim_data);
@@ -410,15 +452,17 @@ int FimExecuteRelu(FimBo* output, FimBo* fim_data)
 
 int FimExecuteBN(FimBo* output, FimBo* fim_data, FimBo* beta, FimBo* gamma, FimBo* scale, FimBo* shift)
 {
-    DLOG(INFO) << "called";
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     FIM_PROFILE_TICK(ExecuteBN);
     int ret = 0;
 
     if (fim_runtime == nullptr) {
+        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
         return -1;
     }
     ret = fim_runtime->execute_bn(output, fim_data, beta, gamma, scale, shift);
     FIM_PROFILE_TOCK(ExecuteBN);
 
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }

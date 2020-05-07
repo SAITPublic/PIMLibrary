@@ -17,7 +17,7 @@ namespace executor
 FimExecutor::FimExecutor(FimRuntimeType rt_type, FimPrecision precision)
     : rt_type_(rt_type), precision_(precision), thread_cnt_(16)
 {
-    DLOG(INFO) << "called ";
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called ";
 
 #ifdef EMULATOR
     fim_emulator_ = fim::runtime::emulator::FimEmulator::get_instance();
@@ -27,19 +27,21 @@ FimExecutor::FimExecutor(FimRuntimeType rt_type, FimPrecision precision)
     max_block_size_ = fbi_.num_fim_chan;
     max_fmtd_size_ = fmtd_size_per_ch_ * max_block_size_;
 #endif
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
 }
 
 FimExecutor* FimExecutor::get_instance(FimRuntimeType rt_type, FimPrecision precision)
 {
-    DLOG(INFO) << "Called";
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " Called";
     static FimExecutor* instance_ = new FimExecutor(rt_type, precision);
 
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return instance_;
 }
 
 int FimExecutor::initialize(void)
 {
-    DLOG(INFO) << "Intialization done ";
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " Intialization done ";
 
     int ret = 0;
     hipGetDeviceProperties(&dev_prop_, 0);
@@ -83,12 +85,13 @@ int FimExecutor::initialize(void)
     /* so FimExecutor needs to maintain intermediate output buffer for gemv op */
     hipMalloc((void**)&fim_gemv_tmp_buffer_, 2 * 1024 * 1024);
 
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
 
 int FimExecutor::deinitialize(void)
 {
-    DLOG(INFO) << "called";
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
     hipFree((void*)d_crf_bin_buffer_);
     hipFree((void*)d_srf_bin_buffer_);
@@ -103,12 +106,13 @@ int FimExecutor::deinitialize(void)
 #endif
     hipFree((void*)fim_gemv_tmp_buffer_);
 
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
 
 int FimExecutor::execute(void* output, void* operand0, void* operand1, size_t size, FimOpType op_type)
 {
-    DLOG(INFO) << "called";
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
 
     if (op_type == OP_ELT_ADD) {
@@ -118,12 +122,13 @@ int FimExecutor::execute(void* output, void* operand0, void* operand1, size_t si
     }
     hipStreamSynchronize(NULL);
 
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
 
 int FimExecutor::execute(FimBo* output, FimBo* operand0, FimBo* operand1, FimOpType op_type)
 {
-    DLOG(INFO) << "called";
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
     size_t size = output->size;
     FimBo* input = operand0;
@@ -162,12 +167,13 @@ int FimExecutor::execute(FimBo* output, FimBo* operand0, FimBo* operand1, FimOpT
     }
 #endif
 
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
 
 int FimExecutor::execute(FimBo* output, FimBo* fim_data, FimOpType op_type)
 {
-    DLOG(INFO) << "called";
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
     unsigned blocks = max_block_size_;
     unsigned threads_per_block = 16;
@@ -207,6 +213,7 @@ int FimExecutor::execute(FimBo* output, FimBo* fim_data, FimOpType op_type)
     } else {
         /* todo:implement other operation function */
         hipLaunchKernelGGL(dummy_kernel, dim3(1), dim3(1), 0, 0);
+        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
         return -1;
     }
     hipStreamSynchronize(NULL);
@@ -227,12 +234,13 @@ int FimExecutor::execute(FimBo* output, FimBo* fim_data, FimOpType op_type)
     }
 #endif
 
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
 
 int FimExecutor::execute_add(FimBo* output, FimBo* fim_data)
 {
-    DLOG(INFO) << "called";
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
     unsigned blocks = 1;
     unsigned threads_per_block = 2;
@@ -265,12 +273,13 @@ int FimExecutor::execute_add(FimBo* output, FimBo* fim_data)
     fim_emulator_->execute_fim(output, fim_data, h_fmtd32_, h_fmtd32_size_[0], OP_ELT_ADD);
 #endif
 
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
 
 int FimExecutor::execute_mul(FimBo* output, FimBo* fim_data)
 {
-    DLOG(INFO) << "called";
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
     unsigned blocks = 1;
     unsigned threads_per_block = 2;
@@ -303,12 +312,13 @@ int FimExecutor::execute_mul(FimBo* output, FimBo* fim_data)
     fim_emulator_->execute_fim(output, fim_data, h_fmtd32_, h_fmtd32_size_[0], OP_ELT_MUL);
 #endif
 
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
 
 int FimExecutor::execute_gemv(FimBo* output, FimBo* operand0, FimBo* operand1)
 {
-    DLOG(INFO) << "called";
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
     FimBo* input = operand0;
     FimBo* weight = operand1;
@@ -341,12 +351,13 @@ int FimExecutor::execute_gemv(FimBo* output, FimBo* operand0, FimBo* operand1)
     fim_emulator_->execute_fim(output, weight, h_fmtd32_, h_fmtd32_size_[0], OP_GEMV);
 #endif
 
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
 
 int FimExecutor::execute_relu(FimBo* output, FimBo* fim_data)
 {
-    DLOG(INFO) << "called";
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
     unsigned blocks = 1;
     unsigned threads_per_block = 2;
@@ -376,12 +387,13 @@ int FimExecutor::execute_relu(FimBo* output, FimBo* fim_data)
     fim_emulator_->execute_fim(output, fim_data, h_fmtd32_, h_fmtd32_size_[0], OP_RELU);
 #endif
 
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
 
 int FimExecutor::execute_bn(FimBo* output, FimBo* fim_data, FimBo* beta, FimBo* gamma, FimBo* scale, FimBo* shift)
 {
-    DLOG(INFO) << "called";
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
 
     unsigned blocks = 1;
@@ -421,6 +433,7 @@ int FimExecutor::execute_bn(FimBo* output, FimBo* fim_data, FimBo* beta, FimBo* 
     fim_emulator_->execute_fim(output, fim_data, h_fmtd32_, h_fmtd32_size_[0], OP_BN);
 #endif
 
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
 

@@ -15,13 +15,13 @@ namespace emulator
 {
 FimEmulator::FimEmulator(void)
 {
-    DLOG(INFO) << "called ";
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called ";
     get_fim_block_info(&fbi_);
 }
 
 FimEmulator* FimEmulator::get_instance(void)
 {
-    DLOG(INFO) << "Called";
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     static FimEmulator* instance_ = new FimEmulator();
 
     return instance_;
@@ -29,7 +29,7 @@ FimEmulator* FimEmulator::get_instance(void)
 
 int FimEmulator::initialize(void)
 {
-    DLOG(INFO) << "Intialization done ";
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " Intialization done ";
     int ret = 0;
 
     return ret;
@@ -37,7 +37,7 @@ int FimEmulator::initialize(void)
 
 int FimEmulator::deinitialize(void)
 {
-    DLOG(INFO) << "called";
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
 
     return ret;
@@ -46,7 +46,7 @@ int FimEmulator::deinitialize(void)
 int FimEmulator::convert_mem_trace_from_16B_to_32B(FimMemTraceData* fmtd32, int* fmtd32_size, FimMemTraceData* fmtd16,
                                                    int fmtd16_size, FimOpType op_type)
 {
-    DLOG(INFO) << "called";
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
 
     TraceParser trace_converter;
@@ -69,7 +69,7 @@ int FimEmulator::convert_mem_trace_from_16B_to_32B(FimMemTraceData* fmtd32, int*
 int FimEmulator::execute_fim(FimBo* output, FimBo* fim_data, FimMemTraceData* fmtd32, int fmtd32_size,
                              FimOpType op_type)
 {
-    DLOG(INFO) << "called";
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
     int num_element = 0;
     uint16_t* sim_output = nullptr;

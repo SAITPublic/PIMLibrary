@@ -16,30 +16,33 @@ namespace manager
 FimMemoryManager::FimMemoryManager(FimDevice* fim_device, FimRuntimeType rt_type, FimPrecision precision)
     : fim_device_(fim_device), rt_type_(rt_type), precision_(precision)
 {
-    DLOG(INFO) << "called";
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     get_fim_block_info(&fbi_);
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
 }
 
-FimMemoryManager::~FimMemoryManager(void) { DLOG(INFO) << "called"; }
+FimMemoryManager::~FimMemoryManager(void) { DLOG(INFO) << "[START] " << __FUNCTION__ << " called"; }
 int FimMemoryManager::initialize(void)
 {
-    DLOG(INFO) << "called";
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
 
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
 
 int FimMemoryManager::deinitialize(void)
 {
-    DLOG(INFO) << "called";
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
 
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
 
 int FimMemoryManager::alloc_memory(void** ptr, size_t size, FimMemType mem_type)
 {
-    DLOG(INFO) << "called";
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
 
     if (mem_type == MEM_TYPE_DEVICE) {
@@ -52,16 +55,18 @@ int FimMemoryManager::alloc_memory(void** ptr, size_t size, FimMemType mem_type)
         *ptr = fragment_allocator_.alloc(size);
     }
 
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
 
 int FimMemoryManager::alloc_memory(FimBo* fim_bo)
 {
-    DLOG(INFO) << "called";
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
 
     if (fim_bo->mem_type == MEM_TYPE_DEVICE) {
         if (hipMalloc((void**)&fim_bo->data, fim_bo->size) != hipSuccess) {
+            DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
             return -1;
         }
     } else if (fim_bo->mem_type == MEM_TYPE_HOST) {
@@ -70,16 +75,18 @@ int FimMemoryManager::alloc_memory(FimBo* fim_bo)
         fim_bo->data = fragment_allocator_.alloc(fim_bo->size);
     }
 
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
 
 int FimMemoryManager::free_memory(void* ptr, FimMemType mem_type)
 {
-    DLOG(INFO) << "called";
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
 
     if (mem_type == MEM_TYPE_DEVICE) {
         if (hipFree(ptr) != hipSuccess) {
+            DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
             return -1;
         }
     } else if (mem_type == MEM_TYPE_HOST) {
@@ -88,47 +95,55 @@ int FimMemoryManager::free_memory(void* ptr, FimMemType mem_type)
         return fragment_allocator_.free(ptr);
     }
 
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
 
 int FimMemoryManager::free_memory(FimBo* fim_bo)
 {
-    DLOG(INFO) << "called";
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
 
     if (fim_bo->mem_type == MEM_TYPE_DEVICE) {
         if (hipFree(fim_bo->data) != hipSuccess) {
+            DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
             return -1;
         }
     } else if (fim_bo->mem_type == MEM_TYPE_HOST) {
         free(fim_bo->data);
     } else if (fim_bo->mem_type == MEM_TYPE_FIM) {
         if (fragment_allocator_.free(fim_bo->data)) return 0;
+        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
         return -1;
     }
 
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
 
 int FimMemoryManager::copy_memory(void* dst, void* src, size_t size, FimMemCpyType cpy_type)
 {
-    DLOG(INFO) << "called";
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
 
     if (cpy_type == HOST_TO_FIM || cpy_type == HOST_TO_DEVICE) {
         if (hipMemcpy(dst, src, size, hipMemcpyHostToDevice) != hipSuccess) {
+            DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
             return -1;
         }
     } else if (cpy_type == FIM_TO_HOST || cpy_type == DEVICE_TO_HOST) {
         if (hipMemcpy(dst, src, size, hipMemcpyDeviceToHost) != hipSuccess) {
+            DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
             return -1;
         }
     } else if (cpy_type == DEVICE_TO_FIM || cpy_type == FIM_TO_DEVICE) {
         if (hipMemcpy(dst, src, size, hipMemcpyDeviceToDevice) != hipSuccess) {
+            DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
             return -1;
         }
     } else if (cpy_type == HOST_TO_HOST) {
         if (hipMemcpy(dst, src, size, hipMemcpyHostToHost) != hipSuccess) {
+            DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
             return -1;
         }
     }
@@ -138,34 +153,39 @@ int FimMemoryManager::copy_memory(void* dst, void* src, size_t size, FimMemCpyTy
 
 int FimMemoryManager::copy_memory(FimBo* dst, FimBo* src, FimMemCpyType cpy_type)
 {
-    DLOG(INFO) << "called";
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
     size_t size = dst->size;
 
     if (cpy_type == HOST_TO_FIM || cpy_type == HOST_TO_DEVICE) {
         if (hipMemcpy(dst->data, src->data, size, hipMemcpyHostToDevice) != hipSuccess) {
+            DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
             return -1;
         }
     } else if (cpy_type == FIM_TO_HOST || cpy_type == DEVICE_TO_HOST) {
         if (hipMemcpy(dst->data, src->data, size, hipMemcpyDeviceToHost) != hipSuccess) {
+            DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
             return -1;
         }
     } else if (cpy_type == DEVICE_TO_FIM || cpy_type == FIM_TO_DEVICE) {
         if (hipMemcpy(dst->data, src->data, size, hipMemcpyDeviceToDevice) != hipSuccess) {
+            DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
             return -1;
         }
     } else if (cpy_type == HOST_TO_HOST) {
         if (hipMemcpy(dst->data, src->data, size, hipMemcpyHostToHost) != hipSuccess) {
+            DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
             return -1;
         }
     }
 
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
 
 int FimMemoryManager::convert_data_layout(void* dst, void* src, size_t size, FimOpType op_type)
 {
-    DLOG(INFO) << "called";
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
 
     if (op_type == OP_GEMV) {
@@ -173,12 +193,13 @@ int FimMemoryManager::convert_data_layout(void* dst, void* src, size_t size, Fim
         DLOG(ERROR) << "not yet implemented";
     }
 
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
 
 int FimMemoryManager::convert_data_layout(FimBo* dst, FimBo* src, FimOpType op_type)
 {
-    DLOG(INFO) << "called";
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
 
     if (op_type == OP_GEMV) {
@@ -191,12 +212,13 @@ int FimMemoryManager::convert_data_layout(FimBo* dst, FimBo* src, FimOpType op_t
         DLOG(ERROR) << "not yet implemented";
     }
 
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
 
 int FimMemoryManager::convert_data_layout(FimBo* dst, FimBo* src0, FimBo* src1, FimOpType op_type)
 {
-    DLOG(INFO) << "called";
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
 
     if (op_type == OP_ELT_ADD || op_type == OP_ELT_MUL) {
@@ -206,12 +228,13 @@ int FimMemoryManager::convert_data_layout(FimBo* dst, FimBo* src0, FimBo* src1, 
         DLOG(ERROR) << "not yet implemented";
     }
 
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
 
 int FimMemoryManager::convert_data_layout_for_bn(FimBo* dst, FimBo* src)
 {
-    DLOG(INFO) << "called";
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
 
     int cidx = 0;
@@ -283,12 +306,13 @@ int FimMemoryManager::convert_data_layout_for_bn(FimBo* dst, FimBo* src)
         }
     }
 
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
 
 int FimMemoryManager::convert_data_layout_for_relu(FimBo* dst, FimBo* src)
 {
-    DLOG(INFO) << "called";
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
 
     uint32_t cidx = 0;
@@ -344,12 +368,13 @@ int FimMemoryManager::convert_data_layout_for_relu(FimBo* dst, FimBo* src)
         }
     }
 
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
 
 int FimMemoryManager::convert_data_layout_for_gemv_weight(FimBo* dst, FimBo* src)
 {
-    DLOG(INFO) << "called";
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
 
     int num_grf_A = fbi_.num_grf;
@@ -473,12 +498,13 @@ int FimMemoryManager::convert_data_layout_for_gemv_weight(FimBo* dst, FimBo* src
         }
     }
 
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
 
 int FimMemoryManager::convert_data_layout_for_elt_op(FimBo* dst, FimBo* src, FimBankType fim_bank_type)
 {
-    DLOG(INFO) << "called";
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
 
     uint32_t cidx = 0;
@@ -534,11 +560,13 @@ int FimMemoryManager::convert_data_layout_for_elt_op(FimBo* dst, FimBo* src, Fim
         }
     }
 
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
 
 void* FimMemoryManager::FimBlockAllocator::alloc(size_t request_size, size_t& allocated_size) const
 {
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     assert(request_size <= block_size() && "BlockAllocator alloc request exceeds block size.");
     uint64_t ret = 0;
     size_t bsize = block_size();
@@ -548,17 +576,21 @@ void* FimMemoryManager::FimBlockAllocator::alloc(size_t request_size, size_t& al
     if (ret == 0) return NULL;
 
     allocated_size = block_size();
+
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return (void*)ret;
 }
 
 void FimMemoryManager::FimBlockAllocator::free(void* ptr, size_t length) const
 {
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     if (ptr == NULL || length == 0) {
         return;
     }
 
     /* todo:implement fimfree function */
     std::free(ptr);
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
 }
 
 uint64_t FimMemoryManager::FimBlockAllocator::allocate_fim_block(size_t bsize) const

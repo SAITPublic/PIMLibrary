@@ -11,12 +11,15 @@ FimCrfBinGen::FimCrfBinGen() {}
 void FimCrfBinGen::gen_binary(FimOpType op_type, int input_size, int output_size, FimBlockInfo* fbi,
                               uint8_t* binary_buffer, int* crf_size)
 {
+    DLOG(INFO) << "[START] " <<__FUNCTION__ << " called";
     create_fim_cmd(op_type, input_size, output_size, fbi);
     change_to_binary(binary_buffer, crf_size);
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
 }
 
 void FimCrfBinGen::create_fim_cmd(FimOpType op_type, int input_size, int output_size, FimBlockInfo* fbi)
 {
+    DLOG(INFO) << "[START] " <<__FUNCTION__ << " called";
     int num_transaction = (input_size / 16) / sizeof(uint16_t);
     int num_parallelism = fbi->num_fim_blocks * fbi->num_fim_chan * fbi->num_fim_rank * fbi->num_grf;
     int num_tile = num_transaction / num_parallelism;
@@ -67,10 +70,12 @@ void FimCrfBinGen::create_fim_cmd(FimOpType op_type, int input_size, int output_
             FimCommand(FimCmdType::EXIT, 0)};
         cmds_.assign(tmp_cmds.begin(), tmp_cmds.end());
     }
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
 }
 
 void FimCrfBinGen::change_to_binary(uint8_t* crf_binary, int* crf_size)
 {
+    DLOG(INFO) << "[START] " <<__FUNCTION__ << " called";
     FimCommand nop_cmd(FimCmdType::NOP, 0);
     *crf_size = cmds_.size();
 
@@ -78,8 +83,8 @@ void FimCrfBinGen::change_to_binary(uint8_t* crf_binary, int* crf_size)
         uint32_t u32_data_ = cmds_[i].to_int();
         memcpy(&crf_binary[i * 4], &u32_data_, sizeof(uint32_t));
     }
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
 }
-
 } /* namespace manager */
 } /* namespace runtime */
 } /* namespace fim */
