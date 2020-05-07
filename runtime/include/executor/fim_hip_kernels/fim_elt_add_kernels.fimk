@@ -41,9 +41,9 @@ __global__ void elt_add_fim(uint8_t* fim_data, uint8_t* fim_ctr, uint8_t* output
     g_fba = (uint64_t)fim_ctr;
     g_fmtd16 = fmtd;
     m_width = mt_width;
-    row_addr = 0x17ff;
+    uint32_t row_addr = 0x17ff;
 #else
-    row_addr = 0x27ff;
+    uint32_t row_addr = 0x27ff;
 #endif
     FimBlockInfo* fbi = &vega20_fbi;
     int num_blk = fbi->num_fim_blocks;
