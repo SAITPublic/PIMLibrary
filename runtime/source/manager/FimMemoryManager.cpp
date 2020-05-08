@@ -542,14 +542,10 @@ void* FimMemoryManager::FimBlockAllocator::alloc(size_t request_size, size_t& al
     uint64_t ret = 0;
     size_t bsize = block_size();
 
-    /********************************************
-      ARG1 : node-id
-      ARG2 : gpu-id
-      ARG3 : block size
-    ********************************************/
-    ret = fmm_map_fim(1, 57585, bsize);
-    if(ret == 0)
-        return NULL;
+    ret = allocate_fim_block(bsize);
+
+    if (ret == 0) return NULL;
+
     allocated_size = block_size();
     return (void*)ret;
 }
@@ -562,6 +558,29 @@ void FimMemoryManager::FimBlockAllocator::free(void* ptr, size_t length) const
 
     /* todo:implement fimfree function */
     std::free(ptr);
+}
+
+uint64_t FimMemoryManager::FimBlockAllocator::allocate_fim_block(size_t bsize) const
+{
+    // Get GPU ID
+    FILE* fd;
+    char path[256];
+    uint32_t* gpu_id = (uint32_t*)malloc(sizeof(uint32_t));
+
+    snprintf(path, 256, "/sys/devices/virtual/kfd/kfd/topology/nodes/1/gpu_id");
+    fd = fopen(path, "r");
+    if (!fd) return -1;
+    if (fscanf(fd, "%ul", gpu_id) != 1) return -1;
+
+    fclose(fd);
+
+    uint64_t ret = 0;
+    /********************************************
+      ARG1 : node-id
+      ARG2 : gpu-id
+      ARG3 : block size
+    ********************************************/
+    return fmm_map_fim(1, *gpu_id, bsize);
 }
 
 } /* namespace manager */
