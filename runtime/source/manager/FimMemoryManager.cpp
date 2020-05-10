@@ -565,13 +565,12 @@ uint64_t FimMemoryManager::FimBlockAllocator::allocate_fim_block(size_t bsize) c
     // Get GPU ID
     FILE* fd;
     char path[256];
-    uint32_t* gpu_id = (uint32_t*)malloc(sizeof(uint32_t));
+    uint32_t gpu_id;
 
     snprintf(path, 256, "/sys/devices/virtual/kfd/kfd/topology/nodes/1/gpu_id");
     fd = fopen(path, "r");
     if (!fd) return -1;
-    if (fscanf(fd, "%ul", gpu_id) != 1) return -1;
-
+    if (fscanf(fd, "%ul", &gpu_id) != 1) return -1;
     fclose(fd);
 
     uint64_t ret = 0;
@@ -580,7 +579,7 @@ uint64_t FimMemoryManager::FimBlockAllocator::allocate_fim_block(size_t bsize) c
       ARG2 : gpu-id
       ARG3 : block size
     ********************************************/
-    return fmm_map_fim(1, *gpu_id, bsize);
+    return fmm_map_fim(1, gpu_id, bsize);
 }
 
 } /* namespace manager */
