@@ -25,7 +25,7 @@ class GemvTest(tf.test.TestCase):
     b =  tf.constant(bn,dtype = np.float16)
     with self.test_session():
         #result = tf.linalg.matmul(a,b)
-        result = fim_gemv(a,b)
+        result = fim_gemv(a,b,tf.constant([1]))
         logging.info('Result %s',result)
         logging.info('Result %s',result.shape)
         logging.info('Result %s %s %s',result[0],result[254],result[257])
@@ -48,7 +48,30 @@ class GemvTest(tf.test.TestCase):
     o = tf.reshape(t_output0,[out_size])
 
     with self.test_session():
-        result = fim_gemv(a,w)
+        result = fim_gemv(a,w,tf.constant([1]))
+        logging.info('Result %s',result)
+        logging.info('Result %s',result.shape)
+        logging.info('Result1 %s',result[0])
+        self.assertAllEqual(result,o)
+
+
+  def testGemvGoldenWeightReordered(self):
+    in_size = 256
+    out_size =  4096
+    input0  = np.fromfile(testFilesPath + "load/gemv/input_256x1.dat",dtype = np.float16)
+    input1  = np.fromfile(testFilesPath + "load/gemv/reordered_weight_256x4096.dat",dtype = np.float16)
+    output0 = np.fromfile(testFilesPath + "load/gemv/output_4096x1.dat",dtype = np.float16)
+
+    t_input0   = tf.convert_to_tensor(input0, np.float16)
+    t_input1   = tf.convert_to_tensor(input1, np.float16)
+    t_output0  = tf.convert_to_tensor(output0, np.float16)
+
+    a = tf.reshape(t_input0, [1, in_size])
+    w = tf.reshape(t_input1, [in_size, out_size])
+    o = tf.reshape(t_output0,[out_size])
+
+    with self.test_session():
+        result = fim_gemv(a,w,tf.constant([0]))
         logging.info('Result %s',result)
         logging.info('Result %s',result.shape)
         logging.info('Result1 %s',result[0])

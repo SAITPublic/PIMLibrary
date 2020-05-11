@@ -6,7 +6,7 @@
 
 using namespace tensorflow;  // NOLINT(build/namespaces)
 
-void KernelLauncher(const void* i_data, const void* w_data, const int IN_LENGTH, const int OUT_LENGTH, void* o_data)
+void KernelLauncher(const void* i_data, const void* w_data, const int IN_LENGTH, const int OUT_LENGTH, void* o_data , int reorder)
 {
     std::cout << "Launcher for FIM_Gemv" << std::endl;
     int ret = 0;
@@ -34,8 +34,13 @@ void KernelLauncher(const void* i_data, const void* w_data, const int IN_LENGTH,
     FimCopyMemory(device_input, host_input, HOST_TO_DEVICE);
 
     /* __FIM_API__ call : Preload weight data on FIM memory */
-    FimConvertDataLayout(host_reordered_weight, host_weight, OP_GEMV);
-    FimCopyMemory(preloaded_weight, host_reordered_weight, HOST_TO_DEVICE);
+    if(reorder){
+        FimConvertDataLayout(host_reordered_weight, host_weight, OP_GEMV);
+        FimCopyMemory(preloaded_weight, host_reordered_weight, HOST_TO_DEVICE);
+    }
+    else{
+        FimCopyMemory(preloaded_weight, host_weight, HOST_TO_DEVICE);
+    }
 
     /* __FIM_API__ call : Execute FIM kernel (GEMV) */
     FimExecuteGEMV(device_output, device_input, preloaded_weight);
@@ -73,6 +78,9 @@ class FimGemvOp : public OpKernel
         int num_rows = input_tensor1.dim_size(0);
         int num_cols = input_tensor1.dim_size(1);
 
+        const Tensor& input_tensor2 = context->input(2);
+        auto reorder = input_tensor2.flat<int32>();
+
         std::cout << "Weight Num rows : " << num_rows << std::endl;
         ;
         std::cout << "Weight Num cols : " << num_cols << std::endl;
@@ -86,7 +94,7 @@ class FimGemvOp : public OpKernel
         auto output = output_tensor->flat<Eigen::half>();
 
         // Call kernel
-        KernelLauncher(input.data(), input1.data(), num_rows, num_cols, output.data());
+        KernelLauncher(input.data(), input1.data(), num_rows, num_cols, output.data(), reorder.data()[0]);
     }
 };
 

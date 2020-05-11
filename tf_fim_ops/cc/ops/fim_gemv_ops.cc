@@ -8,6 +8,7 @@ using namespace tensorflow;  // NOLINT(build/namespaces)
 REGISTER_OP("FimGemv")
     .Input("first: float16")
     .Input("second: float16")
+    .Input("third: int32")
     .Output("ans: float16")
     .SetShapeFn([](::tensorflow::shape_inference::InferenceContext* c) {
         // shape_inference::ShapeHandle out_shape;
