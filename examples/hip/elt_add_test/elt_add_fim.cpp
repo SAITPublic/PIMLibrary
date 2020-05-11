@@ -2,6 +2,8 @@
 #include <iostream>
 #include "hip/hip_runtime.h"
 
+extern "C" uint64_t fmm_map_fim(uint32_t, uint32_t, uint64_t);
+
 #define CHECK(cmd)                                                                                              \
     {                                                                                                           \
         hipError_t error = cmd;                                                                                 \
@@ -151,11 +153,26 @@ int main(int argc, char* argv[])
     hipDeviceProp_t props;
     CHECK(hipGetDeviceProperties(&props, device /*deviceID*/));
 
-    FILE* fp;
-    fp = fopen("fim_base_va.txt", "rt");
-    fscanf(fp, "%lx", &fim_base);
+    // Get GPU ID
+    FILE* fd;
+    char path[256];
+    uint32_t gpu_id;
+
+    snprintf(path, 256, "/sys/devices/virtual/kfd/kfd/topology/nodes/1/gpu_id");
+    fd = fopen(path, "r");
+    if (!fd) return -1;
+    if (fscanf(fd, "%ul", &gpu_id) != 1) return -1;
+    fclose(fd);
+
+    uint64_t ret = 0;
+    /********************************************
+      ARG1 : node-id
+      ARG2 : gpu-id
+      ARG3 : block size
+    ********************************************/
+    uint64_t bsize = 8589934592; //8 * 1024 * 1024 * 1024;
+    fim_base = fmm_map_fim(1, gpu_id, bsize);
     std::cout << std::hex << "fimBaseAddr = " << fim_base << std::endl;
-    fclose(fp);
 
     crf_bin_h = (uint64_t*)malloc(Nbytes);
     CHECK(crf_bin_h == 0 ? hipErrorOutOfMemory : hipSuccess);
