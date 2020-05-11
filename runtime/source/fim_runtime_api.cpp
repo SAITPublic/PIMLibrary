@@ -10,9 +10,10 @@ using namespace fim::runtime;
 
 FimRuntime* fim_runtime = nullptr;
 static bool log_initialized = false;
-
+bool fim_alloc_done = false;
 int FimInitialize(FimRuntimeType rt_type, FimPrecision precision)
 {
+    fim_alloc_done = false;
     if (!log_initialized) {
         FLAGS_logtostderr = true;
         FLAGS_minloglevel = FIM_LOG_LEVEL;

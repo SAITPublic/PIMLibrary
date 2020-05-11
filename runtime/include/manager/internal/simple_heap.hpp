@@ -163,7 +163,7 @@ class SimpleHeap
         } else {  // Alloc new block
             void* ptr = block_allocator_.alloc(bytes, size);
             base = reinterpret_cast<uintptr_t>(ptr);
-            assert(ptr != nullptr && "Block allocation failed, Allocator is expected to throw.");
+            if (ptr == nullptr) return ptr;
         }
 
         in_use_size_ += size;

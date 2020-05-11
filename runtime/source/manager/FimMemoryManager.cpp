@@ -6,6 +6,7 @@
 #include "utility/fim_util.h"
 
 extern "C" uint64_t fmm_map_fim(uint32_t, uint32_t, uint64_t);
+extern bool fim_alloc_done;
 namespace fim
 {
 namespace runtime
@@ -579,7 +580,12 @@ uint64_t FimMemoryManager::FimBlockAllocator::allocate_fim_block(size_t bsize) c
       ARG2 : gpu-id
       ARG3 : block size
     ********************************************/
-    return fmm_map_fim(1, gpu_id, bsize);
+    if (!fim_alloc_done) {
+        ret = fmm_map_fim(1, gpu_id, bsize);
+        fim_alloc_done = true;
+    }
+
+    return ret;
 }
 
 } /* namespace manager */
