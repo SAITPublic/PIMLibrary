@@ -1,5 +1,6 @@
 from bokeh.io import show, output_file, save
 from bokeh.layouts import column
+from bokeh.models import Panel, Tabs
 
 from visualizer.TableViz import create_table
 from visualizer.TimelineViz import create
@@ -29,7 +30,10 @@ if __name__=='__main__':
 	df_gpu_table = get_table_stats(df_gpu)
 	heading, table_plot = create_table(df_gpu_table, heading = 'GPU Calls Summary')
 	#Output all GPU calls Plots
-	save(column(timeline_plot,heading, table_plot))
+	tab1 = Panel(child=timeline_plot, title="GPU Timeline Plot")
+	tab2 = Panel(child=column(heading, table_plot), title="GPU Calls Stats")
+	tabs = Tabs(tabs=[ tab1, tab2 ])
+	save(tabs)
 
 	#FIM Log File Visualization
 	output_file(filename=cpu_output, title='FIM Visualization', mode='inline')
@@ -47,16 +51,23 @@ if __name__=='__main__':
 	#Produce Tabular plot for Buffers
 	heading_b, table_plot_b = create_table(df_cpu_buf, heading = 'FIM Buffers Summary')
 	#Output all CPU calls Plots
-	save(column(timeline_plot, heading_m, table_plot_m, heading_a, table_plot_a, heading_b, table_plot_b))
-	
+	tab1 = Panel(child=timeline_plot, title="FIM Timeline Plot")
+	tab2 = Panel(child=column(heading_m, table_plot_m), title="FIM Module Calls Stats")
+	tab3 = Panel(child=column(heading_a, table_plot_a), title="FIM API Calls Stats")
+	tab4 = Panel(child=column(heading_b, table_plot_b), title="FIM Buffer Calls")
+	tabs = Tabs(tabs=[ tab1, tab2, tab3, tab4 ])
+	save(tabs)
+
 	#MIOpen Log File Visualization
 	output_file(filename=mi_output, title='MIOpen Visualization', mode='inline')
 	#Read File
 	df_mi=parse_miopen_log_file(args.miopen_file)
 	#Produce Tabular plot
 	heading, table_plot = create_table(df_mi, heading = 'MIOpen API Calls')
-	#Output all GPU calls Plots
-	save(column(heading, table_plot))
+	#Output MIOpen Plot
+	tab = Panel(child=column(heading, table_plot), title="MIOpen Function Calls")
+	tabs = Tabs(tabs=[ tab])
+	save(tabs)
 
 	#Main Page
 	output_file(filename=output_name, title='Profiler Visualization', mode='inline')
