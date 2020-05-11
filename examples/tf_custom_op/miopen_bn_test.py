@@ -59,7 +59,7 @@ class MIopenBn4DGolden(tf.test.TestCase):
 
         #result = tf.nn.batch_normalization(t_input0, t_mean, t_var, t_beta, t_gamma, epsilon)
         result = miopen_bn(t_input0, t_mean, t_var, t_beta, t_gamma, epsilon)
-        self.assertAllEqual(result, t_golden)
+        self.assertAllClose(result, t_golden, atol=5e-3)
 
 class MIopenBn1D(tf.test.TestCase):
 

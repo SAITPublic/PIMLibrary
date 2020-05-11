@@ -162,7 +162,7 @@ int miopen_bn_2()
     mode = miopenBNSpatial;
 
     // Translate to miopen expected values.
-    for (int i = 0; i < LENGTH; i++) {
+    for (int i = 0; i < CH; i++) {
         half sc = ((half *)scale_data)[i];
         ((half *)var_data)[i] = (half(1.0) / (sc * sc)) - epsilon;
         ((half *)mean_data)[i] = -((half *)shift_data)[i] / sc;
@@ -183,8 +183,7 @@ int miopen_bn_2()
     miopenDestroyTensorDescriptor(o_desc);
     miopenDestroyTensorDescriptor(w_desc);
     miopenDestroy(handle);
-
-    if (compare_data((char *)out, (char *)ref_data, sizeof(half) * LENGTH)) ret = -1;
+    if (compare_data_round_off((half *)out, (half *)ref_data, LENGTH, 0.005)) ret = -1;
 
     hipFree(ref_data);
     hipFree(out);
