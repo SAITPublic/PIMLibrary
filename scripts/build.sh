@@ -104,7 +104,7 @@ uninstall_fn()
     sudo rm -f /opt/rocm/include/fim_data_types.h
     sudo rm -f /opt/rocm/lib/libdramsim2.so
     sudo rm -rf /opt/rocm/include/dramsim2
-    sudo rm -rf /opt/rocm/lib/python
+    sudo rm -rf /opt/rocm/lib/tf_fim_ops
 }
 
 if [ $1 = "all" ]; then
