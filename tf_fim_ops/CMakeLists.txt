@@ -41,10 +41,10 @@ add_library(miopen_bn SHARED ${MIOPEN_BN_SOURCES})
 target_link_libraries(miopen_bn MIOpen ${TF_LFLAGS})
 
 install ( TARGETS fim_gemv LIBRARY DESTINATION
-           ${CMAKE_CURRENT_SOURCE_DIR}/python/ops/)
+           /opt/rocm/lib/python/ops/)
 install ( TARGETS miopen_eltwise LIBRARY DESTINATION
-           ${CMAKE_CURRENT_SOURCE_DIR}/python/ops/)
+           /opt/rocm/lib/python/ops/)
 install ( TARGETS miopen_activation LIBRARY DESTINATION
-           ${CMAKE_CURRENT_SOURCE_DIR}/python/ops/)
+           /opt/rocm/lib/python/ops/)
 install ( TARGETS miopen_bn LIBRARY DESTINATION
-           ${CMAKE_CURRENT_SOURCE_DIR}/python/ops/)
+           /opt/rocm/lib/python/ops/)
