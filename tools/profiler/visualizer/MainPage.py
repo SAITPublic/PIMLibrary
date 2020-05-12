@@ -1,5 +1,6 @@
 from bokeh.io import show, output_file
-from bokeh.models import ColumnDataSource, Div
+from bokeh.models import Div, Panel, Tabs
+from bokeh.layouts import column
 
 def get_content(plot_type):
 	'''Utility function to get  name and description for different profiler plot pages
@@ -17,31 +18,30 @@ def get_content(plot_type):
 		desc = ['MIOpen API trace and parameters']
 	return (name,desc)
 
-def create_main(pages, heading = 'Profiler Plots', width=1200):
-	'''Creates main page containing links to all plots
-	   pages = Dictionary contaning hyperlink text and path to webpages
+def create_main(plots, heading = 'Profiler Plots', width=1200):
+	'''Creates main page containing all plots inside tabs
+	   plots = Dictionary contaning title and the plots
 	   heading = Page heading
-	   Returns an html div containing main page contents
+	   Returns main page contents
 	'''
-	div_text = '<H1>'+ heading + '</H1><br>\n<ul>\n'
+	div_text = '<H1>'+ heading + '</H1>'
+	div_heading = Div(text=div_text, width=width)
 
-	for path, (hl_text, description) in pages.items():
-		div_text += '<li style=\"font-size:20px\"> <a href = \"' + path + '\"> ' + hl_text + '</a>\n<br>Contains: <ol>\n'
-		for desc in description:
-			div_text += '<li style=\"font-size:18px\"> '+ desc +'</li>\n'
-		div_text+= '</ol></li><br>'
+	tabs = []
+	for title, plot in plots.items():
+		div = Div(text='<H2>'+ title + '</H2>', align='center')
+		tab = Panel(child=column(div, plot), title=title)
+		tabs.append(tab)
 
-	div_text = div_text + '</ul>'
-	div = Div(text=div_text, width=width)
-	return div
+	tabs = Tabs(tabs=tabs)
+	return column(div_heading,tabs)
 
 if __name__ == '__main__':
 
-	#Testing the create_table function with random data
-	pages = {'page1.html':('Text1', ['desc1.1', 'desc1.2']), 'page2.html':('Text2', ['desc2.1', 'desc2.2'])}
-
+	#Testing the create_main function with random data
+	plots = {'title1': Div(text='Test1'), 'title2': Div(text='Test2')}
 	output_file(filename='MainViz.html', title='Viz',mode='inline')
 
-	#call the create_main function to get HTML code for main page
-	main_div = create_main(pages)
-	show(main_div)
+	#call the create_main function to get main page
+	main = create_main(plots)
+	show(main)
