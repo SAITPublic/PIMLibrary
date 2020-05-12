@@ -37,7 +37,7 @@ def create(listEvntsName, evntStartTime, evntEndTime, title, plot_height=100, pl
             bottom = [i] * len(evntStartTime[i])
         ))
 
-        glyph = plot.quad(left="left", right="right", top="top", bottom="bottom",fill_color=colorPallete[i],
+        glyph = plot.quad(left="left", right="right", top="top", bottom="bottom",fill_color=colorPallete[i], line_color=colorPallete[i],
                           source=source)
         glyphs.append(glyph)
 
