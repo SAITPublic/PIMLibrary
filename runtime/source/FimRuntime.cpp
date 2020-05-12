@@ -220,12 +220,13 @@ int FimRuntime::execute_relu(FimBo* output, FimBo* fim_data)
     return ret;
 }
 
-int FimRuntime::execute_bn(FimBo* output, FimBo* fim_data, FimBo* beta, FimBo* gamma, FimBo* scale, FimBo* shift)
+int FimRuntime::execute_bn(FimBo* output, FimBo* fim_data, FimBo* beta, FimBo* gamma, FimBo* mean, FimBo* variance,
+                           double epsilon)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
 
-    ret = fim_executor_->execute_bn(output, fim_data, beta, gamma, scale, shift);
+    ret = fim_executor_->execute_bn(output, fim_data, beta, gamma, mean, variance, epsilon);
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;

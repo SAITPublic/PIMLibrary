@@ -34,7 +34,8 @@ class FimRuntime
     int execute_mul(FimBo* output, FimBo* fim_data);
     int execute_relu(FimBo* output, FimBo* fim_data);
     int execute_gemv(FimBo* output, FimBo* operand0, FimBo* operand1);
-    int execute_bn(FimBo* output, FimBo* fim_data, FimBo* beta, FimBo* gamma, FimBo* scale, FimBo* shift);
+    int execute_bn(FimBo* output, FimBo* fim_data, FimBo* beta, FimBo* gamma, FimBo* mean, FimBo* variance,
+                   double epsilon);
 
    private:
     fim::runtime::manager::FimManager* fim_manager_;

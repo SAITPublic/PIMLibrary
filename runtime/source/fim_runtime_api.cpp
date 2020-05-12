@@ -450,7 +450,8 @@ int FimExecuteRelu(FimBo* output, FimBo* fim_data)
     return ret;
 }
 
-int FimExecuteBN(FimBo* output, FimBo* fim_data, FimBo* beta, FimBo* gamma, FimBo* scale, FimBo* shift)
+int FimExecuteBN(FimBo* output, FimBo* fim_data, FimBo* beta, FimBo* gamma, FimBo* mean, FimBo* variance,
+                 double epsilon)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     FIM_PROFILE_TICK(ExecuteBN);
@@ -460,7 +461,7 @@ int FimExecuteBN(FimBo* output, FimBo* fim_data, FimBo* beta, FimBo* gamma, FimB
         DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
         return -1;
     }
-    ret = fim_runtime->execute_bn(output, fim_data, beta, gamma, scale, shift);
+    ret = fim_runtime->execute_bn(output, fim_data, beta, gamma, mean, variance, epsilon);
     FIM_PROFILE_TOCK(ExecuteBN);
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";

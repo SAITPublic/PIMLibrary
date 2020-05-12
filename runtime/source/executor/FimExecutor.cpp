@@ -391,7 +391,51 @@ int FimExecutor::execute_relu(FimBo* output, FimBo* fim_data)
     return ret;
 }
 
-int FimExecutor::execute_bn(FimBo* output, FimBo* fim_data, FimBo* beta, FimBo* gamma, FimBo* scale, FimBo* shift)
+int FimExecutor::preprocess_srf(FimBo* beta, FimBo* gamma, FimBo* mean, FimBo* variance, double epsilon,
+                                uint8_t* srf_binary)
+{
+    int num_fim_rank = fbi_.num_fim_rank;
+    int num_fim_chan = fbi_.num_fim_chan;
+
+    int cidx = 0;
+    int rank = 0;
+    int burst_idx = 0;
+    int num_stride_reg = 2;
+    int num_half_per_reg = 16;
+
+    half* h_srf_binary = reinterpret_cast<half*>(srf_binary);
+    half* h_beta = (half*)beta->data;
+    half* h_gamma = (half*)gamma->data;
+    half* h_var = (half*)variance->data;
+    half* h_mean = (half*)mean->data;
+
+    for (int ch_model = 0; ch_model < beta->bshape.c; ch_model++) {
+        h_srf_binary[cidx * num_fim_rank * num_half_per_reg + rank * num_half_per_reg + burst_idx] =
+            1 / sqrt((float)h_var[ch_model] + epsilon);  // scale
+        h_srf_binary[cidx * num_fim_rank * num_half_per_reg + rank * num_half_per_reg + burst_idx + 1] =
+            h_gamma[ch_model];  // gamma
+        h_srf_binary[cidx * num_fim_rank * num_half_per_reg + rank * num_half_per_reg + burst_idx + 8] =
+            -(float)h_mean[ch_model] / sqrt((float)h_var[ch_model] + epsilon);  // shift
+        h_srf_binary[cidx * num_fim_rank * num_half_per_reg + rank * num_half_per_reg + burst_idx + 9] =
+            h_beta[ch_model];  // beta
+        rank++;
+
+        if (rank >= num_fim_rank) {
+            rank = 0;
+            cidx++;
+        }
+        if (cidx >= num_fim_chan) {
+            cidx = 0;
+            burst_idx += num_stride_reg;
+        }
+        if (burst_idx >= 8) {
+            std::cout << "error: this is not defined" << std::endl;
+        }
+    }
+}
+
+int FimExecutor::execute_bn(FimBo* output, FimBo* fim_data, FimBo* beta, FimBo* gamma, FimBo* mean, FimBo* variance,
+                            double epsilon)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
@@ -399,13 +443,16 @@ int FimExecutor::execute_bn(FimBo* output, FimBo* fim_data, FimBo* beta, FimBo* 
     unsigned blocks = 1;
     unsigned threads_per_block = 2;
 
-    /* TODO: implement srf bin generator */
-    uint8_t* crf_binary = bn_crf;
-    uint8_t* srf_binary = bn_srf_data;
-    int crf_size = sizeof(bn_crf);
-    int srf_size = sizeof(bn_srf_data);
+    /* TODO: modify 128 to crf size */
 
-    hipMemcpy((void*)d_crf_bin_buffer_, (void*)crf_binary, crf_size, hipMemcpyHostToDevice);
+    fim_manager_->create_crf_binary(OP_BN, output->size, output->size);
+    uint8_t* crf_binary = fim_manager_->get_crf_binary();
+    int crf_size = fim_manager_->get_crf_size();
+    uint8_t* srf_binary = new uint8_t[fbi_.num_fim_chan * fbi_.num_fim_rank * fbi_.trans_size];
+    int srf_size = fbi_.num_fim_chan * fbi_.num_fim_rank * fbi_.trans_size;
+    preprocess_srf(beta, gamma, mean, variance, epsilon, srf_binary);
+
+    hipMemcpy((void*)d_crf_bin_buffer_, (void*)crf_binary, sizeof(uint8_t) * 128, hipMemcpyHostToDevice);
     hipMemcpy((void*)d_srf_bin_buffer_, (void*)srf_binary, srf_size, hipMemcpyHostToDevice);
     hipMemcpy((void*)fim_base_addr_, fim_data->data, fim_data->size, hipMemcpyHostToDevice);
 
@@ -419,6 +466,7 @@ int FimExecutor::execute_bn(FimBo* output, FimBo* fim_data, FimBo* beta, FimBo* 
                        fmtd_size_per_ch_);
 
     hipStreamSynchronize(NULL);
+    delete[] srf_binary;
 
 #ifdef EMULATOR
     hipMemcpy((void*)h_fmtd16_size_, (void*)d_fmtd16_size_, sizeof(int), hipMemcpyDeviceToHost);

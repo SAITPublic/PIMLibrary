@@ -174,12 +174,6 @@ int FimManager::create_crf_binary(FimOpType op_type, int input_size, int output_
     get_fim_block_info(&fbi_);
     fim_crf_generator_->gen_binary(op_type, input_size, output_size, &fbi_, h_binary_buffer_, &crf_size_);
 
-    int num_command_per_register = 8;
-    crf_size_ = ceil((double)crf_size_ / num_command_per_register);
-    // std::cout <<" crf_size : " << crf_size_<<std::endl;
-    // for (int i=0; i<32; i++) {
-    //     std::cout << "g : "<< (int)elt_add_crf[i] << " t : " << (int)h_binary_buffer_[i] << std::endl;
-    // }
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
 }
 

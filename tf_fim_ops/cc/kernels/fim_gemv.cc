@@ -6,7 +6,8 @@
 
 using namespace tensorflow;  // NOLINT(build/namespaces)
 
-void KernelLauncher(const void* i_data, const void* w_data, const int IN_LENGTH, const int OUT_LENGTH, void* o_data , int reorder)
+void KernelLauncher(const void* i_data, const void* w_data, const int IN_LENGTH, const int OUT_LENGTH, void* o_data,
+                    int reorder)
 {
     std::cout << "Launcher for FIM_Gemv" << std::endl;
     int ret = 0;
@@ -34,11 +35,10 @@ void KernelLauncher(const void* i_data, const void* w_data, const int IN_LENGTH,
     FimCopyMemory(device_input, host_input, HOST_TO_DEVICE);
 
     /* __FIM_API__ call : Preload weight data on FIM memory */
-    if(reorder){
+    if (reorder) {
         FimConvertDataLayout(host_reordered_weight, host_weight, OP_GEMV);
         FimCopyMemory(preloaded_weight, host_reordered_weight, HOST_TO_DEVICE);
-    }
-    else{
+    } else {
         FimCopyMemory(preloaded_weight, host_weight, HOST_TO_DEVICE);
     }
 

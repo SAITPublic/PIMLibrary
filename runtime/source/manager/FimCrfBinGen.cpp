@@ -68,6 +68,21 @@ void FimCrfBinGen::create_fim_cmd(FimOpType op_type, int input_size, int output_
             FimCommand(FimCmdType::NOP, 7),
             FimCommand(FimCmdType::EXIT, 0)};
         cmds_.assign(tmp_cmds.begin(), tmp_cmds.end());
+    } else if (op_type == OP_BN) {
+        std::vector<FimCommand> tmp_cmds{FimCommand(FimCmdType::MAD, FimOpdType::GRF_A, FimOpdType::EVEN_BANK,
+                                                    FimOpdType::SRF_M, FimOpdType::SRF_A, 1, 0, 0, 0),
+                                         FimCommand(FimCmdType::MAD, FimOpdType::GRF_A, FimOpdType::GRF_A,
+                                                    FimOpdType::SRF_M, FimOpdType::SRF_A, 1, 0, 0, 1),
+                                         FimCommand(FimCmdType::NOP, 7),
+                                         FimCommand(FimCmdType::MAD, FimOpdType::GRF_B, FimOpdType::ODD_BANK,
+                                                    FimOpdType::SRF_M, FimOpdType::SRF_A, 1, 0, 0, 0),
+                                         FimCommand(FimCmdType::MAD, FimOpdType::GRF_B, FimOpdType::GRF_B,
+                                                    FimOpdType::SRF_M, FimOpdType::SRF_A, 1, 0, 0, 1),
+                                         FimCommand(FimCmdType::NOP, 7),
+                                         FimCommand(FimCmdType::NOP, 0),
+                                         FimCommand(FimCmdType::JUMP, num_jump_to_be_taken, 8),
+                                         FimCommand(FimCmdType::EXIT, 0)};
+        cmds_.assign(tmp_cmds.begin(), tmp_cmds.end());
     }
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
 }
@@ -76,7 +91,7 @@ void FimCrfBinGen::change_to_binary(uint8_t* crf_binary, int* crf_size)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     FimCommand nop_cmd(FimCmdType::NOP, 0);
-    *crf_size = cmds_.size();
+    *crf_size = cmds_.size() * sizeof(uint32_t);
 
     for (int i = 0; i < cmds_.size(); i++) {
         uint32_t u32_data_ = cmds_[i].to_int();
