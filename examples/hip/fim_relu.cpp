@@ -29,8 +29,16 @@ int fim_relu_1(void)
     FimBo* preloaded_fim_input = FimCreateBo(LENGTH, 1, 1, 1, FIM_FP16, MEM_TYPE_FIM);
 
     /* Initialize the input, output data */
-    load_data("../test_vectors/load/relu/input_256KB.dat", (char*)host_input->data, host_input->size);
-    load_data("../test_vectors/load/relu/output_256KB.dat", (char*)golden_output->data, golden_output->size);
+    std::string test_vector_data = TEST_VECTORS_DATA;
+    test_vector_data.append("/test_vectors/");
+
+    std::string input = test_vector_data + "load/relu/input_256KB.dat";
+    std::string output = test_vector_data + "load/relu/output_256KB.dat";
+    std::string preload_input = test_vector_data + "dump/relu/preloaded_input_256KB.dat";
+    std::string output_dump = test_vector_data + "dump/relu/output_256KB.dat";
+
+    load_data(input.c_str(), (char*)host_input->data, host_input->size);
+    load_data(output.c_str(), (char*)golden_output->data, golden_output->size);
 
     /* __FIM_API__ call : Preload weight data on FIM memory */
     FimConvertDataLayout(preloaded_fim_input, host_input, OP_RELU);
@@ -42,9 +50,8 @@ int fim_relu_1(void)
 
     ret = compare_data((char*)golden_output->data, (char*)host_output->data, host_output->size);
 
-    dump_data("../test_vectors/dump/relu/preloaded_input_256KB.dat", (char*)preloaded_fim_input->data,
-              preloaded_fim_input->size);
-    dump_data("../test_vectors/dump/relu/output_256KB.dat", (char*)host_output->data, host_output->size);
+    dump_data(preload_input.c_str(), (char*)preloaded_fim_input->data, preloaded_fim_input->size);
+    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
 
     /* __FIM_API__ call : Free memory */
     FimDestroyBo(host_input);
@@ -80,8 +87,16 @@ int fim_relu_2(void)
     FimAllocMemory(&preloaded_fim_input);
 
     /* Initialize the input, weight, output data */
-    load_data("../test_vectors/load/relu/input_256KB.dat", (char*)host_input.data, host_input.size);
-    load_data("../test_vectors/load/relu/output_256KB.dat", (char*)golden_output.data, golden_output.size);
+    std::string test_vector_data = TEST_VECTORS_DATA;
+    test_vector_data.append("/test_vectors/");
+
+    std::string input = test_vector_data + "load/relu/input_256KB.dat";
+    std::string output = test_vector_data + "load/relu/output_256KB.dat";
+    std::string preload_input = test_vector_data + "dump/relu/preloaded_input_256KB.dat";
+    std::string output_dump = test_vector_data + "dump/relu/output_256KB.dat";
+
+    load_data(input.c_str(), (char*)host_input.data, host_input.size);
+    load_data(output.c_str(), (char*)golden_output.data, golden_output.size);
 
     /* __FIM_API__ call : Preload weight data on FIM memory */
     FimConvertDataLayout(&preloaded_fim_input, &host_input, OP_RELU);
@@ -93,9 +108,8 @@ int fim_relu_2(void)
 
     ret = compare_data((char*)golden_output.data, (char*)host_output.data, host_output.size);
 
-    dump_data("../test_vectors/dump/relu/preloaded_input_256KB.dat", (char*)preloaded_fim_input.data,
-              preloaded_fim_input.size);
-    dump_data("../test_vectors/dump/relu/output_256KB.dat", (char*)host_output.data, host_output.size);
+    dump_data(preload_input.c_str(), (char*)preloaded_fim_input.data, preloaded_fim_input.size);
+    dump_data(output_dump.c_str(), (char*)host_output.data, host_output.size);
 
     /* __FIM_API__ call : Free memory */
     FimFreeMemory(&host_input);
@@ -125,8 +139,16 @@ int fim_relu_3(void)
     FimBo* preloaded_fim_input = FimCreateBo(LENGTH * 2, 1, 1, 1, FIM_FP16, MEM_TYPE_FIM);
 
     /* Initialize the input, output data */
-    load_data("../test_vectors/load/relu/input_512KB.dat", (char*)host_input->data, host_input->size);
-    load_data("../test_vectors/load/relu/output_512KB.dat", (char*)golden_output->data, golden_output->size);
+    std::string test_vector_data = TEST_VECTORS_DATA;
+    test_vector_data.append("/test_vectors/");
+
+    std::string input = test_vector_data + "load/relu/input_512KB.dat";
+    std::string output = test_vector_data + "load/relu/output_512KB.dat";
+    std::string preload_input = test_vector_data + "dump/relu/preloaded_input_512KB.dat";
+    std::string output_dump = test_vector_data + "dump/relu/output_512KB.dat";
+
+    load_data(input.c_str(), (char*)host_input->data, host_input->size);
+    load_data(output.c_str(), (char*)golden_output->data, golden_output->size);
 
     /* __FIM_API__ call : Preload weight data on FIM memory */
     FimConvertDataLayout(preloaded_fim_input, host_input, OP_RELU);
@@ -138,9 +160,8 @@ int fim_relu_3(void)
 
     ret = compare_data((char*)golden_output->data, (char*)host_output->data, host_output->size);
 
-    dump_data("../test_vectors/dump/relu/preloaded_input_512KB.dat", (char*)preloaded_fim_input->data,
-              preloaded_fim_input->size);
-    dump_data("../test_vectors/dump/relu/output_512KB.dat", (char*)host_output->data, host_output->size);
+    dump_data(preload_input.c_str(), (char*)preloaded_fim_input->data, preloaded_fim_input->size);
+    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
 
     /* __FIM_API__ call : Free memory */
     FimDestroyBo(host_input);
@@ -155,6 +176,6 @@ int fim_relu_3(void)
     return ret;
 }
 
-TEST(IntegrationTest, FimRelu1) { EXPECT_TRUE(fim_relu_1() == 0); }
-TEST(IntegrationTest, FimRelu2) { EXPECT_TRUE(fim_relu_2() == 0); }
-TEST(IntegrationTest, FimRelu3) { EXPECT_TRUE(fim_relu_3() == 0); }
+TEST(HIPIntegrationTest, FimRelu1) { EXPECT_TRUE(fim_relu_1() == 0); }
+TEST(HIPIntegrationTest, FimRelu2) { EXPECT_TRUE(fim_relu_2() == 0); }
+TEST(HIPIntegrationTest, FimRelu3) { EXPECT_TRUE(fim_relu_3() == 0); }

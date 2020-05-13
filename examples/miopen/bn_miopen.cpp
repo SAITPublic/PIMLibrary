@@ -134,12 +134,24 @@ int miopen_bn_2()
     hipMalloc(&mean_data, sizeof(half) * CH);
     hipMalloc(&var_data, sizeof(half) * CH);
 
-    load_data("../test_vectors/load/bn/input_256KB.dat", (char *)i_data, sizeof(half) * LENGTH);
-    load_data("../test_vectors/load/bn/beta_128B.dat", (char *)beta_data, sizeof(half) * CH);
-    load_data("../test_vectors/load/bn/gamma_128B.dat", (char *)gamma_data, sizeof(half) * CH);
-    load_data("../test_vectors/load/bn/scale_128B.dat", (char *)scale_data, sizeof(half) * CH);
-    load_data("../test_vectors/load/bn/shift_128B.dat", (char *)shift_data, sizeof(half) * CH);
-    load_data("../test_vectors/load/bn/output_256KB.dat", (char *)ref_data, sizeof(half) * LENGTH);
+    std::string test_vector_data = TEST_VECTORS_DATA;
+    test_vector_data.append("/test_vectors/");
+
+    std::string input = test_vector_data + "load/bn/input_256KB.dat";
+    std::string beta_bn = test_vector_data + "load/bn/beta_128B.dat";
+    std::string gamma = test_vector_data + "load/bn/gamma_128B.dat";
+    std::string scale = test_vector_data + "load/bn/beta_128B.dat";
+    std::string shift = test_vector_data + "load/bn/shift_128B.dat";
+    std::string output = test_vector_data + "load/bn/output_256KB.dat";
+    std::string preload_input = test_vector_data + "dump/bn/preloaded_input_256KB.dat";
+    std::string output_dump = test_vector_data + "dump/bn/output_256KB.dat";
+
+    load_data(input.c_str(), (char *)i_data, sizeof(half) * LENGTH);
+    load_data(beta_bn.c_str(), (char *)beta_data, sizeof(half) * CH);
+    load_data(gamma.c_str(), (char *)gamma_data, sizeof(half) * CH);
+    load_data(scale.c_str(), (char *)scale_data, sizeof(half) * CH);
+    load_data(shift.c_str(), (char *)shift_data, sizeof(half) * CH);
+    load_data(output.c_str(), (char *)ref_data, sizeof(half) * LENGTH);
 
     miopenHandle_t handle;
     miopenCreate(&handle);

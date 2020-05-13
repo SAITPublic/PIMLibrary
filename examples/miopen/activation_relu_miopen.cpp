@@ -31,8 +31,14 @@ int miopen_relu()
     hipMalloc(&b_data, sizeof(half) * LENGTH);
     hipMalloc(&ref_data, sizeof(half) * LENGTH);
 
-    load_data("../test_vectors/load/relu/input_256KB.dat", (char *)a_data, sizeof(half) * LENGTH);
-    load_data("../test_vectors/load/relu/output_256KB.dat", (char *)ref_data, sizeof(half) * LENGTH);
+    std::string test_vector_data = TEST_VECTORS_DATA;
+    test_vector_data.append("/test_vectors/");
+
+    std::string input = test_vector_data + "load/relu/input_256KB.dat";
+    std::string output = test_vector_data + "load/relu/output_256KB.dat";
+
+    load_data(input.c_str(), (char *)a_data, sizeof(half) * LENGTH);
+    load_data(output.c_str(), (char *)ref_data, sizeof(half) * LENGTH);
 
     miopenHandle_t handle;
     miopenCreate(&handle);

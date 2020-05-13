@@ -163,7 +163,12 @@ int miopen_rnn_lstm()
     hipMemcpy(out.data(), out_dev, sizeof(half) * out_sz, hipMemcpyDeviceToHost);
 
     half *golden = new half[out_sz];
-    load_data("../test_vectors/dump/gemv/miopen_lstm.dat", reinterpret_cast<char *>(golden), sizeof(half) * out_sz);
+    std::string test_vector_data = TEST_VECTORS_DATA;
+    test_vector_data.append("/test_vectors/");
+
+    std::string output_lstm = test_vector_data + "dump/gemv/miopen_lstm.dat";
+
+    load_data(output_lstm.c_str(), reinterpret_cast<char *>(golden), sizeof(half) * out_sz);
     ret = compare_data_round_off(golden, out.data(), out_sz);
 
     miopenDestroyTensorDescriptor(output_tensor);

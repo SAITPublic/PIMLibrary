@@ -37,12 +37,24 @@ int fim_bn_1(void)
     FimBo* preloaded_fim_input = FimCreateBo(WIDTH, HEIGHT, CH, BATCH, FIM_FP16, MEM_TYPE_FIM);
 
     /* Initialize the input, output data */
-    load_data("../test_vectors/load/bn/input_256KB.dat", (char*)host_input->data, host_input->size);
-    load_data("../test_vectors/load/bn/beta_128B.dat", (char*)host_beta->data, host_beta->size);
-    load_data("../test_vectors/load/bn/gamma_128B.dat", (char*)host_gamma->data, host_gamma->size);
-    load_data("../test_vectors/load/bn/scale_128B.dat", (char*)host_scale->data, host_scale->size);
-    load_data("../test_vectors/load/bn/shift_128B.dat", (char*)host_shift->data, host_shift->size);
-    load_data("../test_vectors/load/bn/output_256KB.dat", (char*)golden_output->data, golden_output->size);
+    std::string test_vector_data = TEST_VECTORS_DATA;
+    test_vector_data.append("/test_vectors/");
+
+    std::string input = test_vector_data + "load/bn/input_256KB.dat";
+    std::string beta = test_vector_data + "load/bn/beta_128B.dat";
+    std::string gamma = test_vector_data + "load/bn/gamma_128B.dat";
+    std::string scale = test_vector_data + "load/bn/beta_128B.dat";
+    std::string shift = test_vector_data + "load/bn/shift_128B.dat";
+    std::string output = test_vector_data + "load/bn/output_256KB.dat";
+    std::string preload_input = test_vector_data + "dump/bn/preloaded_input_256KB.dat";
+    std::string output_dump = test_vector_data + "dump/bn/output_256KB.dat";
+
+    load_data(input.c_str(), (char*)host_input->data, host_input->size);
+    load_data(beta.c_str(), (char*)host_beta->data, host_beta->size);
+    load_data(gamma.c_str(), (char*)host_gamma->data, host_gamma->size);
+    load_data(scale.c_str(), (char*)host_scale->data, host_scale->size);
+    load_data(shift.c_str(), (char*)host_shift->data, host_shift->size);
+    load_data(output.c_str(), (char*)golden_output->data, golden_output->size);
 
     /* __FIM_API__ call : Preload weight data on FIM memory */
     FimConvertDataLayout(preloaded_fim_input, host_input, OP_BN);
@@ -54,9 +66,8 @@ int fim_bn_1(void)
 
     ret = compare_data((char*)golden_output->data, (char*)host_output->data, host_output->size);
 
-    dump_data("../test_vectors/dump/bn/preloaded_input_256KB.dat", (char*)preloaded_fim_input->data,
-              preloaded_fim_input->size);
-    dump_data("../test_vectors/dump/bn/output_256KB.dat", (char*)host_output->data, host_output->size);
+    dump_data(preload_input.c_str(), (char*)preloaded_fim_input->data, preloaded_fim_input->size);
+    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
 
     /* __FIM_API__ call : Free memory */
     FimDestroyBo(host_input);
@@ -74,4 +85,4 @@ int fim_bn_1(void)
 
     return ret;
 }
-TEST(IntegrationTest, FimBN1) { EXPECT_TRUE(fim_bn_1() == 0); }
+TEST(HIPIntegrationTest, FimBN1) { EXPECT_TRUE(fim_bn_1() == 0); }

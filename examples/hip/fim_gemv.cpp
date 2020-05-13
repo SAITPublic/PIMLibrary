@@ -33,9 +33,19 @@ int fim_gemv(void)
     FimBo* golden_output = FimCreateBo(OUT_LENGTH, 1, 1, 1, FIM_FP16, MEM_TYPE_HOST);
 
     /* Initialize the input, weight, output data */
-    load_data("../test_vectors/load/gemv/input_256x1.dat", (char*)host_input->data, host_input->size);
-    load_data("../test_vectors/load/gemv/weight_256x4096.dat", (char*)host_weight->data, host_weight->size);
-    load_data("../test_vectors/load/gemv/output_4096x1.dat", (char*)golden_output->data, golden_output->size);
+    std::string test_vector_data = TEST_VECTORS_DATA;
+    test_vector_data.append("/test_vectors/");
+
+    std::string input = test_vector_data + "load/gemv/input_256x1.dat";
+    std::string weight = test_vector_data + "load/gemv/weight_256x4096.dat";
+    std::string output = test_vector_data + "load/gemv/output_4096x1.dat";
+    std::string preload_weight = test_vector_data + "dump/gemv/preloaded_weight_256x4096.dat";
+    std::string output_dump = test_vector_data + "dump/gemv/output_4096x1.dat";
+
+    load_data(input.c_str(), (char*)host_input->data, host_input->size);
+    load_data(weight.c_str(), (char*)host_weight->data, host_weight->size);
+    load_data(output.c_str(), (char*)golden_output->data, golden_output->size);
+
     FimCopyMemory(device_input, host_input, HOST_TO_DEVICE);
 
     /* __FIM_API__ call : Preload weight data on FIM memory */
@@ -46,9 +56,8 @@ int fim_gemv(void)
     FimExecuteGEMV(device_output, device_input, preloaded_weight);
 
     FimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
-    dump_data("../test_vectors/dump/gemv/preloaded_weight_256x4096.dat", (char*)preloaded_weight->data,
-              preloaded_weight->size);
-    dump_data("../test_vectors/dump/gemv/output_4096x1.dat", (char*)host_output->data, host_output->size);
+    dump_data(preload_weight.c_str(), (char*)preloaded_weight->data, preloaded_weight->size);
+    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
 
     ret = compare_data((char*)golden_output->data, (char*)host_output->data, host_output->size);
 
@@ -86,9 +95,19 @@ int fim_gemv2(void)
     FimBo* golden_output = FimCreateBo(OUT_LENGTH, 1, 1, 1, FIM_FP16, MEM_TYPE_HOST);
 
     /* Initialize the input, weight, output data */
-    load_data("../test_vectors/load/gemv/input_512x1.dat", (char*)host_input->data, host_input->size);
-    load_data("../test_vectors/load/gemv/weight_512x4096.dat", (char*)host_weight->data, host_weight->size);
-    load_data("../test_vectors/load/gemv/output_4096x1_512.dat", (char*)golden_output->data, golden_output->size);
+    std::string test_vector_data = TEST_VECTORS_DATA;
+    test_vector_data.append("/test_vectors/");
+
+    std::string input = test_vector_data + "load/gemv/input_512x1.dat";
+    std::string weight = test_vector_data + "load/gemv/weight_512x4096.dat";
+    std::string output = test_vector_data + "load/gemv/output_4096x1_512.dat";
+    std::string preload_weight = test_vector_data + "dump/gemv/preloaded_weight_512x4096.dat";
+    std::string output_dump = test_vector_data + "dump/gemv/output_4096x1_512.dat";
+
+    load_data(input.c_str(), (char*)host_input->data, host_input->size);
+    load_data(weight.c_str(), (char*)host_weight->data, host_weight->size);
+    load_data(output.c_str(), (char*)golden_output->data, golden_output->size);
+
     FimCopyMemory(device_input, host_input, HOST_TO_DEVICE);
 
     /* __FIM_API__ call : Preload weight data on FIM memory */
@@ -99,10 +118,9 @@ int fim_gemv2(void)
     FimExecuteGEMV(device_output, device_input, preloaded_weight);
 
     FimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
-    dump_data("../test_vectors/dump/gemv/preloaded_weight_512x4096.dat", (char*)preloaded_weight->data,
-              preloaded_weight->size);
-    dump_data("../test_vectors/dump/gemv/output_4096x1_512.dat", (char*)host_output->data, host_output->size);
 
+    dump_data(preload_weight.c_str(), (char*)preloaded_weight->data, preloaded_weight->size);
+    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
     ret = compare_data((char*)golden_output->data, (char*)host_output->data, host_output->size);
 
     /* __FIM_API__ call : Destroy FIM Buffer Object */
@@ -143,10 +161,18 @@ int fim_gemv3(void)
     FimBo* golden_output = FimCreateBo(fim_desc, MEM_TYPE_HOST, GEMV_OUTPUT);
 
     /* Initialize the input, weight, output data */
-    load_data("../test_vectors/load/gemv/gemv_input_1024x4096.dat", (char*)host_input->data, in_size * sizeof(half));
-    load_data("../test_vectors/load/gemv/gemv_output_1024x4096.dat", (char*)golden_output->data,
-              out_size * sizeof(half));
-    load_data("../test_vectors/load/gemv/gemv_weight_1024x4096.dat", (char*)temp_weight->data, temp_weight->size);
+    std::string test_vector_data = TEST_VECTORS_DATA;
+    test_vector_data.append("/test_vectors/");
+
+    std::string input = test_vector_data + "load/gemv/gemv_input_1024x4096.dat";
+    std::string weight = test_vector_data + "load/gemv/gemv_weight_1024x4096.dat";
+    std::string output = test_vector_data + "load/gemv/gemv_output_1024x4096.dat";
+    std::string preload_weight = test_vector_data + "dump/gemv/gemv_preloaded_weight_1024x4096.dat";
+    std::string output_dump = test_vector_data + "dump/gemv/gemv_output_1024x4096.dat";
+
+    load_data(input.c_str(), (char*)host_input->data, host_input->size);
+    load_data(weight.c_str(), (char*)temp_weight->data, temp_weight->size);
+    load_data(output.c_str(), (char*)golden_output->data, out_size * sizeof(half));
 
     for (int i = 0; i < fim_desc->bshape_r.h; i++) {
         memcpy((half*)host_weight->data + i * fim_desc->bshape_r.w, (half*)temp_weight->data + i * fim_desc->bshape.w,
@@ -163,10 +189,9 @@ int fim_gemv3(void)
     FimExecuteGEMV(device_output, device_input, preloaded_weight);
 
     FimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
-    dump_data("../test_vectors/dump/gemv/gemv_preloaded_weight_1024x4096.dat", (char*)preloaded_weight->data,
-              preloaded_weight->size);
-    dump_data("../test_vectors/dump/gemv/gemv_output_1024x4096.dat", (char*)host_output->data, host_output->size);
 
+    dump_data(preload_weight.c_str(), (char*)preloaded_weight->data, preloaded_weight->size);
+    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
     ret = compare_data((char*)golden_output->data, (char*)host_output->data, host_output->size);
 
     /* __FIM_API__ call : Destroy FIM Buffer Object */

@@ -75,7 +75,8 @@ build="${proj_cmake_dir}/build"
 if [ -d "$build" ]; then
     echo "build directory path ${build}"
 else
-    mkdir build
+    mkdir $build
+    echo "build directory doesn't exists created ${build} directory"
 fi
 
 cmake_fn()
