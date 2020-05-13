@@ -1,6 +1,6 @@
 import pandas as pd
 
-def get_table_stats(df, name_col='KernelName', dur_col = 'DurationNs', avg_col = 'Average_Ns', total_col = 'TotalDuration_Ns'):
+def get_table_stats(df, name_col='Kernel Operation', dur_col = 'duration', avg_col = 'Average Time (in ms)', total_col = 'Total Duration (in ms)'):
 	'''Function to get Average and Total Time duration of calls
 	   df = pandas dataframe
 	   name_col = Column containing names of events (KernelName, ModuleName, APIName, etc)
@@ -10,7 +10,6 @@ def get_table_stats(df, name_col='KernelName', dur_col = 'DurationNs', avg_col =
 	   Return dataframe containg Total and Average time of kernel calls
 	'''
 	df_dur = df[[name_col, dur_col]]
-
 	#Calculate Average
 	avg_df = df_dur.groupby(name_col).mean()
 	avg_df.rename(columns={dur_col: avg_col}, inplace=True)

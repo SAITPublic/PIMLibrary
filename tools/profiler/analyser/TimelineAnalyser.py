@@ -1,4 +1,4 @@
-def get_start_end_times(df, name_col='KernelName', start_col = 'BeginNs', end_col = 'EndNs'):
+def get_start_end_times(df, name_col='Kernel Operation', start_col = 'begin', end_col = 'end'):
 	'''Function to extract start and end Times of events from pandas dataframe
 		df = Pandas dataframe contaning data
 		name_col = Column containg name of events to be plotted (KernelName,ModuleName,APIName, etc)
