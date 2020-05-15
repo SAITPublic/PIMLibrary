@@ -105,7 +105,6 @@ int miopen_bn_2()
 
     void *i_data, *o_data, *ref_data;
     void *gamma_data, *beta_data;
-    void *shift_data, *scale_data;
     void *mean_data, *var_data;
 
     miopenTensorDescriptor_t i_desc, o_desc, w_desc;
@@ -129,44 +128,23 @@ int miopen_bn_2()
 
     hipMalloc(&beta_data, sizeof(half) * CH);
     hipMalloc(&gamma_data, sizeof(half) * CH);
-    hipMalloc(&scale_data, sizeof(half) * CH);
-    hipMalloc(&shift_data, sizeof(half) * CH);
     hipMalloc(&mean_data, sizeof(half) * CH);
     hipMalloc(&var_data, sizeof(half) * CH);
 
-    std::string test_vector_data = TEST_VECTORS_DATA;
-    test_vector_data.append("/test_vectors/");
-
-    std::string input = test_vector_data + "load/bn/input_256KB.dat";
-    std::string beta_bn = test_vector_data + "load/bn/beta_128B.dat";
-    std::string gamma = test_vector_data + "load/bn/gamma_128B.dat";
-    std::string scale = test_vector_data + "load/bn/beta_128B.dat";
-    std::string shift = test_vector_data + "load/bn/shift_128B.dat";
-    std::string output = test_vector_data + "load/bn/output_256KB.dat";
-    std::string preload_input = test_vector_data + "dump/bn/preloaded_input_256KB.dat";
-    std::string output_dump = test_vector_data + "dump/bn/output_256KB.dat";
-
-    load_data(input.c_str(), (char *)i_data, sizeof(half) * LENGTH);
-    load_data(beta_bn.c_str(), (char *)beta_data, sizeof(half) * CH);
-    load_data(gamma.c_str(), (char *)gamma_data, sizeof(half) * CH);
-    load_data(scale.c_str(), (char *)scale_data, sizeof(half) * CH);
-    load_data(shift.c_str(), (char *)shift_data, sizeof(half) * CH);
-    load_data(output.c_str(), (char *)ref_data, sizeof(half) * LENGTH);
+    load_data("../test_vectors/load/bn/input_256KB.dat", (char *)i_data, sizeof(half) * LENGTH);
+    load_data("../test_vectors/load/bn/beta_128B.dat", (char *)beta_data, sizeof(half) * CH);
+    load_data("../test_vectors/load/bn/gamma_128B.dat", (char *)gamma_data, sizeof(half) * CH);
+    load_data("../test_vectors/load/bn/mean_128B.dat", (char *)mean_data, sizeof(half) * CH);
+    load_data("../test_vectors/load/bn/variance_128B.dat", (char *)var_data, sizeof(half) * CH);
+    load_data("../test_vectors/load/bn/output_256KB.dat", (char *)ref_data, sizeof(half) * LENGTH);
 
     miopenHandle_t handle;
     miopenCreate(&handle);
-    double epsilon = 1e-3;
+    double epsilon = 1e-5;
     float alpha = 1.0;
     float beta = 0.0;
     miopenBatchNormMode_t mode;
     mode = miopenBNSpatial;
-
-    // Translate to miopen expected values.
-    for (int i = 0; i < CH; i++) {
-        half sc = ((half *)scale_data)[i];
-        ((half *)var_data)[i] = (half(1.0) / (sc * sc)) - epsilon;
-        ((half *)mean_data)[i] = -((half *)shift_data)[i] / sc;
-    }
 
     miopenBatchNormalizationForwardInference(handle, mode, &alpha, &beta, i_desc, i_data, o_desc, o_data, w_desc,
                                              gamma_data, beta_data, mean_data, var_data, epsilon);
@@ -183,7 +161,8 @@ int miopen_bn_2()
     miopenDestroyTensorDescriptor(o_desc);
     miopenDestroyTensorDescriptor(w_desc);
     miopenDestroy(handle);
-    if (compare_data_round_off((half *)out, (half *)ref_data, LENGTH, 0.005)) ret = -1;
+
+    if (compare_data_round_off((half *)out, (half *)ref_data, LENGTH, 0.01)) ret = -1;
 
     hipFree(ref_data);
     hipFree(out);
@@ -192,8 +171,6 @@ int miopen_bn_2()
 
     hipFree(beta_data);
     hipFree(gamma_data);
-    hipFree(scale_data);
-    hipFree(shift_data);
     hipFree(mean_data);
     hipFree(var_data);
 
