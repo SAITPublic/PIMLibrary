@@ -44,7 +44,7 @@ class MIopenAddTestRandom(tf.test.TestCase):
         for i in batch_size:
             for j in width:
                 for k in height:
-                    with self.test_session():1
+                    with self.test_session():
                         #FIXME: minval, maxval would be changed to finfo(np.float16).min & max
                         input0 = tf.random.uniform(shape=[i, channel, j, k], minval=-300.0, maxval=300.0, dtype=np.float16)
                         input1 = tf.random.uniform(shape=[i, channel, j, k], minval=-300.0, maxval=300.0, dtype=np.float16)
