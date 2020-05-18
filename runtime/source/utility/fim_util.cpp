@@ -297,29 +297,37 @@ __device__ void program_crf_1cu_2th(volatile uint8_t* __restrict__ fim_ctr, uint
     }
 }
 
-__device__ void compute_elt_op_1cu_2th(volatile uint8_t* __restrict__ fim_data, int num_tile, uint64_t offset)
+__device__ void compute_elt_op_1cu_2th(volatile uint8_t* __restrict__ fim_input0,
+                                       volatile uint8_t* __restrict__ fim_input1,
+                                       volatile uint8_t* __restrict__ fim_output, int num_tile, uint64_t offset)
 {
     FimBlockInfo* fbi = &vega20_fbi;
 
     for (int i = 0; i < num_tile; i++) {
-        add_transaction_all_1cu_2th(fim_data, false, 0, 0, 0, fbi->num_grf * i, null_bst, offset, fbi->num_grf);
-        add_transaction_all_1cu_2th(fim_data, false, 0, 1, 0, fbi->num_grf * i, null_bst, offset, fbi->num_grf);
-        add_transaction_all_1cu_2th(fim_data, true, 0, 1, 0, fbi->num_grf * (num_tile + i), null_bst, offset,
-                                    fbi->num_grf);
+        add_transaction_all_1cu_2th(fim_input0, false, 0, 0, 0, fbi->num_grf * i, null_bst, offset, fbi->num_grf);
+        add_transaction_all_1cu_2th(fim_input1, false, 0, 0, 0, fbi->num_grf * i, null_bst, offset, fbi->num_grf);
+        add_transaction_all_1cu_2th(fim_output, true, 0, 0, 0, fbi->num_grf * i, null_bst, offset, fbi->num_grf);
+
+        add_transaction_all_1cu_2th(fim_input0, false, 0, 1, 0, fbi->num_grf * i, null_bst, offset, fbi->num_grf);
+        add_transaction_all_1cu_2th(fim_input1, false, 0, 1, 0, fbi->num_grf * i, null_bst, offset, fbi->num_grf);
+        add_transaction_all_1cu_2th(fim_output, true, 0, 1, 0, fbi->num_grf * i, null_bst, offset, fbi->num_grf);
+        add_transaction_all_1cu_2th(fim_output, true, 0, 1, 0, fbi->num_grf * i + fbi->num_grf - 1, null_bst, offset,
+                                    1);
     }
 }
 
-__device__ void compute_relu_1cu_2th(volatile uint8_t* __restrict__ fim_data, int num_tile, uint64_t offset)
+__device__ void compute_relu_1cu_2th(volatile uint8_t* __restrict__ fim_output, volatile uint8_t* __restrict__ fim_data,
+                                     int num_tile, uint64_t offset)
 {
     FimBlockInfo* fbi = &vega20_fbi;
 
     for (int i = 0; i < num_tile; i++) {
         add_transaction_all_1cu_2th(fim_data, false, 0, 0, 0, fbi->num_grf * i, null_bst, offset, fbi->num_grf);
-        add_transaction_all_1cu_2th(fim_data, true, 0, 0, 0, fbi->num_grf * (num_tile + i), null_bst, offset,
-                                    fbi->num_grf);
+        add_transaction_all_1cu_2th(fim_output, true, 0, 0, 0, fbi->num_grf * i, null_bst, offset, fbi->num_grf);
         add_transaction_all_1cu_2th(fim_data, false, 0, 1, 0, fbi->num_grf * i, null_bst, offset, fbi->num_grf);
-        add_transaction_all_1cu_2th(fim_data, true, 0, 1, 0, fbi->num_grf * (num_tile + i), null_bst, offset,
-                                    fbi->num_grf);
+        add_transaction_all_1cu_2th(fim_output, true, 0, 1, 0, fbi->num_grf * i, null_bst, offset, fbi->num_grf);
+        add_transaction_all_1cu_2th(fim_output, true, 0, 1, 0, fbi->num_grf * i + fbi->num_grf - 1, null_bst, offset,
+                                    1);
     }
 }
 

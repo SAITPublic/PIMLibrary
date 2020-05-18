@@ -14,8 +14,7 @@ int m_width;
 #endif
 
 #include "fim_bn_kernels.fimk"
-#include "fim_elt_add_kernels.fimk"
-#include "fim_elt_mul_kernels.fimk"
+#include "fim_elt_op_kernels.fimk"
 #include "fim_gemv_kernels.fimk"
 #include "fim_relu_kernels.fimk"
 

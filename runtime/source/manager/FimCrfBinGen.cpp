@@ -26,7 +26,7 @@ void FimCrfBinGen::create_fim_cmd(FimOpType op_type, int input_size, int output_
     int num_jump_of_even_bank = 0;
     int num_jump_of_odd_bank = 0;
 
-    if (op_type == OP_RELU) {
+    if (op_type == OP_RELU || op_type == OP_ELT_ADD || op_type == OP_ELT_MUL) {
         num_jump_to_be_taken = num_tile / 2 - 1;
     } else if (op_type == OP_GEMV) {
         num_tile = ceil((double)num_transaction / (double)fbi->num_grf);
@@ -39,34 +39,36 @@ void FimCrfBinGen::create_fim_cmd(FimOpType op_type, int input_size, int output_
     if (op_type == OP_ELT_ADD) {
         std::vector<FimCommand> tmp_cmds{
             FimCommand(FimCmdType::FILL, FimOpdType::GRF_A, FimOpdType::EVEN_BANK),
-            FimCommand(FimCmdType::ADD, FimOpdType::GRF_B, FimOpdType::GRF_A, FimOpdType::ODD_BANK, 1),
-            FimCommand(FimCmdType::NOP, 7), FimCommand(FimCmdType::JUMP, num_jump_to_be_taken, 4),
-            FimCommand(FimCmdType::EXIT, 0)};
+            FimCommand(FimCmdType::ADD, FimOpdType::GRF_A, FimOpdType::GRF_A, FimOpdType::EVEN_BANK, 1),
+            FimCommand(FimCmdType::NOP, 7),
+            FimCommand(FimCmdType::FILL, FimOpdType::GRF_B, FimOpdType::ODD_BANK),
+            FimCommand(FimCmdType::ADD, FimOpdType::GRF_B, FimOpdType::GRF_B, FimOpdType::ODD_BANK, 1),
+            FimCommand(FimCmdType::NOP, 7),
+            FimCommand(FimCmdType::NOP, 0)};
         cmds_.assign(tmp_cmds.begin(), tmp_cmds.end());
     } else if (op_type == OP_ELT_MUL) {
         std::vector<FimCommand> tmp_cmds{
             FimCommand(FimCmdType::FILL, FimOpdType::GRF_A, FimOpdType::EVEN_BANK),
-            FimCommand(FimCmdType::MUL, FimOpdType::GRF_B, FimOpdType::GRF_A, FimOpdType::ODD_BANK, 1),
-            FimCommand(FimCmdType::NOP, 7), FimCommand(FimCmdType::JUMP, num_jump_to_be_taken, 4),
-            FimCommand(FimCmdType::EXIT, 0)};
+            FimCommand(FimCmdType::MUL, FimOpdType::GRF_A, FimOpdType::GRF_A, FimOpdType::EVEN_BANK, 1),
+            FimCommand(FimCmdType::NOP, 7),
+            FimCommand(FimCmdType::FILL, FimOpdType::GRF_B, FimOpdType::ODD_BANK),
+            FimCommand(FimCmdType::MUL, FimOpdType::GRF_B, FimOpdType::GRF_B, FimOpdType::ODD_BANK, 1),
+            FimCommand(FimCmdType::NOP, 7),
+            FimCommand(FimCmdType::NOP, 0)};
         cmds_.assign(tmp_cmds.begin(), tmp_cmds.end());
     } else if (op_type == OP_RELU) {
         std::vector<FimCommand> tmp_cmds{
             FimCommand(FimCmdType::FILL, FimOpdType::GRF_A, FimOpdType::EVEN_BANK, 1, 0, 0, 0, 1),
             FimCommand(FimCmdType::NOP, 7),
             FimCommand(FimCmdType::FILL, FimOpdType::GRF_B, FimOpdType::ODD_BANK, 1, 0, 0, 0, 1),
-            FimCommand(FimCmdType::NOP, 7),
-            FimCommand(FimCmdType::JUMP, num_jump_to_be_taken, 5),
-            FimCommand(FimCmdType::EXIT, 0)};
+            FimCommand(FimCmdType::NOP, 7), FimCommand(FimCmdType::NOP, 0)};
         cmds_.assign(tmp_cmds.begin(), tmp_cmds.end());
     } else if (op_type == OP_GEMV) {
         std::vector<FimCommand> tmp_cmds{
             FimCommand(FimCmdType::MAC, FimOpdType::GRF_B, FimOpdType::GRF_A, FimOpdType::EVEN_BANK, 1, 0, 0, 0),
             FimCommand(FimCmdType::JUMP, num_jump_of_even_bank, 2),
             FimCommand(FimCmdType::MAC, FimOpdType::GRF_B, FimOpdType::GRF_A, FimOpdType::ODD_BANK, 1, 0, 0, 0),
-            FimCommand(FimCmdType::JUMP, num_jump_of_odd_bank, 2),
-            FimCommand(FimCmdType::NOP, 7),
-            FimCommand(FimCmdType::EXIT, 0)};
+            FimCommand(FimCmdType::JUMP, num_jump_of_odd_bank, 2), FimCommand(FimCmdType::NOP, 7)};
         cmds_.assign(tmp_cmds.begin(), tmp_cmds.end());
     } else if (op_type == OP_BN) {
         std::vector<FimCommand> tmp_cmds{FimCommand(FimCmdType::MAD, FimOpdType::GRF_A, FimOpdType::EVEN_BANK,
@@ -79,11 +81,16 @@ void FimCrfBinGen::create_fim_cmd(FimOpType op_type, int input_size, int output_
                                          FimCommand(FimCmdType::MAD, FimOpdType::GRF_B, FimOpdType::GRF_B,
                                                     FimOpdType::SRF_M, FimOpdType::SRF_A, 1, 0, 0, 1),
                                          FimCommand(FimCmdType::NOP, 7),
-                                         FimCommand(FimCmdType::NOP, 0),
-                                         FimCommand(FimCmdType::JUMP, num_jump_to_be_taken, 8),
-                                         FimCommand(FimCmdType::EXIT, 0)};
+                                         FimCommand(FimCmdType::NOP, 0)};
         cmds_.assign(tmp_cmds.begin(), tmp_cmds.end());
     }
+
+    if (num_jump_to_be_taken != 0) {
+        cmds_.push_back(FimCommand(FimCmdType::JUMP, num_jump_to_be_taken, cmds_.size() + 1));
+    }
+
+    cmds_.push_back(FimCommand(FimCmdType::EXIT, 0));
+
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
 }
 

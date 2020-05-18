@@ -108,6 +108,7 @@ inline int compare_data(char* data_a, char* data_b, size_t size)
     int ret = 0;
 
     for (int i = 0; i < size; i++) {
+        // std::cout << (int)data_a[i] << " : " << (int)data_b[i] << std::endl;
         if (data_a[i] != data_b[i]) {
             ret = -1;
             break;

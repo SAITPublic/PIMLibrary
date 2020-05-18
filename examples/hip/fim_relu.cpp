@@ -25,8 +25,8 @@ int fim_relu_1(void)
     FimBo* host_input = FimCreateBo(LENGTH, 1, 1, 1, FIM_FP16, MEM_TYPE_HOST);
     FimBo* host_output = FimCreateBo(LENGTH, 1, 1, 1, FIM_FP16, MEM_TYPE_HOST);
     FimBo* golden_output = FimCreateBo(LENGTH, 1, 1, 1, FIM_FP16, MEM_TYPE_HOST);
-    FimBo* device_output = FimCreateBo(LENGTH, 1, 1, 1, FIM_FP16, MEM_TYPE_DEVICE);
-    FimBo* preloaded_fim_input = FimCreateBo(LENGTH, 1, 1, 1, FIM_FP16, MEM_TYPE_FIM);
+    FimBo* fim_input = FimCreateBo(LENGTH, 1, 1, 1, FIM_FP16, MEM_TYPE_FIM);
+    FimBo* device_output = FimCreateBo(LENGTH, 1, 1, 1, FIM_FP16, MEM_TYPE_FIM);
 
     /* Initialize the input, output data */
     std::string test_vector_data = TEST_VECTORS_DATA;
@@ -34,23 +34,21 @@ int fim_relu_1(void)
 
     std::string input = test_vector_data + "load/relu/input_256KB.dat";
     std::string output = test_vector_data + "load/relu/output_256KB.dat";
-    std::string preload_input = test_vector_data + "dump/relu/preloaded_input_256KB.dat";
     std::string output_dump = test_vector_data + "dump/relu/output_256KB.dat";
 
     load_data(input.c_str(), (char*)host_input->data, host_input->size);
     load_data(output.c_str(), (char*)golden_output->data, golden_output->size);
 
     /* __FIM_API__ call : Preload weight data on FIM memory */
-    FimConvertDataLayout(preloaded_fim_input, host_input, OP_RELU);
+    FimCopyMemory(fim_input, host_input, HOST_TO_FIM);
 
     /* __FIM_API__ call : Execute FIM kernel */
-    FimExecuteRelu(device_output, preloaded_fim_input);
+    FimExecuteRelu(device_output, fim_input);
 
-    FimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
+    FimCopyMemory(host_output, device_output, FIM_TO_HOST);
 
     ret = compare_data((char*)golden_output->data, (char*)host_output->data, host_output->size);
 
-    dump_data(preload_input.c_str(), (char*)preloaded_fim_input->data, preloaded_fim_input->size);
     dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
 
     /* __FIM_API__ call : Free memory */
@@ -58,7 +56,7 @@ int fim_relu_1(void)
     FimDestroyBo(host_output);
     FimDestroyBo(golden_output);
     FimDestroyBo(device_output);
-    FimDestroyBo(preloaded_fim_input);
+    FimDestroyBo(fim_input);
 
     /* __FIM_API__ call : Deinitialize FimRuntime */
     FimDeinitialize();
@@ -73,8 +71,8 @@ int fim_relu_2(void)
     FimBo host_input = {.size = LENGTH * sizeof(half), .mem_type = MEM_TYPE_HOST};
     FimBo host_output = {.size = LENGTH * sizeof(half), .mem_type = MEM_TYPE_HOST};
     FimBo golden_output = {.size = LENGTH * sizeof(half), .mem_type = MEM_TYPE_HOST};
-    FimBo device_output = {.size = LENGTH * sizeof(half), .mem_type = MEM_TYPE_DEVICE};
-    FimBo preloaded_fim_input = {.size = LENGTH * sizeof(half), .mem_type = MEM_TYPE_FIM};
+    FimBo fim_input = {.size = LENGTH * sizeof(half), .mem_type = MEM_TYPE_FIM};
+    FimBo device_output = {.size = LENGTH * sizeof(half), .mem_type = MEM_TYPE_FIM};
 
     /* __FIM_API__ call : Initialize FimRuntime */
     FimInitialize(RT_TYPE_HIP, FIM_FP16);
@@ -83,8 +81,8 @@ int fim_relu_2(void)
     FimAllocMemory(&host_input);
     FimAllocMemory(&host_output);
     FimAllocMemory(&golden_output);
+    FimAllocMemory(&fim_input);
     FimAllocMemory(&device_output);
-    FimAllocMemory(&preloaded_fim_input);
 
     /* Initialize the input, weight, output data */
     std::string test_vector_data = TEST_VECTORS_DATA;
@@ -92,23 +90,21 @@ int fim_relu_2(void)
 
     std::string input = test_vector_data + "load/relu/input_256KB.dat";
     std::string output = test_vector_data + "load/relu/output_256KB.dat";
-    std::string preload_input = test_vector_data + "dump/relu/preloaded_input_256KB.dat";
     std::string output_dump = test_vector_data + "dump/relu/output_256KB.dat";
 
     load_data(input.c_str(), (char*)host_input.data, host_input.size);
     load_data(output.c_str(), (char*)golden_output.data, golden_output.size);
 
     /* __FIM_API__ call : Preload weight data on FIM memory */
-    FimConvertDataLayout(&preloaded_fim_input, &host_input, OP_RELU);
+    FimCopyMemory(&fim_input, &host_input, HOST_TO_FIM);
 
     /* __FIM_API__ call : Execute FIM kernel */
-    FimExecuteRelu(&device_output, &preloaded_fim_input);
+    FimExecuteRelu(&device_output, &fim_input);
 
-    FimCopyMemory(&host_output, &device_output, DEVICE_TO_HOST);
+    FimCopyMemory(&host_output, &device_output, FIM_TO_HOST);
 
     ret = compare_data((char*)golden_output.data, (char*)host_output.data, host_output.size);
 
-    dump_data(preload_input.c_str(), (char*)preloaded_fim_input.data, preloaded_fim_input.size);
     dump_data(output_dump.c_str(), (char*)host_output.data, host_output.size);
 
     /* __FIM_API__ call : Free memory */
@@ -116,7 +112,7 @@ int fim_relu_2(void)
     FimFreeMemory(&host_output);
     FimFreeMemory(&golden_output);
     FimFreeMemory(&device_output);
-    FimFreeMemory(&preloaded_fim_input);
+    FimFreeMemory(&fim_input);
 
     /* __FIM_API__ call : Deinitialize FimRuntime */
     FimDeinitialize();
@@ -135,8 +131,8 @@ int fim_relu_3(void)
     FimBo* host_input = FimCreateBo(LENGTH * 2, 1, 1, 1, FIM_FP16, MEM_TYPE_HOST);
     FimBo* host_output = FimCreateBo(LENGTH * 2, 1, 1, 1, FIM_FP16, MEM_TYPE_HOST);
     FimBo* golden_output = FimCreateBo(LENGTH * 2, 1, 1, 1, FIM_FP16, MEM_TYPE_HOST);
-    FimBo* device_output = FimCreateBo(LENGTH * 2, 1, 1, 1, FIM_FP16, MEM_TYPE_DEVICE);
-    FimBo* preloaded_fim_input = FimCreateBo(LENGTH * 2, 1, 1, 1, FIM_FP16, MEM_TYPE_FIM);
+    FimBo* fim_input = FimCreateBo(LENGTH * 2, 1, 1, 1, FIM_FP16, MEM_TYPE_FIM);
+    FimBo* device_output = FimCreateBo(LENGTH * 2, 1, 1, 1, FIM_FP16, MEM_TYPE_FIM);
 
     /* Initialize the input, output data */
     std::string test_vector_data = TEST_VECTORS_DATA;
@@ -151,16 +147,15 @@ int fim_relu_3(void)
     load_data(output.c_str(), (char*)golden_output->data, golden_output->size);
 
     /* __FIM_API__ call : Preload weight data on FIM memory */
-    FimConvertDataLayout(preloaded_fim_input, host_input, OP_RELU);
+    FimCopyMemory(fim_input, host_input, HOST_TO_FIM);
 
     /* __FIM_API__ call : Execute FIM kernel */
-    FimExecuteRelu(device_output, preloaded_fim_input);
+    FimExecuteRelu(device_output, fim_input);
 
-    FimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
+    FimCopyMemory(host_output, device_output, FIM_TO_HOST);
 
     ret = compare_data((char*)golden_output->data, (char*)host_output->data, host_output->size);
 
-    dump_data(preload_input.c_str(), (char*)preloaded_fim_input->data, preloaded_fim_input->size);
     dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
 
     /* __FIM_API__ call : Free memory */
@@ -168,7 +163,7 @@ int fim_relu_3(void)
     FimDestroyBo(host_output);
     FimDestroyBo(golden_output);
     FimDestroyBo(device_output);
-    FimDestroyBo(preloaded_fim_input);
+    FimDestroyBo(fim_input);
 
     /* __FIM_API__ call : Deinitialize FimRuntime */
     FimDeinitialize();

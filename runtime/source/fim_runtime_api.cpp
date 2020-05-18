@@ -333,88 +333,79 @@ int FimCopyMemory(FimBo* dst, FimBo* src, FimMemCpyType cpy_type)
     return ret;
 }
 
-int FimExecute(void* output, void* operand0, void* operand1, size_t size, FimOpType op_type)
+int FimExecuteAdd(FimBo* output, FimBo* operand0, FimBo* operand1)
 {
-    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
-    FIM_PROFILE_TICK(Execute);
-    int ret = 0;
-
-    if (fim_runtime == nullptr) {
-        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
-        return -1;
-    }
-    ret = fim_runtime->execute(output, operand0, operand1, size, op_type);
-    FIM_PROFILE_TOCK(Execute);
-
-    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
-    return ret;
-}
-
-int FimExecute(FimBo* output, FimBo* operand0, FimBo* operand1, FimOpType op_type)
-{
-    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
-    FIM_PROFILE_TICK(Execute);
-    int ret = 0;
-
-    if (fim_runtime == nullptr) {
-        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
-        return -1;
-    }
-    ret = fim_runtime->execute(output, operand0, operand1, op_type);
-    FIM_PROFILE_TOCK(Execute);
-
-    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
-    return ret;
-}
-
-int FimExecute(FimBo* output, FimBo* fim_data, FimOpType op_type)
-{
-    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
-    FIM_PROFILE_TICK(Execute);
-    int ret = 0;
-
-    if (fim_runtime == nullptr) {
-        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
-        return -1;
-    }
-    ret = fim_runtime->execute(output, fim_data, op_type);
-    FIM_PROFILE_TOCK(Execute);
-
-    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
-    return ret;
-}
-
-int FimExecuteAdd(FimBo* output, FimBo* fim_data)
-{
-    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
+    DLOG(INFO) << "called";
     FIM_PROFILE_TICK(ExecuteAdd);
     int ret = 0;
 
     if (fim_runtime == nullptr) {
-        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
         return -1;
     }
-    ret = fim_runtime->execute_add(output, fim_data);
+    ret = fim_runtime->execute_add(output, operand0, operand1);
     FIM_PROFILE_TOCK(ExecuteAdd);
 
-    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
 
-int FimExecuteMul(FimBo* output, FimBo* fim_data)
+int FimExecuteAdd(FimBo* output, half scalar, FimBo* vector)
 {
-    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
+    DLOG(INFO) << "called";
+    FIM_PROFILE_TICK(ExecuteAdd);
+    int ret = 0;
+
+    if (fim_runtime == nullptr) {
+        return -1;
+    }
+
+    int num_vector = vector->size / sizeof(uint16_t);
+    FimBo* padded_scalar = FimCreateBo(num_vector, 1, 1, 1, FIM_FP16, MEM_TYPE_FIM);
+    for (int i = 0; i < num_vector; i++) {
+        memcpy((char*)padded_scalar->data + i * sizeof(uint16_t), (char*)(&scalar), sizeof(uint16_t));
+    }
+
+    ret = fim_runtime->execute_add(output, vector, padded_scalar);
+    FIM_PROFILE_TOCK(ExecuteAdd);
+
+    FimDestroyBo(padded_scalar);
+    return ret;
+}
+
+int FimExecuteMul(FimBo* output, FimBo* operand0, FimBo* operand1)
+{
+    DLOG(INFO) << "called";
     FIM_PROFILE_TICK(ExecuteMul);
     int ret = 0;
 
     if (fim_runtime == nullptr) {
-        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
         return -1;
     }
-    ret = fim_runtime->execute_mul(output, fim_data);
+    ret = fim_runtime->execute_mul(output, operand0, operand1);
     FIM_PROFILE_TOCK(ExecuteMul);
 
-    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+    return ret;
+}
+
+int FimExecuteMul(FimBo* output, half scalar, FimBo* vector)
+{
+    DLOG(INFO) << "called";
+    FIM_PROFILE_TICK(ExecuteMul);
+    int ret = 0;
+
+    if (fim_runtime == nullptr) {
+        return -1;
+    }
+
+    int num_vector = vector->size / sizeof(uint16_t);
+    FimBo* padded_scalar = FimCreateBo(num_vector, 1, 1, 1, FIM_FP16, MEM_TYPE_FIM);
+    for (int i = 0; i < num_vector; i++) {
+        memcpy((char*)padded_scalar->data + i * sizeof(uint16_t), (char*)(&scalar), sizeof(uint16_t));
+    }
+
+    ret = fim_runtime->execute_mul(output, vector, padded_scalar);
+    FIM_PROFILE_TOCK(ExecuteMul);
+
+    FimDestroyBo(padded_scalar);
     return ret;
 }
 

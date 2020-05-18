@@ -11,11 +11,13 @@ class FimSimulator
     void initialize(const string& device_ini_file_name, const string& system_ini_file_name, size_t megs_of_memory,
                     size_t num_fim_chan, size_t num_fim_rank);
     void preload_data(void* data, size_t data_size);
+    void preload_data_with_addr(uint64_t addr, void* data, size_t data_size);
     void execute_kernel(void* trace_data, size_t num_trace);
     void execute_kernel_bn(void* trace_data, size_t num_trace, int num_batch, int num_ch, int num_width);
     void alloc_burst(size_t preload_size, size_t output_size);
     void get_uint16_result(uint16_t* output_data, size_t num_data);
     void get_uint16_result_gemv(uint16_t* output_data, size_t num_data);
+    void read_result(uint64_t addr, size_t data_size);
     void run();
     void compare_result_arr(uint16_t* test_output, size_t num_data, NumpyBurstType* output_npbst);
 

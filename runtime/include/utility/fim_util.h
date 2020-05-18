@@ -73,8 +73,8 @@ __device__ void program_crf_1cu_2th(volatile uint8_t* __restrict__ fim_ctr, uint
                                     uint64_t offset);
 __device__ void program_srf_1cu_2th(volatile uint8_t* __restrict__ fim_ctr, uint8_t* srf_bin, uint32_t srf_bin_size,
                                     uint64_t offset);
-__device__ void compute_elt_op_1cu_2th(volatile uint8_t* __restrict__ fim_data, int num_tile, uint64_t offset);
-__device__ void compute_relu_1cu_2th(volatile uint8_t* __restrict__ fim_data, int num_tile, uint64_t offset);
+__device__ void compute_relu_1cu_2th(volatile uint8_t* __restrict__ fim_output, volatile uint8_t* __restrict__ fim_data,
+                                     int num_tile, uint64_t offset);
 __device__ void compute_bn_1cu_2th(volatile uint8_t* __restrict__ fim_data, int num_tile, uint64_t offset);
 __device__ int get_num_tile(int dim);
 __device__ int get_result_col(int dim);
@@ -95,6 +95,9 @@ __device__ void compute_gemv_2bank_1cu_2th(volatile uint8_t* __restrict__ fim_ct
                                            volatile uint8_t* __restrict__ fim_input, int num_in_tile, int num_out_tile,
                                            int input_tile, int output_tile, FimBankType bank_type, uint64_t offset);
 
+__device__ void compute_elt_op_1cu_2th(volatile uint8_t* __restrict__ fim_input0,
+                                       volatile uint8_t* __restrict__ fim_input1,
+                                       volatile uint8_t* __restrict__ fim_output, int num_tile, uint64_t offset);
 #ifdef EMULATOR
 __device__ void R_CMD(uint8_t* addr);
 __device__ void W_CMD(uint8_t* addr);

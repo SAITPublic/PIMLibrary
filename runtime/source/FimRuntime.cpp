@@ -143,58 +143,23 @@ int FimRuntime::copy_memory(FimBo* dst, FimBo* src, FimMemCpyType cpy_type)
     return ret;
 }
 
-int FimRuntime::execute(void* output, void* operand0, void* operand1, size_t size, FimOpType op_type)
+int FimRuntime::execute_add(FimBo* output, FimBo* operand0, FimBo* operand1)
 {
-    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
+    DLOG(INFO) << "called";
     int ret = 0;
 
-    ret = fim_executor_->execute(output, operand0, operand1, size, op_type);
+    ret = fim_executor_->execute_add(output, operand0, operand1);
 
-    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
 
-int FimRuntime::execute(FimBo* output, FimBo* operand0, FimBo* operand1, FimOpType op_type)
+int FimRuntime::execute_mul(FimBo* output, FimBo* operand0, FimBo* operand1)
 {
-    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
+    DLOG(INFO) << "called";
     int ret = 0;
 
-    ret = fim_executor_->execute(output, operand0, operand1, op_type);
+    ret = fim_executor_->execute_mul(output, operand0, operand1);
 
-    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
-    return ret;
-}
-
-int FimRuntime::execute(FimBo* output, FimBo* fim_data, FimOpType op_type)
-{
-    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
-    int ret = 0;
-
-    ret = fim_executor_->execute(output, fim_data, op_type);
-
-    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
-    return ret;
-}
-
-int FimRuntime::execute_add(FimBo* output, FimBo* fim_data)
-{
-    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
-    int ret = 0;
-
-    ret = fim_executor_->execute_add(output, fim_data);
-
-    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
-    return ret;
-}
-
-int FimRuntime::execute_mul(FimBo* output, FimBo* fim_data)
-{
-    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
-    int ret = 0;
-
-    ret = fim_executor_->execute_mul(output, fim_data);
-
-    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
 

@@ -1,0 +1,191 @@
+#ifndef _FIM_ELT_OP_KERNELS_FIMK_
+#define _FIM_ELT_OP_KERNELS_FIMK_
+
+__global__ void elt_op_fim_1cu_2th_fp16(volatile uint8_t* __restrict__ operand0,
+                                        volatile uint8_t* __restrict__ operand1, volatile uint8_t* __restrict__ fim_ctr,
+                                        volatile uint8_t* __restrict__ output, int size, FimMemTraceData* fmtd16,
+                                        int* frd_size, int mt_width, uint8_t* crf_binary, int crf_size)
+{
+#ifdef EMULATOR
+    g_fba = (uint64_t)fim_ctr;
+    g_fmtd16 = fmtd16;
+    g_ridx = 0;
+    uint64_t offset = (hipThreadIdx_x % 2) * 0x10;
+    __syncthreads();
+#endif
+    FimBlockInfo* fbi = &vega20_fbi;
+    int out_dim = size / fbi->trans_size;
+
+    /* Radeon7(VEGA20) memory is 16GB but our target is 32GB system */
+    /* so program_crf and chagne_fim_mode functions can not access to over 8GB in our system */
+    park_in_1cu_2th(fim_ctr, offset);
+    change_fim_mode_1cu_2th(fim_ctr, SB_MODE, HAB_MODE, null_bst, offset);
+    program_crf_1cu_2th(fim_ctr, crf_binary, crf_size, offset);
+    change_fim_mode_1cu_2th(fim_ctr, HAB_MODE, HAB_FIM_MODE, elt_add_hab_to_hab_fim, offset);
+    compute_elt_op_1cu_2th(operand0, operand1, output, get_num_tile(out_dim) / 2, offset);
+    change_fim_mode_1cu_2th(fim_ctr, HAB_FIM_MODE, HAB_MODE, elt_add_hab_fim_to_hab, offset);
+    change_fim_mode_1cu_2th(fim_ctr, HAB_MODE, SB_MODE, null_bst, offset);
+    park_out_1cu_2th(fim_ctr, offset);
+#ifdef EMULATOR
+    __syncthreads();
+    frd_size[0] = g_ridx;
+#endif
+}
+
+__global__ void elt_add_fim(uint8_t* fim_data, uint8_t* fim_ctr, uint8_t* output, unsigned int input_size,
+                            FimMemTraceData* fmtd, int* frd_size, int mt_width, uint8_t* crf_binary, int crf_size)
+{
+#ifdef EMULATOR
+    g_idx[hipBlockIdx_x] = 0;
+    g_fba = (uint64_t)fim_ctr;
+    g_fmtd16 = fmtd;
+    m_width = mt_width;
+    uint32_t hab_row_addr = 0x17ff;
+    uint32_t sb_row_addr = 0x1fff;
+#else  /* TARGET */
+    uint32_t hab_row_addr = 0x27ff;
+    uint32_t sb_row_addr = 0x2fff;
+#endif /* EMULATOR */
+    FimBlockInfo* fbi = &vega20_fbi;
+    int num_blk = fbi->num_fim_blocks;
+    int num_g = fbi->num_grf;
+    int num_bg = fbi->num_bank_groups;
+    int num_ba = fbi->num_banks;
+    int num_ch = hipGridDim_x;
+    int num_rank = 1;
+    int num_col = 32;
+    int g_size = 32;
+    int i_size = input_size / sizeof(short);
+    unsigned int start_row = (((uint64_t)fim_data - (uint64_t)fim_ctr) >> 19) & 0x3FFF;
+
+    int num_p = num_blk * num_ch * num_g * (g_size / sizeof(short));
+    int num_t = i_size / num_p;
+
+    uint64_t addr;
+    uint64_t offset = (hipThreadIdx_x % 2) * 0x10;
+
+    B_CMD(0);
+    if (hipThreadIdx_x < num_bg * 2) {
+        addr = addr_gen(hipBlockIdx_x, 0, (hipThreadIdx_x / 2), 0, (1 << 12), 0);
+        R_CMD(&fim_ctr[addr + offset]);
+
+        addr = addr_gen(hipBlockIdx_x, 0, (hipThreadIdx_x / 2), 1, (1 << 12), 0);
+        R_CMD(&fim_ctr[addr + offset]);
+
+        addr = addr_gen(hipBlockIdx_x, 0, (hipThreadIdx_x / 2), 2, (1 << 12), 0);
+        R_CMD(&fim_ctr[addr + offset]);
+
+        addr = addr_gen(hipBlockIdx_x, 0, (hipThreadIdx_x / 2), 3, (1 << 12), 0);
+        R_CMD(&fim_ctr[addr + offset]);
+    }
+    B_CMD(0);
+
+    if (hipThreadIdx_x < 2) {
+        addr = addr_gen(hipBlockIdx_x, 0, 0, 0, hab_row_addr, 0x1f);
+        W_CMD(&fim_ctr[addr + offset]);
+
+        addr = addr_gen(hipBlockIdx_x, 0, 0, 1, hab_row_addr, 0x1f);
+        W_CMD(&fim_ctr[addr + offset]);
+
+        addr = addr_gen(hipBlockIdx_x, 0, 2, 0, hab_row_addr, 0x1f);
+        W_CMD(&fim_ctr[addr + offset]);
+
+        addr = addr_gen(hipBlockIdx_x, 0, 2, 1, hab_row_addr, 0x1f);
+        W_CMD(&fim_ctr[addr + offset]);
+    }
+    B_CMD(0);
+
+    if (hipThreadIdx_x < 2 * crf_size) {
+        addr = addr_gen(hipBlockIdx_x, 0, 0, 1, 0x3fff, 0x4 + hipThreadIdx_x / 2);
+        W_CMD_R(&fim_ctr[addr + offset], crf_binary + hipThreadIdx_x * 16);
+    }
+    B_CMD(0);
+
+    if (hipThreadIdx_x < 2 * crf_size) {
+        addr = addr_gen(hipBlockIdx_x, 0, 0, 0, 0x3fff, 0x0);
+        W_CMD_R(&fim_ctr[addr + offset], elt_add_hab_to_hab_fim + hipThreadIdx_x * 16);
+    }
+    B_CMD(0);
+
+    for (int tile_idx = 0; tile_idx < num_t; tile_idx++) {
+        unsigned int loc = tile_idx * num_g + (hipThreadIdx_x / 2);
+        unsigned int row = start_row + loc / num_col;
+        unsigned int col = loc % num_col;
+
+        addr = addr_gen(hipBlockIdx_x, 0, 0, 0, row, col);
+        R_CMD(&fim_ctr[addr + offset]);
+        B_CMD(1);
+
+        R_CMD(&fim_ctr[addr + 0x2000 + offset]);
+        B_CMD(1);
+
+        unsigned int output_loc = loc + num_t * num_g;
+        unsigned int output_row = start_row + output_loc / num_col;
+        unsigned int output_col = output_loc % num_col;
+
+        addr = addr_gen(hipBlockIdx_x, 0, 0, 1, output_row, output_col);
+        W_CMD(&fim_ctr[addr + offset]);
+        B_CMD(1);
+    }
+
+    if (hipThreadIdx_x < 2 * crf_size) {
+        addr = addr_gen(hipBlockIdx_x, 0, 0, 0, 0x3fff, 0x0);
+        W_CMD_R(&fim_ctr[addr + offset], elt_add_hab_fim_to_hab + hipThreadIdx_x * 16);
+    }
+    B_CMD(0);
+
+    if (hipThreadIdx_x < 4) {
+        addr = addr_gen(hipBlockIdx_x, 0, 0, hipThreadIdx_x / 2, sb_row_addr, 0x1f);
+        W_CMD(&fim_ctr[addr + offset]);
+        B_CMD(1);
+
+        addr = addr_gen(hipBlockIdx_x, 0, 0, hipThreadIdx_x / 2, (1 << 12), 0);
+        R_CMD(&fim_ctr[addr + offset]);
+        B_CMD(1);
+    }
+
+#ifdef EMULATOR
+    if (hipBlockIdx_x == 0 && hipThreadIdx_x == 0) {
+        unsigned int cidx = 0;
+        unsigned int rank = 0;
+        unsigned int bg = 0;
+        unsigned int ba = 0;
+        unsigned int rst_col = (i_size / 16) / (num_blk * num_ch * num_rank);
+
+        for (int x = 0; x < (i_size / 16); x += num_g) {
+            unsigned int row = start_row;
+            unsigned int col = rst_col;
+
+            for (int i = 0; i < num_g; i++) {
+                addr = addr_gen(cidx, rank, bg, ba + 1, row, col);
+                record(cidx, 'O', addr);
+                record(cidx, 'O', addr + 0x10);
+                col++;
+            }
+
+            ba += (num_ba / num_blk);
+            if (ba >= (num_ba / num_bg)) {
+                bg++;
+                ba = 0;
+            }
+            if (bg >= num_bg) {
+                bg = 0;
+                rank++;
+            }
+            if (rank >= num_rank) {
+                rank = 0;
+                cidx++;
+            }
+            if (cidx >= num_ch) {
+                cidx = 0;
+                start_row = row;
+                rst_col = col;
+            }
+        }
+    }
+
+    *frd_size = g_idx[0];
+#endif
+}
+
+#endif /* _FIM_ELT_OP_KERNELS_FIMK_ */
