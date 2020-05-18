@@ -95,7 +95,7 @@ __device__ uint64_t addr_gen(unsigned int ch, unsigned int rank, unsigned int bg
     return addr;
 }
 
-__global__ void compute_add(uint8_t* fim_data, uint8_t* fim_ctr, uint8_t* output, unsigned int input_size,
+__global__ void elt_add_fim(uint8_t* fim_data, uint8_t* fim_ctr, uint8_t* output, unsigned int input_size,
                             uint8_t* crf_binary, int crf_size, uint8_t* hab_to_fim, uint8_t* fim_to_hab)
 {
     int num_blk = 8;
@@ -116,6 +116,54 @@ __global__ void compute_add(uint8_t* fim_data, uint8_t* fim_ctr, uint8_t* output
     uint64_t offset = (hipThreadIdx_x % 2) * 0x10;
 
     B_CMD(0);
+
+    /* park in */
+    if (hipThreadIdx_x < num_bg * 2) {
+        addr = addr_gen(hipBlockIdx_x, 0, (hipThreadIdx_x / 2), 0, (1 << 12), 0);
+        R_CMD(&fim_ctr[addr + offset]);
+
+        addr = addr_gen(hipBlockIdx_x, 0, (hipThreadIdx_x / 2), 1, (1 << 12), 0);
+        R_CMD(&fim_ctr[addr + offset]);
+
+        addr = addr_gen(hipBlockIdx_x, 0, (hipThreadIdx_x / 2), 2, (1 << 12), 0);
+        R_CMD(&fim_ctr[addr + offset]);
+
+        addr = addr_gen(hipBlockIdx_x, 0, (hipThreadIdx_x / 2), 3, (1 << 12), 0);
+        R_CMD(&fim_ctr[addr + offset]);
+    }
+    B_CMD(0);
+
+    /* change SB mode to HAB mode */
+    if (hipThreadIdx_x < 2) {
+        addr = addr_gen(hipBlockIdx_x, 0, 0, 0, (0x27ff >> 1), 0x1f);
+        W_CMD(&fim_ctr[addr + offset]);
+
+        addr = addr_gen(hipBlockIdx_x, 0, 0, 1, (0x27ff >> 1), 0x1f);
+        W_CMD(&fim_ctr[addr + offset]);
+
+        addr = addr_gen(hipBlockIdx_x, 0, 2, 0, (0x27ff >> 1), 0x1f);
+        W_CMD(&fim_ctr[addr + offset]);
+
+        addr = addr_gen(hipBlockIdx_x, 0, 2, 1, (0x27ff >> 1), 0x1f);
+        W_CMD(&fim_ctr[addr + offset]);
+    }
+    B_CMD(0);
+
+    /* set crf binary */
+    if (hipThreadIdx_x < 2 * crf_size) {
+        addr = addr_gen(hipBlockIdx_x, 0, 0, 1, (0x3fff >> 1), 0x4 + hipThreadIdx_x / 2);
+        W_CMD_R(&fim_ctr[addr + offset], crf_binary + hipThreadIdx_x * 16);
+    }
+    B_CMD(0);
+
+    /* change HAB mode to HAB_FIM mode */
+    if (hipThreadIdx_x < 2 * crf_size) {
+        addr = addr_gen(hipBlockIdx_x, 0, 0, 0, (0x3fff >> 1), 0x0);
+        W_CMD_R(&fim_ctr[addr + offset], hab_to_fim + hipThreadIdx_x * 16);
+    }
+    B_CMD(0);
+
+    /* compute elt-add */
     for (int tile_idx = 0; tile_idx < num_t; tile_idx++) {
         unsigned int loc = tile_idx * num_g + (hipThreadIdx_x / 2);
         unsigned int row = start_row + loc / num_col;
@@ -135,6 +183,25 @@ __global__ void compute_add(uint8_t* fim_data, uint8_t* fim_ctr, uint8_t* output
         addr = addr_gen(hipBlockIdx_x, 0, 0, 1, output_row, output_col);
         W_CMD(&fim_ctr[addr + offset]);
         B_CMD(0);
+    }
+
+    /* change HAB_FIM mode to HAB mode */
+    if (hipThreadIdx_x < 2 * crf_size) {
+        addr = addr_gen(hipBlockIdx_x, 0, 0, 0, (0x3fff >> 1), 0x0);
+        W_CMD_R(&fim_ctr[addr + offset], fim_to_hab + hipThreadIdx_x * 16);
+    }
+    B_CMD(0);
+
+    if (hipThreadIdx_x < 4) {
+        /* change HAB mode to SB mode */
+        addr = addr_gen(hipBlockIdx_x, 0, 0, hipThreadIdx_x / 2, (0x2fff >> 1), 0x1f);
+        W_CMD(&fim_ctr[addr + offset]);
+        B_CMD(1);
+
+        /* park out */
+        addr = addr_gen(hipBlockIdx_x, 0, 0, hipThreadIdx_x / 2, (1 << 12), 0);
+        R_CMD(&fim_ctr[addr + offset]);
+        B_CMD(1);
     }
 }
 
@@ -205,7 +272,7 @@ int main(int argc, char* argv[])
     const unsigned blocks = 64;
     const unsigned threadsPerBlock = 16;
 
-    hipLaunchKernelGGL(compute_add, dim3(blocks), dim3(threadsPerBlock), 0, 0, (uint8_t*)fim_base, (uint8_t*)fim_base,
+    hipLaunchKernelGGL(elt_add_fim, dim3(blocks), dim3(threadsPerBlock), 0, 0, (uint8_t*)fim_base, (uint8_t*)fim_base,
                        (uint8_t*)0, input_size, (uint8_t*)crf_bin_d, 1, (uint8_t*)mode1_d, (uint8_t*)mode2_d);
 
     hipDeviceSynchronize();
