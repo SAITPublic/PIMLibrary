@@ -215,6 +215,8 @@ int main(int argc, char* argv[])
     static int device = 0;
 
     unsigned int input_size = 64 * 1024 * sizeof(uint16_t);
+    unsigned int output_offset = input_size * 2;
+    uint64_t fim_output;
 
     CHECK(hipSetDevice(device));
     hipDeviceProp_t props;
@@ -276,6 +278,8 @@ int main(int argc, char* argv[])
                        (uint8_t*)0, input_size, (uint8_t*)crf_bin_d, 1, (uint8_t*)mode1_d, (uint8_t*)mode2_d);
 
     hipDeviceSynchronize();
+
+    fim_output = fim_base + output_offset;
 
     free(mode1_h);
     free(mode2_h);
