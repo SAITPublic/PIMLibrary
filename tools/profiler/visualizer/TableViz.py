@@ -4,7 +4,7 @@ from bokeh.io import show, output_file
 from bokeh.models import ColumnDataSource, Div
 from bokeh.layouts import column
 
-def create_table(df, heading = 'Summary Table', cols = None, width = 1500):
+def create_table(df, heading = 'Summary Table', cols = None, width = 1470, height=430):
 	'''Creates a bokeh Tabular plot
 	   df = Pandas dataframe contaning data
 	   heading = Table heading
@@ -14,15 +14,14 @@ def create_table(df, heading = 'Summary Table', cols = None, width = 1500):
 	'''
 
 	heading_div = Div(text='<H3>'+ heading + '</H3>')
-
     #Filter column from dataframe
 	if cols:
 		df = df[cols]
 
 	Columns = [TableColumn(field=Ci, title=Ci) for Ci in df.columns] # bokeh columns
-	table_plot = DataTable(columns=Columns, source=ColumnDataSource(df), fit_columns = True, width = width) # bokeh table
+	table_plot = DataTable(columns=Columns, source=ColumnDataSource(df), fit_columns = True, width = width, height=height)# bokeh table
 
-	return column(heading_div, table_plot)
+	return column(children=[heading_div, table_plot])
 
 if __name__ == '__main__':
 

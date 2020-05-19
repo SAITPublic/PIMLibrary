@@ -8,7 +8,7 @@ from bokeh.models.ranges import FactorRange
 from bokeh.palettes import viridis
 
 def create(listEvntsName, evntStartTime, evntEndTime, title, plot_height=100, plot_width = 900,
-                      tools=None, colorPallete=None, x_axis_label = 'Time', y_axis_label = 'Calls'):
+                      tools=None, colorPallete=None, x_axis_label = 'Time', y_axis_label = 'Calls', border_color=None):
     ''' Creates Timeline Visualization '''
     
     numEvnts = len(listEvntsName)
@@ -27,6 +27,7 @@ def create(listEvntsName, evntStartTime, evntEndTime, title, plot_height=100, pl
     plot.yaxis.axis_label = y_axis_label
     plot.yaxis.ticker = [ (i+0.5) for i in range(len(listEvntsName))]
     plot.yaxis.major_label_overrides = {(i+0.5):ticker_name for i,ticker_name in enumerate(listEvntsName) }
+    plot.border_fill_color = border_color
 
     glyphs = []
     for i in range(numEvnts):

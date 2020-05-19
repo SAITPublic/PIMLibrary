@@ -1,5 +1,6 @@
-from bokeh.io import show, output_file
+from bokeh.io import output_file,save
 from bokeh.models import Panel, Tabs
+import webbrowser
 
 from visualizer.TableViz import create_table
 from visualizer.TimelineViz import create
@@ -19,21 +20,21 @@ if __name__=='__main__':
 	df_gpu=parse_csv_file(args.gpu_file)
 	#Produce timeline plot
 	event_names, start_times, end_times = get_start_end_times(df_gpu)
-	timeline_plot = create(event_names, start_times, end_times, title = 'Timeline Plot', plot_height = 500, plot_width=1200, x_axis_label = 'Time (in ms)', y_axis_label = 'GPU Kernels')
+	timeline_plot = create(event_names, start_times, end_times, title = 'Timeline Plot', plot_height = 500, plot_width=1400, x_axis_label = 'Time (in ms)', y_axis_label = 'GPU Kernels', border_color = '#99ff99')
 	#Produce Tabular plot
 	df_gpu_table = get_table_stats(df_gpu)
 	table_plot = create_table(df_gpu_table, heading = 'GPU Calls Summary')
 	#Create tabs for GPU calls Plots
 	tab_gpu_timeline = Panel(child=timeline_plot, title="GPU Timeline Plot")
 	tab_gpu_table = Panel(child=table_plot, title="GPU Calls Stats")
-	tabs_gpu = Tabs(tabs=[tab_gpu_timeline, tab_gpu_table])
+	tabs_gpu = Tabs(tabs=[tab_gpu_timeline, tab_gpu_table], background = '#99ff99', width = 1510, height=540)
 
 	#FIM Log File Visualization
 	#Read File
 	df_cpu,df_cpu_buf=parse_fim_log_file(args.fim_file)
 	#Produce timeline plot
 	event_names, start_times, end_times = get_start_end_times(df_cpu, 'Module Name')
-	timeline_plot = create(event_names, start_times, end_times, title = 'Timeline Plot', plot_height = 500, plot_width=1200, x_axis_label = 'Time (in ms)', y_axis_label = 'FIM Modules')
+	timeline_plot = create(event_names, start_times, end_times, title = 'Timeline Plot', plot_height = 500, plot_width=1400, x_axis_label = 'Time (in ms)', y_axis_label = 'FIM Modules', border_color = '#99ff99')
 	#Produce Tabular plot for Module
 	df_cpu_module = get_table_stats(df_cpu, 'Module Name')
 	table_plot_m = create_table(df_cpu_module, heading = 'Module Summary')
@@ -47,7 +48,7 @@ if __name__=='__main__':
 	tab_fim_module = Panel(child=table_plot_m, title="FIM Module Calls Stats")
 	tab_fim_api = Panel(child=table_plot_a, title="FIM API Calls Stats")
 	tab_fim_buffer = Panel(child=table_plot_b, title="FIM Buffer Calls")
-	tabs_fim = Tabs(tabs=[tab_fim_timeline, tab_fim_module, tab_fim_api, tab_fim_buffer])
+	tabs_fim = Tabs(tabs=[tab_fim_timeline, tab_fim_module, tab_fim_api, tab_fim_buffer], background = '#99ff99', width = 1510, height=540)
 
 	#MIOpen Log File Visualization
 	#Read File
@@ -56,12 +57,14 @@ if __name__=='__main__':
 	table_plot = create_table(df_mi, heading = 'MIOpen API Calls')
 	#Create tabs for MIOpen Plot
 	tab_mi_table = Panel(child=table_plot, title="MIOpen Function Calls")
-	tabs_mi = Tabs(tabs=[tab_mi_table])
+	tabs_mi = Tabs(tabs=[tab_mi_table], background = '#99ff99', width = 1510, height=540)
 
 	#Main Page
 	output_file(filename=args.output, title='Profiler Visualization', mode='inline')
 	#Get the main page
 	tabs = {'GPU Profile Data': tabs_gpu, 'FIM SDK Profile Data': tabs_fim, 'MIOpen APIs Profile Data': tabs_mi}
-	main_plot = create_main(tabs)
+	main_plot, css_template = create_main(tabs)
 	#Output Main Page
-	show(main_plot)
+	out_file_save = save(main_plot,template=css_template)
+	file_url = 'file://' + out_file_save
+	webbrowser.open_new_tab(file_url)

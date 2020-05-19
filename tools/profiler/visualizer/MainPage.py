@@ -47,9 +47,35 @@ def create_main(plots, heading = 'Profiler Plots', width=1200):
 		tab = Panel(child=column(div, plot), title=title)
 		tabs.append(tab)
 
-	tabs = Tabs(tabs=tabs)
+	tabs = Tabs(tabs=tabs, background = '#b3e6ff')
 
-	return column(row(image_plot,div_heading),tabs)
+	#CSS template
+	template='''
+    {% block postamble %}
+    <style>
+    .bk-root .bk-tabs-header.bk-above .bk-tab {
+        border-width: 3px 1px 0px 1px;
+        border-radius: 10px 10px 0 0;
+    }
+    .bk-root .bk-tabs-header .bk-tab.bk-active {
+        color: black;
+        background-color: white;
+        border-color: black;
+    }
+    .bk-root .bk-tabs-header .bk-tab:hover {
+        background-color: #f2f2f2;
+    }
+    .bk-root .bk-tabs-header .bk-tab {
+        padding: 4px 8px;
+        border: solid;
+        white-space: nowrap;
+        cursor: pointer;
+        border-color: gray;
+    }
+    </style>
+    {% endblock %}
+    '''
+	return column(row(image_plot,div_heading),tabs), template
 
 if __name__ == '__main__':
 
