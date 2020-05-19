@@ -10,8 +10,8 @@ if [[ ${PIPESTATUS[0]} -ne 4 ]]; then
     exit 1
 fi
 
-OPTIONS=dfo:v
-LONGOPTS=debug,output:,verbose
+OPTIONS=dfo:v,m
+LONGOPTS=debug,output,miopen:,verbose
 
 # -regarding ! and PIPESTATUS see above
 # -temporarily store output to be able to check for errors
@@ -26,7 +26,7 @@ fi
 # read getopt’s output this way to handle the quoting right:
 eval set -- "$PARSED"
 
-d=n v=n proj_cmake_dir=-
+d=n v=n proj_cmake_dir=- miopen=n
 # now enjoy the options in order and nicely split until we see --
 while true; do
     case "$1" in
@@ -41,6 +41,10 @@ while true; do
         -o|--output)
             proj_cmake_dir="$(pwd)/$2"
             shift 2
+            ;;
+        -m|--miopen)
+            miopen=y
+            shift
             ;;
         --)
             shift
@@ -59,16 +63,23 @@ if [[ $# -ne 1 ]]; then
     exit 4
 fi
 
-echo "verbose: $v, debug: $d, option: $1, out: $proj_cmake_dir"
+echo "verbose: $v, debug: $d, option: $1, out: $proj_cmake_dir miopen:$miopen"
 
 cmake_build_options=""
 
 if [ $d = "y" ]; then
     cmake_build_options="${cmake_build_options} -DCMAKE_BUILD_TYPE=Debug"
-    echo "${cmake_build_options}"
 else
     cmake_build_options="${cmake_build_options} -DCMAKE_BUILD_TYPE=Release"
 fi
+
+if [ $miopen = "y" ]; then
+    cmake_build_options="${cmake_build_options} -DMIOPEN_APPS=ON"
+else
+    cmake_build_options="${cmake_build_options} -DMIOPEN_APPS=OFF"
+fi
+
+echo "${cmake_build_options}"
 
 build="${proj_cmake_dir}/build"
 

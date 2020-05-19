@@ -14,6 +14,8 @@ set(PREFIX ${CMAKE_INSTALL_PREFIX})
 set(EXEC_PREFIX "${PREFIX}/bin")
 set(ROCM_PATH $ENV{ROCM_PATH})
 
+option(MIOPEN_APPS "Enable MIOpens apps build" OFF)
+
 # Set Default build type to "Debug"
 if((NOT CMAKE_BUILD_TYPE) OR (CMAKE_BUILD_TYPE) STREQUAL None)
     set(CMAKE_BUILD_TYPE Debug)
