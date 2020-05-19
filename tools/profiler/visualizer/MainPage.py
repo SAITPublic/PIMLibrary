@@ -1,6 +1,6 @@
 from bokeh.io import show, output_file
-from bokeh.models import Div, Panel, Tabs
-from bokeh.layouts import column
+from bokeh.models import Div, Panel, Tabs, ImageURL, Plot, Range1d, ColumnDataSource
+from bokeh.layouts import column, row
 
 def get_content(plot_type):
 	'''Utility function to get  name and description for different profiler plot pages
@@ -24,9 +24,23 @@ def create_main(plots, heading = 'Profiler Plots', width=1200):
 	   heading = Page heading
 	   Returns main page contents
 	'''
+	#Heading
 	div_text = '<H1>'+ heading + '</H1>'
-	div_heading = Div(text=div_text, width=width)
+	div_heading = Div(text=div_text, sizing_mode="stretch_width" )
 
+	#Logo
+	xdr = Range1d()
+	ydr = Range1d()
+	image_plot = Plot(title=None, x_range=xdr, y_range=ydr, plot_width=600, plot_height=50,  min_border=0, min_border_top=5,min_border_right = 0, outline_line_color=None, toolbar_location=None)
+	source = ColumnDataSource(dict(
+    	url = ['assets/SAIT_logo.png'],
+		x1  = [0],
+		y1  = [0],
+	))
+	image1 = ImageURL(url="url", x="x1", y="y1", anchor="bottom_left")
+	image_plot.add_glyph(source, image1)
+
+	#Tabs
 	tabs = []
 	for title, plot in plots.items():
 		div = Div(text='<H2>'+ title + '</H2>', align='center')
@@ -34,7 +48,8 @@ def create_main(plots, heading = 'Profiler Plots', width=1200):
 		tabs.append(tab)
 
 	tabs = Tabs(tabs=tabs)
-	return column(div_heading,tabs)
+
+	return column(row(image_plot,div_heading),tabs)
 
 if __name__ == '__main__':
 
