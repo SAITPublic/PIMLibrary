@@ -131,12 +131,23 @@ int miopen_bn_2()
     hipMalloc(&mean_data, sizeof(half) * CH);
     hipMalloc(&var_data, sizeof(half) * CH);
 
-    load_data("../test_vectors/load/bn/input_256KB.dat", (char *)i_data, sizeof(half) * LENGTH);
-    load_data("../test_vectors/load/bn/beta_128B.dat", (char *)beta_data, sizeof(half) * CH);
-    load_data("../test_vectors/load/bn/gamma_128B.dat", (char *)gamma_data, sizeof(half) * CH);
-    load_data("../test_vectors/load/bn/mean_128B.dat", (char *)mean_data, sizeof(half) * CH);
-    load_data("../test_vectors/load/bn/variance_128B.dat", (char *)var_data, sizeof(half) * CH);
-    load_data("../test_vectors/load/bn/output_256KB.dat", (char *)ref_data, sizeof(half) * LENGTH);
+    /* Initialize the input, output data */
+    std::string test_vector_data = TEST_VECTORS_DATA;
+    test_vector_data.append("/test_vectors/");
+
+    std::string input_file = test_vector_data + "load/bn/input_256KB.dat";
+    std::string beta_file = test_vector_data + "load/bn/beta_128B.dat";
+    std::string gamma_file = test_vector_data + "load/bn/gamma_128B.dat";
+    std::string mean_file = test_vector_data + "load/bn/mean_128B.dat";
+    std::string variance_file = test_vector_data + "load/bn/variance_128B.dat";
+    std::string output_file = test_vector_data + "load/bn/output_256KB.dat";
+
+    load_data(input_file.c_str(), (char *)i_data, sizeof(half) * LENGTH);
+    load_data(beta_file.c_str(), (char *)beta_data, sizeof(half) * CH);
+    load_data(gamma_file.c_str(), (char *)gamma_data, sizeof(half) * CH);
+    load_data(mean_file.c_str(), (char *)mean_data, sizeof(half) * CH);
+    load_data(variance_file.c_str(), (char *)var_data, sizeof(half) * CH);
+    load_data(output_file.c_str(), (char *)ref_data, sizeof(half) * LENGTH);
 
     miopenHandle_t handle;
     miopenCreate(&handle);
