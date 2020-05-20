@@ -8,6 +8,7 @@
 #include "utility/fim_log.h"
 #include "utility/fim_util.h"
 
+extern uint64_t g_fim_base_addr;
 namespace fim
 {
 namespace runtime
@@ -56,11 +57,9 @@ int FimExecutor::initialize(void)
     int max_srf_size = 2048;
     hipMalloc((void**)&d_crf_bin_buffer_, max_crf_size);
     hipMalloc((void**)&d_srf_bin_buffer_, max_srf_size);
-
+    fim_base_addr_ = g_fim_base_addr;
 #ifdef EMULATOR
-    int dummy_size = 20 * 1024 * 1024;
     int reserved_fmtd_size = max_fmtd_size_ * sizeof(FimMemTraceData);
-    hipMalloc((void**)&fim_base_addr_, dummy_size);
     hipMalloc((void**)&d_fmtd16_, reserved_fmtd_size);
     hipMalloc((void**)&d_fmtd16_size_, sizeof(int));
 
@@ -69,13 +68,6 @@ int FimExecutor::initialize(void)
     h_fmtd16_size_ = (int*)malloc(sizeof(int));
     h_fmtd32_size_ = (int*)malloc(sizeof(int));
 #else
-    /* TODO: get fim control base address from device driver */
-    /* roct should write fim_base_va */
-    FILE* fp;
-    fp = fopen("fim_base_va.txt", "rt");
-    fscanf(fp, "%lX", &fim_base_addr_);
-    printf("fim_base_addr_ : 0x%lX\n", fim_base_addr_);
-    fclose(fp);
     fmtd16_ = nullptr;
     fmtd32_ = nullptr;
     fmtd16_size_ = nullptr;
@@ -96,7 +88,6 @@ int FimExecutor::deinitialize(void)
     hipFree((void*)d_crf_bin_buffer_);
     hipFree((void*)d_srf_bin_buffer_);
 #ifdef EMULATOR
-    hipFree((void*)fim_base_addr_);
     hipFree((void*)d_fmtd16_);
     hipFree((void*)d_fmtd16_size_);
     free(h_fmtd16_);

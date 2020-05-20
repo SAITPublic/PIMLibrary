@@ -7,6 +7,7 @@
 
 extern "C" uint64_t fmm_map_fim(uint32_t, uint32_t, uint64_t);
 extern bool fim_alloc_done;
+extern uint64_t g_fim_base_addr;
 namespace fim
 {
 namespace runtime
@@ -615,6 +616,7 @@ uint64_t FimMemoryManager::FimBlockAllocator::allocate_fim_block(size_t bsize) c
     if (!fim_alloc_done) {
         ret = fmm_map_fim(1, gpu_id, bsize);
         fim_alloc_done = true;
+        g_fim_base_addr = ret;
     }
 
     return ret;
