@@ -57,7 +57,6 @@ int FimExecutor::initialize(void)
     int max_srf_size = 2048;
     hipMalloc((void**)&d_crf_bin_buffer_, max_crf_size);
     hipMalloc((void**)&d_srf_bin_buffer_, max_srf_size);
-    fim_base_addr_ = g_fim_base_addr;
 #ifdef EMULATOR
     int reserved_fmtd_size = max_fmtd_size_ * sizeof(FimMemTraceData);
     hipMalloc((void**)&d_fmtd16_, reserved_fmtd_size);
@@ -133,10 +132,10 @@ int FimExecutor::execute(FimBo* output, FimBo* operand0, FimBo* operand1, FimOpT
     hipMemcpy((void*)d_crf_bin_buffer_, (void*)crf_binary, sizeof(uint8_t) * 128, hipMemcpyHostToDevice);
 
     if (op_type == OP_GEMV) {
-        hipMemcpy((void*)fim_base_addr_, weight->data, weight->size, hipMemcpyDeviceToDevice);
+        hipMemcpy((void*)g_fim_base_addr, weight->data, weight->size, hipMemcpyDeviceToDevice);
         hipLaunchKernelGGL(
-            gemv_fim_1cu_2th_fp16, dim3(1), dim3(2), 0, 0, (uint8_t*)fim_base_addr_ /* fim control base */,
-            (uint8_t*)fim_base_addr_ /* fim weight base */, (uint8_t*)fim_gemv_tmp_buffer_, /* fim hw output buffer */
+            gemv_fim_1cu_2th_fp16, dim3(1), dim3(2), 0, 0, (uint8_t*)g_fim_base_addr /* fim control base */,
+            (uint8_t*)g_fim_base_addr /* fim weight base */, (uint8_t*)fim_gemv_tmp_buffer_, /* fim hw output buffer */
             (uint8_t*)input->data, (uint8_t*)output->data, input->bshape.w, output->bshape.w,
             (FimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, (uint8_t*)d_crf_bin_buffer_, crf_size);
     } else {
@@ -179,26 +178,26 @@ int FimExecutor::execute(FimBo* output, FimBo* fim_data, FimOpType op_type)
     if (op_type == OP_ELT_ADD) {
         blocks = 1;
         threads_per_block = 2;
-        hipMemcpy((void*)fim_base_addr_, fim_data->data, fim_data->size, hipMemcpyHostToDevice);
+        hipMemcpy((void*)g_fim_base_addr, fim_data->data, fim_data->size, hipMemcpyHostToDevice);
         hipLaunchKernelGGL(elt_add_fim_1cu_2th_fp16, dim3(blocks), dim3(threads_per_block), 0, 0,
-                           (uint8_t*)fim_base_addr_, (uint8_t*)fim_base_addr_, (uint8_t*)output->data,
+                           (uint8_t*)g_fim_base_addr, (uint8_t*)g_fim_base_addr, (uint8_t*)output->data,
                            (int)output->size, (FimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_,
                            (uint8_t*)d_crf_bin_buffer_, crf_size);
 
     } else if (op_type == OP_ELT_MUL) {
         blocks = 1;
         threads_per_block = 2;
-        hipMemcpy((void*)fim_base_addr_, fim_data->data, fim_data->size, hipMemcpyHostToDevice);
+        hipMemcpy((void*)g_fim_base_addr, fim_data->data, fim_data->size, hipMemcpyHostToDevice);
         hipLaunchKernelGGL(elt_mul_fim_1cu_2th_fp16, dim3(blocks), dim3(threads_per_block), 0, 0,
-                           (uint8_t*)fim_base_addr_, (uint8_t*)fim_base_addr_, (uint8_t*)output->data,
+                           (uint8_t*)g_fim_base_addr, (uint8_t*)g_fim_base_addr, (uint8_t*)output->data,
                            (int)output->size, (FimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_,
                            (uint8_t*)d_crf_bin_buffer_, crf_size);
     } else if (op_type == OP_RELU) {
         blocks = 1;
         threads_per_block = 2;
-        hipMemcpy((void*)fim_base_addr_, fim_data->data, fim_data->size, hipMemcpyHostToDevice);
-        hipLaunchKernelGGL(relu_fim_1cu_2th_fp16, dim3(blocks), dim3(threads_per_block), 0, 0, (uint8_t*)fim_base_addr_,
-                           (uint8_t*)fim_base_addr_, (uint8_t*)output->data, (int)output->size,
+        hipMemcpy((void*)g_fim_base_addr, fim_data->data, fim_data->size, hipMemcpyHostToDevice);
+        hipLaunchKernelGGL(relu_fim_1cu_2th_fp16, dim3(blocks), dim3(threads_per_block), 0, 0, (uint8_t*)g_fim_base_addr,
+                           (uint8_t*)g_fim_base_addr, (uint8_t*)output->data, (int)output->size,
                            (FimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_,
                            (uint8_t*)d_crf_bin_buffer_, crf_size);
     } else {
@@ -242,10 +241,10 @@ int FimExecutor::execute_add(FimBo* output, FimBo* fim_data)
 
     // FIXME : change 128 to a meaningful variable.
     hipMemcpy((void*)d_crf_bin_buffer_, (void*)crf_binary, sizeof(uint8_t) * 128, hipMemcpyHostToDevice);
-    hipMemcpy((void*)fim_base_addr_, fim_data->data, fim_data->size, hipMemcpyHostToDevice);
+    hipMemcpy((void*)g_fim_base_addr, fim_data->data, fim_data->size, hipMemcpyHostToDevice);
 
-    hipLaunchKernelGGL(elt_add_fim_1cu_2th_fp16, dim3(blocks), dim3(threads_per_block), 0, 0, (uint8_t*)fim_base_addr_,
-                       (uint8_t*)fim_base_addr_, (uint8_t*)output->data, output->size, (FimMemTraceData*)d_fmtd16_,
+    hipLaunchKernelGGL(elt_add_fim_1cu_2th_fp16, dim3(blocks), dim3(threads_per_block), 0, 0, (uint8_t*)g_fim_base_addr,
+                       (uint8_t*)g_fim_base_addr, (uint8_t*)output->data, output->size, (FimMemTraceData*)d_fmtd16_,
                        (int*)d_fmtd16_size_, fmtd_size_per_ch_, (uint8_t*)d_crf_bin_buffer_, crf_size);
 
     hipStreamSynchronize(NULL);
@@ -281,10 +280,10 @@ int FimExecutor::execute_mul(FimBo* output, FimBo* fim_data)
 
     // FIXME : change 128 to a meaningful variable.
     hipMemcpy((void*)d_crf_bin_buffer_, (void*)crf_binary, sizeof(uint8_t) * 128, hipMemcpyHostToDevice);
-    hipMemcpy((void*)fim_base_addr_, fim_data->data, fim_data->size, hipMemcpyHostToDevice);
+    hipMemcpy((void*)g_fim_base_addr, fim_data->data, fim_data->size, hipMemcpyHostToDevice);
 
-    hipLaunchKernelGGL(elt_mul_fim_1cu_2th_fp16, dim3(blocks), dim3(threads_per_block), 0, 0, (uint8_t*)fim_base_addr_,
-                       (uint8_t*)fim_base_addr_, (uint8_t*)output->data, (int)output->size, (FimMemTraceData*)d_fmtd16_,
+    hipLaunchKernelGGL(elt_mul_fim_1cu_2th_fp16, dim3(blocks), dim3(threads_per_block), 0, 0, (uint8_t*)g_fim_base_addr,
+                       (uint8_t*)g_fim_base_addr, (uint8_t*)output->data, (int)output->size, (FimMemTraceData*)d_fmtd16_,
                        (int*)d_fmtd16_size_, fmtd_size_per_ch_, (uint8_t*)d_crf_bin_buffer_, crf_size);
 
     hipStreamSynchronize(NULL);
@@ -324,9 +323,9 @@ int FimExecutor::execute_gemv(FimBo* output, FimBo* operand0, FimBo* operand1)
     // FIXME : change 128 to a meaningful variable.
     hipMemcpy((void*)d_crf_bin_buffer_, (void*)crf_binary, sizeof(uint8_t) * 128, hipMemcpyHostToDevice);
 
-    hipMemcpy((void*)fim_base_addr_, weight->data, weight->size, hipMemcpyDeviceToDevice);
-    hipLaunchKernelGGL(gemv_fim_1cu_2th_fp16, dim3(1), dim3(2), 0, 0, (uint8_t*)fim_base_addr_ /* fim control base */,
-                       (uint8_t*)fim_base_addr_ /* fim weight base */,
+    hipMemcpy((void*)g_fim_base_addr, weight->data, weight->size, hipMemcpyDeviceToDevice);
+    hipLaunchKernelGGL(gemv_fim_1cu_2th_fp16, dim3(1), dim3(2), 0, 0, (uint8_t*)g_fim_base_addr /* fim control base */,
+                       (uint8_t*)g_fim_base_addr /* fim weight base */,
                        (uint8_t*)fim_gemv_tmp_buffer_, /* fim hw output buffer */
                        (uint8_t*)input->data, (uint8_t*)output->data, in_size, out_size, (FimMemTraceData*)d_fmtd16_,
                        (int*)d_fmtd16_size_, (uint8_t*)d_crf_bin_buffer_, crf_size);
@@ -359,9 +358,9 @@ int FimExecutor::execute_relu(FimBo* output, FimBo* fim_data)
 
     // FIXME : change 128 to a meaningful variable.
     hipMemcpy((void*)d_crf_bin_buffer_, (void*)crf_binary, sizeof(uint8_t) * 128, hipMemcpyHostToDevice);
-    hipMemcpy((void*)fim_base_addr_, fim_data->data, fim_data->size, hipMemcpyHostToDevice);
-    hipLaunchKernelGGL(relu_fim_1cu_2th_fp16, dim3(blocks), dim3(threads_per_block), 0, 0, (uint8_t*)fim_base_addr_,
-                       (uint8_t*)fim_base_addr_, (uint8_t*)output->data, (int)output->size, (FimMemTraceData*)d_fmtd16_,
+    hipMemcpy((void*)g_fim_base_addr, fim_data->data, fim_data->size, hipMemcpyHostToDevice);
+    hipLaunchKernelGGL(relu_fim_1cu_2th_fp16, dim3(blocks), dim3(threads_per_block), 0, 0, (uint8_t*)g_fim_base_addr,
+                       (uint8_t*)g_fim_base_addr, (uint8_t*)output->data, (int)output->size, (FimMemTraceData*)d_fmtd16_,
                        (int*)d_fmtd16_size_, fmtd_size_per_ch_, (uint8_t*)d_crf_bin_buffer_, crf_size);
     hipStreamSynchronize(NULL);
 
@@ -445,13 +444,13 @@ int FimExecutor::execute_bn(FimBo* output, FimBo* fim_data, FimBo* beta, FimBo* 
 
     hipMemcpy((void*)d_crf_bin_buffer_, (void*)crf_binary, sizeof(uint8_t) * 128, hipMemcpyHostToDevice);
     hipMemcpy((void*)d_srf_bin_buffer_, (void*)srf_binary, srf_size, hipMemcpyHostToDevice);
-    hipMemcpy((void*)fim_base_addr_, fim_data->data, fim_data->size, hipMemcpyHostToDevice);
+    hipMemcpy((void*)g_fim_base_addr, fim_data->data, fim_data->size, hipMemcpyHostToDevice);
 
     printf("crf_size:%d, srf_size:%d, output->size:%d\n", crf_size, srf_size, output->size);
     printf("bshaped(%d,%d,%d,%d)\n", output->bshape.w, output->bshape.h, output->bshape.c, output->bshape.n);
 
-    hipLaunchKernelGGL(bn_fim_1cu_2th_fp16, dim3(blocks), dim3(threads_per_block), 0, 0, (uint8_t*)fim_base_addr_,
-                       (uint8_t*)fim_base_addr_, (uint8_t*)output->data, (int)output->size, output->bshape.n,
+    hipLaunchKernelGGL(bn_fim_1cu_2th_fp16, dim3(blocks), dim3(threads_per_block), 0, 0, (uint8_t*)g_fim_base_addr,
+                       (uint8_t*)g_fim_base_addr, (uint8_t*)output->data, (int)output->size, output->bshape.n,
                        output->bshape.c, output->bshape.w, (uint8_t*)d_crf_bin_buffer_, crf_size,
                        (uint8_t*)d_srf_bin_buffer_, srf_size, (FimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_,
                        fmtd_size_per_ch_);
