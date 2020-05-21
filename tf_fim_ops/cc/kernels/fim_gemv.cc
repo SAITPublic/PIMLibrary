@@ -15,17 +15,17 @@ void KernelLauncher(const void* i_data, const void* w_data, const int IN_LENGTH,
     /* __FIM_API__ call : Initialize FimRuntime */
     FimInitialize(RT_TYPE_HIP, FIM_FP16);
 
+    FimDesc* fim_desc = FimCreateDesc(1, 1, OUT_LENGTH, IN_LENGTH, FIM_FP16);
     /* __FIM_API__ call : Create FIM Buffer Object */
-    FimBo* host_input = FimCreateBo(IN_LENGTH, 1, 1, 1, FIM_FP16, MEM_TYPE_HOST);
-    FimBo* host_weight = FimCreateBo(IN_LENGTH, OUT_LENGTH, 1, 1, FIM_FP16, MEM_TYPE_HOST);
-    FimBo* host_reordered_weight = FimCreateBo(IN_LENGTH, OUT_LENGTH, 1, 1, FIM_FP16, MEM_TYPE_FIM);
-    FimBo* device_input = FimCreateBo(IN_LENGTH, 1, 1, 1, FIM_FP16, MEM_TYPE_DEVICE);
-    FimBo* device_output = FimCreateBo(OUT_LENGTH, 1, 1, 1, FIM_FP16, MEM_TYPE_DEVICE);
-    FimBo* preloaded_weight = FimCreateBo(IN_LENGTH, OUT_LENGTH, 1, 1, FIM_FP16, MEM_TYPE_FIM);
+    FimBo* host_input = FimCreateBo(fim_desc, MEM_TYPE_HOST, GEMV_INPUT);
+    FimBo* host_weight = FimCreateBo(fim_desc, MEM_TYPE_HOST, GEMV_WEIGHT);
+    FimBo* host_reordered_weight = FimCreateBo(fim_desc, MEM_TYPE_HOST, GEMV_WEIGHT);
+    FimBo* device_input = FimCreateBo(fim_desc, MEM_TYPE_DEVICE, GEMV_INPUT);
+    FimBo* device_output = FimCreateBo(fim_desc, MEM_TYPE_DEVICE, GEMV_OUTPUT);
+    FimBo* preloaded_weight = FimCreateBo(fim_desc, MEM_TYPE_FIM, GEMV_WEIGHT);
+    FimBo* host_output = FimCreateBo(fim_desc, MEM_TYPE_HOST, GEMV_OUTPUT);
+    //FimBo* golden_output = FimCreateBo(fim_desc, MEM_TYPE_HOST, GEMV_OUTPUT);
 
-    /* TODO: implement reduce sum for gemv output */
-    FimBo* host_output = FimCreateBo(OUT_LENGTH, 1, 1, 1, FIM_FP16, MEM_TYPE_HOST);
-    // FimBo* golden_output = FimCreateBo(OUT_LENGTH * 16, 1, 1, 1, FIM_FP16, MEM_TYPE_HOST);
 
     // Todo: Handle 2 input
     FimCopyMemory((void*)host_input->data, (void*)i_data, 2 * IN_LENGTH, HOST_TO_HOST);
@@ -36,12 +36,14 @@ void KernelLauncher(const void* i_data, const void* w_data, const int IN_LENGTH,
 
     /* __FIM_API__ call : Preload weight data on FIM memory */
     if (reorder) {
+        std::cout << "Reordering" << std::endl;
         FimConvertDataLayout(host_reordered_weight, host_weight, OP_GEMV);
         FimCopyMemory(preloaded_weight, host_reordered_weight, HOST_TO_DEVICE);
     } else {
         FimCopyMemory(preloaded_weight, host_weight, HOST_TO_DEVICE);
     }
 
+    std::cout << "Calling FIMExecuteGEMV" << std::endl;
     /* __FIM_API__ call : Execute FIM kernel (GEMV) */
     FimExecuteGEMV(device_output, device_input, preloaded_weight);
 
@@ -75,6 +77,7 @@ class FimGemvOp : public OpKernel
         const Tensor& input_tensor1 = context->input(1);
         auto input1 = input_tensor1.flat<Eigen::half>();
 
+        int input_num_rows = input_tensor.dim_size(0);
         int num_rows = input_tensor1.dim_size(0);
         int num_cols = input_tensor1.dim_size(1);
 
@@ -88,7 +91,8 @@ class FimGemvOp : public OpKernel
 
         // Create an output tensor
         Tensor* output_tensor = NULL;
-        TensorShape tshape = TensorShape({num_cols});
+        TensorShape tshape = TensorShape({input_num_rows,num_cols});
+
         OP_REQUIRES_OK(context, context->allocate_output(0, tshape, /*input_tensor.shape()*/
                                                          &output_tensor));
         auto output = output_tensor->flat<Eigen::half>();
