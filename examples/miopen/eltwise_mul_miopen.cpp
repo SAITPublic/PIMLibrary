@@ -9,7 +9,7 @@
 #include <vector>
 
 #include "utility/fim_dump.hpp"
-#define LENGTH (64 * 1024)
+#define LENGTH (128 * 1024)
 
 int miopen_elt_mul()
 {
@@ -42,9 +42,9 @@ int miopen_elt_mul()
     std::string test_vector_data = TEST_VECTORS_DATA;
     test_vector_data.append("/test_vectors/");
 
-    std::string input0 = test_vector_data + "load/elt_mul/input0_128KB.dat";
-    std::string input1 = test_vector_data + "load/elt_mul/input1_128KB.dat";
-    std::string output = test_vector_data + "load/elt_mul/output_128KB.dat";
+    std::string input0 = test_vector_data + "load/elt_mul/input0_256KB.dat";
+    std::string input1 = test_vector_data + "load/elt_mul/input1_256KB.dat";
+    std::string output = test_vector_data + "load/elt_mul/output_256KB.dat";
 
     load_data(input0.c_str(), (char *)a_data, sizeof(half) * LENGTH);
     load_data(input1.c_str(), (char *)b_data, sizeof(half) * LENGTH);
