@@ -41,10 +41,8 @@ class MIopenMulTestRandom(tf.test.TestCase):
                 for w in width:
                     for h in height:
                         with self.test_session():
-                            input0 = tf.random.uniform(shape=[b, c, w, h], minval=-np.sqrt(np.finfo(np.float16).max),
-                                                       maxval=np.sqrt(np.finfo(np.float16).max), dtype=np.float16)
-                            input1 = tf.random.uniform(shape=[b, c, w, h], minval=-np.sqrt(np.finfo(np.float16).max),
-                                                       maxval=np.sqrt(np.finfo(np.float16).max), dtype=np.float16)
+                            input0 = tf.random.uniform(shape=[b, c, w, h], minval=-500, maxval=500, dtype=np.float16)
+                            input1 = tf.random.uniform(shape=[b, c, w, h], minval=-500, maxval=500, dtype=np.float16)
                             mul = tf.constant([1], dtype=np.int32)
 
                             result_custom = miopen_elt(input0, input1, mul)
@@ -70,10 +68,8 @@ class MIopenMulTestRandom(tf.test.TestCase):
                 for w in width:
                     for h in height:
                         with self.test_session():
-                            input0 = tf.random.uniform(shape=[b, c, w, h], minval=-np.sqrt(np.finfo(np.float16).max),
-                                                       maxval=np.sqrt(np.finfo(np.float16).max), dtype=np.float16)
-                            input1 = tf.constant(np.random.randint(-np.sqrt(np.finfo(np.float16).max),
-                                                                   np.sqrt(np.finfo(np.float16).max), dtype=np.float16))
+                            input0 = tf.random.uniform(shape=[b, c, w, h], minval=-500, maxval=500, dtype=np.float16)
+                            input1 = tf.constant(np.random.randint(-500, 500, dtype=np.float16))
 
                             mul = tf.constant([1], dtype=np.int32)
 
