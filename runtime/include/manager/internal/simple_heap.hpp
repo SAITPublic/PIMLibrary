@@ -119,7 +119,6 @@ class SimpleHeap
     void* alloc(size_t bytes)
     {
         size_t aligned_bytes = get_aligned_bytes(bytes);
-        printf("== joker %s %d b:%d, a:%d ==\n", __func__, __LINE__, bytes, aligned_bytes);
 
         if (aligned_bytes > max_alloc()) {
             DLOG(ERROR) << "Requested allocation is larger than block size.";
