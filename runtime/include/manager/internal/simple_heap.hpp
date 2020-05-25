@@ -84,7 +84,9 @@ class SimpleHeap
 
     size_t in_use_size_;
     size_t cache_size_;
+    size_t align_size_;
 
+    __forceinline size_t get_aligned_bytes(size_t bytes) { return (align_size_ * ceil((float)bytes / align_size_)); }
     __forceinline bool isFree(const Fragment_T& node) { return node.free_list_entry_ != free_list_.end(); }
     __forceinline void setUsed(Fragment_T& node) { node.free_list_entry_ = free_list_.end(); }
     __forceinline void setFree(Fragment_T& node, typename Fragment_T::ptr_t Iterator)
@@ -99,7 +101,7 @@ class SimpleHeap
 
    public:
     explicit SimpleHeap(const Allocator& BlockAllocator = Allocator())
-        : block_allocator_(BlockAllocator), in_use_size_(0), cache_size_(0)
+        : block_allocator_(BlockAllocator), in_use_size_(0), cache_size_(0), align_size_(256 * 1024)
     {
     }
     ~SimpleHeap()
@@ -116,13 +118,16 @@ class SimpleHeap
 
     void* alloc(size_t bytes)
     {
-        if (bytes > max_alloc()) {
+        size_t aligned_bytes = get_aligned_bytes(bytes);
+        printf("== joker %s %d b:%d, a:%d ==\n", __func__, __LINE__, bytes, aligned_bytes);
+
+        if (aligned_bytes > max_alloc()) {
             DLOG(ERROR) << "Requested allocation is larger than block size.";
             return nullptr;
         }
 
         // Find best fit.
-        auto free_fragment = free_list_.lower_bound(bytes);
+        auto free_fragment = free_list_.lower_bound(aligned_bytes);
         uintptr_t base;
         size_t size;
 
@@ -131,7 +136,7 @@ class SimpleHeap
             size = free_fragment->first;
             free_list_.erase(free_fragment);
 
-            assert(size >= bytes && "SimpleHeap: map lower_bound failure.");
+            assert(size >= aligned_bytes && "SimpleHeap: map lower_bound failure.");
 
             // Find the containing block and fragment
             auto it = block_list_.upper_bound(base);
@@ -143,12 +148,12 @@ class SimpleHeap
             assert(size == fragment->second.size && "Inconsistency in SimpleHeap.");
 
             // Sub-allocate from fragment.
-            fragment->second.size = bytes;
+            fragment->second.size = aligned_bytes;
             setUsed(fragment->second);
             // Record remaining free space.
-            if (size > bytes) {
-                free_fragment = free_list_.insert(std::make_pair(size - bytes, base + bytes));
-                frag_map[base + bytes] = makeFragment(free_fragment, size - bytes);
+            if (size > aligned_bytes) {
+                free_fragment = free_list_.insert(std::make_pair(size - aligned_bytes, base + aligned_bytes));
+                frag_map[base + aligned_bytes] = makeFragment(free_fragment, size - aligned_bytes);
             }
             return reinterpret_cast<void*>(base);
         }
@@ -161,20 +166,20 @@ class SimpleHeap
             block_cache_.pop_back();
             cache_size_ -= size;
         } else {  // Alloc new block
-            void* ptr = block_allocator_.alloc(bytes, size);
+            void* ptr = block_allocator_.alloc(aligned_bytes, size);
             base = reinterpret_cast<uintptr_t>(ptr);
             if (ptr == nullptr) return ptr;
         }
 
         in_use_size_ += size;
-        assert(size >= bytes && "Alloc exceeds block size.");
+        assert(size >= aligned_bytes && "Alloc exceeds block size.");
         // Sub alloc and insert free region.
-        if (size > bytes) {
-            free_fragment = free_list_.insert(std::make_pair(size - bytes, base + bytes));
-            block_list_[base][base + bytes] = makeFragment(free_fragment, size - bytes);
+        if (size > aligned_bytes) {
+            free_fragment = free_list_.insert(std::make_pair(size - aligned_bytes, base + aligned_bytes));
+            block_list_[base][base + aligned_bytes] = makeFragment(free_fragment, size - aligned_bytes);
         }
         // Track used region
-        block_list_[base][base] = makeFragment(bytes);
+        block_list_[base][base] = makeFragment(aligned_bytes);
 
         return reinterpret_cast<void*>(base);
     }
