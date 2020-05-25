@@ -203,6 +203,7 @@ int fim_gemv3(void)
     FimDestroyBo(device_output);
     FimDestroyBo(preloaded_weight);
     FimDestroyBo(host_reordered_weight);
+    FimDestroyBo(golden_output);
     FimDestroyDesc(fim_desc);
 
     /* __FIM_API__ call : Deinitialize FimRuntime */

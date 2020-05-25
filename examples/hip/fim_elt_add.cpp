@@ -244,6 +244,7 @@ int fim_elt_add_4(void)
     FimDestroyBo(device_output);
     FimDestroyBo(fim_input0);
     FimDestroyBo(fim_input1);
+    FimDestroyDesc(fim_desc);
 
     /* __FIM_API__ call : Deinitialize FimRuntime */
     FimDeinitialize();

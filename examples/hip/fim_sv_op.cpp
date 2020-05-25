@@ -119,6 +119,5 @@ int fim_sv_mul_1(void)
 
     return ret;
 }
-
 TEST(HIPIntegrationTest, FimSVAdd1) { EXPECT_TRUE(fim_sv_add_1() == 0); }
 TEST(HIPIntegrationTest, FimSVMul1) { EXPECT_TRUE(fim_sv_mul_1() == 0); }
