@@ -657,7 +657,7 @@ size_t get_aligned_size(FimDesc* fim_desc, FimMemFlag mem_flag, FimBo* fim_bo)
     } else if (mem_flag == GEMV_OUTPUT) {
         w = 1;
     } else if (mem_flag == ELT_OP) {
-        w = (64 * 1024) * ceil((float)w / (64 * 1024));
+        w = (128 * 1024) * ceil((float)w / (128 * 1024));
         fim_desc->bshape.w = w;
     } else if (mem_flag == ELT_FIM_INPUT) {
         w = 2 * (64 * 1024) * ceil((float)w / (64 * 1024));

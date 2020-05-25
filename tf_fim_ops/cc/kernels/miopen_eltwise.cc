@@ -10,7 +10,7 @@ static const int align = 64 * 1024;
 
 void KernelLauncher(const void* a_data, const void* b_data, const int N, void* c_data, int32 op)
 {
-    const int LENGTH = ((N + align - 1) / align) * align;
+    const int LENGTH = N;
 
     std::cout << "Launcher for MIopen" << std::endl;
     miopenTensorDescriptor_t a_desc, b_desc, c_desc;
