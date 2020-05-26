@@ -93,7 +93,7 @@ class MIopenAddTestFile(tf.test.TestCase):
 
             add = tf.constant([0], dtype=np.int32)
             result = miopen_elt(input0, input1, add)
-            golden = np.fromfile("../test_vectors/load/elt_add/output_128KB.dat", dtype=np.float16)
+            golden = np.fromfile("../test_vectors/load/elt_add/output_256KB.dat", dtype=np.float16)
             self.assertAllEqual(result, golden)
 
 
