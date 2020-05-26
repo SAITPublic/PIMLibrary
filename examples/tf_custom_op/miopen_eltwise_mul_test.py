@@ -69,7 +69,7 @@ class MIopenMulTestRandom(tf.test.TestCase):
                     for h in height:
                         with self.test_session():
                             input0 = tf.random.uniform(shape=[b, c, w, h], minval=-500, maxval=500, dtype=np.float16)
-                            input1 = tf.constant(np.random.randint(-500, 500, dtype=np.float16))
+                            input1 = tf.constant(np.random.randint(-500, 500), dtype=np.float16)
 
                             mul = tf.constant([1], dtype=np.int32)
 
