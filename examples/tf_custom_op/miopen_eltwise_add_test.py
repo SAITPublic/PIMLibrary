@@ -89,7 +89,7 @@ class MIopenAddTestFile(tf.test.TestCase):
     def test(self):
         with self.test_session():
             input0 = np.fromfile("../test_vectors/load/elt_add/input0_128KB.dat", dtype=np.float16)
-            input1 = np.fromfile("../test_vectors/load/elt_add/input1_128KB.dat", dtype=np.float16)
+            input1 = np.fromfile("../test_vectors/load/elt_add/input1_256KB.dat", dtype=np.float16)
 
             add = tf.constant([0], dtype=np.int32)
             result = miopen_elt(input0, input1, add)
