@@ -27,6 +27,7 @@ class FimEmulator
     int execute_elt_op(FimBo* output, FimBo* operand0, FimBo* operand1, FimMemTraceData* fmtd32, int fmtd32_size,
                        uint64_t fim_base_addr);
     int execute_relu(FimBo* output, FimBo* fim_data, FimMemTraceData* fmtd32, int fmtd32_size, uint64_t fim_base_addr);
+    int execute_gemv(FimBo* output, FimBo* fim_data, FimMemTraceData* fmtd32, int fmtd32_size, FimOpType op_type);
     int set_input_for_test(uint16_t* test_input, int test_size);
     int set_kernel_trace_for_test(FimMemTraceData* fmtd32, int* num_trace);
     bool uint16_equal(uint16_t A, uint16_t B, int maxUlpsDiff);

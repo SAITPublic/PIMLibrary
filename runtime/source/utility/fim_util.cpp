@@ -517,19 +517,22 @@ __device__ void read_result_bn_1cu_2th(volatile uint8_t* __restrict__ output, vo
 __device__ void compute_gemv_2bank_1cu_2th(volatile uint8_t* __restrict__ fim_ctr,
                                            volatile uint8_t* __restrict__ fim_weight,
                                            volatile uint8_t* __restrict__ fim_input, int num_in_tile, int num_out_tile,
-                                           int input_tile, int output_tile, FimBankType bank_type, uint64_t offset)
+                                           int input_tile, int output_tile, int batch_idx, FimBankType bank_type,
+                                           uint64_t offset)
 {
     FimBlockInfo* fbi = &vega20_fbi;
     uint64_t c_addr;
     uint64_t i_addr;
     uint32_t row = 0;
-    uint32_t col = (fbi->num_grf_A * fbi->num_grf_B) * (input_tile / 2 + output_tile * num_in_tile);
+    uint32_t col = (fbi->num_grf_A * fbi->num_grf_B) * (input_tile / 2 + output_tile * num_in_tile / 2);
 
     for (int cidx = 0; cidx < fbi->num_fim_chan; cidx++) {
         for (int rank = 0; rank < fbi->num_fim_rank; rank++) {
             for (int gidx = 0; gidx < fbi->num_grf_A; gidx++) {
                 c_addr = addr_gen(cidx, rank, 0, 1, 0x3fff, 0x8 + gidx);
-                i_addr = (input_tile * fbi->num_grf_A + gidx) * fbi->trans_size;
+                i_addr =
+                    (batch_idx * fbi->num_grf_A * num_in_tile + input_tile * fbi->num_grf_A + gidx) * fbi->trans_size;
+                // i_addr = (input_tile * fbi->num_grf_A + gidx) * fbi->trans_size;
                 GEN_WRITE_CMD(&fim_ctr[c_addr + offset], &fim_input[i_addr + offset]);
             }
             BLOCK_SYNC(cidx, false);

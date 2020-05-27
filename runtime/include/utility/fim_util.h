@@ -90,10 +90,12 @@ __device__ void read_result_1cu_2th(volatile uint8_t* __restrict__ output, volat
 __device__ void read_result_2bank_1cu_2th(volatile uint8_t* __restrict__ output,
                                           volatile uint8_t* __restrict__ fim_data, int out_dim, uint32_t s_row,
                                           uint32_t s_col, uint64_t offset);
+
 __device__ void compute_gemv_2bank_1cu_2th(volatile uint8_t* __restrict__ fim_ctr,
                                            volatile uint8_t* __restrict__ fim_weight,
                                            volatile uint8_t* __restrict__ fim_input, int num_in_tile, int num_out_tile,
-                                           int input_tile, int output_tile, FimBankType bank_type, uint64_t offset);
+                                           int input_tile, int output_tile, int batch_idx, FimBankType bank_type,
+                                           uint64_t offset);
 
 __device__ void compute_elt_op_1cu_2th(volatile uint8_t* __restrict__ fim_input0,
                                        volatile uint8_t* __restrict__ fim_input1,

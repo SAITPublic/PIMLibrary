@@ -185,6 +185,7 @@ int FimExecutor::execute_gemv(FimBo* output, FimBo* operand0, FimBo* operand1)
 
     int in_size = weight->bshape.w;
     int out_size = weight->bshape.h;
+    int num_batch = input->bshape.n;
 
     fim_manager_->create_crf_binary(OP_GEMV, in_size * sizeof(half), out_size * sizeof(half));
     uint8_t* crf_binary = fim_manager_->get_crf_binary();
@@ -197,8 +198,8 @@ int FimExecutor::execute_gemv(FimBo* output, FimBo* operand0, FimBo* operand1)
     hipLaunchKernelGGL(gemv_fim_1cu_2th_fp16, dim3(1), dim3(2), 0, 0, (uint8_t*)g_fim_base_addr /* fim control base */,
                        (uint8_t*)g_fim_base_addr /* fim weight base */,
                        (uint8_t*)fim_gemv_tmp_buffer_, /* fim hw output buffer */
-                       (uint8_t*)input->data, (uint8_t*)output->data, in_size, out_size, (FimMemTraceData*)d_fmtd16_,
-                       (int*)d_fmtd16_size_, (uint8_t*)d_crf_bin_buffer_, crf_size);
+                       (uint8_t*)input->data, (uint8_t*)output->data, in_size, num_batch, out_size,
+                       (FimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, (uint8_t*)d_crf_bin_buffer_, crf_size);
 
     hipStreamSynchronize(NULL);
 
@@ -208,7 +209,7 @@ int FimExecutor::execute_gemv(FimBo* output, FimBo* operand0, FimBo* operand1)
     hipMemcpy((void*)h_fmtd16_, (void*)d_fmtd16_, sizeof(FimMemTraceData) * max_fmtd_size_, hipMemcpyDeviceToHost);
 
     fim_emulator_->convert_mem_trace_from_16B_to_32B(h_fmtd32_, h_fmtd32_size_, h_fmtd16_, h_fmtd16_size_[0], OP_GEMV);
-    fim_emulator_->execute_fim(output, weight, h_fmtd32_, h_fmtd32_size_[0], OP_GEMV);
+    fim_emulator_->execute_gemv(output, weight, h_fmtd32_, h_fmtd32_size_[0], OP_GEMV);
 #endif
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";

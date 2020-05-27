@@ -4,8 +4,8 @@
 __global__ void gemv_fim_1cu_2th_fp16(volatile uint8_t* __restrict__ fim_ctr, volatile uint8_t* __restrict__ fim_weight,
                                       volatile uint8_t* __restrict__ fim_gemv_tmp_buffer,
                                       volatile uint8_t* __restrict__ fim_input, volatile uint8_t* __restrict__ output,
-                                      int input_dim, int output_dim, FimMemTraceData* fmtd16, int* frd_size,
-                                      uint8_t* crf_binary, int crf_size)
+                                      int input_dim, int batch_dim, int output_dim, FimMemTraceData* fmtd16,
+                                      int* frd_size, uint8_t* crf_binary, int crf_size)
 {
 #ifdef EMULATOR
     g_fba = (uint64_t)fim_ctr;
@@ -31,22 +31,24 @@ __global__ void gemv_fim_1cu_2th_fp16(volatile uint8_t* __restrict__ fim_ctr, vo
     change_fim_mode_1cu_2th(fim_ctr, SB_MODE, HAB_MODE, null_bst, offset);
     program_crf_1cu_2th(fim_ctr, crf_binary, crf_size, offset);
     for (int j = 0; j < num_out_tile; j++) {
-        change_fim_mode_1cu_2th(fim_ctr, HAB_MODE, HAB_FIM_MODE, gemv_hab_to_hab_fim, offset);
-        for (int i = 0; i < num_in_tile; i += 2) {
-            compute_gemv_2bank_1cu_2th(fim_ctr, fim_weight, fim_input, num_in_tile / 2, num_out_tile, i, j, EVEN_BANK,
-                                       offset);
+        for (int b = 0; b < batch_dim; b++) {
+            change_fim_mode_1cu_2th(fim_ctr, HAB_MODE, HAB_FIM_MODE, gemv_hab_to_hab_fim, offset);
+            for (int i = 0; i < num_in_tile; i += 2) {
+                compute_gemv_2bank_1cu_2th(fim_ctr, fim_weight, fim_input, num_in_tile, num_out_tile, i, j, b,
+                                           EVEN_BANK, offset);
+            }
+            for (int i = 1; i < num_in_tile; i += 2) {
+                compute_gemv_2bank_1cu_2th(fim_ctr, fim_weight, fim_input, num_in_tile, num_out_tile, i, j, b, ODD_BANK,
+                                           offset);
+            }
+            compute_col = num_out_tile * num_in_tile / 2 * fbi->num_grf_A * fbi->num_grf_B + (j + b) * fbi->num_grf_B;
+            add_transaction_all_1cu_2th(fim_ctr, true, 0, 1, 0, compute_col, null_bst, offset, fbi->num_grf);
+            change_fim_mode_1cu_2th(fim_ctr, HAB_FIM_MODE, HAB_MODE, gemv_hab_fim_to_hab, offset);
         }
-        for (int i = 1; i < num_in_tile; i += 2) {
-            compute_gemv_2bank_1cu_2th(fim_ctr, fim_weight, fim_input, num_in_tile / 2, num_out_tile, i, j, ODD_BANK,
-                                       offset);
-        }
-        compute_col = num_out_tile * num_in_tile / 2 * fbi->num_grf_A * fbi->num_grf_B + j * fbi->num_grf_B;
-        add_transaction_all_1cu_2th(fim_ctr, true, 0, 1, 0, compute_col, null_bst, offset, fbi->num_grf);
-        change_fim_mode_1cu_2th(fim_ctr, HAB_FIM_MODE, HAB_MODE, gemv_hab_fim_to_hab, offset);
     }
     change_fim_mode_1cu_2th(fim_ctr, HAB_MODE, SB_MODE, null_bst, offset);
     park_out_1cu_2th(fim_ctr, offset);
-    read_result_1cu_2th(fim_gemv_tmp_buffer, fim_weight, ODD_BANK, num_output_bst, 0, end_col, offset);
+    read_result_1cu_2th(fim_gemv_tmp_buffer, fim_weight, ODD_BANK, num_output_bst * batch_dim, 0, end_col, offset);
 #ifdef EMULATOR
     __syncthreads();
     frd_size[0] = g_ridx;

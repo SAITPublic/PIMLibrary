@@ -12,8 +12,71 @@ using half_float::half;
 
 #define IN_LENGTH (256)
 #define OUT_LENGTH (4096)
+#define BATCH_DIM (2)
 
 using namespace std;
+
+int fim_gemv_batch(void)
+{
+    int ret = 0;
+
+    /* __FIM_API__ call : Initialize FimRuntime */
+    FimInitialize(RT_TYPE_HIP, FIM_FP16);
+
+    /* __FIM_API__ call : Create FIM Buffer Object */
+    FimBo* host_input = FimCreateBo(IN_LENGTH, 1, 1, BATCH_DIM, FIM_FP16, MEM_TYPE_HOST);
+    FimBo* host_weight = FimCreateBo(IN_LENGTH, OUT_LENGTH, 1, 1, FIM_FP16, MEM_TYPE_HOST);
+    FimBo* host_reordered_weight = FimCreateBo(IN_LENGTH, OUT_LENGTH, 1, 1, FIM_FP16, MEM_TYPE_FIM);
+    FimBo* device_input = FimCreateBo(IN_LENGTH, 1, 1, BATCH_DIM, FIM_FP16, MEM_TYPE_DEVICE);
+    FimBo* device_output = FimCreateBo(OUT_LENGTH, 1, 1, BATCH_DIM, FIM_FP16, MEM_TYPE_DEVICE);
+    FimBo* preloaded_weight = FimCreateBo(IN_LENGTH, OUT_LENGTH, 1, 1, FIM_FP16, MEM_TYPE_FIM);
+    FimBo* host_output = FimCreateBo(OUT_LENGTH, 1, 1, BATCH_DIM, FIM_FP16, MEM_TYPE_HOST);
+    FimBo* golden_output = FimCreateBo(OUT_LENGTH, 1, 1, BATCH_DIM, FIM_FP16, MEM_TYPE_HOST);
+
+    /* Initialize the input, weight, output data */
+    std::string test_vector_data = TEST_VECTORS_DATA;
+    test_vector_data.append("/test_vectors/");
+
+    std::string input = test_vector_data + "load/gemv/batch_input_2x256.dat";
+    std::string weight = test_vector_data + "load/gemv/batch_weight_256x4096.dat";
+    std::string output = test_vector_data + "load/gemv/batch_output_2x4096.dat";
+    std::string preload_weight = test_vector_data + "dump/gemv/batch_preloaded_weight_256x4096.dat";
+    std::string output_dump = test_vector_data + "dump/gemv/batch_output_2x4096.dat";
+
+    load_data(input.c_str(), (char*)host_input->data, host_input->size);
+    load_data(weight.c_str(), (char*)host_weight->data, host_weight->size);
+    load_data(output.c_str(), (char*)golden_output->data, golden_output->size);
+
+    FimCopyMemory(device_input, host_input, HOST_TO_DEVICE);
+
+    /* __FIM_API__ call : Preload weight data on FIM memory */
+    FimConvertDataLayout(host_reordered_weight, host_weight, OP_GEMV);
+    FimCopyMemory(preloaded_weight, host_reordered_weight, HOST_TO_DEVICE);
+
+    /* __FIM_API__ call : Execute FIM kernel (GEMV) */
+    FimExecuteGEMV(device_output, device_input, preloaded_weight);
+
+    FimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
+    dump_data(preload_weight.c_str(), (char*)preloaded_weight->data, preloaded_weight->size);
+    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
+
+    ret = compare_data((char*)golden_output->data, (char*)host_output->data, host_output->size);
+
+    /* __FIM_API__ call : Destroy FIM Buffer Object */
+    FimDestroyBo(host_input);
+    FimDestroyBo(host_weight);
+    FimDestroyBo(host_output);
+    FimDestroyBo(device_input);
+    FimDestroyBo(device_output);
+    FimDestroyBo(preloaded_weight);
+    FimDestroyBo(host_reordered_weight);
+    FimDestroyBo(golden_output);
+
+    /* __FIM_API__ call : Deinitialize FimRuntime */
+    FimDeinitialize();
+
+    return ret;
+}
 
 int fim_gemv(void)
 {
@@ -212,6 +275,7 @@ int fim_gemv3(void)
     return ret;
 }
 
+TEST(HIPIntegrationTest, FimGEMVBATCH) { EXPECT_TRUE(fim_gemv_batch() == 0); }
 TEST(HIPIntegrationTest, FimGEMV) { EXPECT_TRUE(fim_gemv() == 0); }
 TEST(HIPIntegrationTest, FimGEMV2) { EXPECT_TRUE(fim_gemv2() == 0); }
 TEST(HIPIntegrationTest, FimGEMV3) { EXPECT_TRUE(fim_gemv3() == 0); }
