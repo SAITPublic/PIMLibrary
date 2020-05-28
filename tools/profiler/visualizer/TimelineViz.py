@@ -5,17 +5,19 @@ from bokeh.plotting import figure
 from bokeh.models.glyphs import Quad
 from bokeh.io import curdoc, show, output_file
 from bokeh.models.ranges import FactorRange
-from bokeh.palettes import viridis
+from bokeh.palettes import Category20
 
 def create(listEvntsName, evntStartTime, evntEndTime, title, plot_height=100, plot_width = 900,
-                      tools=None, colorPallete=None, x_axis_label = 'Time', y_axis_label = 'Calls', border_color=None):
+                      tools=None, colorPallete=None, x_axis_label = 'Time', y_axis_label = 'Calls', border_color=None, fim_plot=None):
     ''' Creates Timeline Visualization '''
     
     numEvnts = len(listEvntsName)
 
     if colorPallete == None:
-        colorPallete = viridis(numEvnts)
-
+        if(numEvnts<3):
+            colorPallete = Category20[3]
+        else:
+            colorPallete = Category20[numEvnts]
     assert numEvnts == len(evntStartTime), 'Num of events do not match'
     assert numEvnts == len(evntEndTime), 'Num of events do not match'
 
@@ -40,10 +42,13 @@ def create(listEvntsName, evntStartTime, evntEndTime, title, plot_height=100, pl
 
         glyph = plot.quad(left="left", right="right", top="top", bottom="bottom",fill_color=colorPallete[i], line_color=colorPallete[i],
                           source=source)
+        if(fim_plot):
+            if((listEvntsName[i].endswith('.cpp')) and (listEvntsName[i] != 'fim_runtime_api.cpp')):
+                glyph.visible=False
         glyphs.append(glyph)
 
     legend_items = [(listEvntsName[i],[glyphs[i]]) for i in range(numEvnts)]
-    legend = Legend(items=legend_items, location=(30, 0))
+    legend = Legend(items=legend_items, location=(30, 0),click_policy="hide")
 
     plot.add_layout(legend, 'right')
     xaxis = LinearAxis() 

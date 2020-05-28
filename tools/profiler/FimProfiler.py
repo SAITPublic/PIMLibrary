@@ -33,8 +33,8 @@ if __name__=='__main__':
 	#Read File
 	df_cpu,df_cpu_buf=parse_fim_log_file(args.fim_file)
 	#Produce timeline plot
-	event_names, start_times, end_times = get_start_end_times(df_cpu, 'Module Name')
-	timeline_plot = create(event_names, start_times, end_times, title = 'Timeline Plot', plot_height = 500, plot_width=1400, x_axis_label = 'Time (in ms)', y_axis_label = 'FIM Modules', border_color = '#99ff99')
+	event_names, start_times, end_times = get_start_end_times(df_cpu, 'Module Name', fim_processing=True)
+	timeline_plot = create(event_names, start_times, end_times, title = 'Timeline Plot', plot_height = 500, plot_width=1400, x_axis_label = 'Time (in ms)', y_axis_label = 'FIM Modules', border_color = '#99ff99', fim_plot=True)
 	#Produce Tabular plot for Module
 	df_cpu_module = get_table_stats(df_cpu, 'Module Name')
 	table_plot_m = create_table(df_cpu_module, heading = 'Module Summary')
