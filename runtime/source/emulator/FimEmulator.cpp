@@ -92,8 +92,11 @@ int FimEmulator::execute_gemv(FimBo* output, FimBo* fim_data, FimMemTraceData* f
     fim_sim_.get_uint16_result(sim_output, num_element);
     cout << sim_output_size / sizeof(half) / 16 << endl;
     reduce_sum_for_gemv((void*)sim_output /* out */, (void*)sim_output /* in */, sim_output_size, fbi_.num_out_per_grf);
-    if (output->mem_type != MEM_TYPE_HOST)
-        hipMemcpy((void*)output->data, (void*)sim_output, output->size, hipMemcpyHostToDevice);
+    if (output->mem_type != MEM_TYPE_HOST) {
+        for (int i = 0; i < output->bshape.n; i++) {
+            hipMemcpy((half*)output->data + i * fim_data->bshape_r.h, (half*)sim_output + i * fim_data->bshape.h, fim_data->bshape_r.h * sizeof(half), hipMemcpyHostToDevice);
+        }
+    }
 
     delete sim_output;
 
@@ -129,7 +132,7 @@ int FimEmulator::execute_fim(FimBo* output, FimBo* fim_data, FimMemTraceData* fm
             hipMemcpy((void*)output->data, (void*)sim_output, output->size, hipMemcpyHostToDevice);
 
     } else if (op_type == OP_GEMV) {
-        int out_size = fim_data->bshape.h * sizeof(half);
+        int out_size = fim_data->bshape.h * sizeof(half) * output->bshape.n;
         num_element = out_size * fbi_.num_out_per_grf / sizeof(uint16_t);
         sim_output = new uint16_t[num_element];
         sim_output_size = num_element * sizeof(uint16_t);

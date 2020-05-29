@@ -106,7 +106,7 @@ FimBo* FimCreateBo(FimDesc* fim_desc, FimMemType mem_type, FimMemFlag mem_flag)
     }
 
     if (mem_flag == GEMV_INPUT) {
-        pad_data(fim_bo->data, fim_desc->bshape_r.w, fim_desc->bshape.w, mem_flag);
+        pad_data(fim_bo->data, fim_desc->bshape_r.w, fim_desc->bshape.w, fim_desc->bshape.n, mem_flag);
     }
 
     return fim_bo;
