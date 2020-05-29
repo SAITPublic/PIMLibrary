@@ -24,7 +24,7 @@ FimExecutor::FimExecutor(FimRuntimeType rt_type, FimPrecision precision)
     fim_emulator_ = fim::runtime::emulator::FimEmulator::get_instance();
 
     get_fim_block_info(&fbi_);
-    fmtd_size_per_ch_ = 4000;
+    fmtd_size_per_ch_ = 20000;
     max_block_size_ = fbi_.num_fim_chan;
     max_fmtd_size_ = fmtd_size_per_ch_ * max_block_size_;
 #endif
