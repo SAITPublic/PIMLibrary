@@ -2,6 +2,8 @@ from bokeh.io import show, output_file
 from bokeh.models import Div, Panel, Tabs, ImageURL, Plot, Range1d, ColumnDataSource
 from bokeh.layouts import column, row
 
+from visualizer.Config import get_config
+
 def get_content(plot_type):
 	'''Utility function to get  name and description for different profiler plot pages
 	   plot_type = can either be fim/gpu
@@ -18,7 +20,7 @@ def get_content(plot_type):
 		desc = ['MIOpen API trace and parameters']
 	return (name,desc)
 
-def create_main(plots, heading = 'Profiler Plots', width=1200):
+def create_main(plots, heading = 'Profiler Plots'):
 	'''Creates main page containing all plots inside tabs
 	   plots = Dictionary contaning title and the plots
 	   heading = Page heading
@@ -31,9 +33,9 @@ def create_main(plots, heading = 'Profiler Plots', width=1200):
 	#Logo
 	xdr = Range1d()
 	ydr = Range1d()
-	image_plot = Plot(title=None, x_range=xdr, y_range=ydr, plot_width=600, plot_height=50,  min_border=0, min_border_top=5,min_border_right = 0, outline_line_color=None, toolbar_location=None)
+	image_plot = Plot(title=None, x_range=xdr, y_range=ydr, plot_width=get_config('sait_logo_width'), plot_height=get_config('sait_logo_height'),  min_border=0, min_border_top=5,min_border_right = 0, outline_line_color=None, toolbar_location=None)
 	source = ColumnDataSource(dict(
-    	url = ['assets/SAIT_logo.png'],
+    	url = [get_config('sait_logo_url')],
 		x1  = [0],
 		y1  = [0],
 	))
@@ -47,7 +49,7 @@ def create_main(plots, heading = 'Profiler Plots', width=1200):
 		tab = Panel(child=column(div, plot), title=title)
 		tabs.append(tab)
 
-	tabs = Tabs(tabs=tabs, background = '#b3e6ff')
+	tabs = Tabs(tabs=tabs, background = get_config('upper_tab_bg'))
 
 	#CSS template
 	template='''
@@ -84,5 +86,5 @@ if __name__ == '__main__':
 	output_file(filename='MainViz.html', title='Viz',mode='inline')
 
 	#call the create_main function to get main page
-	main = create_main(plots)
+	main,_ = create_main(plots)
 	show(main)

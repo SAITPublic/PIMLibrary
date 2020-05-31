@@ -1,5 +1,4 @@
 import numpy as np
-
 from bokeh.models import ColumnDataSource, DataRange1d, Plot, LinearAxis, Grid, Legend
 from bokeh.plotting import figure
 from bokeh.models.glyphs import Quad
@@ -7,10 +6,12 @@ from bokeh.io import curdoc, show, output_file
 from bokeh.models.ranges import FactorRange
 from bokeh.palettes import Category20
 
-def create(listEvntsName, evntStartTime, evntEndTime, title, plot_height=100, plot_width = 900,
+from visualizer.Config import get_config
+
+def create(listEvntsName, evntStartTime, evntEndTime, title, plot_height=get_config('timeline_plot_height'), plot_width = get_config('timeline_plot_width'),
                       tools=None, colorPallete=None, x_axis_label = 'Time', y_axis_label = 'Calls', border_color=None, fim_plot=None):
     ''' Creates Timeline Visualization '''
-    
+
     numEvnts = len(listEvntsName)
 
     if colorPallete == None:

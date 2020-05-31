@@ -4,7 +4,9 @@ from bokeh.io import show, output_file
 from bokeh.models import ColumnDataSource, Div
 from bokeh.layouts import column
 
-def create_table(df, heading = 'Summary Table', cols = None, width = 1470, height=430):
+from visualizer.Config import get_config
+
+def create_table(df, heading = 'Summary Table', cols = None, width = get_config('table_plot_width'), height=get_config('table_plot_height')):
 	'''Creates a bokeh Tabular plot
 	   df = Pandas dataframe contaning data
 	   heading = Table heading
