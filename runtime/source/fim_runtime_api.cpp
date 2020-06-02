@@ -459,3 +459,20 @@ int FimExecuteBN(FimBo* output, FimBo* fim_data, FimBo* beta, FimBo* gamma, FimB
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
+
+int FimExecuteDummy(void)
+{
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
+    FIM_PROFILE_TICK(ExecuteDummy);
+    int ret = 0;
+
+    if (fim_runtime == nullptr) {
+        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+        return -1;
+    }
+    ret = fim_runtime->execute_dummy();
+    FIM_PROFILE_TOCK(ExecuteDummy);
+
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+    return ret;
+}

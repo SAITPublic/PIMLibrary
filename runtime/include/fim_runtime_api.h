@@ -34,5 +34,6 @@ __FIM_API__ int FimExecuteRelu(FimBo* output, FimBo* fim_data);
 __FIM_API__ int FimExecuteGEMV(FimBo* output, FimBo* operand0, FimBo* operand1);
 __FIM_API__ int FimExecuteBN(FimBo* output, FimBo* fim_data, FimBo* beta, FimBo* gamma, FimBo* mean, FimBo* variance,
                              double epsilon);
+__FIM_API__ int FimExecuteDummy(void);
 
 #endif /* _FIM_RUNTIME_API_H_ */

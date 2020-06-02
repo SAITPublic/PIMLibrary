@@ -24,8 +24,7 @@ void KernelLauncher(const void* i_data, const void* w_data, const int IN_LENGTH,
     FimBo* device_output = FimCreateBo(fim_desc, MEM_TYPE_DEVICE, GEMV_OUTPUT);
     FimBo* preloaded_weight = FimCreateBo(fim_desc, MEM_TYPE_FIM, GEMV_WEIGHT);
     FimBo* host_output = FimCreateBo(fim_desc, MEM_TYPE_HOST, GEMV_OUTPUT);
-    //FimBo* golden_output = FimCreateBo(fim_desc, MEM_TYPE_HOST, GEMV_OUTPUT);
-
+    // FimBo* golden_output = FimCreateBo(fim_desc, MEM_TYPE_HOST, GEMV_OUTPUT);
 
     // Todo: Handle 2 input
     FimCopyMemory((void*)host_input->data, (void*)i_data, 2 * IN_LENGTH, HOST_TO_HOST);
@@ -91,7 +90,7 @@ class FimGemvOp : public OpKernel
 
         // Create an output tensor
         Tensor* output_tensor = NULL;
-        TensorShape tshape = TensorShape({input_num_rows,num_cols});
+        TensorShape tshape = TensorShape({input_num_rows, num_cols});
 
         OP_REQUIRES_OK(context, context->allocate_output(0, tshape, /*input_tensor.shape()*/
                                                          &output_tensor));

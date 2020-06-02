@@ -212,6 +212,8 @@ int fim_gemv3(void)
     /* __FIM_API__ call : Initialize FimRuntime */
     FimInitialize(RT_TYPE_HIP, FIM_FP16);
 
+    FimExecuteDummy();
+
     FimDesc* fim_desc = FimCreateDesc(1, 1, out_size, in_size, FIM_FP16);
     /* __FIM_API__ call : Create FIM Buffer Object */
     FimBo* host_input = FimCreateBo(fim_desc, MEM_TYPE_HOST, GEMV_INPUT);
@@ -349,7 +351,6 @@ int fim_gemv4(void)
 
     return ret;
 }
-
 
 TEST(HIPIntegrationTest, FimGEMVBATCH) { EXPECT_TRUE(fim_gemv_batch() == 0); }
 TEST(HIPIntegrationTest, FimGEMV) { EXPECT_TRUE(fim_gemv() == 0); }

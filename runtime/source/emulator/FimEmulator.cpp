@@ -52,7 +52,7 @@ int FimEmulator::convert_mem_trace_from_16B_to_32B(FimMemTraceData* fmtd32, int*
     TraceParser trace_converter;
     trace_converter.coalesce_trace(fmtd32, fmtd32_size, fmtd16, fmtd16_size);
 
-    printf("%s %d fmtd16_size : %d\n", __func__, __LINE__, fmtd16_size);
+    DLOG(INFO) << "fmtd16_size : " << fmtd16_size;
 
 #ifdef DEBUG_FIM
     char str[256];
@@ -90,11 +90,11 @@ int FimEmulator::execute_gemv(FimBo* output, FimBo* fim_data, FimMemTraceData* f
     fim_sim_.preload_data((void*)fim_data->data, fim_data->size);
     fim_sim_.execute_kernel((void*)fmtd32, fmtd32_size);
     fim_sim_.get_uint16_result(sim_output, num_element);
-    cout << sim_output_size / sizeof(half) / 16 << endl;
     reduce_sum_for_gemv((void*)sim_output /* out */, (void*)sim_output /* in */, sim_output_size, fbi_.num_out_per_grf);
     if (output->mem_type != MEM_TYPE_HOST) {
         for (int i = 0; i < output->bshape.n; i++) {
-            hipMemcpy((half*)output->data + i * fim_data->bshape_r.h, (half*)sim_output + i * fim_data->bshape.h, fim_data->bshape_r.h * sizeof(half), hipMemcpyHostToDevice);
+            hipMemcpy((half*)output->data + i * fim_data->bshape_r.h, (half*)sim_output + i * fim_data->bshape.h,
+                      fim_data->bshape_r.h * sizeof(half), hipMemcpyHostToDevice);
         }
     }
 

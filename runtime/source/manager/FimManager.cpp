@@ -175,6 +175,7 @@ int FimManager::create_crf_binary(FimOpType op_type, int input_size, int output_
     fim_crf_generator_->gen_binary(op_type, input_size, output_size, &fbi_, h_binary_buffer_, &crf_size_);
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+    return ret;
 }
 
 uint8_t* FimManager::get_crf_binary() { return h_binary_buffer_; }

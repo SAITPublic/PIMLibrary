@@ -6,6 +6,7 @@
 #include "hip/hip_runtime.h"
 #include "utility/fim_dump.hpp"
 #include "utility/fim_log.h"
+#include "utility/fim_profile.h"
 #include "utility/fim_util.h"
 
 extern uint64_t g_fim_base_addr;
@@ -46,10 +47,10 @@ int FimExecutor::initialize(void)
 
     int ret = 0;
     hipGetDeviceProperties(&dev_prop_, 0);
-    std::cout << " System minor " << dev_prop_.minor << std::endl;
-    std::cout << " System major " << dev_prop_.major << std::endl;
-    std::cout << " agent prop name " << dev_prop_.name << std::endl;
-    std::cout << " hip Device prop succeeded " << std::endl;
+    DLOG(INFO) << " System minor " << dev_prop_.minor << std::endl;
+    DLOG(INFO) << " System major " << dev_prop_.major << std::endl;
+    DLOG(INFO) << " agent prop name " << dev_prop_.name << std::endl;
+    DLOG(INFO) << " hip Device prop succeeded " << std::endl;
 
     fim_manager_ = fim::runtime::manager::FimManager::get_instance(rt_type_, precision_);
 
@@ -66,11 +67,6 @@ int FimExecutor::initialize(void)
     h_fmtd32_ = (FimMemTraceData*)malloc(reserved_fmtd_size);
     h_fmtd16_size_ = (int*)malloc(sizeof(int));
     h_fmtd32_size_ = (int*)malloc(sizeof(int));
-#else
-    fmtd16_ = nullptr;
-    fmtd32_ = nullptr;
-    fmtd16_size_ = nullptr;
-    fmtd32_size_ = nullptr;
 #endif
     /* FIM HW can generate only gemv output without reduction sum */
     /* so FimExecutor needs to maintain intermediate output buffer for gemv op */
@@ -187,29 +183,38 @@ int FimExecutor::execute_gemv(FimBo* output, FimBo* operand0, FimBo* operand1)
     int out_size = weight->bshape.h;
     int num_batch = input->bshape.n;
 
+    FIM_PROFILE_TICK(CreateCRFBin);
     fim_manager_->create_crf_binary(OP_GEMV, in_size * sizeof(half), out_size * sizeof(half));
     uint8_t* crf_binary = fim_manager_->get_crf_binary();
     int crf_size = fim_manager_->get_crf_size();
+    FIM_PROFILE_TOCK(CreateCRFBin);
 
     // FIXME : change 128 to a meaningful variable.
+    FIM_PROFILE_TICK(CopyCRFBin);
     hipMemcpy((void*)d_crf_bin_buffer_, (void*)crf_binary, sizeof(uint8_t) * 128, hipMemcpyHostToDevice);
+    FIM_PROFILE_TOCK(CopyCRFBin);
 
+    FIM_PROFILE_TICK(LoadWeight);
     hipMemcpy((void*)g_fim_base_addr, weight->data, weight->size, hipMemcpyDeviceToDevice);
+    FIM_PROFILE_TOCK(LoadWeight);
+
+    FIM_PROFILE_TICK(RunGemvKernel);
     hipLaunchKernelGGL(gemv_fim_1cu_2th_fp16, dim3(1), dim3(2), 0, 0, (uint8_t*)g_fim_base_addr /* fim control base */,
                        (uint8_t*)g_fim_base_addr /* fim weight base */,
                        (uint8_t*)fim_gemv_tmp_buffer_, /* fim hw output buffer */
                        (uint8_t*)input->data, (uint8_t*)output->data, in_size, num_batch, out_size,
                        (FimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, (uint8_t*)d_crf_bin_buffer_, crf_size);
-
     hipStreamSynchronize(NULL);
+    FIM_PROFILE_TOCK(RunGemvKernel);
 
 #ifdef EMULATOR
-    printf("%s %d d_fmtd16_size : %d\n", __func__, __LINE__, d_fmtd16_size_[0]);
+    FIM_PROFILE_TICK(RunGemvEmulation);
     hipMemcpy((void*)h_fmtd16_size_, (void*)d_fmtd16_size_, sizeof(int), hipMemcpyDeviceToHost);
     hipMemcpy((void*)h_fmtd16_, (void*)d_fmtd16_, sizeof(FimMemTraceData) * max_fmtd_size_, hipMemcpyDeviceToHost);
 
     fim_emulator_->convert_mem_trace_from_16B_to_32B(h_fmtd32_, h_fmtd32_size_, h_fmtd16_, h_fmtd16_size_[0], OP_GEMV);
     fim_emulator_->execute_gemv(output, weight, h_fmtd32_, h_fmtd32_size_[0], OP_GEMV);
+    FIM_PROFILE_TOCK(RunGemvEmulation);
 #endif
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
@@ -341,6 +346,18 @@ int FimExecutor::execute_bn(FimBo* output, FimBo* fim_data, FimBo* beta, FimBo* 
     fim_emulator_->convert_mem_trace_from_16B_to_32B(h_fmtd32_, h_fmtd32_size_, h_fmtd16_, h_fmtd16_size_[0], OP_BN);
     fim_emulator_->execute_fim(output, fim_data, h_fmtd32_, h_fmtd32_size_[0], OP_BN);
 #endif
+
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+    return ret;
+}
+
+int FimExecutor::execute_dummy(void)
+{
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
+    int ret = 0;
+
+    hipLaunchKernelGGL(dummy_kernel, dim3(1), dim3(1), 0, 0);
+    hipStreamSynchronize(NULL);
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;

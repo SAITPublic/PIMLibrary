@@ -9,8 +9,6 @@ __host__ __device__ void reduce_sum_for_gemv(void* out, void* in, int out_size, 
     half* input = (half*)in;
     int out_num = out_size / sizeof(half) / reduce_size;
 
-    printf("out_num:%d,  out_size:%d,  reduce_size:%d\n", out_num, out_size, reduce_size);
-
     for (int i = 0; i < out_num; i++) {
         t_output = 0;
         for (int j = 0; j < reduce_size; j++) {
