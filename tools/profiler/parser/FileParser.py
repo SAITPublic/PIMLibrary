@@ -9,9 +9,14 @@ def parse_csv_file(file_name, cols=['Kernel Operation', 'begin', 'end', 'duratio
 	'''
 	df=pd.read_csv(file_name)
 	df.rename(columns = {'KernelName':'Kernel Operation', 'BeginNs':'begin', 'EndNs':'end', 'DurationNs':'duration'}, inplace=True)
-	for col in ['begin','end','duration']:
-		df[col] = df[col]/(10**6)
 
+	#Set starting time to 0 ms
+	for col in ['end','begin']:
+		df[col] = df[col] - df['begin'][0]
+
+	for col in ['begin', 'end','duration']:
+		df[col] = (df[col]/(10**6))
+	
 	if cols:
 		df=df[cols]
 	return df
@@ -47,7 +52,14 @@ def parse_fim_log_file(file_name, cols=None):
 
 	#Set EndTime = BeginTime wherever Endtime is nan (not in log file)
 	df['end'] = np.where(pd.isna(df.end), df['begin'], df['end'])
-	df['duration'] = df['end'] - df['begin'] #set duration
+	#Set starting time to 0 ms
+	df['end'] = df['end'] - df['begin'][0]
+	df['begin'] = df['begin'] - df['begin'][0]
+	#Set duration
+	df['duration'] = df['end'] - df['begin']
+
+	for col in ['begin', 'end','duration']:
+		df[col] = (df[col]).astype('float').round(3)
 
 	return df, df_buf
 
