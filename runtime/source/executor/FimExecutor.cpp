@@ -199,7 +199,7 @@ int FimExecutor::execute_gemv(FimBo* output, FimBo* operand0, FimBo* operand1)
     FIM_PROFILE_TOCK(CopyCRFBin);
 
     FIM_PROFILE_TICK(RunGemvKernel);
-    for (int iter = 0; iter < 100; iter++) {
+    for (int iter = 0; iter < 1; iter++) {
         hipLaunchKernelGGL(
             gemv_fim_1cu_2th_fp16, dim3(1), dim3(2), 0, 0, (uint8_t*)g_fim_base_addr /* fim control base */,
             (uint8_t*)weight->data /* fim weight base */, (uint8_t*)fim_gemv_tmp_buffer_, /* fim hw output buffer */
