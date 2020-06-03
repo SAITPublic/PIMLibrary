@@ -20,8 +20,8 @@ if __name__=='__main__':
 	#Read File
 	df_gpu=parse_csv_file(args.gpu_file)
 	#Produce timeline plot
-	event_names, start_times, end_times = get_start_end_times(df_gpu)
-	timeline_plot = create(event_names, start_times, end_times, title = 'Timeline Plot', x_axis_label = 'Time (in ms)', y_axis_label = 'GPU Kernels', border_color = get_config('timeline_border_fill_colour'))
+	event_names, start_times, end_times, tag_names = get_start_end_times(df_gpu)
+	timeline_plot = create(event_names, start_times, end_times, tag_names, title = 'Timeline Plot', x_axis_label = 'Time (in ms)', y_axis_label = 'GPU Kernels', border_color = get_config('timeline_border_fill_colour'))
 	#Produce Tabular plot
 	df_gpu_table = get_table_stats(df_gpu)
 	table_plot = create_table(df_gpu_table, heading = 'GPU Calls Summary')
@@ -34,8 +34,8 @@ if __name__=='__main__':
 	#Read File
 	df_cpu,df_cpu_buf=parse_fim_log_file(args.fim_file)
 	#Produce timeline plot
-	event_names, start_times, end_times = get_start_end_times(df_cpu, 'Module Name', fim_processing=True)
-	timeline_plot = create(event_names, start_times, end_times, title = 'Timeline Plot', x_axis_label = 'Time (in ms)', y_axis_label = 'FIM Modules', border_color = get_config('timeline_border_fill_colour'), fim_plot=True)
+	event_names, start_times, end_times, tag_names = get_start_end_times(df_cpu, 'Module Name', fim_processing=True)
+	timeline_plot = create(event_names, start_times, end_times, tag_names, title = 'Timeline Plot', x_axis_label = 'Time (in ms)', y_axis_label = 'FIM Modules', border_color = get_config('timeline_border_fill_colour'), fim_plot=True)
 	#Produce Tabular plot for Module
 	df_cpu_module = get_table_stats(df_cpu, 'Module Name')
 	table_plot_m = create_table(df_cpu_module, heading = 'Module Summary')
