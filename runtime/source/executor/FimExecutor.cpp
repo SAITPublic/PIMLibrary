@@ -198,19 +198,17 @@ int FimExecutor::execute_gemv(FimBo* output, FimBo* operand0, FimBo* operand1)
     hipMemcpy((void*)d_crf_bin_buffer_, (void*)crf_binary, sizeof(uint8_t) * 128, hipMemcpyHostToDevice);
     FIM_PROFILE_TOCK(CopyCRFBin);
 
-    FIM_PROFILE_TICK(LoadWeight);
-    hipMemcpy((void*)g_fim_base_addr, weight->data, weight->size, hipMemcpyDeviceToDevice);
-    FIM_PROFILE_TOCK(LoadWeight);
-
     FIM_PROFILE_TICK(RunGemvKernel);
-    hipLaunchKernelGGL(gemv_fim_1cu_2th_fp16, dim3(1), dim3(2), 0, 0, (uint8_t*)g_fim_base_addr /* fim control base */,
-                       (uint8_t*)g_fim_base_addr /* fim weight base */,
-                       (uint8_t*)fim_gemv_tmp_buffer_, /* fim hw output buffer */
-                       (uint8_t*)input->data, (uint8_t*)output->data, in_size, num_batch, out_size,
+    for (int iter = 0; iter < 100; iter++) {
+        hipLaunchKernelGGL(
+            gemv_fim_1cu_2th_fp16, dim3(1), dim3(2), 0, 0, (uint8_t*)g_fim_base_addr /* fim control base */,
+            (uint8_t*)weight->data /* fim weight base */, (uint8_t*)fim_gemv_tmp_buffer_, /* fim hw output buffer */
+            (uint8_t*)input->data, (uint8_t*)output->data, in_size, num_batch, out_size,
 #ifdef EMULATOR
-                       (FimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_,
+            (FimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_,
 #endif
-                       (uint8_t*)d_crf_bin_buffer_, crf_size);
+            (uint8_t*)d_crf_bin_buffer_, crf_size);
+    }
     hipStreamSynchronize(NULL);
     FIM_PROFILE_TOCK(RunGemvKernel);
 

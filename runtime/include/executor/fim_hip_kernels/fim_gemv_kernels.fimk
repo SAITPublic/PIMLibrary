@@ -1,6 +1,16 @@
 #ifndef _FIM_GEMV_KERNELS_FIMK_
 #define _FIM_GEMV_KERNELS_FIMK_
 
+#define PREPARE_KERNEL 1
+#define PARK_IN 1
+#define CHANGE_SB_HAB 1
+#define PROGRAM_CRF 1
+#define COMPUTE_GEMV 1
+#define CHANGE_HAB_SB 1
+#define PARK_OUT 1
+#define READ_RESULT 1
+#define INTEGRAL_SUM 1
+
 __global__ void gemv_fim_1cu_2th_fp16(volatile uint8_t* __restrict__ fim_ctr, volatile uint8_t* __restrict__ fim_weight,
                                       volatile uint8_t* __restrict__ fim_gemv_tmp_buffer,
                                       volatile uint8_t* __restrict__ fim_input, volatile uint8_t* __restrict__ output,
@@ -16,6 +26,8 @@ __global__ void gemv_fim_1cu_2th_fp16(volatile uint8_t* __restrict__ fim_ctr, vo
     g_ridx = 0;
     __syncthreads();
 #endif
+
+#if PREPARE_KERNEL
     uint64_t offset = (hipThreadIdx_x % 2) * 0x10;
     FimBlockInfo* fbi = &vega20_fbi;
     input_dim = input_dim * sizeof(half) / fbi->trans_size;
@@ -27,12 +39,23 @@ __global__ void gemv_fim_1cu_2th_fp16(volatile uint8_t* __restrict__ fim_ctr, vo
     int num_jump_of_odd_bank = fbi->num_grf_B * floorf((float)num_in_tile / 2) - 1;
     int end_col = gemv_get_result_col(input_dim / fbi->trans_size, num_output_bst, num_in_tile, num_out_tile);
     int compute_col = 0;
+#endif
 
     /* Radeon7(VEGA20) memory is 16GB but our target is 32GB system */
     /* so program_crf and chagne_fim_mode functions can not access to over 8GB in our system */
+#if PARK_IN
     park_in_1cu_2th(fim_ctr, offset);
+#endif
+
+#if CHANGE_SB_HAB
     change_fim_mode_1cu_2th(fim_ctr, SB_MODE, HAB_MODE, null_bst, offset);
+#endif
+
+#if PROGRAM_CRF
     program_crf_1cu_2th(fim_ctr, crf_binary, crf_size, offset);
+#endif
+
+#if COMPUTE_GEMV
     for (int j = 0; j < num_out_tile; j++) {
         for (int b = 0; b < batch_dim; b++) {
             change_fim_mode_1cu_2th(fim_ctr, HAB_MODE, HAB_FIM_MODE, gemv_hab_to_hab_fim, offset);
@@ -49,18 +72,30 @@ __global__ void gemv_fim_1cu_2th_fp16(volatile uint8_t* __restrict__ fim_ctr, vo
             change_fim_mode_1cu_2th(fim_ctr, HAB_FIM_MODE, HAB_MODE, gemv_hab_fim_to_hab, offset);
         }
     }
+#endif
+
+#if CHANGE_HAB_SB
     change_fim_mode_1cu_2th(fim_ctr, HAB_MODE, SB_MODE, null_bst, offset);
+#endif
+
+#if PARK_OUT
     park_out_1cu_2th(fim_ctr, offset);
+#endif
+
+#if READ_RESULT
     read_result_1cu_2th(fim_gemv_tmp_buffer, fim_weight, ODD_BANK, num_output_bst * batch_dim, 0, end_col, offset);
+#endif
+
 #ifdef EMULATOR
     __syncthreads();
     frd_size[0] = g_ridx;
 #endif
 
-/* TODO: verify reduce sum in Target Mode */
-#if 0 
+#if INTEGRAL_SUM
+    /* TODO: verify reduce sum in Target Mode */
     if (hipThreadIdx_x == 0) {
-        reduce_sum_for_gemv((void*)output, (void*)fim_gemv_tmp_buffer, output_dim * fbi->num_out_per_grf * 2, fbi->num_out_per_grf);
+        reduce_sum_for_gemv_profile((void*)output, (void*)fim_gemv_tmp_buffer, output_dim * fbi->num_out_per_grf * 2,
+                                    fbi->num_out_per_grf);
     }
 #endif
 }

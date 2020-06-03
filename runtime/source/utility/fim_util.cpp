@@ -19,6 +19,23 @@ __host__ __device__ void reduce_sum_for_gemv(void* out, void* in, int out_size, 
     }
 }
 
+__host__ __device__ void reduce_sum_for_gemv_profile(void* out, void* in, int out_size, int reduce_size)
+{
+    short t_output;
+    short* output = (short*)out;
+    short* input = (short*)in;
+    int out_num = out_size / sizeof(short) / reduce_size;
+
+    for (int i = 0; i < out_num; i++) {
+        t_output = 0;
+        for (int j = 0; j < reduce_size; j++) {
+            t_output += input[j];
+        }
+        output[i] = t_output;
+        input += reduce_size;
+    }
+}
+
 __host__ __device__ uint32_t mask_by_bit(uint32_t value, uint32_t start, uint32_t end)
 {
     int length = start - end + 1;

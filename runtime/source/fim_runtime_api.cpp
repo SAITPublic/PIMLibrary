@@ -108,6 +108,7 @@ FimBo* FimCreateBo(FimDesc* fim_desc, FimMemType mem_type, FimMemFlag mem_flag)
     if (mem_flag == GEMV_INPUT) {
         pad_data(fim_bo->data, fim_desc->bshape_r.w, fim_desc->bshape.w, fim_desc->bshape.n, mem_flag);
     }
+    FIM_PROFILE_TOCK(CreateBo);
 
     return fim_bo;
 }
@@ -160,7 +161,7 @@ int FimDestroyBo(FimBo* fim_bo)
 int FimDestroyDesc(FimDesc* fim_desc)
 {
     DLOG(INFO) << "called";
-    FIM_PROFILE_TICK(DestroyBo);
+    FIM_PROFILE_TICK(DestroyDesc);
     int ret = 0;
 
     if (fim_runtime == nullptr) {
@@ -168,7 +169,7 @@ int FimDestroyDesc(FimDesc* fim_desc)
         return -1;
     }
     delete fim_desc;
-    FIM_PROFILE_TOCK(DestroyBo);
+    FIM_PROFILE_TOCK(DestroyDesc);
 
     return ret;
 }

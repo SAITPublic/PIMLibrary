@@ -39,6 +39,7 @@ FimBlockInfo vega20_fbi = {
 
 __host__ void get_fim_block_info(FimBlockInfo* fbi);
 __host__ __device__ void reduce_sum_for_gemv(void* out, void* in, int out_size, int reduce_size);
+__host__ __device__ void reduce_sum_for_gemv_profile(void* out, void* in, int out_size, int reduce_size);
 __host__ __device__ uint32_t mask_by_bit(uint32_t value, uint32_t start, uint32_t end);
 __host__ __device__ uint64_t addr_gen(uint32_t chan, uint32_t rank, uint32_t bankgroup, uint32_t bank, uint32_t row,
                                       uint32_t col);
