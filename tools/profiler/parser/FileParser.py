@@ -34,8 +34,9 @@ def parse_fim_log_file(file_name, cols=None):
 			if(line[0] == 'I'):
 				log  = line.split()
 				if(log[4] != '[START]' and log[4] != '[END]'):
-					log_data = {'Buffer Id':log[4], 'Creation Time (in ms)':(float(log[8])/1000)}
-					df_buf =df_buf.append(log_data, ignore_index=True)
+					if(len(log) == 9): #Buffer Logs
+						log_data = {'Buffer Id':log[4], 'Creation Time (in ms)':(float(log[8])/1000)}
+						df_buf =df_buf.append(log_data, ignore_index=True)
 				else:
 					log_time = log[1].split(':')
 					log_time_s = int(log_time[0])*3600+int(log_time[1])*60+float(log_time[2])
