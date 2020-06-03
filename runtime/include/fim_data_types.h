@@ -6,8 +6,6 @@
 
 using half_float::half;
 
-#define EMULATOR
-
 #define __FIM_API__
 
 /** TODO add the following function

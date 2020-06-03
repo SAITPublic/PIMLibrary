@@ -15,6 +15,7 @@ set(EXEC_PREFIX "${PREFIX}/bin")
 set(ROCM_PATH $ENV{ROCM_PATH})
 
 option(MIOPEN_APPS "Enable MIOpens apps build" OFF)
+option(TARGET "Enable TARGET apps build" OFF)
 
 # Set Default build type to "Debug"
 if((NOT CMAKE_BUILD_TYPE) OR (CMAKE_BUILD_TYPE) STREQUAL None)
@@ -47,6 +48,12 @@ link_directories("${ROCM_PATH}/hsa/lib" "${ROCM_PATH}/libhsakmt/lib" "${ROCM_PAT
 
 #for test vectors default data path
 add_definitions(-DTEST_VECTORS_DATA="${PROJECT_SOURCE_DIR}")
+
+if(TARGET)
+    add_definitions(-DTARGET=1)
+else()
+    add_definitions(-DEMULATOR=1)
+endif()
 
 add_subdirectory(runtime)
 add_subdirectory(examples)
