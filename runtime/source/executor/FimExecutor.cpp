@@ -112,7 +112,9 @@ int FimExecutor::execute_add(FimBo* output, FimBo* operand0, FimBo* operand1)
 
     hipLaunchKernelGGL(elt_op_fim_1cu_2th_fp16, dim3(blocks), dim3(threads_per_block), 0, 0, (uint8_t*)operand0->data,
                        (uint8_t*)operand1->data, (uint8_t*)g_fim_base_addr, (uint8_t*)output->data, output->size,
+#ifdef EMULATOR
                        (FimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_,
+#endif
                        (uint8_t*)d_crf_bin_buffer_, crf_size);
 
     hipStreamSynchronize(NULL);
@@ -150,7 +152,9 @@ int FimExecutor::execute_mul(FimBo* output, FimBo* operand0, FimBo* operand1)
 
     hipLaunchKernelGGL(elt_op_fim_1cu_2th_fp16, dim3(blocks), dim3(threads_per_block), 0, 0, (uint8_t*)operand0->data,
                        (uint8_t*)operand1->data, (uint8_t*)g_fim_base_addr, (uint8_t*)output->data, output->size,
+#ifdef EMULATOR
                        (FimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_,
+#endif
                        (uint8_t*)d_crf_bin_buffer_, crf_size);
 
     hipStreamSynchronize(NULL);
@@ -203,7 +207,10 @@ int FimExecutor::execute_gemv(FimBo* output, FimBo* operand0, FimBo* operand1)
                        (uint8_t*)g_fim_base_addr /* fim weight base */,
                        (uint8_t*)fim_gemv_tmp_buffer_, /* fim hw output buffer */
                        (uint8_t*)input->data, (uint8_t*)output->data, in_size, num_batch, out_size,
-                       (FimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, (uint8_t*)d_crf_bin_buffer_, crf_size);
+#ifdef EMULATOR
+                       (FimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_,
+#endif
+                       (uint8_t*)d_crf_bin_buffer_, crf_size);
     hipStreamSynchronize(NULL);
     FIM_PROFILE_TOCK(RunGemvKernel);
 
@@ -237,7 +244,9 @@ int FimExecutor::execute_relu(FimBo* output, FimBo* fim_data)
 
     hipLaunchKernelGGL(relu_fim_1cu_2th_fp16, dim3(blocks), dim3(threads_per_block), 0, 0, (uint8_t*)fim_data->data,
                        (uint8_t*)g_fim_base_addr, (uint8_t*)output->data, (int)output->size,
+#ifdef EMULATOR
                        (FimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_,
+#endif
                        (uint8_t*)d_crf_bin_buffer_, crf_size);
     hipStreamSynchronize(NULL);
 
@@ -327,9 +336,11 @@ int FimExecutor::execute_bn(FimBo* output, FimBo* fim_data, FimBo* beta, FimBo* 
 
     hipLaunchKernelGGL(bn_fim_1cu_2th_fp16, dim3(blocks), dim3(threads_per_block), 0, 0, (uint8_t*)g_fim_base_addr,
                        (uint8_t*)g_fim_base_addr, (uint8_t*)output->data, (int)output->size, output->bshape.n,
-                       output->bshape.c, output->bshape.w, (uint8_t*)d_crf_bin_buffer_, crf_size,
-                       (uint8_t*)d_srf_bin_buffer_, srf_size, (FimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_,
-                       fmtd_size_per_ch_);
+                       output->bshape.c, output->bshape.w,
+#ifdef EMULATOR
+                       (FimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_,
+#endif
+                       (uint8_t*)d_crf_bin_buffer_, crf_size, (uint8_t*)d_srf_bin_buffer_, srf_size);
 
     hipStreamSynchronize(NULL);
     delete[] srf_binary;

@@ -4,16 +4,19 @@
 __global__ void gemv_fim_1cu_2th_fp16(volatile uint8_t* __restrict__ fim_ctr, volatile uint8_t* __restrict__ fim_weight,
                                       volatile uint8_t* __restrict__ fim_gemv_tmp_buffer,
                                       volatile uint8_t* __restrict__ fim_input, volatile uint8_t* __restrict__ output,
-                                      int input_dim, int batch_dim, int output_dim, FimMemTraceData* fmtd16,
-                                      int* frd_size, uint8_t* crf_binary, int crf_size)
+                                      int input_dim, int batch_dim, int output_dim,
+#ifdef EMULATOR
+                                      FimMemTraceData* fmtd16, int* frd_size,
+#endif
+                                      uint8_t* crf_binary, int crf_size)
 {
 #ifdef EMULATOR
     g_fba = (uint64_t)fim_ctr;
     g_fmtd16 = fmtd16;
     g_ridx = 0;
-    uint64_t offset = (hipThreadIdx_x % 2) * 0x10;
     __syncthreads();
 #endif
+    uint64_t offset = (hipThreadIdx_x % 2) * 0x10;
     FimBlockInfo* fbi = &vega20_fbi;
     input_dim = input_dim * sizeof(half) / fbi->trans_size;
     int num_parallelism = fbi->num_fim_blocks * fbi->num_fim_chan * fbi->num_fim_rank;
@@ -54,7 +57,8 @@ __global__ void gemv_fim_1cu_2th_fp16(volatile uint8_t* __restrict__ fim_ctr, vo
     frd_size[0] = g_ridx;
 #endif
 
-#if 0 /* TODO: verify reduce sum in Target Mode */
+/* TODO: verify reduce sum in Target Mode */
+#if 0 
     if (hipThreadIdx_x == 0) {
         reduce_sum_for_gemv((void*)output, (void*)fim_gemv_tmp_buffer, output_dim * fbi->num_out_per_grf * 2, fbi->num_out_per_grf);
     }

@@ -3,16 +3,19 @@
 
 __global__ void elt_op_fim_1cu_2th_fp16(volatile uint8_t* __restrict__ operand0,
                                         volatile uint8_t* __restrict__ operand1, volatile uint8_t* __restrict__ fim_ctr,
-                                        volatile uint8_t* __restrict__ output, int size, FimMemTraceData* fmtd16,
-                                        int* frd_size, int mt_width, uint8_t* crf_binary, int crf_size)
+                                        volatile uint8_t* __restrict__ output, int size,
+#ifdef EMULATOR
+                                        FimMemTraceData* fmtd16, int* frd_size, int mt_width,
+#endif
+                                        uint8_t* crf_binary, int crf_size)
 {
 #ifdef EMULATOR
     g_fba = (uint64_t)fim_ctr;
     g_fmtd16 = fmtd16;
     g_ridx = 0;
-    uint64_t offset = (hipThreadIdx_x % 2) * 0x10;
     __syncthreads();
 #endif
+    uint64_t offset = (hipThreadIdx_x % 2) * 0x10;
     FimBlockInfo* fbi = &vega20_fbi;
     int out_dim = size / fbi->trans_size;
 
@@ -33,7 +36,10 @@ __global__ void elt_op_fim_1cu_2th_fp16(volatile uint8_t* __restrict__ operand0,
 }
 
 __global__ void elt_add_fim(uint8_t* fim_data, uint8_t* fim_ctr, uint8_t* output, unsigned int input_size,
-                            FimMemTraceData* fmtd, int* frd_size, int mt_width, uint8_t* crf_binary, int crf_size)
+#ifdef EMULATOR
+                            FimMemTraceData* fmtd, int* frd_size, int mt_width,
+#endif
+                            uint8_t* crf_binary, int crf_size)
 {
 #ifdef EMULATOR
     g_idx[hipBlockIdx_x] = 0;

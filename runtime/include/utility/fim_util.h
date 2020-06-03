@@ -51,17 +51,18 @@ extern int g_idx[64];
 extern int m_width;
 extern FimMemTraceData* g_fmtd16;
 
+__device__ void record(int bid, char mtype, uint64_t paddr);
+#endif
+
 __device__ void GEN_WRITE_CMD(volatile uint8_t* __restrict__ dst, volatile uint8_t* __restrict__ src);
 __device__ void GEN_READ_CMD(volatile uint8_t* __restrict__ dst, volatile uint8_t* __restrict__ src,
                              bool is_output = false);
 __device__ void BLOCK_SYNC(int cu_ch_idx = 0, bool block_all_chan = true);
-#else  /* TARGET */
-__device__ void GEN_WRITE_CMD(volatile uint8_t* __restrict__ dst, volatile uint8_t* __restrict__ src);
+__device__ void R_CMD(uint8_t* addr);
+__device__ void W_CMD(uint8_t* addr);
+__device__ void W_CMD_R(uint8_t* addr, uint8_t* src);
+__device__ void B_CMD(int type);
 
-__device__ void GEN_READ_CMD(volatile uint8_t* __restrict__ dst, volatile uint8_t* __restrict__ src,
-                             bool is_output = false);
-__device__ void BLOCK_SYNC(void);
-#endif /* EMULATOR */
 __device__ void add_transaction_all_1cu_2th(volatile uint8_t* __restrict__ fim_addr, bool is_write, uint32_t bg,
                                             uint32_t bank, uint32_t row, uint32_t col, uint8_t* burst, uint64_t offset,
                                             int loop_cnt = 1);
@@ -100,19 +101,7 @@ __device__ void compute_gemv_2bank_1cu_2th(volatile uint8_t* __restrict__ fim_ct
 __device__ void compute_elt_op_1cu_2th(volatile uint8_t* __restrict__ fim_input0,
                                        volatile uint8_t* __restrict__ fim_input1,
                                        volatile uint8_t* __restrict__ fim_output, int num_tile, uint64_t offset);
-#ifdef EMULATOR
-__device__ void R_CMD(uint8_t* addr);
-__device__ void W_CMD(uint8_t* addr);
-__device__ void W_CMD_R(uint8_t* addr, uint8_t* src);
-__device__ void B_CMD(int type);
-__device__ void record(int bid, char mtype, uint64_t paddr);
-#else
-__device__ void R_CMD(uint8_t* addr);
-__device__ void W_CMD(uint8_t* addr);
-__device__ void W_CMD_R(uint8_t* addr, uint8_t* src);
-__device__ void B_CMD(int type);
-#endif
-
 size_t get_aligned_size(FimDesc* fim_desc, FimMemFlag mem_flag, FimBo* fim_bo);
 void pad_data(void* input, int in_size, int in_nsize, int batch_size, FimMemFlag mem_flag);
+
 #endif /* _FIM_UTIL_H_ */

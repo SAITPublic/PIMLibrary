@@ -64,6 +64,14 @@ __host__ __device__ uint64_t addr_gen(uint32_t chan, uint32_t rank, uint32_t ban
 
     addr <<= fbi->num_offset_bit;
 
+#ifdef TARGET
+    /* we assume fim kernel run on vega20(32GB) system */
+    /* but SAIT server is vega20(16GB) system */
+    /* so upper 2bit should be set as 0 for normal work */
+    uint64_t mask = !(0x3 << 33);
+    addr &= mask;
+#endif
+
     return addr;
 }
 
@@ -149,13 +157,12 @@ __device__ void GEN_WRITE_CMD(volatile uint8_t* __restrict__ dst, volatile uint8
     asm volatile("global_store_dwordx4 %0, v[27:30], off\n\t" ::"v"(dst) : "v27", "v28", "v29", "v30");
 }
 
-__device__ void GEN_READ_CMD(volatile uint8_t* __restrict__ dst, volatile uint8_t* __restrict__ src,
-                             bool is_output = false)
+__device__ void GEN_READ_CMD(volatile uint8_t* __restrict__ dst, volatile uint8_t* __restrict__ src, bool is_output)
 {
     asm volatile("global_load_dwordx4 v[27:30], %0, off\n\t" ::"v"(src) : "v27", "v28", "v29", "v30");
 }
 
-__device__ void BLOCK_SYNC(void) { __syncthreads(); }
+__device__ void BLOCK_SYNC(int cu_ch_idx, bool block_all_chan) { __syncthreads(); }
 
 #endif /* EMULATOR */
 

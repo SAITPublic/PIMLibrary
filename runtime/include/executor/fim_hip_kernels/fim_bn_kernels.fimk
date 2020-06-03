@@ -3,16 +3,18 @@
 
 __global__ void bn_fim_1cu_2th_fp16(volatile uint8_t* __restrict__ fim_data, volatile uint8_t* __restrict__ fim_ctr,
                                     volatile uint8_t* __restrict__ output, int size, int num_ba, int num_ch, int num_w,
-                                    uint8_t* crf_binary, int crf_size, uint8_t* srf_binary, int srf_size,
-                                    FimMemTraceData* fmtd16, int* frd_size, int mt_width)
+#ifdef EMULATOR
+                                    FimMemTraceData* fmtd16, int* frd_size, int mt_width,
+#endif
+                                    uint8_t* crf_binary, int crf_size, uint8_t* srf_binary, int srf_size)
 {
 #ifdef EMULATOR
     g_fba = (uint64_t)fim_ctr;
     g_fmtd16 = fmtd16;
     g_ridx = 0;
-    uint64_t offset = (hipThreadIdx_x % 2) * 0x10;
     __syncthreads();
 #endif
+    uint64_t offset = (hipThreadIdx_x % 2) * 0x10;
     FimBlockInfo* fbi = &vega20_fbi;
     int out_dim = size / fbi->trans_size;
     int end_col = get_result_col(out_dim / 2);
