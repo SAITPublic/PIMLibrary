@@ -61,6 +61,7 @@ class GemvTest(tf.test.TestCase):
         with self.test_session():
             minv = 0.5
             maxv = 1.0
+            batches = [1,4]
             sizes = [
                 (128, 768),
                 (256, 768),
@@ -72,10 +73,11 @@ class GemvTest(tf.test.TestCase):
             ]
             success = True
             failed_cases = []
-            for size in sizes:
+            for batch in batches:
+              for size in sizes:
                 a = tf.random.uniform(
                     shape=(
-                        1,
+                        batch,
                         size[0]),
                     minval=minv,
                     maxval=maxv,
@@ -92,7 +94,7 @@ class GemvTest(tf.test.TestCase):
                 try:
                     self.assertAllClose(result, golden, rtol=5e-1)
                 except Exception as ex:
-                    failed_cases.append(size)
+                    failed_cases.append([batch,size])
                     success = False
 
             if not success:
@@ -122,6 +124,35 @@ class GemvTest(tf.test.TestCase):
         a = tf.reshape(t_input0, [1, in_size])
         w = tf.reshape(t_input1, [in_size, out_size])
         o = tf.reshape(t_output0, [1, out_size])
+
+        with self.test_session():
+            result = fim_gemv(a, w, tf.constant([1]))
+            self.assertAllEqual(result, o)
+
+    def testGemvGoldenBatch(self):
+        in_size = 1024
+        out_size = 4096
+        batch_size = 4
+        input0 = np.fromfile(
+            testFilesPath +
+            "load/gemv/gemv_batch_input_4x1024.dat",
+            dtype=np.float16)
+        input1 = np.fromfile(
+            testFilesPath +
+            "load/gemv/gemv_batch_weight_1024x4096.dat",
+            dtype=np.float16)
+        output0 = np.fromfile(
+            testFilesPath +
+            "load/gemv/gemv_batch_output_4x4096.dat",
+            dtype=np.float16)
+
+        t_input0 = tf.convert_to_tensor(input0, np.float16)
+        t_input1 = tf.convert_to_tensor(input1, np.float16)
+        t_output0 = tf.convert_to_tensor(output0, np.float16)
+
+        a = tf.reshape(t_input0, [batch_size, in_size])
+        w = tf.reshape(t_input1, [in_size, out_size])
+        o = tf.reshape(t_output0, [batch_size, out_size])
 
         with self.test_session():
             result = fim_gemv(a, w, tf.constant([1]))
@@ -181,9 +212,6 @@ class GemvTest(tf.test.TestCase):
 
         with self.test_session():
             result = fim_gemv(a, w, tf.constant([0]))
-            logging.info('Result %s', result)
-            logging.info('Result %s', result.shape)
-            logging.info('Result1 %s', result[0])
             self.assertAllEqual(result, o)
 
     def testGemvSmall(self):
@@ -196,8 +224,6 @@ class GemvTest(tf.test.TestCase):
         b = tf.constant(bn, dtype=np.float16)
         with self.test_session():
             result = fim_gemv(a, b, tf.constant([1]))
-            logging.info('Result %s', result)
-            logging.info('Result %s', result.shape)
             result = tf.reshape(result, [32])
             self.assertAllEqual(result, [64.] * 32)
 
