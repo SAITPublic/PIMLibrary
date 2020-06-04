@@ -34,8 +34,14 @@ def parse_fim_log_file(file_name, cols=None):
 			if(line[0] == 'I'):
 				log  = line.split()
 				if(log[4] != '[START]' and log[4] != '[END]'):
-					if(len(log) == 9): #Buffer Logs
-						log_data = {'Buffer Id':log[4], 'Creation Time (in ms)':(float(log[8])/1000)}
+					if(len(log) == 9 and log[5] == 'time' and log[7] == ':'): #Buffer Logs
+						if(log[6] == '(us)'):
+							div = 1000
+						elif(log[6] == '(ms)'):
+							div = 1
+						else:
+							print('Problem with buffer log: ', log)
+						log_data = {'Buffer Id':log[4], 'Creation Time (in ms)':(float(log[8])/div)}
 						df_buf =df_buf.append(log_data, ignore_index=True)
 				else:
 					log_time = log[1].split(':')
