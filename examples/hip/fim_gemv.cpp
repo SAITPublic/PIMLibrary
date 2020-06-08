@@ -298,6 +298,7 @@ int fim_gemv4(void)
     FimBo* device_output = FimCreateBo(fim_desc, MEM_TYPE_DEVICE, GEMV_OUTPUT);
     FimBo* preloaded_weight = FimCreateBo(fim_desc, MEM_TYPE_FIM, GEMV_WEIGHT);
     FimBo* host_output = FimCreateBo(fim_desc, MEM_TYPE_HOST, GEMV_OUTPUT);
+    FimBo* temp_output = FimCreateBo(fim_desc, MEM_TYPE_HOST, GEMV_OUTPUT);
     FimBo* golden_output = FimCreateBo(fim_desc, MEM_TYPE_HOST, GEMV_OUTPUT);
 
     /* Initialize the input, weight, output data */
@@ -312,7 +313,13 @@ int fim_gemv4(void)
 
     load_data(input.c_str(), (char*)host_input->data, host_input->size);
     load_data(weight.c_str(), (char*)temp_weight->data, temp_weight->size);
-    load_data(output.c_str(), (char*)golden_output->data, golden_output->size);
+    load_data(output.c_str(), (char*)temp_output->data, temp_output->size);
+
+    for (int i = 0; i < batch_n; i++) {
+        memcpy((half*)golden_output->data + i * fim_desc->bshape_r.h, (half*)temp_output->data + i * fim_desc->bshape.h,
+               fim_desc->bshape_r.h * sizeof(half));
+    }
+
 
     for (int i = 0; i < fim_desc->bshape_r.h; i++) {
         memcpy((half*)host_weight->data + i * fim_desc->bshape_r.w, (half*)temp_weight->data + i * fim_desc->bshape.w,
@@ -332,7 +339,8 @@ int fim_gemv4(void)
 
     dump_data(preload_weight.c_str(), (char*)preloaded_weight->data, preloaded_weight->size);
     dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
-    ret = compare_data((char*)golden_output->data, (char*)host_output->data, out_size * sizeof(half));
+    ret = compare_data((char*)golden_output->data, (char*)host_output->data, batch_n * out_size * sizeof(half));
+
 
     /* __FIM_API__ call : Destroy FIM Buffer Object */
     FimDestroyBo(host_input);
@@ -343,6 +351,7 @@ int fim_gemv4(void)
     FimDestroyBo(device_output);
     FimDestroyBo(preloaded_weight);
     FimDestroyBo(host_reordered_weight);
+    FimDestroyBo(temp_output);
     FimDestroyBo(golden_output);
     FimDestroyDesc(fim_desc);
 
