@@ -112,4 +112,16 @@ python3 tf_custom_op/<test_file>
 For more details about usage, refer [Profiler](https://github.sec.samsung.net/FIM/FIMLibrary/tree/develop/tools/profiler)
    
 
+# Documentation
+## How to generate Doxygen documentation
+### Prerquisites
+doxygen and graphviz packages need to be installed.
+```
+sudo apt-get install doxygen
+sudo apt-get install graphviz
+```
 
+### Documentation Generation
+`doxygen Doxyfile`
+
+Documentation will be generated in Doc/Doxygen folder
