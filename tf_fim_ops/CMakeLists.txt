@@ -27,6 +27,12 @@ set(FIM_ACT_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/cc/kernels/fim_activation.cc
 set(FIM_BN_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/cc/kernels/fim_bn.cc
             ${CMAKE_CURRENT_SOURCE_DIR}/cc/ops/fim_bn_ops.cc)
 
+set(FIM_INIT_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/cc/kernels/fim_init.cc
+            ${CMAKE_CURRENT_SOURCE_DIR}/cc/ops/fim_init_ops.cc)
+
+set(FIM_DEINIT_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/cc/kernels/fim_deinit.cc
+            ${CMAKE_CURRENT_SOURCE_DIR}/cc/ops/fim_deinit_ops.cc)
+
 set(MIOPEN_ELT_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/cc/kernels/miopen_eltwise.cc
             ${CMAKE_CURRENT_SOURCE_DIR}/cc/ops/miopen_eltwise_ops.cc)
 
@@ -49,6 +55,12 @@ target_link_libraries(fim_activation FimRuntime ${TF_LFLAGS})
 add_library(fim_bn SHARED ${FIM_BN_SOURCES})
 target_link_libraries(fim_bn FimRuntime ${TF_LFLAGS})
 
+add_library(fim_init SHARED ${FIM_INIT_SOURCES})
+target_link_libraries(fim_init FimRuntime ${TF_LFLAGS})
+
+add_library(fim_deinit SHARED ${FIM_DEINIT_SOURCES})
+target_link_libraries(fim_deinit FimRuntime ${TF_LFLAGS})
+
 add_library(miopen_eltwise SHARED ${MIOPEN_ELT_SOURCES})
 target_link_libraries(miopen_eltwise MIOpen ${TF_LFLAGS})
 
@@ -65,6 +77,9 @@ install ( TARGETS fim_eltwise LIBRARY DESTINATION
 install ( TARGETS fim_activation LIBRARY DESTINATION
            /opt/rocm/lib)
 install ( TARGETS fim_bn LIBRARY DESTINATION
+install ( TARGETS fim_init LIBRARY DESTINATION
+           /opt/rocm/lib)
+install ( TARGETS fim_deinit LIBRARY DESTINATION
            /opt/rocm/lib)
 install ( TARGETS miopen_eltwise LIBRARY DESTINATION
            /opt/rocm/lib)
