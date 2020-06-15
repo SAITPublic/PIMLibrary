@@ -77,6 +77,7 @@ install ( TARGETS fim_eltwise LIBRARY DESTINATION
 install ( TARGETS fim_activation LIBRARY DESTINATION
            /opt/rocm/lib)
 install ( TARGETS fim_bn LIBRARY DESTINATION
+           /opt/rocm/lib)
 install ( TARGETS fim_init LIBRARY DESTINATION
            /opt/rocm/lib)
 install ( TARGETS fim_deinit LIBRARY DESTINATION
