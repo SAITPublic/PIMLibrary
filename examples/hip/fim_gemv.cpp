@@ -26,7 +26,7 @@ int fim_gemv_batch(void)
     /* __FIM_API__ call : Create FIM Buffer Object */
     FimBo* host_input = FimCreateBo(IN_LENGTH, 1, 1, BATCH_DIM, FIM_FP16, MEM_TYPE_HOST);
     FimBo* host_weight = FimCreateBo(IN_LENGTH, OUT_LENGTH, 1, 1, FIM_FP16, MEM_TYPE_HOST);
-    FimBo* host_reordered_weight = FimCreateBo(IN_LENGTH, OUT_LENGTH, 1, 1, FIM_FP16, MEM_TYPE_FIM);
+    FimBo* host_reordered_weight = FimCreateBo(IN_LENGTH, OUT_LENGTH, 1, 1, FIM_FP16, MEM_TYPE_HOST);
     FimBo* device_input = FimCreateBo(IN_LENGTH, 1, 1, BATCH_DIM, FIM_FP16, MEM_TYPE_DEVICE);
     FimBo* device_output = FimCreateBo(OUT_LENGTH, 1, 1, BATCH_DIM, FIM_FP16, MEM_TYPE_DEVICE);
     FimBo* preloaded_weight = FimCreateBo(IN_LENGTH, OUT_LENGTH, 1, 1, FIM_FP16, MEM_TYPE_FIM);
@@ -89,7 +89,7 @@ int fim_gemv(void)
     /* __FIM_API__ call : Create FIM Buffer Object */
     FimBo* host_input = FimCreateBo(IN_LENGTH, 1, 1, 1, FIM_FP16, MEM_TYPE_HOST);
     FimBo* host_weight = FimCreateBo(IN_LENGTH, OUT_LENGTH, 1, 1, FIM_FP16, MEM_TYPE_HOST);
-    FimBo* host_reordered_weight = FimCreateBo(IN_LENGTH, OUT_LENGTH, 1, 1, FIM_FP16, MEM_TYPE_FIM);
+    FimBo* host_reordered_weight = FimCreateBo(IN_LENGTH, OUT_LENGTH, 1, 1, FIM_FP16, MEM_TYPE_HOST);
     FimBo* device_input = FimCreateBo(IN_LENGTH, 1, 1, 1, FIM_FP16, MEM_TYPE_DEVICE);
     FimBo* device_output = FimCreateBo(OUT_LENGTH, 1, 1, 1, FIM_FP16, MEM_TYPE_DEVICE);
     FimBo* preloaded_weight = FimCreateBo(IN_LENGTH, OUT_LENGTH, 1, 1, FIM_FP16, MEM_TYPE_FIM);
@@ -151,7 +151,7 @@ int fim_gemv2(void)
     /* __FIM_API__ call : Create FIM Buffer Object */
     FimBo* host_input = FimCreateBo(IN_LENGTH * 2, 1, 1, 1, FIM_FP16, MEM_TYPE_HOST);
     FimBo* host_weight = FimCreateBo(IN_LENGTH * 2, OUT_LENGTH, 1, 1, FIM_FP16, MEM_TYPE_HOST);
-    FimBo* host_reordered_weight = FimCreateBo(IN_LENGTH * 2, OUT_LENGTH, 1, 1, FIM_FP16, MEM_TYPE_FIM);
+    FimBo* host_reordered_weight = FimCreateBo(IN_LENGTH * 2, OUT_LENGTH, 1, 1, FIM_FP16, MEM_TYPE_HOST);
     FimBo* device_input = FimCreateBo(IN_LENGTH * 2, 1, 1, 1, FIM_FP16, MEM_TYPE_DEVICE);
     FimBo* device_output = FimCreateBo(OUT_LENGTH, 1, 1, 1, FIM_FP16, MEM_TYPE_DEVICE);
     FimBo* preloaded_weight = FimCreateBo(IN_LENGTH * 2, OUT_LENGTH, 1, 1, FIM_FP16, MEM_TYPE_FIM);
