@@ -10,21 +10,6 @@
 using namespace std;
 using namespace DRAMSim;
 
-typedef struct __MemTraceData {
-    uint8_t data[32];
-    uint64_t addr;
-    int block_id;
-    int thread_id;
-    char cmd;
-} MemTraceData;
-
-typedef struct _traceDataBst {
-    BurstType data;
-    uint64_t addr;
-    int ch;
-    char cmd;
-} TraceDataBst;
-
 class FIMController
 {
    public:
@@ -40,9 +25,7 @@ class FIMController
     int num_fim_rank_;
     int num_grf_A_;
     int num_grf_B_;
-    int num_all_grf_;
     int num_grf_;
-    int num_srf_;
     bool use_all_grf_;
 
    private:
@@ -74,8 +57,6 @@ class FIMController
 
     BurstType crf_burst;
     shared_ptr<MultiChannelMemorySystem> mem_;
-    vector<MemTraceData> trace_data_;
-    vector<TraceDataBst> trace_bst_;
 
    public:
     FIMController(shared_ptr<MultiChannelMemorySystem> mem, FIMMode mode, int num_chan, int num_rank, int num_bankgroup,
@@ -109,8 +90,6 @@ class FIMController
 
         num_grf_A_ = 8;
         num_grf_B_ = 8;
-        num_srf_ = 4;
-        num_all_grf_ = num_grf_A_ + num_grf_B_;
         num_grf_ = num_grf_A_;
         use_all_grf_ = false;
         srf_bst = NULL;
@@ -121,7 +100,7 @@ class FIMController
         bst_hab.u8_data_[0] = 0;
 
         grfb_reset.u8_data_[21] = 1;
-        print_mmap();
+        // print_mmap();
 
         fim_chans_.clear();
         fim_ranks_.clear();
@@ -135,7 +114,6 @@ class FIMController
 
     unsigned mask_by_bit(unsigned value, int starting_bit, int end_bit);
     void set_fim_cmd(vector<fim_cmd>& fim_cmds, int num_jump_to_be_taken, KernelType ktype);
-    void attach_memory_system(shared_ptr<MultiChannelMemorySystem> mem);
     void add_barrier();
     void run_fim();
     void print_stats();
@@ -162,7 +140,6 @@ class FIMController
     unsigned get_result_col(int dim);
     unsigned get_result_col_gemv(int input_dim, int output_dim);
     int get_num_tile(int dim);
-    int get_num_jump(int num_tile, KernelType ktype);
     void change_bank(fim_bank_type bank_type, int& cidx, int& rank, int& bg, int& bank, unsigned& starting_row,
                      unsigned& starting_col, unsigned& row, unsigned& col);
     int set_toggle_condition(fim_bank_type bank_type);
@@ -170,20 +147,18 @@ class FIMController
                        NumpyBurstType* beta_npbst, NumpyBurstType* input_npbst, fp16** params);
 
     void execute_gemv(NumpyBurstType* w_data, NumpyBurstType* i_data);
-    void execute_eltwise(int dim, fim_bank_type bank_type, KernelType ktype);
+    void execute_eltwise(int dim, fim_bank_type bank_type, KernelType ktype, int input0_row, int result_row,
+                         int input1_row = 0);
 
-    void preload_operand(NumpyBurstType* operand, fim_bank_type bank_type, KernelType ktype, unsigned starting_row = 0,
-                         unsigned starting_col = 0);
     void preload_gemv(NumpyBurstType* operand, unsigned starting_row = 0, unsigned starting_col = 0);
     void preload_eltwise(NumpyBurstType* operand, fim_bank_type bank_type, unsigned starting_row,
                          unsigned starting_col);
 
     void compute_gemv(NumpyBurstType* data, int num_input_tile, int num_output_tile, int input_tile, int output_tile,
-                      fim_bank_type bank_type);
-    void compute_add(int num_tile);
-    void compute_mul(int num_tile);
+                      int batch_idx, fim_bank_type bank_type);
+    void compute_add_or_mul(int num_tile, int input0_row, int result_row, int input1_row);
+    void compute_relu(int num_tile, int input0_row, int result_row);
     void compute_bn(int num_tile);
-    void compute_relu(int num_tile);
 
     void read_result(BurstType* result_bst, fim_bank_type bank_type, int output_dim, unsigned starting_row = 0,
                      unsigned starting_col = 0);
@@ -192,7 +167,7 @@ class FIMController
     void run_trace();
     void convert_to_burst_trace();
 
-    void read_data(BurstType* bst_data, size_t bst_cnt);
+    void read_data(BurstType* bst_data, size_t bst_cnt, unsigned starting_row = 0, unsigned starting_col = 0);
     void create_eltwise_vector(NumpyBurstType* operand, uint16_t* data, fim_bank_type bank_type,
                                unsigned starting_row = 0, unsigned starting_col = 0);
 
@@ -207,6 +182,8 @@ class FIMController
     void program_srf();
     void read_result_bn(BurstType* result_bst, int num_ba, int num_ch, int num_w, unsigned starting_row = 0,
                         unsigned starting_col = 0);
+
+    void preload_no_replacement(NumpyBurstType* operand, unsigned starting_row, unsigned starting_col);
 };
 
 #endif

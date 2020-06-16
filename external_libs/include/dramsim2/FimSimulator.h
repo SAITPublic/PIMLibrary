@@ -3,6 +3,21 @@
 
 #include "FIMCtrl.h"
 
+typedef struct __MemTraceData {
+    uint8_t data[32];
+    uint64_t addr;
+    int block_id;
+    int thread_id;
+    char cmd;
+} MemTraceData;
+
+typedef struct __TraceDataBst {
+    BurstType data;
+    uint64_t addr;
+    int ch;
+    char cmd;
+} TraceDataBst;
+
 class FimSimulator
 {
    public:
@@ -16,7 +31,6 @@ class FimSimulator
     void execute_kernel_bn(void* trace_data, size_t num_trace, int num_batch, int num_ch, int num_width);
     void alloc_burst(size_t preload_size, size_t output_size);
     void get_uint16_result(uint16_t* output_data, size_t num_data);
-    void get_uint16_result_gemv(uint16_t* output_data, size_t num_data);
     void read_result(uint64_t addr, size_t data_size);
     void run();
     void compare_result_arr(uint16_t* test_output, size_t num_data, NumpyBurstType* output_npbst);
@@ -33,7 +47,6 @@ class FimSimulator
     void convert_arr_to_burst(void* data, size_t data_size, BurstType* bst);
     void push_trace(vector<TraceDataBst>* trace_bst);
     void push_trace_bn(vector<TraceDataBst>* trace_bst, int num_batch, int num_ch, int num_width);
-
     void convert_to_burst_trace(void* trace_data, vector<TraceDataBst>* trace_bst, size_t num_trace);
 
    private:

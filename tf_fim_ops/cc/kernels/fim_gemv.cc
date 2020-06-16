@@ -6,8 +6,8 @@
 
 using namespace tensorflow;  // NOLINT(build/namespaces)
 
-void KernelLauncher(const void* i_data, const void* w_data, const int num_batch, const int IN_LENGTH, const int OUT_LENGTH, void* o_data,
-                    int reorder)
+void KernelLauncher(const void* i_data, const void* w_data, const int num_batch, const int IN_LENGTH,
+                    const int OUT_LENGTH, void* o_data, int reorder)
 {
     std::cout << "Launcher for FIM_Gemv" << std::endl;
 
@@ -26,8 +26,8 @@ void KernelLauncher(const void* i_data, const void* w_data, const int num_batch,
 
     // Copy , incement using descriptors bshape.w
     for (int i = 0; i < num_batch; i++) {
-    memcpy(static_cast<half*>(host_input->data) + i * fim_desc->bshape.w,
-           static_cast<const half*>(i_data) + i * IN_LENGTH, sizeof(half) * IN_LENGTH);
+        memcpy(static_cast<half*>(host_input->data) + i * fim_desc->bshape.w,
+               static_cast<const half*>(i_data) + i * IN_LENGTH, sizeof(half) * IN_LENGTH);
     }
     FimCopyMemory((void*)host_weight->data, (void*)w_data, sizeof(half) * IN_LENGTH * OUT_LENGTH, HOST_TO_HOST);
 
@@ -89,7 +89,7 @@ class FimGemvOp : public OpKernel
 
         // Create an output tensor
         Tensor* output_tensor = NULL;
-        TensorShape tshape = TensorShape({num_batch,num_cols});
+        TensorShape tshape = TensorShape({num_batch, num_cols});
 
         OP_REQUIRES_OK(context, context->allocate_output(0, tshape, /*input_tensor.shape()*/
                                                          &output_tensor));

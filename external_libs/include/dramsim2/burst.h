@@ -367,64 +367,6 @@ struct NumpyBurstType {
         }
     }
 
-    void copy_from_buffer(uint16_t* buffer, vector<unsigned long> buf_shape)
-    {
-        int buf_size = 1;
-
-        for (int i = 0; i < buf_shape.size(); i++) {
-            buf_size *= buf_shape[i];
-        }
-
-        for (int i = 0; i < buf_size; i += 16) {
-            BurstType burst((buffer[i]), (buffer[i + 1]), (buffer[i + 2]), (buffer[i + 3]), (buffer[i + 4]),
-                            (buffer[i + 5]), (buffer[i + 6]), (buffer[i + 7]), (buffer[i + 8]), (buffer[i + 9]),
-                            (buffer[i + 10]), (buffer[i + 11]), (buffer[i + 12]), (buffer[i + 13]), (buffer[i + 14]),
-                            (buffer[i + 15]));
-            bdata.push_back(burst);
-        }
-
-        for (int i = 0; i < buf_shape.size(); i++) {
-            if (i == buf_shape.size() - 1)
-                bshape.push_back(ceil(buf_shape[i] / (double)16));
-            else
-                bshape.push_back(buf_shape[i]);
-        }
-    }
-
-    void load_fp16_from_txt(string filename, vector<unsigned long> file_shape)
-    {
-        ifstream file(filename.c_str());
-
-        if (file.is_open()) {
-            int i = 0;
-            while (!file.eof()) {
-                uint16_t tmp_data;
-                file >> tmp_data;
-                if (file.eof()) {
-                    break;
-                }
-                u16_data.push_back(tmp_data);
-            }
-        }
-
-        for (int i = 0; i < u16_data.size(); i += 16) {
-            BurstType burst((u16_data[i]), (u16_data[i + 1]), (u16_data[i + 2]), (u16_data[i + 3]), (u16_data[i + 4]),
-                            (u16_data[i + 5]), (u16_data[i + 6]), (u16_data[i + 7]), (u16_data[i + 8]),
-                            (u16_data[i + 9]), (u16_data[i + 10]), (u16_data[i + 11]), (u16_data[i + 12]),
-                            (u16_data[i + 13]), (u16_data[i + 14]), (u16_data[i + 15]));
-            bdata.push_back(burst);
-        }
-
-        for (int i = 0; i < file_shape.size(); i++) {
-            if (i == file_shape.size() - 1)
-                bshape.push_back(ceil(file_shape[i] / (double)16));
-            else
-                bshape.push_back(file_shape[i]);
-        }
-
-        file.close();
-    }
-
     void dump_fp16(string filename)
     {
         ofstream file(filename.c_str());

@@ -320,7 +320,6 @@ int fim_gemv4(void)
                fim_desc->bshape_r.h * sizeof(half));
     }
 
-
     for (int i = 0; i < fim_desc->bshape_r.h; i++) {
         memcpy((half*)host_weight->data + i * fim_desc->bshape_r.w, (half*)temp_weight->data + i * fim_desc->bshape.w,
                fim_desc->bshape_r.w * sizeof(half));
@@ -340,7 +339,6 @@ int fim_gemv4(void)
     dump_data(preload_weight.c_str(), (char*)preloaded_weight->data, preloaded_weight->size);
     dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
     ret = compare_data((char*)golden_output->data, (char*)host_output->data, batch_n * out_size * sizeof(half));
-
 
     /* __FIM_API__ call : Destroy FIM Buffer Object */
     FimDestroyBo(host_input);

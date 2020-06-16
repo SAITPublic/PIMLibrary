@@ -18,10 +18,7 @@ class FimInitOp : public OpKernel
    public:
     explicit FimInitOp(OpKernelConstruction* context) : OpKernel(context) {}
 
-    void Compute(OpKernelContext* context) override
-    {
-        KernelLauncher();
-    }
+    void Compute(OpKernelContext* context) override { KernelLauncher(); }
 };
 
 REGISTER_KERNEL_BUILDER(Name("FimInit").Device(DEVICE_GPU), FimInitOp);
