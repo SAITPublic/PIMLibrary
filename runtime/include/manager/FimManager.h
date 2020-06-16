@@ -39,6 +39,7 @@ class FimManager
     int create_crf_binary(FimOpType op_type, int input_size, int output_size);
     uint8_t* get_crf_binary();
     int get_crf_size();
+    FimCrfBinGen* fim_crf_generator_;
 
    private:
     FimManager(FimRuntimeType rt_type, FimPrecision precision);
@@ -46,7 +47,6 @@ class FimManager
     FimDevice* fim_device_;
     FimControlManager* fim_control_manager_;
     FimMemoryManager* fim_memory_manager_;
-    FimCrfBinGen* fim_crf_generator_;
 
     FimRuntimeType rt_type_;
     FimPrecision precision_;

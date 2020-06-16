@@ -54,9 +54,14 @@ int FimExecutor::initialize(void)
 
     fim_manager_ = fim::runtime::manager::FimManager::get_instance(rt_type_, precision_);
 
-    int max_crf_size = 128;
+    max_crf_size_ = 128;
+    max_crf_lut_size_ = 10;
     int max_srf_size = 2048;
-    hipMalloc((void**)&d_crf_bin_buffer_, max_crf_size);
+
+    hipMalloc((void**)&d_crf_bin_lut_, (int)OP_DUMMY * max_crf_lut_size_ * max_crf_size_);
+    h_crf_size_lut_ = (int*)malloc(sizeof(int) * max_crf_lut_size_ * (int)OP_DUMMY);
+    create_crf_lut();
+
     hipMalloc((void**)&d_srf_bin_buffer_, max_srf_size);
 #ifdef EMULATOR
     int reserved_fmtd_size = max_fmtd_size_ * sizeof(FimMemTraceData);
@@ -80,10 +85,11 @@ int FimExecutor::deinitialize(void)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
-    hipFree((void*)d_crf_bin_buffer_);
+    hipFree((void*)d_crf_bin_lut_);
     hipFree((void*)d_srf_bin_buffer_);
+    free(h_crf_size_lut_);
 #ifdef EMULATOR
-    hipFree((void*)d_fmtd16_);
+        hipFree((void*)d_fmtd16_);
     hipFree((void*)d_fmtd16_size_);
     free(h_fmtd16_);
     free(h_fmtd16_size_);
@@ -96,26 +102,67 @@ int FimExecutor::deinitialize(void)
     return ret;
 }
 
+void FimExecutor::create_crf_lut()
+{
+    uint8_t* temp_crf = new uint8_t[max_crf_size_];
+    int crf_size = 0;
+
+    int num_op_type = (int)OP_DUMMY;
+
+    for (int j = 0; j < max_crf_lut_size_; j++) {
+        fim_manager_->fim_crf_generator_->gen_binary_with_loop(OP_GEMV, j * 8 - 1, temp_crf, &crf_size);
+        memcpy(d_crf_bin_lut_ + (int)OP_GEMV * max_crf_lut_size_ * max_crf_size_ + j * max_crf_size_, temp_crf,
+               crf_size);
+        h_crf_size_lut_[(int)OP_GEMV * max_crf_lut_size_ + j] = crf_size;
+    }
+
+    for (int i = 1; i < num_op_type; i++) {
+        for (int j = 0; j < max_crf_lut_size_; j++) {
+            fim_manager_->fim_crf_generator_->gen_binary_with_loop((FimOpType)i, j, temp_crf, &crf_size);
+            memcpy(d_crf_bin_lut_ + i * max_crf_lut_size_ * max_crf_size_ + j * max_crf_size_, temp_crf, crf_size);
+            h_crf_size_lut_[i * max_crf_lut_size_ + j] = crf_size;
+        }
+    }
+
+    delete[] temp_crf;
+}
+
+int FimExecutor::get_loop_counter(FimOpType op_type, int input_size)
+{
+    int lc = 0;
+
+    int num_transaction = (input_size / 16) / sizeof(uint16_t);
+    int num_parallelism = fbi_.num_fim_blocks * fbi_.num_fim_chan * fbi_.num_fim_rank * fbi_.num_grf;
+    int num_tile = num_transaction / num_parallelism;
+
+    if (op_type == OP_RELU || op_type == OP_ELT_ADD || op_type == OP_ELT_MUL) {
+        lc = num_tile / 2 - 1;
+    } else if (op_type == OP_GEMV) {
+        num_tile = ceil((double)num_transaction / (double)fbi_.num_grf);
+        lc = fbi_.num_grf * ceil((double)num_tile / 2) - 1;
+    } else {
+        lc = num_tile - 1;
+    }
+
+    return lc;
+}
+
 int FimExecutor::execute_add(FimBo* output, FimBo* operand0, FimBo* operand1)
 {
     DLOG(INFO) << "called";
     int ret = 0;
     unsigned blocks = 1;
     unsigned threads_per_block = 2;
-
-    fim_manager_->create_crf_binary(OP_ELT_ADD, output->size, output->size);
-    uint8_t* crf_binary = fim_manager_->get_crf_binary();
-    int crf_size = fim_manager_->get_crf_size();
-
-    // FIXME : change 128 to a meaningful variable.
-    hipMemcpy((void*)d_crf_bin_buffer_, (void*)crf_binary, sizeof(uint8_t) * 128, hipMemcpyHostToDevice);
+    int lc = get_loop_counter(OP_ELT_ADD, output->size);
+    int crf_lut_offset = (int)OP_ELT_ADD * max_crf_lut_size_ * max_crf_size_ + lc * max_crf_size_;
+    int crf_size = h_crf_size_lut_[(int)OP_ELT_ADD * max_crf_lut_size_ + lc];
 
     hipLaunchKernelGGL(elt_op_fim_1cu_2th_fp16, dim3(blocks), dim3(threads_per_block), 0, 0, (uint8_t*)operand0->data,
                        (uint8_t*)operand1->data, (uint8_t*)g_fim_base_addr, (uint8_t*)output->data, output->size,
 #ifdef EMULATOR
                        (FimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_,
 #endif
-                       (uint8_t*)d_crf_bin_buffer_, crf_size);
+                       (uint8_t*)d_crf_bin_lut_ + crf_lut_offset, crf_size);
 
     hipStreamSynchronize(NULL);
 
@@ -143,19 +190,16 @@ int FimExecutor::execute_mul(FimBo* output, FimBo* operand0, FimBo* operand1)
     unsigned blocks = 1;
     unsigned threads_per_block = 2;
 
-    fim_manager_->create_crf_binary(OP_ELT_MUL, output->size, output->size);
-    uint8_t* crf_binary = fim_manager_->get_crf_binary();
-    int crf_size = fim_manager_->get_crf_size();
-
-    // FIXME : change 128 to a meaningful variable.
-    hipMemcpy((void*)d_crf_bin_buffer_, (void*)crf_binary, sizeof(uint8_t) * 128, hipMemcpyHostToDevice);
+    int lc = get_loop_counter(OP_ELT_MUL, output->size);
+    int crf_lut_offset = (int)OP_ELT_MUL * max_crf_lut_size_ * max_crf_size_ + lc * max_crf_size_;
+    int crf_size = h_crf_size_lut_[(int)OP_ELT_MUL * max_crf_lut_size_ + lc];
 
     hipLaunchKernelGGL(elt_op_fim_1cu_2th_fp16, dim3(blocks), dim3(threads_per_block), 0, 0, (uint8_t*)operand0->data,
                        (uint8_t*)operand1->data, (uint8_t*)g_fim_base_addr, (uint8_t*)output->data, output->size,
 #ifdef EMULATOR
                        (FimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_,
 #endif
-                       (uint8_t*)d_crf_bin_buffer_, crf_size);
+                       (uint8_t*)d_crf_bin_lut_ + crf_lut_offset, crf_size);
 
     hipStreamSynchronize(NULL);
 
@@ -188,15 +232,10 @@ int FimExecutor::execute_gemv(FimBo* output, FimBo* operand0, FimBo* operand1)
     int num_batch = input->bshape.n;
 
     FIM_PROFILE_TICK(CreateCRFBin);
-    fim_manager_->create_crf_binary(OP_GEMV, in_size * sizeof(half), out_size * sizeof(half));
-    uint8_t* crf_binary = fim_manager_->get_crf_binary();
-    int crf_size = fim_manager_->get_crf_size();
+    int lc = (get_loop_counter(OP_GEMV, in_size * sizeof(half)) + 1) / 8;
+    int crf_lut_offset = (int)OP_GEMV * max_crf_lut_size_ * max_crf_size_ + lc * max_crf_size_;
+    int crf_size = h_crf_size_lut_[(int)OP_GEMV * max_crf_lut_size_ + lc];
     FIM_PROFILE_TOCK(CreateCRFBin);
-
-    // FIXME : change 128 to a meaningful variable.
-    FIM_PROFILE_TICK(CopyCRFBin);
-    hipMemcpy((void*)d_crf_bin_buffer_, (void*)crf_binary, sizeof(uint8_t) * 128, hipMemcpyHostToDevice);
-    FIM_PROFILE_TOCK(CopyCRFBin);
 
     FIM_PROFILE_TICK(RunGemvKernel);
     for (int iter = 0; iter < 1; iter++) {
@@ -207,7 +246,7 @@ int FimExecutor::execute_gemv(FimBo* output, FimBo* operand0, FimBo* operand1)
 #ifdef EMULATOR
             (FimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_,
 #endif
-            (uint8_t*)d_crf_bin_buffer_, crf_size);
+            (uint8_t*)d_crf_bin_lut_ + crf_lut_offset, crf_size);
     }
     hipStreamSynchronize(NULL);
     FIM_PROFILE_TOCK(RunGemvKernel);
@@ -233,19 +272,16 @@ int FimExecutor::execute_relu(FimBo* output, FimBo* fim_data)
     unsigned blocks = 1;
     unsigned threads_per_block = 2;
 
-    fim_manager_->create_crf_binary(OP_RELU, output->size, output->size);
-    uint8_t* crf_binary = fim_manager_->get_crf_binary();
-    int crf_size = fim_manager_->get_crf_size();
-
-    // FIXME : change 128 to a meaningful variable.
-    hipMemcpy((void*)d_crf_bin_buffer_, (void*)crf_binary, sizeof(uint8_t) * 128, hipMemcpyHostToDevice);
+    int lc = get_loop_counter(OP_RELU, output->size);
+    int crf_lut_offset = (int)OP_RELU * max_crf_lut_size_ * max_crf_size_ + lc * max_crf_size_;
+    int crf_size = h_crf_size_lut_[(int)OP_RELU * max_crf_lut_size_ + lc];
 
     hipLaunchKernelGGL(relu_fim_1cu_2th_fp16, dim3(blocks), dim3(threads_per_block), 0, 0, (uint8_t*)fim_data->data,
                        (uint8_t*)g_fim_base_addr, (uint8_t*)output->data, (int)output->size,
 #ifdef EMULATOR
                        (FimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_,
 #endif
-                       (uint8_t*)d_crf_bin_buffer_, crf_size);
+                       (uint8_t*)d_crf_bin_lut_ + crf_lut_offset, crf_size);
     hipStreamSynchronize(NULL);
 
 #ifdef EMULATOR
@@ -318,14 +354,14 @@ int FimExecutor::execute_bn(FimBo* output, FimBo* fim_data, FimBo* beta, FimBo* 
 
     /* TODO: modify 128 to crf size */
 
-    fim_manager_->create_crf_binary(OP_BN, output->size, output->size);
-    uint8_t* crf_binary = fim_manager_->get_crf_binary();
-    int crf_size = fim_manager_->get_crf_size();
+    int lc = get_loop_counter(OP_BN, output->size);
+    int crf_lut_offset = (int)OP_BN * max_crf_lut_size_ * max_crf_size_ + lc * max_crf_size_;
+    int crf_size = h_crf_size_lut_[(int)OP_BN * max_crf_lut_size_ + lc];
+
     uint8_t* srf_binary = new uint8_t[fbi_.num_fim_chan * fbi_.num_fim_rank * fbi_.trans_size];
     int srf_size = fbi_.num_fim_chan * fbi_.num_fim_rank * fbi_.trans_size;
     preprocess_srf(beta, gamma, mean, variance, epsilon, srf_binary);
 
-    hipMemcpy((void*)d_crf_bin_buffer_, (void*)crf_binary, sizeof(uint8_t) * 128, hipMemcpyHostToDevice);
     hipMemcpy((void*)d_srf_bin_buffer_, (void*)srf_binary, srf_size, hipMemcpyHostToDevice);
     hipMemcpy((void*)g_fim_base_addr, fim_data->data, fim_data->size, hipMemcpyHostToDevice);
 
@@ -338,7 +374,7 @@ int FimExecutor::execute_bn(FimBo* output, FimBo* fim_data, FimBo* beta, FimBo* 
 #ifdef EMULATOR
                        (FimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_,
 #endif
-                       (uint8_t*)d_crf_bin_buffer_, crf_size, (uint8_t*)d_srf_bin_buffer_, srf_size);
+                       (uint8_t*)d_crf_bin_lut_ + crf_lut_offset, crf_size, (uint8_t*)d_srf_bin_buffer_, srf_size);
 
     hipStreamSynchronize(NULL);
     delete[] srf_binary;

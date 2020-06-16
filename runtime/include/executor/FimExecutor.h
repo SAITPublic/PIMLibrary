@@ -22,6 +22,8 @@ class FimExecutor
 
     int initialize(void);
     int deinitialize(void);
+    int get_loop_counter(FimOpType op_type, int input_size);
+    void create_crf_lut();
 
     int execute_add(FimBo* output, FimBo* operand0, FimBo* operand1);
     int execute_mul(FimBo* output, FimBo* operand0, FimBo* operand1);
@@ -34,8 +36,9 @@ class FimExecutor
     int preprocess_srf(FimBo* beta, FimBo* gamma, FimBo* mean, FimBo* variance, double epsilon, uint8_t* srf_binary);
 
    private:
+    int max_crf_size_;
+    int max_crf_lut_size_;
     fim::runtime::manager::FimManager* fim_manager_;
-    uint8_t* d_crf_bin_buffer_;
     uint8_t* d_srf_bin_buffer_;
 
     FimRuntimeType rt_type_;
@@ -45,6 +48,8 @@ class FimExecutor
     uint64_t fim_base_addr_;
     uint8_t* fim_gemv_tmp_buffer_;
     FimBlockInfo fbi_;
+    uint8_t* d_crf_bin_lut_;
+    int* h_crf_size_lut_;
 #ifdef EMULATOR
     FimMemTraceData* d_fmtd16_;
     int* d_fmtd16_size_;
