@@ -12,6 +12,6 @@ def get_config(attr):
 			'lower_tab_height' : 540,
 			'sait_logo_width' : 600,
 			'sait_logo_height' : 50,
-			'sait_logo_url' : 'assets/SAIT_logo.png' 
+			'sait_logo_url' : 'profiler/static/images/SAIT_logo.png' 
 			}
 	return vals[attr]

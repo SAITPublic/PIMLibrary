@@ -51,33 +51,7 @@ def create_main(plots, heading = 'Profiler Plots'):
 
 	tabs = Tabs(tabs=tabs, background = get_config('upper_tab_bg'))
 
-	#CSS template
-	template='''
-    {% block postamble %}
-    <style>
-    .bk-root .bk-tabs-header.bk-above .bk-tab {
-        border-width: 3px 1px 0px 1px;
-        border-radius: 10px 10px 0 0;
-    }
-    .bk-root .bk-tabs-header .bk-tab.bk-active {
-        color: black;
-        background-color: white;
-        border-color: black;
-    }
-    .bk-root .bk-tabs-header .bk-tab:hover {
-        background-color: #f2f2f2;
-    }
-    .bk-root .bk-tabs-header .bk-tab {
-        padding: 4px 8px;
-        border: solid;
-        white-space: nowrap;
-        cursor: pointer;
-        border-color: gray;
-    }
-    </style>
-    {% endblock %}
-    '''
-	return column(row(image_plot,div_heading),tabs), template
+	return column(row(image_plot,div_heading),tabs)
 
 if __name__ == '__main__':
 
@@ -86,5 +60,5 @@ if __name__ == '__main__':
 	output_file(filename='MainViz.html', title='Viz',mode='inline')
 
 	#call the create_main function to get main page
-	main,_ = create_main(plots)
+	main = create_main(plots)
 	show(main)
