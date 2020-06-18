@@ -28,7 +28,7 @@ void FimCrfBinGen::create_fim_cmd(FimOpType op_type, int input_size, int output_
     } else if (op_type == OP_GEMV) {
         num_tile = ceil((double)num_transaction / (double)fbi->num_grf);
         num_jump_of_even_bank = fbi->num_grf * ceil((double)num_tile / 2) - 1;
-        num_jump_of_odd_bank = fbi->num_grf * floor(num_tile / 2) - 1;
+        num_jump_of_odd_bank = fbi->num_grf * floor((double)num_tile / 2) - 1;
     } else {
         num_jump_to_be_taken = num_tile - 1;
     }

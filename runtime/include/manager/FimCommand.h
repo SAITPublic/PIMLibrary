@@ -44,7 +44,8 @@ class FimCommand
           is_auto_(0),
           dst_idx_(0),
           src0_idx_(0),
-          src1_idx_(0)
+          src1_idx_(0),
+          is_relu_(0)
     {
     }
 
@@ -60,7 +61,8 @@ class FimCommand
           is_auto_(0),
           dst_idx_(0),
           src0_idx_(0),
-          src1_idx_(0)
+          src1_idx_(0),
+          is_relu_(0)
 
     {
     }
@@ -77,7 +79,8 @@ class FimCommand
           is_auto_(0),
           dst_idx_(0),
           src0_idx_(0),
-          src1_idx_(0)
+          src1_idx_(0),
+          is_relu_(0)
     {
     }
 
@@ -110,7 +113,8 @@ class FimCommand
           is_auto_(is_auto),
           dst_idx_(dst_idx),
           src0_idx_(src0_idx),
-          src1_idx_(src1_idx)
+          src1_idx_(src1_idx),
+          is_relu_(0)
     {
     }
 
@@ -126,7 +130,8 @@ class FimCommand
           is_auto_(is_auto),
           dst_idx_(dst_idx),
           src0_idx_(src0_idx),
-          src1_idx_(src1_idx)
+          src1_idx_(src1_idx),
+          is_relu_(0)
     {
     }
 

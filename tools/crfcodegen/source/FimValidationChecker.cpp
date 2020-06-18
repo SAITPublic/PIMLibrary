@@ -1,4 +1,5 @@
 #include "FimValidationChecker.h"
+#include <cassert>
 
 namespace crfgen_offline
 {
@@ -68,9 +69,15 @@ FimOpdPairType FimValidationChecker::change_opd_type(FimOpdType opd_type) const
 
 int FimValidationChecker::check_cmd_validation(std::vector<FimCommand>& cmds)
 {
+    int ret = 1;
+
     for (int i = 0; i < cmds.size(); i++) {
-        check_validate_pair(cmds[i]);
+        ret = check_validate_pair(cmds[i]);
+        if(0 == ret)
+            return ret;
     }
+
+    return ret;
 }
 
 int FimValidationChecker::check_validate_pair(FimCommand& fim_cmd)
@@ -255,8 +262,14 @@ int FimValidationChecker::check_hazard(std::vector<FimCommand>& cmds)
 int FimValidationChecker::detect_structural_hazard(std::vector<FimCommand>& cmds, int cur_idx, int next_idx,
                                                    int num_nop)
 {
-    int cur_op_idx = get_hazard_table_idx(cmds[cur_idx]);
-    int next_op_idx = get_hazard_table_idx(cmds[next_idx]);
+    int cur_op_idx, next_op_idx;
+
+    cur_op_idx = get_hazard_table_idx(cmds[cur_idx]);
+    assert(cur_op_idx >= 0);
+
+    next_op_idx = get_hazard_table_idx(cmds[next_idx]);
+    assert(next_op_idx >= 0);
+
     int is_consecutive = cmds[cur_idx].dst_ == cmds[next_idx].dst_;
     int r_nonr_idx = !is_read_register(cmds[cur_idx]) * 2 + !is_read_register(cmds[next_idx]);
     int num_required_nop = structual_hazard_table[is_consecutive][r_nonr_idx][next_op_idx][cur_op_idx];
@@ -275,10 +288,12 @@ int FimValidationChecker::detect_structural_hazard(std::vector<FimCommand>& cmds
 int FimValidationChecker::detect_data_hazard(std::vector<FimCommand>& cmds, int cur_idx, int next_idx, int num_nop)
 {
     int opcode_idx = get_hazard_table_idx(cmds[cur_idx]);
+    assert(opcode_idx >= 0);
+
     int is_read_reg = is_read_register(cmds[cur_idx]);
     int num_required_nop = data_hazard_table[is_read_reg][opcode_idx];
 
-    int max_idx = (cur_idx + num_required_nop + 1) < cmds.size() ? (cur_idx + num_required_nop + 1) : (cmds.size());
+    int max_idx = ((int64_t)cur_idx + num_required_nop + 1) < cmds.size() ? ((int64_t)cur_idx + num_required_nop + 1) : (cmds.size());
     int is_hazard = 0;
 
     for (int i = next_idx; i < max_idx; i++) {
