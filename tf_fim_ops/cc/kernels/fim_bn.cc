@@ -10,8 +10,6 @@ void KernelLauncher(const void* inp_data, const int N, const int DIMS, const voi
                     const void* beta, const void* gamma, const double epsilon, std::vector<int>& in_dims,
                     void* out_data)
 {
-    FimInitialize(RT_TYPE_HIP, FIM_FP16);
-
     const int BATCH = in_dims[0];
     const int CH = in_dims[1];
     const int HEIGHT = in_dims[2];
@@ -67,9 +65,6 @@ void KernelLauncher(const void* inp_data, const int N, const int DIMS, const voi
     FimDestroyBo(fim_gamma);
     FimDestroyBo(host_output);
     FimDestroyBo(device_output);
-
-    /* __FIM_API__ call : Deinitialize FimRuntime */
-    FimDeinitialize();
 }
 
 class FimBnOp : public OpKernel

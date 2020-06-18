@@ -4,14 +4,19 @@ from __future__ import print_function
 
 import tensorflow as tf
 import numpy as np
-import math
-from tensorflow.python.platform import test
 tf.debugging.set_log_device_placement(True)
 
 try:
     from tf_fim_ops.python.ops.fim_bn_ops import fim_bn
 except ImportError:
     from fim_bn_ops import fim_bn
+
+try:
+    from tf_fim_ops.python.ops.fim_init_ops import fim_init
+    from tf_fim_ops.python.ops.fim_deinit_ops import fim_deinit
+except ImportError:
+    from fim_init_ops import fim_init
+    from fim_deinit_ops import fim_deinit
 
 
 class FimBn4DGolden(tf.test.TestCase):
@@ -150,4 +155,6 @@ class FimBnRandom4D(tf.test.TestCase):
 
 
 if __name__ == '__main__':
+    fim_init()
     tf.test.main()
+    fim_deinit()

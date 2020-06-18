@@ -10,9 +10,6 @@ void KernelLauncher(const void* inp0_data, const void* inp1_data, int N, int is_
 {
     std::cout << "Launcher for FIM_Eltwise" << std::endl;
 
-    /* __FIM_API__ call : Initialize FimRuntime */
-    FimInitialize(RT_TYPE_HIP, FIM_FP16);
-
     FimDesc* fim_desc = FimCreateDesc(1, 1, 1, N, FIM_FP16);
 
     /* __FIM_API__ call : Create FIM Buffer Object */
@@ -69,8 +66,6 @@ void KernelLauncher(const void* inp0_data, const void* inp1_data, int N, int is_
     FimDestroyBo(fim_input1);
     FimDestroyDesc(fim_desc);
 
-    /* __FIM_API__ call : Deinitialize FimRuntime */
-    FimDeinitialize();
 }
 
 class FimEltwiseOp : public OpKernel

@@ -11,8 +11,8 @@ void KernelLauncher(const void* i_data, const void* w_data, const int num_batch,
 {
     std::cout << "Launcher for FIM_Gemv" << std::endl;
 
-    /* __FIM_API__ call : Initialize FimRuntime */
-    FimInitialize(RT_TYPE_HIP, FIM_FP16);
+//    /* __FIM_API__ call : Initialize FimRuntime */
+//    FimInitialize(RT_TYPE_HIP, FIM_FP16);
 
     FimDesc* fim_desc = FimCreateDesc(num_batch, 1, OUT_LENGTH, IN_LENGTH, FIM_FP16);
     /* __FIM_API__ call : Create FIM Buffer Object */
@@ -58,8 +58,8 @@ void KernelLauncher(const void* i_data, const void* w_data, const int num_batch,
     FimDestroyBo(preloaded_weight);
     FimDestroyBo(host_reordered_weight);
 
-    /* __FIM_API__ call : Deinitialize FimRuntime */
-    FimDeinitialize();
+//    /* __FIM_API__ call : Deinitialize FimRuntime */
+//    FimDeinitialize();
 }
 
 class FimGemvOp : public OpKernel

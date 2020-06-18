@@ -9,9 +9,6 @@ void KernelLauncher(const void* inp_data, const int N, void* out_data)
 {
     std::cout << "Launcher for FIM_Activation" << std::endl;
 
-    /* __FIM_API__ call : Initialize FimRuntime */
-    FimInitialize(RT_TYPE_HIP, FIM_FP16);
-
     FimDesc* fim_desc = FimCreateDesc(1, 1, 1, N, FIM_FP16);
 
     /* __FIM_API__ call : Create FIM Buffer Object */
@@ -37,9 +34,6 @@ void KernelLauncher(const void* inp_data, const int N, void* out_data)
     FimDestroyBo(device_output);
     FimDestroyBo(fim_input);
     FimDestroyDesc(fim_desc);
-
-    /* __FIM_API__ call : Deinitialize FimRuntime */
-    FimDeinitialize();
 }
 
 class FimActivationOp : public OpKernel

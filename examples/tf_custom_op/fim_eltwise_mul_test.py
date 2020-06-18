@@ -12,6 +12,13 @@ try:
 except ImportError:
     from fim_eltwise_ops import fim_eltwise
 
+try:
+    from tf_fim_ops.python.ops.fim_init_ops import fim_init
+    from tf_fim_ops.python.ops.fim_deinit_ops import fim_deinit
+except ImportError:
+    from fim_init_ops import fim_init
+    from fim_deinit_ops import fim_deinit
+
 tf.debugging.set_log_device_placement(True)
 testFilesPath = 'test_vectors/'
 
@@ -203,4 +210,6 @@ class FimMulTestFile(tf.test.TestCase):
 
 
 if __name__ == '__main__':
+    fim_init()
     tf.test.main()
+    fim_deinit()
