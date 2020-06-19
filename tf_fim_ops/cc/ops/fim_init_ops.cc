@@ -3,6 +3,4 @@
 
 using namespace tensorflow;  // NOLINT(build/namespaces)
 
-REGISTER_OP("FimInit")
-    .Attr("runtimetype: string")
-    .Attr("precision: string");
+REGISTER_OP("FimInit");

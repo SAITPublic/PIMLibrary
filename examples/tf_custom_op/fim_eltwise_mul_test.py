@@ -210,6 +210,6 @@ class FimMulTestFile(tf.test.TestCase):
 
 
 if __name__ == '__main__':
-    fim_init("RT_TYPE_HIP", "FIM_FP16")
+    fim_init()
     tf.test.main()
     fim_deinit()
