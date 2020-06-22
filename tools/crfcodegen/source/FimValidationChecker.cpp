@@ -73,8 +73,7 @@ int FimValidationChecker::check_cmd_validation(std::vector<FimCommand>& cmds)
 
     for (int i = 0; i < cmds.size(); i++) {
         ret = check_validate_pair(cmds[i]);
-        if(0 == ret)
-            return ret;
+        if (0 == ret) return ret;
     }
 
     return ret;
@@ -293,7 +292,8 @@ int FimValidationChecker::detect_data_hazard(std::vector<FimCommand>& cmds, int 
     int is_read_reg = is_read_register(cmds[cur_idx]);
     int num_required_nop = data_hazard_table[is_read_reg][opcode_idx];
 
-    int max_idx = ((int64_t)cur_idx + num_required_nop + 1) < cmds.size() ? ((int64_t)cur_idx + num_required_nop + 1) : (cmds.size());
+    int max_idx = ((int64_t)cur_idx + num_required_nop + 1) < cmds.size() ? ((int64_t)cur_idx + num_required_nop + 1)
+                                                                          : (cmds.size());
     int is_hazard = 0;
 
     for (int i = next_idx; i < max_idx; i++) {

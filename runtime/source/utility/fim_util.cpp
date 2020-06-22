@@ -560,7 +560,7 @@ __device__ void compute_gemv_2bank_1cu_2th(volatile uint8_t* __restrict__ fim_ct
             BLOCK_SYNC(cidx, false);
         }
     }
-    add_transaction_all_1cu_2th(fim_ctr, false, 0, (int)bank_type, row, col, null_bst, offset,
+    add_transaction_all_1cu_2th(fim_weight, false, 0, (int)bank_type, row, col, null_bst, offset,
                                 fbi->num_grf_A * fbi->num_grf_B);
 }
 

@@ -162,6 +162,8 @@ class FIMController
 
     void read_result(BurstType* result_bst, fim_bank_type bank_type, int output_dim, unsigned starting_row = 0,
                      unsigned starting_col = 0);
+    void read_result_with_addr(BurstType* result_bst, fim_bank_type bank_type, int output_dim, uint64_t base_addr,
+                               unsigned starting_row = 0, unsigned starting_col = 0);
     void set_fim_chan(int dim);
     void read_memory_trace(const string& filename);
     void run_trace();

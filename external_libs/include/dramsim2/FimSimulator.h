@@ -32,6 +32,7 @@ class FimSimulator
     void alloc_burst(size_t preload_size, size_t output_size);
     void get_uint16_result(uint16_t* output_data, size_t num_data);
     void read_result(uint64_t addr, size_t data_size);
+    void read_result_gemv(uint64_t addr, size_t data_dim);
     void run();
     void compare_result_arr(uint16_t* test_output, size_t num_data, NumpyBurstType* output_npbst);
 

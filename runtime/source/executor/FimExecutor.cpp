@@ -75,8 +75,8 @@ int FimExecutor::initialize(void)
 #endif
     /* FIM HW can generate only gemv output without reduction sum */
     /* so FimExecutor needs to maintain intermediate output buffer for gemv op */
-    hipMalloc((void**)&fim_gemv_tmp_buffer_, 2 * 1024 * 1024);
-
+    
+    fim_manager_->alloc_memory((void**)&fim_gemv_tmp_buffer_, 2 * 1024 * 1024, MEM_TYPE_FIM);
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
@@ -89,14 +89,14 @@ int FimExecutor::deinitialize(void)
     hipFree((void*)d_srf_bin_buffer_);
     free(h_crf_size_lut_);
 #ifdef EMULATOR
-        hipFree((void*)d_fmtd16_);
+    hipFree((void*)d_fmtd16_);
     hipFree((void*)d_fmtd16_size_);
     free(h_fmtd16_);
     free(h_fmtd16_size_);
     free(h_fmtd32_);
     free(h_fmtd32_size_);
 #endif
-    hipFree((void*)fim_gemv_tmp_buffer_);
+    fim_manager_->free_memory((void*)fim_gemv_tmp_buffer_, MEM_TYPE_FIM);
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
@@ -250,14 +250,14 @@ int FimExecutor::execute_gemv(FimBo* output, FimBo* operand0, FimBo* operand1)
     }
     hipStreamSynchronize(NULL);
     FIM_PROFILE_TOCK(RunGemvKernel);
-
 #ifdef EMULATOR
     FIM_PROFILE_TICK(RunGemvEmulation);
     hipMemcpy((void*)h_fmtd16_size_, (void*)d_fmtd16_size_, sizeof(int), hipMemcpyDeviceToHost);
     hipMemcpy((void*)h_fmtd16_, (void*)d_fmtd16_, sizeof(FimMemTraceData) * max_fmtd_size_, hipMemcpyDeviceToHost);
 
     fim_emulator_->convert_mem_trace_from_16B_to_32B(h_fmtd32_, h_fmtd32_size_, h_fmtd16_, h_fmtd16_size_[0], OP_GEMV);
-    fim_emulator_->execute_gemv(output, weight, h_fmtd32_, h_fmtd32_size_[0], OP_GEMV);
+    fim_emulator_->execute_gemv(output, weight, h_fmtd32_, h_fmtd32_size_[0], OP_GEMV, g_fim_base_addr,
+                                fim_gemv_tmp_buffer_);
     FIM_PROFILE_TOCK(RunGemvEmulation);
 #endif
 

@@ -65,7 +65,6 @@ void KernelLauncher(const void* inp0_data, const void* inp1_data, int N, int is_
     FimDestroyBo(device_output);
     FimDestroyBo(fim_input1);
     FimDestroyDesc(fim_desc);
-
 }
 
 class FimEltwiseOp : public OpKernel

@@ -8,8 +8,8 @@
 #define COMPUTE_GEMV 1
 #define CHANGE_HAB_SB 1
 #define PARK_OUT 1
-#define READ_RESULT 1
-#define INTEGRAL_SUM 1
+#define READ_RESULT 0
+#define INTEGRAL_SUM 0
 
 __global__ void gemv_fim_1cu_2th_fp16(volatile uint8_t* __restrict__ fim_ctr, volatile uint8_t* __restrict__ fim_weight,
                                       volatile uint8_t* __restrict__ fim_gemv_tmp_buffer,
@@ -67,8 +67,10 @@ __global__ void gemv_fim_1cu_2th_fp16(volatile uint8_t* __restrict__ fim_ctr, vo
                 compute_gemv_2bank_1cu_2th(fim_ctr, fim_weight, fim_input, num_in_tile, num_out_tile, i, j, b, ODD_BANK,
                                            offset);
             }
-            compute_col = num_out_tile * num_in_tile / 2 * fbi->num_grf_A * fbi->num_grf_B + (j + b) * fbi->num_grf_B;
-            add_transaction_all_1cu_2th(fim_ctr, true, 0, 1, 0, compute_col, null_bst, offset, fbi->num_grf);
+
+            compute_col = (j + b) * fbi->num_grf_B;
+            add_transaction_all_1cu_2th(fim_gemv_tmp_buffer, true, 0, 1, 0, compute_col, null_bst, offset,
+                                        fbi->num_grf);
             change_fim_mode_1cu_2th(fim_ctr, HAB_FIM_MODE, HAB_MODE, gemv_hab_fim_to_hab, offset);
         }
     }
@@ -83,7 +85,7 @@ __global__ void gemv_fim_1cu_2th_fp16(volatile uint8_t* __restrict__ fim_ctr, vo
 #endif
 
 #if READ_RESULT
-    read_result_1cu_2th(fim_gemv_tmp_buffer, fim_weight, ODD_BANK, num_output_bst * batch_dim, 0, end_col, offset);
+    read_result_1cu_2th(fim_gemv_tmp_buffer, fim_gemv_tmp_buffer, ODD_BANK, num_output_bst * batch_dim, 0, 0, offset);
 #endif
 
 #ifdef EMULATOR
