@@ -240,7 +240,11 @@ int FimExecutor::execute_gemv(FimBo* output, FimBo* operand0, FimBo* operand1)
     FIM_PROFILE_TOCK(CreateCRFBin);
 
     FIM_PROFILE_TICK(RunGemvKernel);
+#ifdef EMULATOR
     for (int iter = 0; iter < 1; iter++) {
+#else
+    for (int iter = 0; iter < 100; iter++) {
+#endif
         hipLaunchKernelGGL(gemv_fim_64cu_2th_fp16, dim3(blocks), dim3(threads_per_block), 0, 0,
                            (uint8_t*)g_fim_base_addr /* fim control base */,
                            (uint8_t*)weight->data /* fim weight base */,
@@ -398,7 +402,7 @@ int FimExecutor::execute_bn(FimBo* output, FimBo* fim_data, FimBo* beta, FimBo* 
     }
     h_fmtd16_size_[0] *= blocks;
     fim_emulator_->convert_mem_trace_from_16B_to_32B(h_fmtd32_, h_fmtd32_size_, h_fmtd16_, h_fmtd16_size_[0], OP_BN);
-    fim_emulator_->execute_fim(output, fim_data, h_fmtd32_, h_fmtd32_size_[0], OP_BN);
+    fim_emulator_->execute_bn(output, fim_data, h_fmtd32_, h_fmtd32_size_[0]);
 #endif
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";

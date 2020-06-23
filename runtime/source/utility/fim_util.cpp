@@ -2,12 +2,19 @@
 
 __host__ void get_fim_block_info(FimBlockInfo* fbi) { memcpy(fbi, &vega20_fbi, sizeof(FimBlockInfo)); }
 
-__host__ __device__ void reduce_sum_for_gemv(void* out, void* in, int out_size, int reduce_size)
+__host__ void integral_sum_for_gemv_host(void* out, void* in, int out_size, int reduce_size)
 {
     half t_output;
     half* output = (half*)out;
     half* input = (half*)in;
     int out_num = out_size / sizeof(half) / reduce_size;
+
+#if 0
+    std::cout << "[ gemv integral sum  ]" << std::endl;
+    std::cout << "out_size    : " << out_size << std::endl;
+    std::cout << "reduce_size : " << reduce_size << std::endl;
+    std::cout << "out_num     : " << out_num << std::endl;
+#endif
 
     for (int i = 0; i < out_num; i++) {
         t_output = 0;
@@ -19,20 +26,25 @@ __host__ __device__ void reduce_sum_for_gemv(void* out, void* in, int out_size, 
     }
 }
 
-__host__ __device__ void reduce_sum_for_gemv_profile(void* out, void* in, int out_size, int reduce_size)
+__device__ void integral_sum_for_gemv_gpu(void* out, void* in, int out_size, int reduce_size)
 {
     short t_output;
     short* output = (short*)out;
     short* input = (short*)in;
     int out_num = out_size / sizeof(short) / reduce_size;
+    int bid = hipBlockIdx_x;
+    int tid = hipThreadIdx_x;
+    int offset = tid * reduce_size;
+    int threads = hipBlockDim_x * hipGridDim_x;
 
-    for (int i = 0; i < out_num; i++) {
+    for (int i = bid; i < out_num; i += threads) {
         t_output = 0;
+        input += offset;
         for (int j = 0; j < reduce_size; j++) {
             t_output += input[j];
         }
-        output[i] = t_output;
-        input += reduce_size;
+        output[i + tid] = t_output;
+        input += (reduce_size * threads);
     }
 }
 

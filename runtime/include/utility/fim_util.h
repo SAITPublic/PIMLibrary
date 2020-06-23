@@ -38,8 +38,8 @@ FimBlockInfo vega20_fbi = {
 };
 
 __host__ void get_fim_block_info(FimBlockInfo* fbi);
-__host__ __device__ void reduce_sum_for_gemv(void* out, void* in, int out_size, int reduce_size);
-__host__ __device__ void reduce_sum_for_gemv_profile(void* out, void* in, int out_size, int reduce_size);
+__host__ void integral_sum_for_gemv_host(void* out, void* in, int out_size, int reduce_size);
+__device__ void integral_sum_for_gemv_gpu(void* out, void* in, int out_size, int reduce_size);
 __host__ __device__ uint32_t mask_by_bit(uint32_t value, uint32_t start, uint32_t end);
 __host__ __device__ uint64_t addr_gen(uint32_t chan, uint32_t rank, uint32_t bankgroup, uint32_t bank, uint32_t row,
                                       uint32_t col);
@@ -67,6 +67,8 @@ __device__ void R_CMD(uint8_t* addr);
 __device__ void W_CMD(uint8_t* addr);
 __device__ void W_CMD_R(uint8_t* addr, uint8_t* src);
 __device__ void B_CMD(int type);
+
+__device__ void integral_sum_for_gemv_64cu_2th(void* out, void* in, int out_size, int reduce_size);
 
 /* 1CU 2TH functions */
 
