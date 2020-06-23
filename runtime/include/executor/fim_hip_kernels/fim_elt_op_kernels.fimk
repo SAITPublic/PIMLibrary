@@ -12,7 +12,8 @@ __global__ void elt_op_fim_1cu_2th_fp16(volatile uint8_t* __restrict__ operand0,
 #ifdef EMULATOR
     g_fba = (uint64_t)fim_ctr;
     g_fmtd16 = fmtd16;
-    g_ridx = 0;
+    g_ridx[hipBlockIdx_x] = 0;
+    m_width = mt_width;
     __syncthreads();
 #endif
     uint64_t offset = (hipThreadIdx_x % 2) * 0x10;
@@ -31,7 +32,7 @@ __global__ void elt_op_fim_1cu_2th_fp16(volatile uint8_t* __restrict__ operand0,
     park_out_1cu_2th(fim_ctr, offset);
 #ifdef EMULATOR
     __syncthreads();
-    frd_size[0] = g_ridx;
+    frd_size[0] = g_ridx[hipBlockIdx_x];
 #endif
 }
 

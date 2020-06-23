@@ -75,7 +75,7 @@ int FimExecutor::initialize(void)
 #endif
     /* FIM HW can generate only gemv output without reduction sum */
     /* so FimExecutor needs to maintain intermediate output buffer for gemv op */
-    
+
     fim_manager_->alloc_memory((void**)&fim_gemv_tmp_buffer_, 2 * 1024 * 1024, MEM_TYPE_FIM);
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
@@ -226,6 +226,8 @@ int FimExecutor::execute_gemv(FimBo* output, FimBo* operand0, FimBo* operand1)
     int ret = 0;
     FimBo* input = operand0;
     FimBo* weight = operand1;
+    unsigned blocks = 64;
+    unsigned threads_per_block = 2;
 
     int in_size = weight->bshape.w;
     int out_size = weight->bshape.h;
@@ -239,14 +241,15 @@ int FimExecutor::execute_gemv(FimBo* output, FimBo* operand0, FimBo* operand1)
 
     FIM_PROFILE_TICK(RunGemvKernel);
     for (int iter = 0; iter < 1; iter++) {
-        hipLaunchKernelGGL(
-            gemv_fim_1cu_2th_fp16, dim3(1), dim3(2), 0, 0, (uint8_t*)g_fim_base_addr /* fim control base */,
-            (uint8_t*)weight->data /* fim weight base */, (uint8_t*)fim_gemv_tmp_buffer_, /* fim hw output buffer */
-            (uint8_t*)input->data, (uint8_t*)output->data, in_size, num_batch, out_size,
+        hipLaunchKernelGGL(gemv_fim_64cu_2th_fp16, dim3(blocks), dim3(threads_per_block), 0, 0,
+                           (uint8_t*)g_fim_base_addr /* fim control base */,
+                           (uint8_t*)weight->data /* fim weight base */,
+                           (uint8_t*)fim_gemv_tmp_buffer_, /* fim hw output buffer */
+                           (uint8_t*)input->data, (uint8_t*)output->data, in_size, num_batch, out_size,
 #ifdef EMULATOR
-            (FimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_,
+                           (FimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_,
 #endif
-            (uint8_t*)d_crf_bin_lut_ + crf_lut_offset, crf_size);
+                           (uint8_t*)d_crf_bin_lut_ + crf_lut_offset, crf_size);
     }
     hipStreamSynchronize(NULL);
     FIM_PROFILE_TOCK(RunGemvKernel);
@@ -254,6 +257,12 @@ int FimExecutor::execute_gemv(FimBo* output, FimBo* operand0, FimBo* operand1)
     FIM_PROFILE_TICK(RunGemvEmulation);
     hipMemcpy((void*)h_fmtd16_size_, (void*)d_fmtd16_size_, sizeof(int), hipMemcpyDeviceToHost);
     hipMemcpy((void*)h_fmtd16_, (void*)d_fmtd16_, sizeof(FimMemTraceData) * max_fmtd_size_, hipMemcpyDeviceToHost);
+
+    for (size_t i = 1; i < blocks; i++) {
+        memcpy(&h_fmtd16_[i * h_fmtd16_size_[0]], &h_fmtd16_[i * fmtd_size_per_ch_],
+               h_fmtd16_size_[0] * sizeof(FimMemTraceData));
+    }
+    h_fmtd16_size_[0] *= blocks;
 
     fim_emulator_->convert_mem_trace_from_16B_to_32B(h_fmtd32_, h_fmtd32_size_, h_fmtd16_, h_fmtd16_size_[0], OP_GEMV);
     fim_emulator_->execute_gemv(output, weight, h_fmtd32_, h_fmtd32_size_[0], OP_GEMV, g_fim_base_addr,
@@ -365,8 +374,8 @@ int FimExecutor::execute_bn(FimBo* output, FimBo* fim_data, FimBo* beta, FimBo* 
     hipMemcpy((void*)d_srf_bin_buffer_, (void*)srf_binary, srf_size, hipMemcpyHostToDevice);
     hipMemcpy((void*)g_fim_base_addr, fim_data->data, fim_data->size, hipMemcpyHostToDevice);
 
-    printf("crf_size:%d, srf_size:%d, output->size:%d\n", crf_size, srf_size, output->size);
-    printf("bshaped(%d,%d,%d,%d)\n", output->bshape.w, output->bshape.h, output->bshape.c, output->bshape.n);
+    // printf("crf_size:%d, srf_size:%d, output->size:%d\n", crf_size, srf_size, output->size);
+    // printf("bshaped(%d,%d,%d,%d)\n", output->bshape.w, output->bshape.h, output->bshape.c, output->bshape.n);
 
     hipLaunchKernelGGL(bn_fim_1cu_2th_fp16, dim3(blocks), dim3(threads_per_block), 0, 0, (uint8_t*)g_fim_base_addr,
                        (uint8_t*)g_fim_base_addr, (uint8_t*)output->data, (int)output->size, output->bshape.n,

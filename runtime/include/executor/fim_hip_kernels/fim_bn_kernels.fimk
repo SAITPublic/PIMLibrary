@@ -11,7 +11,8 @@ __global__ void bn_fim_1cu_2th_fp16(volatile uint8_t* __restrict__ fim_data, vol
 #ifdef EMULATOR
     g_fba = (uint64_t)fim_ctr;
     g_fmtd16 = fmtd16;
-    g_ridx = 0;
+    g_ridx[hipBlockIdx_x] = 0;
+    m_width = mt_width;
     __syncthreads();
 #endif
     uint64_t offset = (hipThreadIdx_x % 2) * 0x10;
@@ -33,7 +34,7 @@ __global__ void bn_fim_1cu_2th_fp16(volatile uint8_t* __restrict__ fim_data, vol
     read_result_bn_1cu_2th(output, fim_data, num_ba, num_ch, num_w / 16, 0, end_col, offset);
 #ifdef EMULATOR
     __syncthreads();
-    frd_size[0] = g_ridx;
+    frd_size[0] = g_ridx[hipBlockIdx_x];
 #endif
 }
 

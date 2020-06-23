@@ -8,7 +8,7 @@
 #ifdef EMULATOR
 uint64_t g_fba;
 FimMemTraceData* g_fmtd16;
-int g_ridx;
+int g_ridx[64];
 int g_idx[64];
 int m_width;
 #endif
