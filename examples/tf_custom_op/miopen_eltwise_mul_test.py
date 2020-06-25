@@ -4,11 +4,7 @@ from __future__ import print_function
 
 import tensorflow as tf
 import numpy as np
-
-try:
-    from tf_fim_ops.python.ops.miopen_eltwise_ops import miopen_elt
-except ImportError:
-    from miopen_eltwise_ops import miopen_elt
+import tf_fim_ops
 
 tf.debugging.set_log_device_placement(True)
 testFilesPath = '../test_vectors/'
@@ -22,7 +18,7 @@ class MIopenMulTestConstant(tf.test.TestCase):
             input1 = tf.constant([50., 5., 5., 5., 0.], dtype=np.float16)
 
             mul = tf.constant([1], dtype=np.int32)
-            result = miopen_elt(input0, input1, mul)
+            result = tf_fim_ops.miopen_elt(input0, input1, mul)
             self.assertAllEqual(result, [50., 10., 15., 20., 0.])
 
 
@@ -45,7 +41,7 @@ class MIopenMulTestRandom(tf.test.TestCase):
                             input1 = tf.random.uniform(shape=[b, c, w, h], minval=-500, maxval=500, dtype=np.float16)
                             mul = tf.constant([1], dtype=np.int32)
 
-                            result_custom = miopen_elt(input0, input1, mul)
+                            result_custom = tf_fim_ops.miopen_elt(input0, input1, mul)
                             result_math_multiply = tf.math.multiply(input0, input1)
                             try:
                                 self.assertAllEqual(result_custom, result_math_multiply)
@@ -73,7 +69,7 @@ class MIopenMulTestRandom(tf.test.TestCase):
 
                             mul = tf.constant([1], dtype=np.int32)
 
-                            result_custom = miopen_elt(input0, input1, mul)
+                            result_custom = tf_fim_ops.miopen_elt(input0, input1, mul)
                             result_math_multiply = tf.math.multiply(input0, input1)
                             try:
                                 self.assertAllEqual(result_custom, result_math_multiply)
@@ -92,10 +88,10 @@ class MIopenMulTestFile(tf.test.TestCase):
             input1 = np.fromfile("../test_vectors/load/elt_mul/input1_128KB.dat", dtype=np.float16)
 
             mul = tf.constant([1], dtype=np.int32)
-            result = miopen_elt(input0, input1, mul)
+            result = tf_fim_ops.miopen_elt(input0, input1, mul)
             golden = np.fromfile("../test_vectors/load/elt_mul/output_128KB.dat", dtype = np.float16)
             self.assertAllEqual(result, golden)
 
 
 if __name__ == '__main__':
-  tf.test.main()
+    tf.test.main()

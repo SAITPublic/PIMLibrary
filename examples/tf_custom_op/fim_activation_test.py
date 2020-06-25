@@ -4,18 +4,7 @@ from __future__ import print_function
 
 import tensorflow as tf
 import numpy as np
-
-try:
-    from tf_fim_ops.python.ops.fim_activation_ops import fim_act
-except ImportError:
-    from fim_activation_ops import fim_act
-
-try:
-    from tf_fim_ops.python.ops.fim_init_ops import fim_init
-    from tf_fim_ops.python.ops.fim_deinit_ops import fim_deinit
-except ImportError:
-    from fim_init_ops import fim_init
-    from fim_deinit_ops import fim_deinit
+import tf_fim_ops
 
 tf.debugging.set_log_device_placement(True)
 testFilesPath = 'test_vectors/'
@@ -25,14 +14,14 @@ class FimActTestConstant(tf.test.TestCase):
     def test1(self):
         with self.test_session():
             inp = tf.constant([-3., 5., -13., -4., 9., 0.], dtype=np.float16)
-            result = fim_act(inp)
+            result = tf_fim_ops.fim_act(inp)
             self.assertAllEqual(result, [0., 5., 0., 0., 9., 0.])
 
     def test2(self):
         with self.test_session():
             inp = tf.constant(
                 [[-5., -1., 0.], [2., -1., 0.]], dtype=np.float16)
-            result = fim_act(inp)
+            result = tf_fim_ops.fim_act(inp)
             self.assertAllEqual(result, [[0., 0., 0.], [2., 0., 0.]])
 
 
@@ -60,7 +49,7 @@ class FimActTestRandom(tf.test.TestCase):
                                 500,
                                 maxval=500,
                                 dtype=np.float16)
-                            result_custom = fim_act(input0)
+                            result_custom = tf_fim_ops.fim_act(input0)
                             result_tf_relu = tf.nn.relu(input0)
                             try:
                                 self.assertAllEqual(
@@ -80,7 +69,7 @@ class FimActTestFile(tf.test.TestCase):
             inp = np.fromfile(
                 "test_vectors/load/relu/input_256KB.dat",
                 dtype=np.float16)
-            result = fim_act(inp)
+            result = tf_fim_ops.fim_act(inp)
             golden = np.fromfile(
                 "test_vectors/load/relu/output_256KB.dat",
                 dtype=np.float16)
@@ -91,7 +80,7 @@ class FimActTestFile(tf.test.TestCase):
             inp = np.fromfile(
                 "test_vectors/load/relu/input_512KB.dat",
                 dtype=np.float16)
-            result = fim_act(inp)
+            result = tf_fim_ops.fim_act(inp)
             golden = np.fromfile(
                 "test_vectors/load/relu/output_512KB.dat",
                 dtype=np.float16)
@@ -99,6 +88,6 @@ class FimActTestFile(tf.test.TestCase):
 
 
 if __name__ == '__main__':
-    fim_init()
+    tf_fim_ops.fim_init()
     tf.test.main()
-    fim_deinit()
+    tf_fim_ops.fim_deinit()

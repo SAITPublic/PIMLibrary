@@ -5,13 +5,10 @@ from __future__ import print_function
 import tensorflow as tf
 import numpy as np
 import math
-from tensorflow.python.platform import test
+import tf_fim_ops
+
 tf.debugging.set_log_device_placement(True)
 
-try:
-  from tf_fim_ops.python.ops.miopen_bn_ops import miopen_bn
-except ImportError:
-  from miopen_bn_ops import miopen_bn
 
 class MIopenBn4DGolden(tf.test.TestCase):
 
@@ -58,7 +55,7 @@ class MIopenBn4DGolden(tf.test.TestCase):
         t_gamma = tf.reshape(t_gamma,[1,CH,1,1])
 
         #result = tf.nn.batch_normalization(t_input0, t_mean, t_var, t_beta, t_gamma, epsilon)
-        result = miopen_bn(t_input0, t_mean, t_var, t_beta, t_gamma, epsilon)
+        result = tf_fim_ops.miopen_bn(t_input0, t_mean, t_var, t_beta, t_gamma, epsilon)
         self.assertAllClose(result, t_golden, atol=5e-3)
 
 class MIopenBn1D(tf.test.TestCase):
@@ -181,9 +178,9 @@ class MIopenBn4D(tf.test.TestCase):
           mean = tf.zeros(mean.shape,dtype = tf.dtypes.float16)
           var = tf.ones(var.shape,dtype = tf.dtypes.float16)
 
-          bn = miopen_bn(t_input0, mean, var, offset, scale, var_epsilon)
+          bn = tf_fim_ops.miopen_bn(t_input0, mean, var, offset, scale, var_epsilon)
           #bn = tf.nn.batch_normalization(t_input0, mean, var, offset, scale, var_epsilon)
           self.assertAllEqual(bn, input0)
 
 if __name__ == '__main__':
-  tf.test.main()
+    tf.test.main()

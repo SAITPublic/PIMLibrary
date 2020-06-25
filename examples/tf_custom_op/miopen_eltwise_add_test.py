@@ -4,11 +4,7 @@ from __future__ import print_function
 
 import tensorflow as tf
 import numpy as np
-
-try:
-    from tf_fim_ops.python.ops.miopen_eltwise_ops import miopen_elt
-except ImportError:
-    from miopen_eltwise_ops import miopen_elt
+import tf_fim_ops
 
 tf.debugging.set_log_device_placement(True)
 testFilesPath = '../test_vectors/'
@@ -22,7 +18,7 @@ class MIopenAddTestConstant(tf.test.TestCase):
             input1 = tf.constant([50.,5.,5.,5.,5.], dtype=np.float16)
 
             add = tf.constant([0], dtype=np.int32)
-            result = miopen_elt(input0, input1, add)
+            result = tf_fim_ops.miopen_elt(input0, input1, add)
             self.assertAllEqual(result, [51.,7.,8.,9.,10.])
 
 
@@ -45,7 +41,7 @@ class MIopenAddTestRandom(tf.test.TestCase):
                             input1 = tf.random.uniform(shape=[b, c, w, h], minval=-500, maxval=500, dtype=np.float16)
                             add = tf.constant([0], dtype=np.int32)
 
-                            result_custom = miopen_elt(input0, input1, add)
+                            result_custom = tf_fim_ops.miopen_elt(input0, input1, add)
                             result_math_add = tf.math.add(input0, input1)
                             try:
                                 self.assertAllEqual(result_custom, result_math_add)
@@ -73,7 +69,7 @@ class MIopenAddTestRandom(tf.test.TestCase):
 
                             add = tf.constant([0], dtype=np.int32)
 
-                            result_custom = miopen_elt(input0, input1, add)
+                            result_custom = tf_fim_ops.miopen_elt(input0, input1, add)
                             result_math_add = tf.math.add(input0, input1)
                             try:
                                 self.assertAllEqual(result_custom, result_math_add)
@@ -92,11 +88,10 @@ class MIopenAddTestFile(tf.test.TestCase):
             input1 = np.fromfile("../test_vectors/load/elt_add/input1_256KB.dat", dtype=np.float16)
 
             add = tf.constant([0], dtype=np.int32)
-            result = miopen_elt(input0, input1, add)
+            result = tf_fim_ops.miopen_elt(input0, input1, add)
             golden = np.fromfile("../test_vectors/load/elt_add/output_256KB.dat", dtype=np.float16)
             self.assertAllEqual(result, golden)
 
 
 if __name__ == '__main__':
     tf.test.main()
-

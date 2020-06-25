@@ -4,19 +4,9 @@ from __future__ import print_function
 
 import tensorflow as tf
 import numpy as np
+import tf_fim_ops
+
 tf.debugging.set_log_device_placement(True)
-
-try:
-    from tf_fim_ops.python.ops.fim_bn_ops import fim_bn
-except ImportError:
-    from fim_bn_ops import fim_bn
-
-try:
-    from tf_fim_ops.python.ops.fim_init_ops import fim_init
-    from tf_fim_ops.python.ops.fim_deinit_ops import fim_deinit
-except ImportError:
-    from fim_init_ops import fim_init
-    from fim_deinit_ops import fim_deinit
 
 
 class FimBn4DGolden(tf.test.TestCase):
@@ -66,7 +56,7 @@ class FimBn4DGolden(tf.test.TestCase):
             t_beta = tf.reshape(t_beta, [1, CH, 1, 1])
 
             #result = tf.nn.batch_normalization(t_input0, t_mean, t_var, t_beta, t_gamma, epsilon)
-            result = fim_bn(t_input0, t_mean, t_var, t_beta, gamma, epsilon)
+            result = tf_fim_ops.fim_bn(t_input0, t_mean, t_var, t_beta, gamma, epsilon)
             self.assertAllClose(result, t_golden, atol=5e-3)
 
 
@@ -112,7 +102,7 @@ class FIMBn4DOpc(tf.test.TestCase):
                 offset = tf.zeros(mean.shape, dtype=tf.dtypes.float16)
                 scale = tf.ones(mean.shape, dtype=tf.dtypes.float16)
 
-                result = fim_bn(
+                result = tf_fim_ops.fim_bn(
                     t_input0, mean, var, offset, scale, var_epsilon)
                 tf_golden = tf.nn.batch_normalization(
                     t_input0, mean, var, offset, scale, var_epsilon)
@@ -148,13 +138,13 @@ class FimBnRandom4D(tf.test.TestCase):
             var = tf.ones([1, 64, 1, 1], dtype=tf.dtypes.float16)
 
             var_epsilon = 1e-5
-            bn = fim_bn(t_input0, mean, var, beta, gamma, var_epsilon)
+            bn = tf_fim_ops.fim_bn(t_input0, mean, var, beta, gamma, var_epsilon)
             #bn_tf = tf.nn.batch_normalization(t_input0, mean, var, beta, gamma, var_epsilon)
             #self.assertAllEqual(bn, input0)
             self.assertAllClose(bn, t_input0, rtol=5e-3)
 
 
 if __name__ == '__main__':
-    fim_init()
+    tf_fim_ops.fim_init()
     tf.test.main()
-    fim_deinit()
+    tf_fim_ops.fim_deinit()

@@ -4,20 +4,7 @@ from __future__ import print_function
 
 import tensorflow as tf
 import numpy as np
-import logging
-
-from tensorflow.python.platform import test
-try:
-    from tf_fim_ops.python.ops.fim_eltwise_ops import fim_eltwise
-except ImportError:
-    from fim_eltwise_ops import fim_eltwise
-
-try:
-    from tf_fim_ops.python.ops.fim_init_ops import fim_init
-    from tf_fim_ops.python.ops.fim_deinit_ops import fim_deinit
-except ImportError:
-    from fim_init_ops import fim_init
-    from fim_deinit_ops import fim_deinit
+import tf_fim_ops
 
 tf.debugging.set_log_device_placement(True)
 testFilesPath = 'test_vectors/'
@@ -29,7 +16,7 @@ class FimMulTestConstant(tf.test.TestCase):
         input1 = tf.constant([50., 5., 5., 5., 0.], dtype=np.float16)
         mul = tf.constant([1], dtype=np.int32)
         with self.test_session():
-            result = fim_eltwise(input0, input1, mul)
+            result = tf_fim_ops.fim_eltwise(input0, input1, mul)
             self.assertAllEqual(result, [50., 10., 15., 20., 0.])
 
     def test_scalar_vector(self):
@@ -38,7 +25,7 @@ class FimMulTestConstant(tf.test.TestCase):
             [[1., 2., 3., 4., 0.], [6., 7., 8., 9., 1.]], dtype=np.float16)
         mul = tf.constant([1], dtype=np.int32)
         with self.test_session():
-            result = fim_eltwise(input0, input1, mul)
+            result = tf_fim_ops.fim_eltwise(input0, input1, mul)
             self.assertAllEqual(result, [[20., 40., 60., 80., 0.], [
                                 120., 140., 160., 180., 20.]])
 
@@ -48,7 +35,7 @@ class FimMulTestConstant(tf.test.TestCase):
         input1 = tf.constant([20], dtype=np.float16)
         mul = tf.constant([1], dtype=np.int32)
         with self.test_session():
-            result = fim_eltwise(input0, input1, mul)
+            result = tf_fim_ops.fim_eltwise(input0, input1, mul)
             self.assertAllEqual(result, [[20., 40., 60., 80., 0.], [
                                 120., 140., 160., 180., 20.]])
 
@@ -57,7 +44,7 @@ class FimMulTestConstant(tf.test.TestCase):
         input1 = tf.constant([100], dtype=np.float16)
         mul = tf.constant([1], dtype=np.int32)
         with self.test_session():
-            result = fim_eltwise(input0, input1, mul)
+            result = tf_fim_ops.fim_eltwise(input0, input1, mul)
             self.assertAllEqual(result, [1000])
 
     def test_2Dscalar_vector(self):
@@ -65,7 +52,7 @@ class FimMulTestConstant(tf.test.TestCase):
         input1 = tf.constant([[1, 2, 3, 4], [5, 6, 7, 8]], dtype=np.float16)
         mul = tf.constant([1], dtype=np.int32)
         with self.test_session():
-            result = fim_eltwise(input0, input1, mul)
+            result = tf_fim_ops.fim_eltwise(input0, input1, mul)
             self.assertAllEqual(result, [[3, 6, 9, 12], [15, 18, 21, 24]])
 
 
@@ -105,7 +92,7 @@ class FimMulTestRandom(tf.test.TestCase):
                                 dtype=np.float16)
                             mul = tf.constant([1], dtype=np.int32)
 
-                            result_custom = fim_eltwise(input0, input1, mul)
+                            result_custom = tf_fim_ops.fim_eltwise(input0, input1, mul)
                             result_math_multiply = tf.math.multiply(
                                 input0, input1)
                             try:
@@ -145,7 +132,7 @@ class FimMulTestRandom(tf.test.TestCase):
 
                             mul = tf.constant([1], dtype=np.int32)
 
-                            result_custom = fim_eltwise(input0, input1, mul)
+                            result_custom = tf_fim_ops.fim_eltwise(input0, input1, mul)
                             result_math_multiply = tf.math.multiply(
                                 input0, input1)
                             try:
@@ -170,7 +157,7 @@ class FimMulTestFile(tf.test.TestCase):
                 dtype=np.float16)
 
             mul = tf.constant([1], dtype=np.int32)
-            result = fim_eltwise(input0, input1, mul)
+            result = tf_fim_ops.fim_eltwise(input0, input1, mul)
             golden = np.fromfile(
                 "test_vectors/load/elt_mul/output_256KB.dat",
                 dtype=np.float16)
@@ -186,7 +173,7 @@ class FimMulTestFile(tf.test.TestCase):
                 dtype=np.float16)
 
             mul = tf.constant([1], dtype=np.int32)
-            result = fim_eltwise(input0, input1, mul)
+            result = tf_fim_ops.fim_eltwise(input0, input1, mul)
             golden = np.fromfile(
                 "test_vectors/load/elt_mul/output_512KB.dat",
                 dtype=np.float16)
@@ -202,7 +189,7 @@ class FimMulTestFile(tf.test.TestCase):
                 dtype=np.float16)
 
             mul = tf.constant([1], dtype=np.int32)
-            result = fim_eltwise(input0, input1, mul)
+            result = tf_fim_ops.fim_eltwise(input0, input1, mul)
             golden = np.fromfile(
                 "test_vectors/load/sv_mul/output_256KB.dat",
                 dtype=np.float16)
@@ -210,6 +197,6 @@ class FimMulTestFile(tf.test.TestCase):
 
 
 if __name__ == '__main__':
-    fim_init()
+    tf_fim_ops.fim_init()
     tf.test.main()
-    fim_deinit()
+    tf_fim_ops.fim_deinit()

@@ -4,20 +4,7 @@ from __future__ import print_function
 
 import tensorflow as tf
 import numpy as np
-import logging
-
-from tensorflow.python.platform import test
-try:
-    from tf_fim_ops.python.ops.fim_gemv_ops import fim_gemv
-except ImportError:
-    from fim_gemv_ops import fim_gemv
-
-try:
-    from tf_fim_ops.python.ops.fim_init_ops import fim_init
-    from tf_fim_ops.python.ops.fim_deinit_ops import fim_deinit
-except ImportError:
-    from fim_init_ops import fim_init
-    from fim_deinit_ops import fim_deinit
+import tf_fim_ops
 
 tf.debugging.set_log_device_placement(True)
 testFilesPath = '../test_vectors/'
@@ -35,7 +22,7 @@ class GemvTest(tf.test.TestCase):
 
         with self.test_session():
             #result = tf.linalg.matmul(a,b)
-            result = fim_gemv(a, b, tf.constant([1]))
+            result = tf_fim_ops.fim_gemv(a, b, tf.constant([1]))
             self.assertAllEqual(result, o.reshape(1, out_size))
 
     def testGemvRandom(self):
@@ -59,7 +46,7 @@ class GemvTest(tf.test.TestCase):
             dtype=tf.dtypes.float16)
         with self.test_session():
             golden = tf.linalg.matmul(a, b)
-            result = fim_gemv(a, b, tf.constant([1]))
+            result = tf_fim_ops.fim_gemv(a, b, tf.constant([1]))
             self.assertAllClose(result, golden, rtol=5e-1)
 
     # Todo,support batchsize when implement in fim
@@ -97,7 +84,7 @@ class GemvTest(tf.test.TestCase):
                     maxval=maxv,
                     dtype=tf.dtypes.float16)
                 golden = tf.linalg.matmul(a, b)
-                result = fim_gemv(a, b, tf.constant([1]))
+                result = tf_fim_ops.fim_gemv(a, b, tf.constant([1]))
                 try:
                     self.assertAllClose(result, golden, rtol=5e-1)
                 except Exception as ex:
@@ -133,7 +120,7 @@ class GemvTest(tf.test.TestCase):
         o = tf.reshape(t_output0, [1, out_size])
 
         with self.test_session():
-            result = fim_gemv(a, w, tf.constant([1]))
+            result = tf_fim_ops.fim_gemv(a, w, tf.constant([1]))
             self.assertAllEqual(result, o)
 
     def testGemvGoldenBatch(self):
@@ -162,7 +149,7 @@ class GemvTest(tf.test.TestCase):
         o = tf.reshape(t_output0, [batch_size, out_size])
 
         with self.test_session():
-            result = fim_gemv(a, w, tf.constant([1]))
+            result = tf_fim_ops.fim_gemv(a, w, tf.constant([1]))
             self.assertAllEqual(result, o)
 
     def testGemvGoldenPad(self):
@@ -190,7 +177,7 @@ class GemvTest(tf.test.TestCase):
         o = tf.reshape(t_output0, [1, out_size])
 
         with self.test_session():
-            result = fim_gemv(a, w, tf.constant([1]))
+            result = tf_fim_ops.fim_gemv(a, w, tf.constant([1]))
             self.assertAllEqual(result, o)
 
     def testGemvGoldenWeightReordered(self):
@@ -218,7 +205,7 @@ class GemvTest(tf.test.TestCase):
         o = tf.reshape(t_output0, [1, out_size])
 
         with self.test_session():
-            result = fim_gemv(a, w, tf.constant([0]))
+            result = tf_fim_ops.fim_gemv(a, w, tf.constant([0]))
             self.assertAllEqual(result, o)
 
     def testGemvSmall(self):
@@ -230,12 +217,12 @@ class GemvTest(tf.test.TestCase):
         a = tf.constant(an, dtype=np.float16)
         b = tf.constant(bn, dtype=np.float16)
         with self.test_session():
-            result = fim_gemv(a, b, tf.constant([1]))
+            result = tf_fim_ops.fim_gemv(a, b, tf.constant([1]))
             result = tf.reshape(result, [32])
             self.assertAllEqual(result, [64.] * 32)
 
 
 if __name__ == "__main__":
-    fim_init()
+    tf_fim_ops.fim_init()
     tf.test.main()
-    fim_deinit()
+    tf_fim_ops.fim_deinit()
