@@ -3,11 +3,7 @@
 
 #include <fstream>
 #include <vector>
-#include "manager/FimCommand.h"
-
-using fim::runtime::manager::FimCmdType;
-using fim::runtime::manager::FimCommand;
-using fim::runtime::manager::FimOpdType;
+#include "FimCmd.h"
 
 namespace crfgen_offline
 {
@@ -49,6 +45,7 @@ class FimValidationChecker
     FimValidationChecker();
     ~FimValidationChecker();
 
+    int validation_check(std::vector<FimCommand>& fim_cmd_vec);
     int check_cmd_validation(std::vector<FimCommand>& cmds);
     int check_validate_pair(FimCommand& fim_cmd);
     int check_isa_restriction(std::vector<FimCommand>& cmds);

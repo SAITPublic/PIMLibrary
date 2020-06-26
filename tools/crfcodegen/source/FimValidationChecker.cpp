@@ -375,4 +375,15 @@ int FimValidationChecker::get_hazard_table_idx(FimCommand& cmd)
     }
 }
 
+int FimValidationChecker::validation_check(std::vector<FimCommand>& fim_cmd_vec)
+{
+    int ret = 0;
+
+    ret = check_cmd_validation(fim_cmd_vec);
+    ret &= check_isa_restriction(fim_cmd_vec);
+    ret &= check_hazard(fim_cmd_vec);
+
+    return ret;
+}
+
 }  // namespace crfgen_offline
