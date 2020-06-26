@@ -51,6 +51,7 @@
 #include <deque>
 #include <map>
 #include <utility>
+#include <cmath>
 
 #include "utility/fim_log.h"
 #include "utils.hpp"

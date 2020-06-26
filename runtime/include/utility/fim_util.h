@@ -3,11 +3,10 @@
 
 #include "executor/fim_hip_kernels/fim_crf_bins.h"
 #include "fim_data_types.h"
-#include "half.hpp"
+#include "hip/hip_fp16.h"
 #include "hip/hip_runtime.h"
 #include "utility/fim_log.h"
 
-using half_float::half;
 
 /* TODO: get VEGA20 scheme from device driver */
 FimBlockInfo vega20_fbi = {

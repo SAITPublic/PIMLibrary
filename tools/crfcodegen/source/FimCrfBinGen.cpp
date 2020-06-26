@@ -1,4 +1,5 @@
 #include "FimCrfBinGen.h"
+#include <cmath>
 
 namespace crfgen_offline
 {

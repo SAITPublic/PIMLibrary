@@ -28,10 +28,10 @@ __host__ void integral_sum_for_gemv_host(void* out, void* in, int out_size, int 
 
 __device__ void integral_sum_for_gemv_gpu(void* out, void* in, int out_size, int reduce_size)
 {
-    short t_output;
-    short* output = (short*)out;
-    short* input = (short*)in;
-    int out_num = out_size / sizeof(short) / reduce_size;
+    half t_output;
+    half* output = (half*)out;
+    half* input = (half*)in;
+    int out_num = out_size / sizeof(half) / reduce_size;
     int bid = hipBlockIdx_x;
     int tid = hipThreadIdx_x;
     int offset = tid * reduce_size;

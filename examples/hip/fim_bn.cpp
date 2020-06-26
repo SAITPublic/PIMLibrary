@@ -5,10 +5,9 @@
 #include <algorithm>
 #include <iostream>
 #include "fim_runtime_api.h"
-#include "half.hpp"
+#include "hip/hip_fp16.h"
 #include "utility/fim_dump.hpp"
 
-using half_float::half;
 
 using namespace std;
 

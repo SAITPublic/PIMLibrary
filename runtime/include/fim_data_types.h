@@ -2,9 +2,7 @@
 #define _FIM_DATA_TYPE_H_
 
 #include <stddef.h>
-#include "half.hpp"
-
-using half_float::half;
+#include <stdint.h>
 
 #define __FIM_API__
 
@@ -14,7 +12,6 @@ inline _Float16 convertF2H(float f_val) { return __float2half(f_val); }
 
 **/
 
-inline float convertH2F(half_float::half h_val) { return half_float::detail::half2float<float>(h_val); }
 typedef enum __FimRuntimeType {
     RT_TYPE_HIP,
     RT_TYPE_OPENCL,

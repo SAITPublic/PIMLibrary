@@ -1,6 +1,7 @@
 #include <miopen/miopen.h>
 #include <iostream>
 #include "fim_runtime_api.h"
+#include "hip/hip_fp16.h"
 #include "tensorflow/core/framework/op.h"
 #include "tensorflow/core/framework/op_kernel.h"
 
@@ -31,10 +32,10 @@ void KernelLauncher(const void* inp0_data, const void* inp1_data, int N, int is_
 
         if (op == 0) {
             std::cout << "Calling FIMExecuteAdd" << std::endl;
-            FimExecuteAdd(device_output, fim_input0, fim_input1);
+            FimExecuteAdd(device_output, (void*)&fim_input0, fim_input1);
         } else {
             std::cout << "Calling FIMExecuteMul" << std::endl;
-            FimExecuteMul(device_output, fim_input0, fim_input1);
+            FimExecuteMul(device_output, (void*)&fim_input0, fim_input1);
         }
     } else {
         FimBo* host_input0 = FimCreateBo(fim_desc, MEM_TYPE_HOST);

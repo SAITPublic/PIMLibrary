@@ -5,10 +5,8 @@
 #include <algorithm>
 #include <iostream>
 #include "fim_runtime_api.h"
-#include "half.hpp"
+#include "hip/hip_fp16.h"
 #include "utility/fim_dump.hpp"
-
-using half_float::half;
 
 #define LENGTH (128 * 1024)
 
@@ -45,7 +43,7 @@ int fim_sv_add_1(void)
     FimCopyMemory(fim_vector, host_vector, HOST_TO_FIM);
 
     /* __FIM_API__ call : Execute FIM kernel (ELT_ADD) */
-    FimExecuteAdd(device_output, *(half*)host_scalar->data, fim_vector);
+    FimExecuteAdd(device_output, host_scalar->data, fim_vector);
 
     FimCopyMemory(host_output, device_output, FIM_TO_HOST);
 
@@ -98,7 +96,7 @@ int fim_sv_mul_1(void)
     FimCopyMemory(fim_vector, host_vector, HOST_TO_FIM);
 
     /* __FIM_API__ call : Execute FIM kernel (ELT_ADD) */
-    FimExecuteMul(device_output, *(half*)host_scalar->data, fim_vector);
+    FimExecuteMul(device_output, host_scalar->data, fim_vector);
 
     FimCopyMemory(host_output, device_output, FIM_TO_HOST);
 

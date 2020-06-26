@@ -3,7 +3,7 @@
 
 #include "emulator/FimEmulator.h"
 #include "fim_data_types.h"
-#include "half.hpp"
+#include "hip/hip_fp16.h"
 #include "hip/hip_runtime.h"
 #include "manager/FimManager.h"
 

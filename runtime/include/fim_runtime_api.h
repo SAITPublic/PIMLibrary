@@ -2,6 +2,7 @@
 #define _FIM_RUNTIME_API_H_
 
 #include "fim_data_types.h"
+
 /** @mainpage FIM SDK
  *
  * @section intro_sec Documentation of FIM SDK
@@ -225,7 +226,7 @@ __FIM_API__ int FimExecuteAdd(FimBo* output, FimBo* operand0, FimBo* operand1);
  *
  * @return success/failure
  */
-__FIM_API__ int FimExecuteAdd(FimBo* output, half scalar, FimBo* vector);
+__FIM_API__ int FimExecuteAdd(FimBo* output, void* scalar, FimBo* vector);
 
 /**
  * @brief Executes Mul vector operation in FIM
@@ -247,7 +248,7 @@ __FIM_API__ int FimExecuteMul(FimBo* output, FimBo* operand0, FimBo* operand1);
  *
  * @return success/failure
  */
-__FIM_API__ int FimExecuteMul(FimBo* output, half scalar, FimBo* vector);
+__FIM_API__ int FimExecuteMul(FimBo* output, void* scalar, FimBo* vector);
 
 /**
  * @brief Executes FIM Relu operations

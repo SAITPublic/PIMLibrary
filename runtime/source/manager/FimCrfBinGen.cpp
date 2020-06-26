@@ -1,4 +1,5 @@
 #include "manager/FimCrfBinGen.h"
+#include <cmath>
 
 namespace fim
 {
