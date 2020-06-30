@@ -2,30 +2,6 @@
 
 __host__ void get_fim_block_info(FimBlockInfo* fbi) { memcpy(fbi, &vega20_fbi, sizeof(FimBlockInfo)); }
 
-__host__ void integral_sum_for_gemv_host(void* out, void* in, int out_size, int reduce_size)
-{
-    half t_output;
-    half* output = (half*)out;
-    half* input = (half*)in;
-    int out_num = out_size / sizeof(half) / reduce_size;
-
-#if 0
-    std::cout << "[ gemv integral sum  ]" << std::endl;
-    std::cout << "out_size    : " << out_size << std::endl;
-    std::cout << "reduce_size : " << reduce_size << std::endl;
-    std::cout << "out_num     : " << out_num << std::endl;
-#endif
-
-    for (int i = 0; i < out_num; i++) {
-        t_output = 0;
-        for (int j = 0; j < reduce_size; j++) {
-            t_output += input[j];
-        }
-        output[i] = t_output;
-        input += reduce_size;
-    }
-}
-
 __device__ void integral_sum_for_gemv_gpu(void* out, void* in, int out_size, int reduce_size)
 {
     half t_output;
