@@ -11,7 +11,6 @@ FimMemTraceData* g_fmtd16;
 int g_ridx[64];
 int g_idx[64];
 int m_width;
-bool record_enable;
 #endif
 
 #include "fim_bn_kernels.fimk"

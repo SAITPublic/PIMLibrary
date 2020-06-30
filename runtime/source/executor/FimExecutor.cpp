@@ -25,7 +25,7 @@ FimExecutor::FimExecutor(FimRuntimeType rt_type, FimPrecision precision)
     fim_emulator_ = fim::runtime::emulator::FimEmulator::get_instance();
 
     get_fim_block_info(&fbi_);
-    fmtd_size_per_ch_ = 200000;
+    fmtd_size_per_ch_ = 20000;
     max_block_size_ = fbi_.num_fim_chan;
     max_fmtd_size_ = fmtd_size_per_ch_ * max_block_size_;
 #endif
@@ -227,7 +227,7 @@ int FimExecutor::execute_gemv(FimBo* output, FimBo* operand0, FimBo* operand1)
     FimBo* input = operand0;
     FimBo* weight = operand1;
     unsigned blocks = 64;
-    unsigned threads_per_block = 128;
+    unsigned threads_per_block = 16;
 
     int in_size = weight->bshape.w;
     int out_size = weight->bshape.h;
@@ -247,7 +247,7 @@ int FimExecutor::execute_gemv(FimBo* output, FimBo* operand0, FimBo* operand1)
 #else
     for (int iter = 0; iter < 100; iter++) {
 #endif
-        hipLaunchKernelGGL(gemv_fim_64cu_128th_fp16, dim3(blocks), dim3(threads_per_block), 0, 0,
+        hipLaunchKernelGGL(gemv_fim_64cu_16th_fp16, dim3(blocks), dim3(threads_per_block), 0, 0,
                            (uint8_t*)g_fim_base_addr /* fim control base */,
                            (uint8_t*)weight->data /* fim weight base */,
                            (uint8_t*)fim_gemv_tmp_buffer_, /* fim hw output buffer */
