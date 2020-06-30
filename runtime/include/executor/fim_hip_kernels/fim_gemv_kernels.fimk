@@ -10,6 +10,100 @@
 #define PARK_OUT 1
 #define INTEGRAL_SUM 1
 
+__global__ void gemv_fim_64cu_128th_fp16(volatile uint8_t* __restrict__ fim_ctr,
+                                       volatile uint8_t* __restrict__ fim_weight,
+                                       volatile uint8_t* __restrict__ fim_gemv_tmp_buffer,
+                                       volatile uint8_t* __restrict__ fim_input, volatile uint8_t* __restrict__ output,
+                                       int input_dim, int batch_dim, int output_dim,
+#ifdef EMULATOR
+                                       FimMemTraceData* fmtd16, int* frd_size, int mt_width,
+#endif
+                                       uint8_t* crf_binary, int crf_size)
+{
+#ifdef EMULATOR
+    g_fba = (uint64_t)fim_ctr;
+    g_fmtd16 = fmtd16;
+    g_ridx[hipBlockIdx_x] = 0;
+    m_width = mt_width;
+    record_enable = true;
+    __syncthreads();
+#endif
+
+#if PREPARE_KERNEL
+    uint64_t offset = (hipThreadIdx_x % 2) * 0x10;
+    FimBlockInfo* fbi = &vega20_fbi;
+    input_dim = input_dim * sizeof(half) / fbi->trans_size;
+    // 512
+    int num_parallelism = fbi->num_fim_blocks * fbi->num_fim_chan * fbi->num_fim_rank;
+    // 4096
+    int num_output_bst = output_dim;
+    // 1
+    int num_out_tile = ceilf((float)num_output_bst / (float)num_parallelism) / fbi->num_grf_B;
+    // 8
+    int num_in_tile = ceilf((float)input_dim / (float)fbi->num_grf_A);
+    int num_jump_of_even_bank = fbi->num_grf_B * ceilf((float)num_in_tile / 2) - 1;
+    int num_jump_of_odd_bank = fbi->num_grf_B * floorf((float)num_in_tile / 2) - 1;
+    int end_col = gemv_get_result_col(input_dim / fbi->trans_size, num_output_bst, num_in_tile, num_out_tile);
+    int compute_col = 0;
+#endif
+
+    /* Radeon7(VEGA20) memory is 16GB but our target is 32GB system */
+    /* so program_crf and chagne_fim_mode functions can not access to over 8GB in our system */
+#if PARK_IN
+    park_in_64cu_128th(fim_ctr, offset);
+#endif
+
+#if CHANGE_SB_HAB
+    change_fim_mode_64cu_128th(fim_ctr, SB_MODE, HAB_MODE, null_bst, offset);
+#endif
+
+#if PROGRAM_CRF
+    program_crf_64cu_128th(fim_ctr, crf_binary, crf_size, offset);
+#endif
+
+#if COMPUTE_GEMV
+    for (int b = 0; b < batch_dim; b++) {
+        for (int j = 0; j < num_out_tile; j++) {
+            change_fim_mode_64cu_128th(fim_ctr, HAB_MODE, HAB_FIM_MODE, gemv_hab_to_hab_fim, offset);
+            for (int i = 0; i < num_in_tile; i += 2) {
+                compute_gemv_2bank_64cu_128th(fim_ctr, fim_weight, fim_input, num_in_tile, num_out_tile, i, j, b,
+                                            EVEN_BANK, offset);
+            }
+            for (int i = 1; i < num_in_tile; i += 2) {
+                compute_gemv_2bank_64cu_128th(fim_ctr, fim_weight, fim_input, num_in_tile, num_out_tile, i, j, b,
+                                            ODD_BANK, offset);
+            }
+            compute_col = (j + b) * fbi->num_grf_B;
+            add_transaction_all_64cu_128th(fim_gemv_tmp_buffer, true, 0, 1, 0, compute_col, null_bst, offset,
+                                         fbi->num_grf);
+            change_fim_mode_64cu_128th(fim_ctr, HAB_FIM_MODE, HAB_MODE, gemv_hab_fim_to_hab, offset);
+        }
+    }
+#endif
+
+#if CHANGE_HAB_SB
+    change_fim_mode_64cu_128th(fim_ctr, HAB_MODE, SB_MODE, null_bst, offset);
+#endif
+
+#if PARK_OUT
+    park_out_64cu_128th(fim_ctr, offset);
+#endif
+
+#ifdef EMULATOR
+    __syncthreads();
+    if (hipBlockIdx_x == 0 && hipThreadIdx_x == 0) {
+        frd_size[0] = g_ridx[0];
+    }
+#endif
+
+#if INTEGRAL_SUM
+    /* TODO: verify reduce sum in Target Mode */
+    __syncthreads();
+    integral_sum_for_gemv_gpu((void*)output, (void*)fim_gemv_tmp_buffer, output_dim * fbi->num_out_per_grf * 2,
+                              fbi->num_out_per_grf);
+#endif
+}
+
 __global__ void gemv_fim_64cu_2th_fp16(volatile uint8_t* __restrict__ fim_ctr,
                                        volatile uint8_t* __restrict__ fim_weight,
                                        volatile uint8_t* __restrict__ fim_gemv_tmp_buffer,
@@ -57,8 +151,8 @@ __global__ void gemv_fim_64cu_2th_fp16(volatile uint8_t* __restrict__ fim_ctr,
 #endif
 
 #if COMPUTE_GEMV
-    for (int j = 0; j < num_out_tile; j++) {
-        for (int b = 0; b < batch_dim; b++) {
+    for (int b = 0; b < batch_dim; b++) {
+        for (int j = 0; j < num_out_tile; j++) {
             change_fim_mode_64cu_2th(fim_ctr, HAB_MODE, HAB_FIM_MODE, gemv_hab_to_hab_fim, offset);
             for (int i = 0; i < num_in_tile; i += 2) {
                 compute_gemv_2bank_64cu_2th(fim_ctr, fim_weight, fim_input, num_in_tile, num_out_tile, i, j, b,
@@ -145,8 +239,8 @@ __global__ void gemv_fim_1cu_2th_fp16(volatile uint8_t* __restrict__ fim_ctr, vo
 #endif
 
 #if COMPUTE_GEMV
-    for (int j = 0; j < num_out_tile; j++) {
-        for (int b = 0; b < batch_dim; b++) {
+    for (int b = 0; b < batch_dim; b++) {
+        for (int j = 0; j < num_out_tile; j++) {
             change_fim_mode_1cu_2th(fim_ctr, HAB_MODE, HAB_FIM_MODE, gemv_hab_to_hab_fim, offset);
             for (int i = 0; i < num_in_tile; i += 2) {
                 compute_gemv_2bank_1cu_2th(fim_ctr, fim_weight, fim_input, num_in_tile, num_out_tile, i, j, b,

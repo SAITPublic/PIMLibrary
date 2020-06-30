@@ -86,8 +86,8 @@ __host__ __device__ uint64_t addr_gen_safe(uint32_t chan, uint32_t rank, uint32_
     FimBlockInfo* fbi = &vega20_fbi;
 
     while (col >= fbi->num_col / fbi->bl) {
-        row++;
-        col -= (fbi->num_col / fbi->bl);
+	row++;
+	col -= (fbi->num_col / fbi->bl);
     }
 
     if (row >= fbi->num_row) {
@@ -102,9 +102,12 @@ extern int g_ridx[64];
 extern int g_idx[64];
 extern int m_width;
 extern FimMemTraceData* g_fmtd16;
+extern bool record_enable;
 
 __device__ void GEN_WRITE_CMD(volatile uint8_t* __restrict__ dst, volatile uint8_t* __restrict__ src)
 {
+    if (record_enable == false) return;
+
     __syncthreads();
     int bid = hipBlockIdx_x;
     int tid = hipThreadIdx_x;
@@ -120,6 +123,8 @@ __device__ void GEN_WRITE_CMD(volatile uint8_t* __restrict__ dst, volatile uint8
 
 __device__ void GEN_READ_CMD(volatile uint8_t* __restrict__ dst, volatile uint8_t* __restrict__ src, bool is_output)
 {
+    if (record_enable == false) return;
+
     int bid = hipBlockIdx_x;
     int tid = hipThreadIdx_x;
     int row = bid * m_width;
@@ -133,6 +138,8 @@ __device__ void GEN_READ_CMD(volatile uint8_t* __restrict__ dst, volatile uint8_
 
 __device__ void BLOCK_SYNC(int cu_ch_idx, bool block_all_chan)
 {
+    if (record_enable == false) return;
+
     __syncthreads();
     if (hipBlockIdx_x == 0 && hipThreadIdx_x == 0) {
         FimBlockInfo* fbi = &vega20_fbi;
@@ -162,6 +169,8 @@ __device__ void BLOCK_SYNC(int cu_ch_idx, bool block_all_chan)
 
 __device__ void GEN_BLOCK_CMD(int type)
 {
+    if (record_enable == false) return;
+
     int row = hipBlockIdx_x * m_width;
     int midx = row + atomicAdd(&g_ridx[hipBlockIdx_x], 1);
 
@@ -761,3 +770,165 @@ __device__ void park_out_64cu_2th(volatile uint8_t* __restrict__ fim_ctr, uint64
     t_addr = addr_gen(cidx, rank, 0, 1, (1 << 12), 0);
     GEN_READ_CMD(null_bst + offset, &fim_ctr[t_addr + offset]);
 }
+
+/* 64CU 128th functions */
+
+__device__ void compute_gemv_2bank_64cu_128th(volatile uint8_t* __restrict__ fim_ctr,
+                                            volatile uint8_t* __restrict__ fim_weight,
+                                            volatile uint8_t* __restrict__ fim_input, int num_in_tile, int num_out_tile,
+                                            int input_tile, int output_tile, int batch_idx, FimBankType bank_type,
+                                            uint64_t offset)
+{
+    FimBlockInfo* fbi = &vega20_fbi;
+    int cidx = hipBlockIdx_x;
+    uint64_t c_addr;
+    uint64_t i_addr;
+    uint32_t row = 0;
+    uint32_t col = (fbi->num_grf_A * fbi->num_grf_B) * (input_tile / 2 + output_tile * num_in_tile / 2);
+    uint32_t gidx = (hipThreadIdx_x / 2) % fbi->num_grf_A;
+    int rank = 0;
+
+    if (hipThreadIdx_x < 16) {
+        c_addr = addr_gen(cidx, rank, 0, 1, 0x3fff, 0x8 + gidx);
+        i_addr = (batch_idx * fbi->num_grf_A * num_in_tile + input_tile * fbi->num_grf_A + gidx) * fbi->trans_size;
+        GEN_WRITE_CMD(&fim_ctr[c_addr + offset], &fim_input[i_addr + offset]);
+    }
+    GEN_BLOCK_CMD(0);
+
+//    record_enable = true;
+    add_transaction_all_64cu_128th(fim_weight, false, 0, (int)bank_type, row, col, null_bst, offset,
+                                 fbi->num_grf_A * fbi->num_grf_B);
+//    record_enable = false;
+}
+
+__device__ void program_crf_64cu_128th(volatile uint8_t* __restrict__ fim_ctr, uint8_t* crf_bin, uint32_t cmd_size,
+                                     uint64_t offset)
+{
+    FimBlockInfo* fbi = &vega20_fbi;
+
+    for (int i = 0; i < cmd_size; i += fbi->trans_size) {
+        add_transaction_all_64cu_128th(fim_ctr, true, 0, 1, 0x3fff, 0x4 + i, crf_bin + i, offset);
+    }
+}
+
+__device__ void add_transaction_all_64cu_128th(volatile uint8_t* __restrict__ fim_addr, bool is_write, uint32_t bg,
+                                             uint32_t bank, uint32_t row, uint32_t col, uint8_t* burst, uint64_t offset,
+                                             int loop_cnt)
+{
+#if 0
+    if (hipThreadIdx_x >= 2 * loop_cnt) return;
+
+    FimBlockInfo* fbi = &vega20_fbi;
+    int cidx = hipBlockIdx_x;
+    int rank = 0;
+    int col_step = fbi->num_col / fbi->bl;
+
+    uint32_t col_offset = hipThreadIdx_x / 2;
+    uint32_t local_col = col + col_offset;
+    uint32_t row_offset = local_col / col_step;
+    uint32_t local_row = row + row_offset;
+    uint64_t t_addr = 0;
+
+    local_col %= col_step;
+
+    t_addr = addr_gen(cidx, rank, bg, bank, local_row, local_col);
+
+    if (is_write) {
+        GEN_WRITE_CMD(&fim_addr[t_addr + offset], burst + offset);
+    } else {
+        GEN_READ_CMD(null_bst + offset, &fim_addr[t_addr + offset]);
+    }
+    GEN_BLOCK_CMD(0);
+#else
+    if (hipThreadIdx_x >= 2) return;
+
+    FimBlockInfo* fbi = &vega20_fbi;
+    int cidx = hipBlockIdx_x;
+    int col_step = fbi->num_col / fbi->bl;
+    int rank = 0;
+    uint64_t t_addr;
+
+    uint32_t local_row = row;
+
+    for (int lc = 0, local_col = col; lc < loop_cnt; lc++, local_col++) {
+        while (local_col >= col_step) {
+            local_row++;
+            local_col -= col_step;
+        }
+        t_addr = addr_gen(cidx, rank, bg, bank, local_row, local_col);
+
+        if (is_write) {
+            GEN_WRITE_CMD(&fim_addr[t_addr + offset], burst + offset);
+        } else {
+            GEN_READ_CMD(null_bst + offset, &fim_addr[t_addr + offset]);
+        }
+    }
+    GEN_BLOCK_CMD(0);
+#endif
+}
+
+__device__ void change_fim_mode_64cu_128th(volatile uint8_t* __restrict__ fim_ctr, FimMode mode1, FimMode mode2,
+                                         uint8_t* change_mode_bin, uint64_t offset)
+{
+    FimBlockInfo* fbi = &vega20_fbi;
+#ifdef EMULATOR
+    /* RA13 and RA12 is swapped in Aquabolt-XL core-die, we need to emulate this behavior in emulator mode */
+    /* 0x17ff : RA12<->RA13 swapped address in vega20 memory map */
+    uint32_t hab_row_addr = 0x17ff;
+    uint32_t sb_row_addr = 0x1fff;
+#else  /* TARGET */
+    uint32_t hab_row_addr = 0x27ff;
+    uint32_t sb_row_addr = 0x2fff;
+#endif /* EMULATOR */
+
+    if (mode1 == SB_MODE) {
+        if (mode2 == HAB_MODE) {
+            add_transaction_all_64cu_128th(fim_ctr, true, 0, 0, hab_row_addr, 0x1f, change_mode_bin, offset);
+            add_transaction_all_64cu_128th(fim_ctr, true, 0, 1, hab_row_addr, 0x1f, change_mode_bin, offset);
+            if (fbi->num_banks >= 2) {
+                add_transaction_all_64cu_128th(fim_ctr, true, 2, 0, hab_row_addr, 0x1f, change_mode_bin, offset);
+                add_transaction_all_64cu_128th(fim_ctr, true, 2, 1, hab_row_addr, 0x1f, change_mode_bin, offset);
+            }
+        }
+    } else if (mode1 == HAB_MODE) {
+        if (mode2 == SB_MODE) {
+            add_transaction_all_64cu_128th(fim_ctr, true, 0, 0, sb_row_addr, 0x1f, change_mode_bin, offset);
+            add_transaction_all_64cu_128th(fim_ctr, true, 0, 1, sb_row_addr, 0x1f, change_mode_bin, offset);
+        } else if (mode2 == HAB_FIM_MODE) {
+            add_transaction_all_64cu_128th(fim_ctr, true, 0, 0, 0x3fff, 0x0, change_mode_bin, offset);
+        }
+    } else if (mode1 == HAB_FIM_MODE) {
+        if (mode2 == HAB_MODE) {
+            add_transaction_all_64cu_128th(fim_ctr, true, 0, 0, 0x3fff, 0x0, change_mode_bin, offset);
+        }
+    }
+    GEN_BLOCK_CMD(0);
+}
+
+__device__ void park_in_64cu_128th(volatile uint8_t* __restrict__ fim_ctr, uint64_t offset)
+{
+    FimBlockInfo* fbi = &vega20_fbi;
+    uint32_t cidx = hipBlockIdx_x;
+    uint32_t b = (hipThreadIdx_x / (fbi->num_banks / fbi->num_bank_groups)) / 2;
+    uint32_t bg = (hipThreadIdx_x % fbi->num_bank_groups) / 2;
+    uint32_t rank = 0;
+    uint64_t t_addr;
+
+    t_addr = addr_gen(cidx, rank, bg, b, (1 << 12), 0);
+    GEN_READ_CMD(null_bst + offset, &fim_ctr[t_addr + offset]);
+}
+
+__device__ void park_out_64cu_128th(volatile uint8_t* __restrict__ fim_ctr, uint64_t offset)
+{
+    if (hipThreadIdx_x >= 4) return;
+
+    uint32_t cidx = hipBlockIdx_x;
+    uint32_t rank = 0;
+    uint32_t bank = hipThreadIdx_x / 2;
+    uint64_t t_addr;
+    FimBlockInfo* fbi = &vega20_fbi;
+
+    t_addr = addr_gen(cidx, rank, 0, bank, (1 << 12), 0);
+    GEN_READ_CMD(null_bst + offset, &fim_ctr[t_addr + offset]);
+}
+

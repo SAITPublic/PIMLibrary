@@ -6,7 +6,7 @@
 long long getTickCount(void);
 double getTickFrequency(void);
 
-#define CONSOL 0
+#define CONSOL 1
 
 #ifdef PROFILE
 #define FIM_PROFILE_TICK(name) long long __tick_##name = getTickCount()
