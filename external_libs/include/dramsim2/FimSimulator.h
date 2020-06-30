@@ -43,6 +43,7 @@ class FimSimulator
     void compare_result(size_t num_data, NumpyBurstType* output_npbst);
     void read_memory_trace(const string& file_name, vector<MemTraceData>& vec_trace_data);
     void create_tv_for_gemv_test(NumpyBurstType* weight_npbst, uint16_t* test_weight);
+    void get_reduced_result(uint16_t* output_data, size_t num_data);
 
    private:
     void convert_arr_to_burst(void* data, size_t data_size, BurstType* bst);

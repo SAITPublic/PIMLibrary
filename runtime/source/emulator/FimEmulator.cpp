@@ -73,12 +73,12 @@ int FimEmulator::execute_gemv(FimBo* output, FimBo* fim_data, FimMemTraceData* f
     int ret = 0;
     int num_out_before_reduce = 0;
     uint16_t* sim_output = nullptr;
-    int sim_output_size = 0;
+    int output_size_before_reduce = 0;
 
     int out_dim = fim_data->bshape.h * output->bshape.n;
     num_out_before_reduce = out_dim * fbi_.num_out_per_grf;
-    sim_output_size = num_out_before_reduce * sizeof(uint16_t);
-    sim_output = new uint16_t[num_out_before_reduce];
+    output_size_before_reduce = num_out_before_reduce * sizeof(uint16_t);
+    sim_output = new uint16_t[out_dim];
 
 #ifdef DEBUG_FIM
     fim_sim_.initialize("../external_libs/include/dramsim2/ini/HBM2_samsung_2M_16B_x64.ini",
@@ -92,13 +92,12 @@ int FimEmulator::execute_gemv(FimBo* output, FimBo* fim_data, FimMemTraceData* f
     uint64_t fim_data_addr = reinterpret_cast<uint64_t>(fim_data->data);
     uint64_t output_addr = reinterpret_cast<uint64_t>(output->data);
 
-    fim_sim_.alloc_burst(fim_data->size, sim_output_size);
+    fim_sim_.alloc_burst(fim_data->size, output_size_before_reduce);
     fim_sim_.preload_data_with_addr(fim_data_addr - fim_base_addr, fim_data->data, fim_data->size);
     fim_sim_.execute_kernel((void*)fmtd32, fmtd32_size);
     fim_sim_.read_result_gemv(tmp_data_addr - fim_base_addr, out_dim);
-    fim_sim_.get_uint16_result(sim_output, num_out_before_reduce);
-    integral_sum_for_gemv_host((void*)sim_output /* out */, (void*)sim_output /* in */, sim_output_size,
-                               fbi_.num_out_per_grf);
+    fim_sim_.get_reduced_result(sim_output, out_dim);
+
     if (output->mem_type != MEM_TYPE_HOST) {
         for (int i = 0; i < output->bshape.n; i++) {
             hipMemcpy((half*)output->data + i * fim_data->bshape_r.h, (half*)sim_output + i * fim_data->bshape.h,
