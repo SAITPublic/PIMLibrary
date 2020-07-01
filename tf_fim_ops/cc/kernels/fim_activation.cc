@@ -13,25 +13,19 @@ void KernelLauncher(const void* inp_data, const int N, void* out_data)
     FimDesc* fim_desc = FimCreateDesc(1, 1, 1, N, FIM_FP16);
 
     /* __FIM_API__ call : Create FIM Buffer Object */
-    FimBo* host_input = FimCreateBo(fim_desc, MEM_TYPE_HOST);
-    FimBo* host_output = FimCreateBo(fim_desc, MEM_TYPE_HOST);
     FimBo* fim_input = FimCreateBo(fim_desc, MEM_TYPE_FIM);
     FimBo* device_output = FimCreateBo(fim_desc, MEM_TYPE_FIM);
 
     /* __FIM_API__ call : Copy input data on FIM memory */
-    FimCopyMemory((void*)host_input->data, (void*)inp_data, sizeof(half) * N, HOST_TO_HOST);
-    FimCopyMemory(fim_input, host_input, HOST_TO_FIM);
+    FimCopyMemory(fim_input->data, (void*)inp_data, sizeof(half) * N, HOST_TO_FIM);
 
     std::cout << "Calling FIMExecuteRelu" << std::endl;
     /* __FIM_API__ call : Execute FIM kernel (Relu) */
     FimExecuteRelu(device_output, fim_input);
 
-    FimCopyMemory(host_output, device_output, FIM_TO_HOST);
-    FimCopyMemory((void*)out_data, (void*)host_output->data, sizeof(half) * N, HOST_TO_HOST);
+    FimCopyMemory((void*)out_data, (void*)device_output->data, sizeof(half) * N, FIM_TO_HOST);
 
     /* __FIM_API__ call : Free memory */
-    FimDestroyBo(host_input);
-    FimDestroyBo(host_output);
     FimDestroyBo(device_output);
     FimDestroyBo(fim_input);
     FimDestroyDesc(fim_desc);
