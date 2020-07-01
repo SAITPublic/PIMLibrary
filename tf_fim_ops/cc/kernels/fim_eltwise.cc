@@ -14,21 +14,15 @@ void KernelLauncher(const void* inp0_data, const void* inp1_data, int N, int is_
     FimDesc* fim_desc = FimCreateDesc(1, 1, 1, N, FIM_FP16);
 
     /* __FIM_API__ call : Create FIM Buffer Object */
-    FimBo* host_input1 = FimCreateBo(fim_desc, MEM_TYPE_HOST);
-    FimBo* host_output = FimCreateBo(fim_desc, MEM_TYPE_HOST);
-    FimBo* golden_output = FimCreateBo(fim_desc, MEM_TYPE_HOST);
     FimBo* fim_input1 = FimCreateBo(fim_desc, MEM_TYPE_FIM);
     FimBo* device_output = FimCreateBo(fim_desc, MEM_TYPE_FIM);
 
-    FimCopyMemory((void*)host_input1->data, (void*)inp1_data, sizeof(half) * N, HOST_TO_HOST);
-    FimCopyMemory(fim_input1, host_input1, HOST_TO_FIM);
+    FimCopyMemory((void*)fim_input1->data, (void*)inp1_data, sizeof(half) * N, HOST_TO_FIM);
 
     if (is_scalar == 1) {
-        half host_input0;
         half fim_input0;
 
-        FimCopyMemory((void*)&host_input0, (void*)inp0_data, sizeof(half), HOST_TO_HOST);
-        FimCopyMemory((void*)&fim_input0, (void*)&host_input0, sizeof(half), HOST_TO_FIM);
+        FimCopyMemory((void*)&fim_input0, (void*)inp0_data, sizeof(half), HOST_TO_FIM);
 
         if (op == 0) {
             std::cout << "Calling FIMExecuteAdd" << std::endl;
@@ -38,11 +32,9 @@ void KernelLauncher(const void* inp0_data, const void* inp1_data, int N, int is_
             FimExecuteMul(device_output, (void*)&fim_input0, fim_input1);
         }
     } else {
-        FimBo* host_input0 = FimCreateBo(fim_desc, MEM_TYPE_HOST);
         FimBo* fim_input0 = FimCreateBo(fim_desc, MEM_TYPE_FIM);
 
-        FimCopyMemory((void*)host_input0->data, (void*)inp0_data, sizeof(half) * N, HOST_TO_HOST);
-        FimCopyMemory(fim_input0, host_input0, HOST_TO_FIM);
+        FimCopyMemory((void*)fim_input0->data, (void*)inp0_data, sizeof(half) * N, HOST_TO_FIM);
 
         if (op == 0) {
             std::cout << "Calling FIMExecuteAdd" << std::endl;
@@ -52,17 +44,12 @@ void KernelLauncher(const void* inp0_data, const void* inp1_data, int N, int is_
             FimExecuteMul(device_output, fim_input0, fim_input1);
         }
 
-        FimDestroyBo(host_input0);
         FimDestroyBo(fim_input0);
     }
 
-    FimCopyMemory(host_output, device_output, FIM_TO_HOST);
-    FimCopyMemory((void*)out_data, (void*)host_output->data, sizeof(half) * N, HOST_TO_HOST);
+    FimCopyMemory((void*)out_data, (void*)device_output->data, sizeof(half) * N, FIM_TO_HOST);
 
     /* __FIM_API__ call : Free memory */
-    FimDestroyBo(host_input1);
-    FimDestroyBo(host_output);
-    FimDestroyBo(golden_output);
     FimDestroyBo(device_output);
     FimDestroyBo(fim_input1);
     FimDestroyDesc(fim_desc);
