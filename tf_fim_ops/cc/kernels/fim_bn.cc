@@ -18,12 +18,6 @@ void KernelLauncher(const void* inp_data, const int N, const int DIMS, const voi
 
     /* __FIM_API__ call : Create FIM Buffer Object */
     FimBo* host_input = FimCreateBo(WIDTH, HEIGHT, CH, BATCH, FIM_FP16, MEM_TYPE_HOST);
-    FimBo* host_mean = FimCreateBo(1, 1, CH, 1, FIM_FP16, MEM_TYPE_HOST);
-    FimBo* host_var = FimCreateBo(1, 1, CH, 1, FIM_FP16, MEM_TYPE_HOST);
-    FimBo* host_beta = FimCreateBo(1, 1, CH, 1, FIM_FP16, MEM_TYPE_HOST);
-    FimBo* host_gamma = FimCreateBo(1, 1, CH, 1, FIM_FP16, MEM_TYPE_HOST);
-    FimBo* host_output = FimCreateBo(WIDTH, HEIGHT, CH, BATCH, FIM_FP16, MEM_TYPE_HOST);
-
     FimBo* fim_mean = FimCreateBo(1, 1, CH, 1, FIM_FP16, MEM_TYPE_FIM);
     FimBo* fim_var = FimCreateBo(1, 1, CH, 1, FIM_FP16, MEM_TYPE_FIM);
     FimBo* fim_beta = FimCreateBo(1, 1, CH, 1, FIM_FP16, MEM_TYPE_FIM);
@@ -33,38 +27,28 @@ void KernelLauncher(const void* inp_data, const int N, const int DIMS, const voi
     FimBo* device_output = FimCreateBo(WIDTH, HEIGHT, CH, BATCH, FIM_FP16, MEM_TYPE_FIM);
 
     FimCopyMemory((void*)host_input->data, (void*)inp_data, sizeof(half) * N, HOST_TO_HOST);
-    FimCopyMemory((void*)host_mean->data, (void*)mean, sizeof(half) * CH, HOST_TO_HOST);
-    FimCopyMemory((void*)host_var->data, (void*)var, sizeof(half) * CH, HOST_TO_HOST);
-    FimCopyMemory((void*)host_gamma->data, (void*)gamma, sizeof(half) * CH, HOST_TO_HOST);
-    FimCopyMemory((void*)host_beta->data, (void*)beta, sizeof(half) * CH, HOST_TO_HOST);
 
     /* __FIM_API__ call : Preload input data on FIM memory */
     FimConvertDataLayout(preloaded_fim_input, host_input, OP_BN);
 
-    FimCopyMemory(fim_mean, host_mean, HOST_TO_FIM);
-    FimCopyMemory(fim_var, host_var, HOST_TO_FIM);
-    FimCopyMemory(fim_gamma, host_gamma, HOST_TO_FIM);
-    FimCopyMemory(fim_beta, host_beta, HOST_TO_FIM);
+    FimCopyMemory(fim_mean->data, (void*)mean, sizeof(half) * CH, HOST_TO_FIM);
+    FimCopyMemory(fim_var->data, (void*)var, sizeof(half) * CH, HOST_TO_FIM);
+    FimCopyMemory(fim_gamma->data, (void*)gamma, sizeof(half) * CH, HOST_TO_FIM);
+    FimCopyMemory(fim_beta->data, (void*)beta, sizeof(half) * CH, HOST_TO_FIM);
 
     // /* __FIM_API__ call : Execute FIM kernel */
     FimExecuteBN(device_output, preloaded_fim_input, fim_beta, fim_gamma, fim_mean, fim_var, epsilon);
 
-    FimCopyMemory(host_output, device_output, FIM_TO_HOST);
-    FimCopyMemory((void*)out_data, (void*)host_output->data, sizeof(half) * N, HOST_TO_HOST);
+    FimCopyMemory((void*)out_data, (void*)device_output->data, sizeof(half) * N, FIM_TO_HOST);
+
 
     /* __FIM_API__ call : Free memory */
     FimDestroyBo(host_input);
-    FimDestroyBo(host_mean);
-    FimDestroyBo(host_var);
-    FimDestroyBo(host_beta);
-    FimDestroyBo(host_gamma);
-
     FimDestroyBo(preloaded_fim_input);
     FimDestroyBo(fim_mean);
     FimDestroyBo(fim_var);
     FimDestroyBo(fim_beta);
     FimDestroyBo(fim_gamma);
-    FimDestroyBo(host_output);
     FimDestroyBo(device_output);
 }
 
