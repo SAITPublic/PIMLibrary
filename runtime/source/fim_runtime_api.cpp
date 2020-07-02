@@ -105,15 +105,12 @@ FimBo* FimCreateBo(FimDesc* fim_desc, FimMemType mem_type, FimMemFlag mem_flag)
         return nullptr;
     }
 
-    if (mem_flag == GEMV_INPUT) {
-        pad_data(fim_bo->data, fim_desc->bshape_r.w, fim_desc->bshape.w, fim_desc->bshape.n, mem_flag);
-    }
     FIM_PROFILE_TOCK(CreateBo);
 
     return fim_bo;
 }
 
-FimDesc* FimCreateDesc(int n, int c, int h, int w, FimPrecision precision)
+FimDesc* FimCreateDesc(int n, int c, int h, int w, FimPrecision precision, FimOpType op_type)
 {
     DLOG(INFO) << "called";
     FIM_PROFILE_TICK(CreateDesc);
@@ -125,9 +122,9 @@ FimDesc* FimCreateDesc(int n, int c, int h, int w, FimPrecision precision)
 
     FimDesc* fim_desc = new FimDesc;
 
-    fim_desc->bshape_r = {(uint32_t)w, (uint32_t)h, (uint32_t)c, (uint32_t)n};
-    fim_desc->bshape = {(uint32_t)w, (uint32_t)h, (uint32_t)c, (uint32_t)n};
     fim_desc->precision = precision;
+    fim_desc->bshape_r = {(uint32_t)w, (uint32_t)h, (uint32_t)c, (uint32_t)n};
+    align_shape(fim_desc, op_type);
 
     FIM_PROFILE_TOCK(CreateDesc);
 
@@ -477,3 +474,40 @@ int FimExecuteDummy(void)
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
+
+void* FimFindWeight(uint64_t w_addr)
+{
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
+    FIM_PROFILE_TICK(FindWeight);
+
+    void* addr = nullptr;
+
+    if (fim_runtime == nullptr) {
+        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+        return addr;
+    }
+    addr = fim_runtime->find_weight(w_addr);
+    FIM_PROFILE_TOCK(FindWeight);
+
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+    return addr;
+}
+
+int FimInsertWeight(uint64_t w_addr, void* fim_addr)
+{
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
+    FIM_PROFILE_TICK(InsertWeight);
+
+    int ret = 0;
+
+    if (fim_runtime == nullptr) {
+        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+        return -1;
+    }
+    ret = fim_runtime->insert_weight(w_addr, fim_addr);
+    FIM_PROFILE_TOCK(InsertWeight);
+
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+    return ret;
+}
+

@@ -27,7 +27,7 @@ typedef enum __FimMemType {
     MEM_TYPE_FIM,
 } FimMemType;
 
-typedef enum __FimMemFlag { ELT_OP, ELT_FIM_INPUT, GEMV_INPUT, GEMV_WEIGHT, GEMV_OUTPUT } FimMemFlag;
+typedef enum __FimMemFlag { ELT_OP, GEMV_INPUT, GEMV_WEIGHT, GEMV_OUTPUT } FimMemFlag;
 
 typedef enum __FimMemCpyType {
     HOST_TO_HOST,

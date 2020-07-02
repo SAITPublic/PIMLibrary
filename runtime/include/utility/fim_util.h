@@ -44,6 +44,7 @@ __host__ __device__ uint64_t addr_gen_safe(uint32_t chan, uint32_t rank, uint32_
                                            uint32_t& col);
 size_t get_aligned_size(FimDesc* fim_desc, FimMemFlag mem_flag, FimBo* fim_bo);
 void pad_data(void* input, int in_size, int in_nsize, int batch_size, FimMemFlag mem_flag);
+void align_shape(FimDesc* fim_desc, FimOpType op_type);
 
 #ifdef EMULATOR
 extern uint64_t g_fba;

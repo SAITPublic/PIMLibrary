@@ -87,7 +87,7 @@ __FIM_API__ int FimDestroyBo(FimBo* fim_bo);
  *
  * @return Return success/failure
  */
-__FIM_API__ FimDesc* FimCreateDesc(int n, int c, int h, int w, FimPrecision precision);
+__FIM_API__ FimDesc* FimCreateDesc(int n, int c, int h, int w, FimPrecision precision, FimOpType op_type = OP_ELT_ADD);
 
 /**
  * @brief Destroy FIM descriptor
@@ -297,6 +297,12 @@ __FIM_API__ int FimExecuteBN(FimBo* output, FimBo* fim_data, FimBo* beta, FimBo*
  * @return
  */
 __FIM_API__ int FimExecuteDummy(void);
+
+__FIM_API__ void* FimFindWeight(uint64_t w_addr);
+
+__FIM_API__ int FimInsertWeight(uint64_t w_addr, void* fim_addr);
+
+
 
 /**@}*/
 #endif /* _FIM_RUNTIME_API_H_ */

@@ -295,37 +295,38 @@ size_t get_aligned_size(FimDesc* fim_desc, FimMemFlag mem_flag, FimBo* fim_bo)
 {
     size_t size;
 
-    int n = fim_desc->bshape_r.n;
-    int c = fim_desc->bshape_r.c;
-    int h = fim_desc->bshape_r.h;
-    int w = fim_desc->bshape_r.w;
+    int n = fim_desc->bshape.n;
+    int c = fim_desc->bshape.c;
+    int h = fim_desc->bshape.h;
+    int w = fim_desc->bshape.w;
 
-    fim_bo->bshape_r = {(uint32_t)w, (uint32_t)h, (uint32_t)c, (uint32_t)n};
     if (mem_flag == GEMV_INPUT) {
-        w = 256 * ceil((float)w / 256);
         h = 1;
-        fim_desc->bshape.w = w;
     } else if (mem_flag == GEMV_WEIGHT) {
-        w = 256 * ceil((float)w / 256);
-        h = 4096 * ceil((float)h / 4096);
         n = 1;
-        fim_desc->bshape.w = w;
-        fim_desc->bshape.h = h;
     } else if (mem_flag == GEMV_OUTPUT) {
         w = 1;
-        h = 4096 * ceil((float)h / 4096);
-        fim_desc->bshape.h = h;
-    } else if (mem_flag == ELT_OP) {
-        w = (128 * 1024) * ceil((float)w / (128 * 1024));
-        fim_desc->bshape.w = w;
-    } else if (mem_flag == ELT_FIM_INPUT) {
-        w = 2 * (64 * 1024) * ceil((float)w / (64 * 1024));
     }
+    fim_bo->bshape_r = fim_desc->bshape_r;
     fim_bo->bshape = {(uint32_t)w, (uint32_t)h, (uint32_t)c, (uint32_t)n};
 
     size = n * c * h * w;
 
     return size;
+}
+
+void align_shape(FimDesc* fim_desc, FimOpType op_type)
+{
+    FimBShape bs = fim_desc->bshape_r;
+
+    if (op_type == OP_GEMV) {
+        bs.w = 256 * ceil((float)bs.w / 256);
+        bs.h = 4096 * ceil((float)bs.h / 4096);
+    }
+    else {
+        bs.w = (128 * 1024) * ceil((float)bs.w / (128 * 1024));
+    }
+    fim_desc->bshape = bs;
 }
 
 void pad_data(void* input, int in_size, int in_nsize, int batch_size, FimMemFlag mem_flag)

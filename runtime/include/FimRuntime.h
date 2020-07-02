@@ -1,6 +1,7 @@
 #ifndef _FIM_RUNTIME_H_
 #define _FIM_RUNTIME_H_
 
+#include <unordered_map>
 #include "executor/FimExecutor.h"
 #include "fim_data_types.h"
 #include "manager/FimManager.h"
@@ -34,12 +35,15 @@ class FimRuntime
     int execute_bn(FimBo* output, FimBo* fim_data, FimBo* beta, FimBo* gamma, FimBo* mean, FimBo* variance,
                    double epsilon);
     int execute_dummy(void);
+    int insert_weight(uint64_t w_addr, void* fim_addr);
+    void* find_weight(uint64_t w_addr);
 
    private:
     fim::runtime::manager::FimManager* fim_manager_;
     fim::runtime::executor::FimExecutor* fim_executor_;
     FimRuntimeType rt_type_;
     FimPrecision precision_;
+    std::unordered_map<uint64_t, void*> weight_map_;
 };
 
 } /* namespace runtime */

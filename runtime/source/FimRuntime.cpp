@@ -40,6 +40,10 @@ int FimRuntime::deinitialize(void)
     fim_manager_->deinitialize();
     fim_executor_->deinitialize();
 
+    for (auto it = weight_map_.begin(); it != weight_map_.end(); ++it) {
+        free_memory(it->second, MEM_TYPE_FIM);
+    }
+
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
@@ -203,6 +207,37 @@ int FimRuntime::execute_dummy(void)
     int ret = 0;
 
     ret = fim_executor_->execute_dummy();
+
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+    return ret;
+}
+
+void* FimRuntime::find_weight(uint64_t w_addr)
+{
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
+    void* addr = nullptr;
+
+    std::unordered_map<uint64_t, void*>::const_iterator found = weight_map_.find(w_addr);
+    if (found != weight_map_.end()) {
+        addr = found->second;
+    }
+
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+    return addr;
+}
+
+int FimRuntime::insert_weight(uint64_t w_addr, void *fim_addr)
+{
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
+    int ret = 0;
+
+    std::unordered_map<uint64_t, void*>::const_iterator found = weight_map_.find(w_addr);
+    if (found == weight_map_.end()) {
+        weight_map_.insert(std::make_pair(w_addr, fim_addr));
+    }
+    else {
+        ret = -1;
+    }
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;

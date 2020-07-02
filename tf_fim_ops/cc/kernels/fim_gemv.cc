@@ -14,7 +14,7 @@ void KernelLauncher(const void* i_data, const void* w_data, const int num_batch,
     //    /* __FIM_API__ call : Initialize FimRuntime */
     //    FimInitialize(RT_TYPE_HIP, FIM_FP16);
 
-    FimDesc* fim_desc = FimCreateDesc(num_batch, 1, OUT_LENGTH, IN_LENGTH, FIM_FP16);
+    FimDesc* fim_desc = FimCreateDesc(num_batch, 1, OUT_LENGTH, IN_LENGTH, FIM_FP16, OP_GEMV);
     /* __FIM_API__ call : Create FIM Buffer Object */
     FimBo* host_input = FimCreateBo(fim_desc, MEM_TYPE_HOST, GEMV_INPUT);
     FimBo* host_weight = FimCreateBo(fim_desc, MEM_TYPE_HOST, GEMV_WEIGHT);
