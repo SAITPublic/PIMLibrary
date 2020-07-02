@@ -4,6 +4,7 @@ import math
 import os
 from os import path
 from tensorflow.python.platform import test
+import tf_fim_ops
 tf.debugging.set_log_device_placement(True)
 tf.keras.backend.set_floatx('float16')
 
@@ -200,5 +201,6 @@ if __name__ == '__main__':
     gen_bidirectional(True)
   if path.isfile(folder+'lstm_bidirectional_5_out.bin') == False:
     gen_bidirectional_5(True)
-
+  tf_fim_ops.fim_init()
   tf.test.main()
+  tf_fim_ops.fim_deinit()
