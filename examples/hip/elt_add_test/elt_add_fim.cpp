@@ -49,6 +49,11 @@ __device__ inline unsigned int mask_by_bit(unsigned int value, int start, int en
     return value & ((1 << length) - 1);
 }
 
+
+// 32CH, 16GB address map 
+// rank 1b | row 14b | col(msb) 3b | ba(msb) 1b | bg 2b | ba(lsb) 1b | chan(msb) 4b | col(lsb) 1b | chan[0] 1b | col(lsb) 1b | col(bst) 5b
+// 32CH, 32GB address map(?) 
+// rank 2b | row 14b | col(msb) 3b | ba(msb) 1b | bg 2b | ba(lsb) 1b | chan(msb) 4b | col(lsb) 1b | chan[0] 1b | col(lsb) 1b | col(bst) 5b
 __device__ uint64_t addr_gen(unsigned int ch, unsigned int rank, unsigned int bg, unsigned int ba, unsigned int row,
                              unsigned int col)
 {
@@ -57,7 +62,7 @@ __device__ uint64_t addr_gen(unsigned int ch, unsigned int rank, unsigned int bg
     int num_bank_high_bit_ = 1;
     int num_bankgroup_bit_ = 2;
     int num_bank_low_bit_ = 1;
-    int num_chan_bit_ = 6;
+    int num_chan_bit_ = 5;
     int num_col_low_bit_ = 1;
     int num_offset_bit_ = 5;
 
@@ -135,30 +140,30 @@ __global__ void elt_add_fim(uint8_t* fim_data, uint8_t* fim_ctr, uint8_t* output
 
     /* change SB mode to HAB mode */
     if (hipThreadIdx_x < 2) {
-        addr = addr_gen(hipBlockIdx_x, 0, 0, 0, (0x27ff >> 1), 0x1f);
+        addr = addr_gen(hipBlockIdx_x, 0, 0, 0, 0x27ff, 0x1f);
         W_CMD(&fim_ctr[addr + offset]);
 
-        addr = addr_gen(hipBlockIdx_x, 0, 0, 1, (0x27ff >> 1), 0x1f);
+        addr = addr_gen(hipBlockIdx_x, 0, 0, 1, 0x27ff, 0x1f);
         W_CMD(&fim_ctr[addr + offset]);
 
-        addr = addr_gen(hipBlockIdx_x, 0, 2, 0, (0x27ff >> 1), 0x1f);
+        addr = addr_gen(hipBlockIdx_x, 0, 2, 0, 0x27ff, 0x1f);
         W_CMD(&fim_ctr[addr + offset]);
 
-        addr = addr_gen(hipBlockIdx_x, 0, 2, 1, (0x27ff >> 1), 0x1f);
+        addr = addr_gen(hipBlockIdx_x, 0, 2, 1, 0x27ff, 0x1f);
         W_CMD(&fim_ctr[addr + offset]);
     }
     B_CMD(0);
 
     /* set crf binary */
     if (hipThreadIdx_x < 2 * crf_size) {
-        addr = addr_gen(hipBlockIdx_x, 0, 0, 1, (0x3fff >> 1), 0x4 + hipThreadIdx_x / 2);
+        addr = addr_gen(hipBlockIdx_x, 0, 0, 1, 0x3fff, 0x4 + hipThreadIdx_x / 2);
         W_CMD_R(&fim_ctr[addr + offset], crf_binary + hipThreadIdx_x * 16);
     }
     B_CMD(0);
 
     /* change HAB mode to HAB_FIM mode */
     if (hipThreadIdx_x < 2 * crf_size) {
-        addr = addr_gen(hipBlockIdx_x, 0, 0, 0, (0x3fff >> 1), 0x0);
+        addr = addr_gen(hipBlockIdx_x, 0, 0, 0, 0x3fff, 0x0);
         W_CMD_R(&fim_ctr[addr + offset], hab_to_fim + hipThreadIdx_x * 16);
     }
     B_CMD(0);
@@ -187,14 +192,14 @@ __global__ void elt_add_fim(uint8_t* fim_data, uint8_t* fim_ctr, uint8_t* output
 
     /* change HAB_FIM mode to HAB mode */
     if (hipThreadIdx_x < 2 * crf_size) {
-        addr = addr_gen(hipBlockIdx_x, 0, 0, 0, (0x3fff >> 1), 0x0);
+        addr = addr_gen(hipBlockIdx_x, 0, 0, 0, 0x3fff, 0x0);
         W_CMD_R(&fim_ctr[addr + offset], fim_to_hab + hipThreadIdx_x * 16);
     }
     B_CMD(0);
 
     if (hipThreadIdx_x < 4) {
         /* change HAB mode to SB mode */
-        addr = addr_gen(hipBlockIdx_x, 0, 0, hipThreadIdx_x / 2, (0x2fff >> 1), 0x1f);
+        addr = addr_gen(hipBlockIdx_x, 0, 0, hipThreadIdx_x / 2, 0x2fff, 0x1f);
         W_CMD(&fim_ctr[addr + offset]);
         B_CMD(1);
 
@@ -271,7 +276,7 @@ int main(int argc, char* argv[])
     CHECK(hipMemcpy(mode1_d, mode1_h, Nbytes, hipMemcpyHostToDevice));
     CHECK(hipMemcpy(mode2_d, mode2_h, Nbytes, hipMemcpyHostToDevice));
 
-    const unsigned blocks = 64;
+    const unsigned blocks = 32;
     const unsigned threadsPerBlock = 16;
 
     hipLaunchKernelGGL(elt_add_fim, dim3(blocks), dim3(threadsPerBlock), 0, 0, (uint8_t*)fim_base, (uint8_t*)fim_base,
