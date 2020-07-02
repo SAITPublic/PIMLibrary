@@ -8,7 +8,6 @@
 #include "hip/hip_fp16.h"
 #include "utility/fim_dump.hpp"
 
-
 #define IN_LENGTH (256)
 #define OUT_LENGTH (4096)
 #define BATCH_DIM (2)

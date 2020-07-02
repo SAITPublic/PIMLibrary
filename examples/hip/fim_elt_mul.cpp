@@ -8,7 +8,6 @@
 #include "hip/hip_fp16.h"
 #include "utility/fim_dump.hpp"
 
-
 #define LENGTH (128 * 1024)
 
 using namespace std;

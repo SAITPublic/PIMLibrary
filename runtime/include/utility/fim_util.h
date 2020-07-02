@@ -7,7 +7,6 @@
 #include "hip/hip_runtime.h"
 #include "utility/fim_log.h"
 
-
 /* TODO: get VEGA20 scheme from device driver */
 FimBlockInfo vega20_fbi = {
     .fim_addr_map = AMDGPU_VEGA20,

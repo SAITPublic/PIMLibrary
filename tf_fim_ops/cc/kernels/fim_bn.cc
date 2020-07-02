@@ -41,7 +41,6 @@ void KernelLauncher(const void* inp_data, const int N, const int DIMS, const voi
 
     FimCopyMemory((void*)out_data, (void*)device_output->data, sizeof(half) * N, FIM_TO_HOST);
 
-
     /* __FIM_API__ call : Free memory */
     FimDestroyBo(host_input);
     FimDestroyBo(preloaded_fim_input);

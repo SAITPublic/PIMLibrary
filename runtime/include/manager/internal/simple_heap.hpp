@@ -48,10 +48,10 @@
 #ifndef _SIMPLE_HEAP_HPP_
 #define _SIMPLE_HEAP_HPP_
 
+#include <cmath>
 #include <deque>
 #include <map>
 #include <utility>
-#include <cmath>
 
 #include "utility/fim_log.h"
 #include "utils.hpp"

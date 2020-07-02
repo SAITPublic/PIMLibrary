@@ -70,8 +70,8 @@ int miopen_bn_1()
     hipMalloc(&out, sizeof(half) * LENGTH);
     // Todo check return value
     auto status = hipMemcpy(out, o_data, sizeof(half) * LENGTH, hipMemcpyDeviceToHost);
-    //std::cout << "out " << ((half *)out)[0] << std::endl;
-    //std::cout << "refout " << ((half *)ref_data)[0] << std::endl;
+    // std::cout << "out " << ((half *)out)[0] << std::endl;
+    // std::cout << "refout " << ((half *)ref_data)[0] << std::endl;
 
     miopenDestroyTensorDescriptor(i_desc);
     miopenDestroyTensorDescriptor(o_desc);
@@ -165,8 +165,8 @@ int miopen_bn_2()
     auto status = hipMemcpy(out, o_data, sizeof(half) * LENGTH, hipMemcpyDeviceToHost);
 
     // Todo : Test fails but tolerance is around 0.001
-    //std::cout << "out " << ((half *)out)[0] << std::endl;
-    //std::cout << "refout " << ((half *)ref_data)[0] << std::endl;
+    // std::cout << "out " << ((half *)out)[0] << std::endl;
+    // std::cout << "refout " << ((half *)ref_data)[0] << std::endl;
 
     miopenDestroyTensorDescriptor(i_desc);
     miopenDestroyTensorDescriptor(o_desc);
