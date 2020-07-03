@@ -233,8 +233,6 @@ int FimExecutor::execute_gemv(FimBo* output, FimBo* operand0, FimBo* operand1)
     int out_size = weight->bshape.h;
     int num_batch = input->bshape.n;
 
-    std::cout << "in " << in_size << " out " << out_size << " " << std::endl;
-
     FIM_PROFILE_TICK(CreateCRFBin);
     int lc = (get_loop_counter(OP_GEMV, in_size * sizeof(half)) + 1) / 8;
     int crf_lut_offset = (int)OP_GEMV * max_crf_lut_size_ * max_crf_size_ + lc * max_crf_size_;
