@@ -1,8 +1,14 @@
+
 #include <stdio.h>
 #include <iostream>
 #include "hip/hip_runtime.h"
 
 extern "C" uint64_t fmm_map_fim(uint32_t, uint32_t, uint64_t);
+
+#define FIM_RESERVED_8GB  (0x200000000)
+#define FIM_RESERVED_16GB (0x400000000)
+#define CHANNEL (32)
+#define CH_BIT (5)
 
 #define CHECK(cmd)                                                                                              \
     {                                                                                                           \
@@ -62,7 +68,7 @@ __device__ uint64_t addr_gen(unsigned int ch, unsigned int rank, unsigned int bg
     int num_bank_high_bit_ = 1;
     int num_bankgroup_bit_ = 2;
     int num_bank_low_bit_ = 1;
-    int num_chan_bit_ = 5;
+    int num_chan_bit_ = CH_BIT;
     int num_col_low_bit_ = 1;
     int num_offset_bit_ = 5;
 
@@ -104,18 +110,18 @@ __global__ void elt_add_fim(uint8_t* fim_data, uint8_t* fim_ctr, uint8_t* output
                             uint8_t* crf_binary, int crf_size, uint8_t* hab_to_fim, uint8_t* fim_to_hab)
 {
     int num_blk = 8;
-    int num_g = 8;
+    int num_grf = 8;
     int num_bg = 4;
     int num_ba = 16;
-    int num_ch = hipGridDim_x;
+    int num_ch = CHANNEL;
     int num_rank = 1;
     int num_col = 32;
-    int g_size = 32;
+    int grf_size = 32;
     int i_size = input_size / sizeof(uint16_t);
-    unsigned int start_row = (((uint64_t)fim_data - (uint64_t)fim_ctr) >> 19) & 0x3FFF;
+    unsigned int start_row = (((uint64_t)fim_data - (uint64_t)fim_ctr) >> 20) & 0x3FFF;
 
-    int num_p = num_blk * num_ch * num_g * (g_size / sizeof(short));
-    int num_t = i_size / num_p;
+    int num_parallel = num_blk * num_ch * num_grf * (grf_size / sizeof(short));
+    int num_tile = i_size / num_parallel;
 
     uint64_t addr;
     uint64_t offset = (hipThreadIdx_x % 2) * 0x10;
@@ -169,8 +175,8 @@ __global__ void elt_add_fim(uint8_t* fim_data, uint8_t* fim_ctr, uint8_t* output
     B_CMD(0);
 
     /* compute elt-add */
-    for (int tile_idx = 0; tile_idx < num_t; tile_idx++) {
-        unsigned int loc = tile_idx * num_g + (hipThreadIdx_x / 2);
+    for (int tile_idx = 0; tile_idx < num_tile; tile_idx++) {
+        unsigned int loc = tile_idx * num_grf + (hipThreadIdx_x / 2);
         unsigned int row = start_row + loc / num_col;
         unsigned int col = loc % num_col;
 
@@ -181,7 +187,7 @@ __global__ void elt_add_fim(uint8_t* fim_data, uint8_t* fim_ctr, uint8_t* output
         R_CMD(&fim_ctr[addr + 0x2000 + offset]);
         B_CMD(0);
 
-        unsigned int output_loc = loc + num_t * num_g;
+        unsigned int output_loc = loc + num_tile * num_grf;
         unsigned int output_row = start_row + output_loc / num_col;
         unsigned int output_col = output_loc % num_col;
 
@@ -244,7 +250,7 @@ int main(int argc, char* argv[])
       ARG2 : gpu-id
       ARG3 : block size
     ********************************************/
-    uint64_t bsize = 8589934592;  // 8 * 1024 * 1024 * 1024;
+    uint64_t bsize = FIM_RESERVED_16GB;
     fim_base = fmm_map_fim(1, gpu_id, bsize);
     std::cout << std::hex << "fimBaseAddr = " << fim_base << std::endl;
 
@@ -276,7 +282,7 @@ int main(int argc, char* argv[])
     CHECK(hipMemcpy(mode1_d, mode1_h, Nbytes, hipMemcpyHostToDevice));
     CHECK(hipMemcpy(mode2_d, mode2_h, Nbytes, hipMemcpyHostToDevice));
 
-    const unsigned blocks = 32;
+    const unsigned blocks = CHANNEL;
     const unsigned threadsPerBlock = 16;
 
     hipLaunchKernelGGL(elt_add_fim, dim3(blocks), dim3(threadsPerBlock), 0, 0, (uint8_t*)fim_base, (uint8_t*)fim_base,

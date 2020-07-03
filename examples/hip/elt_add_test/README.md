@@ -1,5 +1,8 @@
 # Eltwise-add Test
 
+This test app is implemented based on 32GB memory with 32 channel.
+You need to reserve 16GB memory size using ROCK patch before execute this test app.
+
 This is the test code for eltwise-add operation on FIM.
 The kernel includes just adding part of the fim-elt-add.
 It can be used to verify memory transactions are generated properly.
