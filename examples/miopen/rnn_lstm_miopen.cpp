@@ -7,9 +7,23 @@
 #include <memory>
 #include <utility>
 #include <vector>
+#include "half.hpp"
 
 #include "utility/fim_dump.hpp"
 #define LENGTH (64 * 1024)
+
+using half_float::half;
+
+inline float convertH2F(half h_val) { return half_float::detail::half2float<float>(h_val); }
+inline int compare_data_round_off(half* data_a, half* data_b, size_t size, double epsilon = 0.001)
+{
+    for (int i = 0; i < size; i++) {
+        if (!((abs(data_a[i]) - abs(data_b[i])) < (half)epsilon)) {
+            return -1;
+        }
+    }
+    return 0;
+}
 
 int miopen_rnn_lstm()
 {
@@ -166,7 +180,7 @@ int miopen_rnn_lstm()
     std::string test_vector_data = TEST_VECTORS_DATA;
     test_vector_data.append("/test_vectors/");
 
-    std::string output_lstm = test_vector_data + "dump/gemv/miopen_lstm.dat";
+    std::string output_lstm = test_vector_data + "load/gemv/miopen_lstm.dat";
 
     load_data(output_lstm.c_str(), reinterpret_cast<char *>(golden), sizeof(half) * out_sz);
     ret = compare_data_round_off(golden, out.data(), out_sz);
