@@ -201,6 +201,7 @@ if __name__ == '__main__':
     gen_bidirectional(True)
   if path.isfile(folder+'lstm_bidirectional_5_out.bin') == False:
     gen_bidirectional_5(True)
+
   tf_fim_ops.fim_init()
   tf.test.main()
   tf_fim_ops.fim_deinit()

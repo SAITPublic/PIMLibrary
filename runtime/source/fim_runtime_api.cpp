@@ -86,10 +86,16 @@ FimBo* FimCreateBo(int w, int h, int c, int n, FimPrecision precision, FimMemTyp
 
 FimBo* FimCreateBo(FimDesc* fim_desc, FimMemType mem_type, FimMemFlag mem_flag)
 {
-    DLOG(INFO) << "called";
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     FIM_PROFILE_TICK(CreateBo);
 
     int ret = 0;
+
+    if (fim_runtime == nullptr) {
+        DLOG(ERROR) << "FimRuntime is not initialized";
+        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+        return nullptr;
+    }
 
     FimBo* fim_bo = new FimBo;
     int type_size = (fim_desc->precision == FIM_FP16) ? 2 : 1;
@@ -102,11 +108,12 @@ FimBo* FimCreateBo(FimDesc* fim_desc, FimMemType mem_type, FimMemFlag mem_flag)
     ret = fim_runtime->alloc_memory(fim_bo);
     if (ret != 0) {
         DLOG(ERROR) << "Fail to alloc memory";
+        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
         return nullptr;
     }
-
     FIM_PROFILE_TOCK(CreateBo);
 
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return fim_bo;
 }
 
