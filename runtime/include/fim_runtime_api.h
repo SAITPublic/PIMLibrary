@@ -213,7 +213,7 @@ __FIM_API__ int FimCopyMemory(FimBo* dst, FimBo* src, FimMemCpyType cpy_type);
  *
  * @return success/failure
  */
-__FIM_API__ int FimExecuteAdd(FimBo* output, FimBo* operand0, FimBo* operand1);
+__FIM_API__ int FimExecuteAdd(FimBo* output, FimBo* operand0, FimBo* operand1, bool block = false);
 
 /**
  * @brief Execute add scalar operation on FIM
@@ -226,7 +226,7 @@ __FIM_API__ int FimExecuteAdd(FimBo* output, FimBo* operand0, FimBo* operand1);
  *
  * @return success/failure
  */
-__FIM_API__ int FimExecuteAdd(FimBo* output, void* scalar, FimBo* vector);
+__FIM_API__ int FimExecuteAdd(FimBo* output, void* scalar, FimBo* vector, bool block = false);
 
 /**
  * @brief Executes Mul vector operation in FIM
@@ -237,7 +237,7 @@ __FIM_API__ int FimExecuteAdd(FimBo* output, void* scalar, FimBo* vector);
  *
  * @return
  */
-__FIM_API__ int FimExecuteMul(FimBo* output, FimBo* operand0, FimBo* operand1);
+__FIM_API__ int FimExecuteMul(FimBo* output, FimBo* operand0, FimBo* operand1, bool block = false);
 
 /**
  * @brief Executes Mul Scalar operation in FIM
@@ -248,7 +248,7 @@ __FIM_API__ int FimExecuteMul(FimBo* output, FimBo* operand0, FimBo* operand1);
  *
  * @return success/failure
  */
-__FIM_API__ int FimExecuteMul(FimBo* output, void* scalar, FimBo* vector);
+__FIM_API__ int FimExecuteMul(FimBo* output, void* scalar, FimBo* vector, bool block = false);
 
 /**
  * @brief Executes FIM Relu operations
@@ -258,7 +258,7 @@ __FIM_API__ int FimExecuteMul(FimBo* output, void* scalar, FimBo* vector);
  *
  * @return success/failure
  */
-__FIM_API__ int FimExecuteRelu(FimBo* output, FimBo* fim_data);
+__FIM_API__ int FimExecuteRelu(FimBo* output, FimBo* fim_data, bool block = false);
 
 /**
  * @brief Executes FIM GEMV operation
@@ -273,7 +273,8 @@ __FIM_API__ int FimExecuteRelu(FimBo* output, FimBo* fim_data);
  *
  * @return success or failure
  */
-__FIM_API__ int FimExecuteGemv(FimBo* output, FimBo* operand0, FimBo* operand1);
+
+__FIM_API__ int FimExecuteGemv(FimBo* output, FimBo* operand0, FimBo* operand1, bool block = false);
 
 /**
  * @brief Executes FIM GEMV + Add operation
@@ -287,7 +288,7 @@ __FIM_API__ int FimExecuteGemv(FimBo* output, FimBo* operand0, FimBo* operand1);
  *
  * @return success or failure
  */
-__FIM_API__ int FimExecuteGemvAdd(FimBo* output, FimBo* operand0, FimBo* operand1);
+__FIM_API__ int FimExecuteGemvAdd(FimBo* output, FimBo* operand0, FimBo* operand1, bool block = false);
 
 /**
  * @brief Executes Batch normalization operation.
@@ -303,7 +304,16 @@ __FIM_API__ int FimExecuteGemvAdd(FimBo* output, FimBo* operand0, FimBo* operand
  * @return success/failure
  */
 __FIM_API__ int FimExecuteBN(FimBo* output, FimBo* fim_data, FimBo* beta, FimBo* gamma, FimBo* mean, FimBo* variance,
-                             double epsilon);
+                             double epsilon, bool block = false);
+
+/**
+* @brief Synchronization call for FIM commands
+*
+* This API blocks execution until all previously issues commands are completed
+*
+* @return
+*/
+__FIM_API__ int FimSynchronize();
 
 /**
  * @brief Execute Dummy operation in FIM

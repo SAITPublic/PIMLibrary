@@ -15,7 +15,6 @@ class FimRuntime
    public:
     FimRuntime(FimRuntimeType rtType, FimPrecision precision);
     virtual ~FimRuntime(void) {}
-
     int initialize(void);
     int deinitialize(void);
     int alloc_memory(void** ptr, size_t size, FimMemType mem_type);
@@ -28,13 +27,15 @@ class FimRuntime
     int copy_memory(void* dst, void* src, size_t size, FimMemCpyType cpy_type);
     int copy_memory(FimBo* dst, FimBo* src, FimMemCpyType cpy_type);
 
-    int execute_add(FimBo* output, FimBo* operand0, FimBo* operand1);
-    int execute_mul(FimBo* output, FimBo* operand0, FimBo* operand1);
-    int execute_relu(FimBo* output, FimBo* fim_data);
-    int execute_gemv(FimBo* output, FimBo* operand0, FimBo* operand1);
-    int execute_gemv_add(FimBo* output, FimBo* operand0, FimBo* operand1);
+    int execute_add(FimBo* output, FimBo* operand0, FimBo* operand1, bool block = false);
+    int execute_mul(FimBo* output, FimBo* operand0, FimBo* operand1, bool block = false);
+    int execute_relu(FimBo* output, FimBo* fim_data, bool block = false);
+    int execute_gemv(FimBo* output, FimBo* operand0, FimBo* operand1, bool block = false);
+    int execute_gemv_add(FimBo* output, FimBo* operand0, FimBo* operand1, bool block = false);
     int execute_bn(FimBo* output, FimBo* fim_data, FimBo* beta, FimBo* gamma, FimBo* mean, FimBo* variance,
-                   double epsilon);
+                   double epsilon, bool block = false);
+    int execute_sync();
+
     int execute_dummy(void);
     int insert_gemv_bundle(uint64_t w_addr, FimGemvBundle* fim_addr);
     FimGemvBundle* find_gemv_bundle(uint64_t w_addr);
