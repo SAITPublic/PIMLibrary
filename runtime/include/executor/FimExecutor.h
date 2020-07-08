@@ -29,6 +29,7 @@ class FimExecutor
     int execute_mul(FimBo* output, FimBo* operand0, FimBo* operand1);
     int execute_relu(FimBo* output, FimBo* fim_data);
     int execute_gemv(FimBo* output, FimBo* operand0, FimBo* operand1);
+    int execute_gemv_add(FimBo* output, FimBo* operand0, FimBo* operand1);
     int execute_bn(FimBo* output, FimBo* fim_data, FimBo* beta, FimBo* gamma, FimBo* mean, FimBo* variance,
                    double epsilon);
     int execute_dummy(void);

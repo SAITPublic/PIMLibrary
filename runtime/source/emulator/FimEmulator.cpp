@@ -110,6 +110,58 @@ int FimEmulator::execute_gemv(FimBo* output, FimBo* fim_data, FimMemTraceData* f
     return ret;
 }
 
+int FimEmulator::execute_gemv_add(FimBo* output, FimBo* fim_data, FimMemTraceData* fmtd32, int fmtd32_size,
+                                  FimOpType op_type, uint64_t fim_base_addr, uint8_t* temp_buf)
+{
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
+    int ret = 0;
+    int num_out_before_reduce = 0;
+    uint16_t* sim_output = nullptr;
+    int output_size_before_reduce = 0;
+
+    int out_dim = fim_data->bshape.h * output->bshape.n;
+    num_out_before_reduce = out_dim * fbi_.num_out_per_grf;
+    output_size_before_reduce = num_out_before_reduce * sizeof(uint16_t);
+    sim_output = new uint16_t[out_dim];
+
+#ifdef DEBUG_FIM
+    fim_sim_.initialize("../external_libs/include/dramsim2/ini/HBM2_samsung_2M_16B_x64.ini",
+                        "../external_libs/include/dramsim2/ini/system_hbm_vega20.ini", 256 * 64 * 2, 64, 1);
+#else
+    fim_sim_.initialize("/opt/rocm/include/dramsim2/ini/HBM2_samsung_2M_16B_x64.ini",
+                        "/opt/rocm/include/dramsim2/ini/system_hbm_vega20_gemv.ini", 256 * 64 * 2, 64, 1);
+#endif
+
+    uint64_t tmp_data_addr = reinterpret_cast<uint64_t>(temp_buf);
+    uint64_t fim_data_addr = reinterpret_cast<uint64_t>(fim_data->data);
+    uint64_t output_addr = reinterpret_cast<uint64_t>(output->data);
+
+    fim_sim_.alloc_burst(fim_data->size, output_size_before_reduce);
+    fim_sim_.preload_data_with_addr(fim_data_addr - fim_base_addr, fim_data->data, fim_data->size);
+    fim_sim_.execute_kernel((void*)fmtd32, fmtd32_size);
+    fim_sim_.read_result_gemv(tmp_data_addr - fim_base_addr, out_dim);
+    fim_sim_.get_reduced_result(sim_output, out_dim);
+/*
+    if (output->mem_type != MEM_TYPE_HOST) {
+        for (int i = 0; i < output->bshape.n; i++) {
+            for (int j = 0; j < fim_data->bshape_r.h; j++) {
+                ((half*)output->data)[i * fim_data->bshape_r.h + j] += ((half*)sim_output)[i * fim_data->bshape.h + j];
+            }
+        }
+    }
+*/
+    if (output->mem_type != MEM_TYPE_HOST) {
+        for (int i = 0; i < output->bshape.n; i++) {
+            hipMemcpy((half*)output->data + i * fim_data->bshape_r.h, (half*)sim_output + i * fim_data->bshape.h,
+                      fim_data->bshape_r.h * sizeof(half), hipMemcpyHostToDevice);
+        }
+    }
+
+    delete sim_output;
+
+    return ret;
+}
+
 int FimEmulator::execute_bn(FimBo* output, FimBo* fim_data, FimMemTraceData* fmtd32, int fmtd32_size)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";

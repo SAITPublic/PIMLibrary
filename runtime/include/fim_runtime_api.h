@@ -288,6 +288,9 @@ __FIM_API__ int FimExecuteGEMV(FimBo* output, FimBo* operand0, FimBo* operand1);
  *
  * @return success/failure
  */
+
+__FIM_API__ int FimExecuteGEMVAdd(FimBo* output, FimBo* operand0, FimBo* operand1);
+
 __FIM_API__ int FimExecuteBN(FimBo* output, FimBo* fim_data, FimBo* beta, FimBo* gamma, FimBo* mean, FimBo* variance,
                              double epsilon);
 
@@ -298,11 +301,11 @@ __FIM_API__ int FimExecuteBN(FimBo* output, FimBo* fim_data, FimBo* beta, FimBo*
  */
 __FIM_API__ int FimExecuteDummy(void);
 
-__FIM_API__ void* FimFindWeight(uint64_t w_addr);
+__FIM_API__ FimGemvBundle* FimCreateGemvBundle(FimBo* input, FimBo* weight);
 
-__FIM_API__ int FimInsertWeight(uint64_t w_addr, void* fim_addr);
+__FIM_API__ FimGemvBundle* FimFindGemvBundle(uint64_t w_addr);
 
-
+__FIM_API__ int FimInsertGemvBundle(uint64_t w_addr, FimGemvBundle* fim_addr);
 
 /**@}*/
 #endif /* _FIM_RUNTIME_API_H_ */

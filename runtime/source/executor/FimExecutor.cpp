@@ -278,6 +278,64 @@ int FimExecutor::execute_gemv(FimBo* output, FimBo* operand0, FimBo* operand1)
     return ret;
 }
 
+int FimExecutor::execute_gemv_add(FimBo* output, FimBo* operand0, FimBo* operand1)
+{
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
+    int ret = 0;
+    FimBo* input = operand0;
+    FimBo* weight = operand1;
+    unsigned blocks = 64;
+    unsigned threads_per_block = 16;
+
+    int in_size = weight->bshape.w;
+    int out_size = weight->bshape.h;
+    int num_batch = input->bshape.n;
+
+    FIM_PROFILE_TICK(CreateCRFBin);
+    int lc = (get_loop_counter(OP_GEMV, in_size * sizeof(half)) + 1) / 8;
+    int crf_lut_offset = (int)OP_GEMV * max_crf_lut_size_ * max_crf_size_ + lc * max_crf_size_;
+    int crf_size = h_crf_size_lut_[(int)OP_GEMV * max_crf_lut_size_ + lc];
+    FIM_PROFILE_TOCK(CreateCRFBin);
+
+    FIM_PROFILE_TICK(RunGemvKernel);
+#ifdef EMULATOR
+    for (int iter = 0; iter < 1; iter++) {
+#else
+    for (int iter = 0; iter < 100; iter++) {
+#endif
+        hipLaunchKernelGGL(gemv_fim_64cu_16th_fp16, dim3(blocks), dim3(threads_per_block), 0, 0,
+                           (uint8_t*)g_fim_base_addr /* fim control base */,
+                           (uint8_t*)weight->data /* fim weight base */,
+                           (uint8_t*)fim_gemv_tmp_buffer_, /* fim hw output buffer */
+                           (uint8_t*)input->data, (uint8_t*)output->data, in_size, num_batch, out_size,
+#ifdef EMULATOR
+                           (FimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_,
+#endif
+                           (uint8_t*)d_crf_bin_lut_ + crf_lut_offset, crf_size);
+    }
+    hipStreamSynchronize(NULL);
+    FIM_PROFILE_TOCK(RunGemvKernel);
+#ifdef EMULATOR
+    FIM_PROFILE_TICK(RunGemvEmulation);
+    hipMemcpy((void*)h_fmtd16_size_, (void*)d_fmtd16_size_, sizeof(int), hipMemcpyDeviceToHost);
+    hipMemcpy((void*)h_fmtd16_, (void*)d_fmtd16_, sizeof(FimMemTraceData) * max_fmtd_size_, hipMemcpyDeviceToHost);
+
+    for (size_t i = 1; i < blocks; i++) {
+        memcpy(&h_fmtd16_[i * h_fmtd16_size_[0]], &h_fmtd16_[i * fmtd_size_per_ch_],
+               h_fmtd16_size_[0] * sizeof(FimMemTraceData));
+    }
+    h_fmtd16_size_[0] *= blocks;
+
+    fim_emulator_->convert_mem_trace_from_16B_to_32B(h_fmtd32_, h_fmtd32_size_, h_fmtd16_, h_fmtd16_size_[0], OP_GEMV);
+    fim_emulator_->execute_gemv_add(output, weight, h_fmtd32_, h_fmtd32_size_[0], OP_GEMV, g_fim_base_addr,
+                                    fim_gemv_tmp_buffer_);
+    FIM_PROFILE_TOCK(RunGemvEmulation);
+#endif
+
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+    return ret;
+}
+
 int FimExecutor::execute_relu(FimBo* output, FimBo* fim_data)
 {
     DLOG(INFO) << "called";

@@ -29,6 +29,8 @@ class FimEmulator
     int execute_relu(FimBo* output, FimBo* fim_data, FimMemTraceData* fmtd32, int fmtd32_size, uint64_t fim_base_addr);
     int execute_gemv(FimBo* output, FimBo* fim_data, FimMemTraceData* fmtd32, int fmtd32_size, FimOpType op_type,
                      uint64_t fim_base_addr, uint8_t* temp_buf);
+    int execute_gemv_add(FimBo* output, FimBo* fim_data, FimMemTraceData* fmtd32, int fmtd32_size, FimOpType op_type,
+                         uint64_t fim_base_addr, uint8_t* temp_buf);
 
    private:
     FimBlockInfo fbi_;

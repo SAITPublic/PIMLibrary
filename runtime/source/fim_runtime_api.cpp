@@ -431,6 +431,23 @@ int FimExecuteGEMV(FimBo* output, FimBo* operand0, FimBo* operand1)
     return ret;
 }
 
+int FimExecuteGEMVAdd(FimBo* output, FimBo* operand0, FimBo* operand1)
+{
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
+    FIM_PROFILE_TICK(ExecuteGEMVAdd);
+    int ret = 0;
+
+    if (fim_runtime == nullptr) {
+        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+        return -1;
+    }
+    ret = fim_runtime->execute_gemv_add(output, operand0, operand1);
+    FIM_PROFILE_TOCK(ExecuteGEMVAdd);
+
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+    return ret;
+}
+
 int FimExecuteRelu(FimBo* output, FimBo* fim_data)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
@@ -482,25 +499,49 @@ int FimExecuteDummy(void)
     return ret;
 }
 
-void* FimFindWeight(uint64_t w_addr)
+FimGemvBundle* FimCreateGemvBundle(FimBo* input, FimBo* weight)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
-    FIM_PROFILE_TICK(FindWeight);
+    FIM_PROFILE_TICK(CreateGemvBundle);
 
-    void* addr = nullptr;
+    int ret = 0;
+
+    if (fim_runtime == nullptr) {
+        DLOG(ERROR) << "FimRuntime is not initialized";
+        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+        return nullptr;
+    }
+
+    FimGemvBundle* bundle = new FimGemvBundle;
+
+    bundle->in = input;
+    bundle->wei = weight;
+
+    FIM_PROFILE_TOCK(CreateGemvBundle);
+
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+    return bundle;
+}
+
+FimGemvBundle* FimFindGemvBundle(uint64_t w_addr)
+{
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
+    FIM_PROFILE_TICK(FindGemvBundle);
+
+    FimGemvBundle* addr = nullptr;
 
     if (fim_runtime == nullptr) {
         DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
         return addr;
     }
-    addr = fim_runtime->find_weight(w_addr);
-    FIM_PROFILE_TOCK(FindWeight);
+    addr = fim_runtime->find_gemv_bundle(w_addr);
+    FIM_PROFILE_TOCK(FindGemvBundle);
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return addr;
 }
 
-int FimInsertWeight(uint64_t w_addr, void* fim_addr)
+int FimInsertGemvBundle(uint64_t w_addr, FimGemvBundle* fim_addr)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     FIM_PROFILE_TICK(InsertWeight);
@@ -511,10 +552,9 @@ int FimInsertWeight(uint64_t w_addr, void* fim_addr)
         DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
         return -1;
     }
-    ret = fim_runtime->insert_weight(w_addr, fim_addr);
+    ret = fim_runtime->insert_gemv_bundle(w_addr, fim_addr);
     FIM_PROFILE_TOCK(InsertWeight);
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
-

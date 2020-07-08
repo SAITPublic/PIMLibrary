@@ -41,7 +41,11 @@ int FimRuntime::deinitialize(void)
     fim_executor_->deinitialize();
 
     for (auto it = weight_map_.begin(); it != weight_map_.end(); ++it) {
-        free_memory(it->second, MEM_TYPE_FIM);
+        free_memory(it->second->in, MEM_TYPE_DEVICE);
+        free_memory(it->second->wei, MEM_TYPE_FIM);
+        delete it->second->in;
+        delete it->second->wei;
+        delete it->second;
     }
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
@@ -178,6 +182,17 @@ int FimRuntime::execute_gemv(FimBo* output, FimBo* operand0, FimBo* operand1)
     return ret;
 }
 
+int FimRuntime::execute_gemv_add(FimBo* output, FimBo* operand0, FimBo* operand1)
+{
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
+    int ret = 0;
+
+    ret = fim_executor_->execute_gemv_add(output, operand0, operand1);
+
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+    return ret;
+}
+
 int FimRuntime::execute_relu(FimBo* output, FimBo* fim_data)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
@@ -212,12 +227,12 @@ int FimRuntime::execute_dummy(void)
     return ret;
 }
 
-void* FimRuntime::find_weight(uint64_t w_addr)
+FimGemvBundle* FimRuntime::find_gemv_bundle(uint64_t w_addr)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
-    void* addr = nullptr;
+    FimGemvBundle* addr = nullptr;
 
-    std::unordered_map<uint64_t, void*>::const_iterator found = weight_map_.find(w_addr);
+    std::unordered_map<uint64_t, FimGemvBundle*>::const_iterator found = weight_map_.find(w_addr);
     if (found != weight_map_.end()) {
         addr = found->second;
     }
@@ -226,12 +241,12 @@ void* FimRuntime::find_weight(uint64_t w_addr)
     return addr;
 }
 
-int FimRuntime::insert_weight(uint64_t w_addr, void *fim_addr)
+int FimRuntime::insert_gemv_bundle(uint64_t w_addr, FimGemvBundle* fim_addr)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
 
-    std::unordered_map<uint64_t, void*>::const_iterator found = weight_map_.find(w_addr);
+    std::unordered_map<uint64_t, FimGemvBundle*>::const_iterator found = weight_map_.find(w_addr);
     if (found == weight_map_.end()) {
         weight_map_.insert(std::make_pair(w_addr, fim_addr));
     }

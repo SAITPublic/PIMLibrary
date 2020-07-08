@@ -32,18 +32,19 @@ class FimRuntime
     int execute_mul(FimBo* output, FimBo* operand0, FimBo* operand1);
     int execute_relu(FimBo* output, FimBo* fim_data);
     int execute_gemv(FimBo* output, FimBo* operand0, FimBo* operand1);
+    int execute_gemv_add(FimBo* output, FimBo* operand0, FimBo* operand1);
     int execute_bn(FimBo* output, FimBo* fim_data, FimBo* beta, FimBo* gamma, FimBo* mean, FimBo* variance,
                    double epsilon);
     int execute_dummy(void);
-    int insert_weight(uint64_t w_addr, void* fim_addr);
-    void* find_weight(uint64_t w_addr);
+    int insert_gemv_bundle(uint64_t w_addr, FimGemvBundle* fim_addr);
+    FimGemvBundle* find_gemv_bundle(uint64_t w_addr);
 
    private:
     fim::runtime::manager::FimManager* fim_manager_;
     fim::runtime::executor::FimExecutor* fim_executor_;
     FimRuntimeType rt_type_;
     FimPrecision precision_;
-    std::unordered_map<uint64_t, void*> weight_map_;
+    std::unordered_map<uint64_t, FimGemvBundle*> weight_map_;
 };
 
 } /* namespace runtime */
