@@ -18,9 +18,8 @@ typedef struct __TraceDataBst {
     char cmd;
 } TraceDataBst;
 
-class FimSimulator
-{
-   public:
+class FimSimulator {
+public:
     FimSimulator();
     ~FimSimulator();
     void initialize(const string& device_ini_file_name, const string& system_ini_file_name, size_t megs_of_memory,
@@ -30,29 +29,29 @@ class FimSimulator
     void execute_kernel(void* trace_data, size_t num_trace);
     void execute_kernel_bn(void* trace_data, size_t num_trace, int num_batch, int num_ch, int num_width);
     void alloc_burst(size_t preload_size, size_t output_size);
-    void get_uint16_result(uint16_t* output_data, size_t num_data);
     void read_result(uint64_t addr, size_t data_size);
     void read_result_gemv(uint64_t addr, size_t data_dim);
-    void run();
+    void get_uint16_result(uint16_t* output_data, size_t num_data);
+    void get_reduced_result(uint16_t* output_data, size_t num_data);
+    void get_add_result(uint16_t* output_data, size_t num_data, void* gemm_data);
     void compare_result_arr(uint16_t* test_output, size_t num_data, NumpyBurstType* output_npbst);
-
-    // function for test
+    void run();
+    
+    //function for test 
     void vector_to_arr(vector<MemTraceData>& vec_trace_data, MemTraceData* trace_data);
     void set_data_for_eltwise(NumpyBurstType* input0, NumpyBurstType* input1, uint16_t* test_input);
     void set_data_for_bn(NumpyBurstType* input0, uint16_t* test_input);
     void compare_result(size_t num_data, NumpyBurstType* output_npbst);
     void read_memory_trace(const string& file_name, vector<MemTraceData>& vec_trace_data);
     void create_tv_for_gemv_test(NumpyBurstType* weight_npbst, uint16_t* test_weight);
-    void get_reduced_result(uint16_t* output_data, size_t num_data);
-
-   private:
+private:
     void convert_arr_to_burst(void* data, size_t data_size, BurstType* bst);
     void push_trace(vector<TraceDataBst>* trace_bst);
     void push_trace_bn(vector<TraceDataBst>* trace_bst, int num_batch, int num_ch, int num_width);
     void convert_to_burst_trace(void* trace_data, vector<TraceDataBst>* trace_bst, size_t num_trace);
 
-   private:
-    shared_ptr<FIMController> fim_controller_;  // for test
+private:
+    shared_ptr<FIMController> fim_controller_;
     shared_ptr<MultiChannelMemorySystem> mem_;
 
     BurstType* preload_burst_;
@@ -61,4 +60,7 @@ class FimSimulator
     size_t cycle_;
 };
 
+
 #endif
+
+

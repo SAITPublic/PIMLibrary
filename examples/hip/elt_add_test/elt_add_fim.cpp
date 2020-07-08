@@ -5,7 +5,7 @@
 
 extern "C" uint64_t fmm_map_fim(uint32_t, uint32_t, uint64_t);
 
-#define FIM_RESERVED_8GB  (0x200000000)
+#define FIM_RESERVED_8GB (0x200000000)
 #define FIM_RESERVED_16GB (0x400000000)
 #define CHANNEL (32)
 #define CH_BIT (5)
@@ -55,11 +55,10 @@ __device__ inline unsigned int mask_by_bit(unsigned int value, int start, int en
     return value & ((1 << length) - 1);
 }
 
-
-// 32CH, 16GB address map 
-// rank 1b | row 14b | col(msb) 3b | ba(msb) 1b | bg 2b | ba(lsb) 1b | chan(msb) 4b | col(lsb) 1b | chan[0] 1b | col(lsb) 1b | col(bst) 5b
-// 32CH, 32GB address map(?) 
-// rank 2b | row 14b | col(msb) 3b | ba(msb) 1b | bg 2b | ba(lsb) 1b | chan(msb) 4b | col(lsb) 1b | chan[0] 1b | col(lsb) 1b | col(bst) 5b
+// 32CH, 16GB address map
+// rank 1b | row 14b | col(msb) 3b | ba(msb) 1b | bg 2b | ba(lsb) 1b | chan(msb) 4b | col(lsb) 1b | chan[0] 1b |
+// col(lsb) 1b | col(bst) 5b 32CH, 32GB address map(?) rank 2b | row 14b | col(msb) 3b | ba(msb) 1b | bg 2b | ba(lsb) 1b
+// | chan(msb) 4b | col(lsb) 1b | chan[0] 1b | col(lsb) 1b | col(bst) 5b
 __device__ uint64_t addr_gen(unsigned int ch, unsigned int rank, unsigned int bg, unsigned int ba, unsigned int row,
                              unsigned int col)
 {
