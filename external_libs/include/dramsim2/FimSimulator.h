@@ -33,7 +33,7 @@ public:
     void read_result_gemv(uint64_t addr, size_t data_dim);
     void get_uint16_result(uint16_t* output_data, size_t num_data);
     void get_reduced_result(uint16_t* output_data, size_t num_data);
-    void get_add_result(uint16_t* output_data, size_t num_data, void* gemm_data);
+    void eltwise_add(void* output_data, uint16_t* reduced_output, int real_dim, int padded_dim, int num_batch);
     void compare_result_arr(uint16_t* test_output, size_t num_data, NumpyBurstType* output_npbst);
     void run();
     
