@@ -77,7 +77,7 @@ int fim_gemv_batch(void)
     return ret;
 }
 
-int fim_gemv(void)
+int fim_gemv_256(void)
 {
     int ret = 0;
 
@@ -139,7 +139,7 @@ int fim_gemv(void)
     return ret;
 }
 
-int fim_gemv2(void)
+int fim_gemv_512(void)
 {
     int ret = 0;
 
@@ -201,7 +201,7 @@ int fim_gemv2(void)
     return ret;
 }
 
-int fim_gemv3(void)
+int fim_gemv_desc(void)
 {
     int ret = 0;
     int in_size = 800;
@@ -276,7 +276,7 @@ int fim_gemv3(void)
     return ret;
 }
 
-int fim_gemv4(void)
+int fim_gemv_desc_batch(void)
 {
     int ret = 0;
     int in_size = 800;
@@ -357,8 +357,92 @@ int fim_gemv4(void)
     return ret;
 }
 
-TEST(HIPIntegrationTest, FimGEMVBATCH) { EXPECT_TRUE(fim_gemv_batch() == 0); }
-TEST(HIPIntegrationTest, FimGEMV) { EXPECT_TRUE(fim_gemv() == 0); }
-TEST(HIPIntegrationTest, FimGEMV2) { EXPECT_TRUE(fim_gemv2() == 0); }
-TEST(HIPIntegrationTest, FimGEMV3) { EXPECT_TRUE(fim_gemv3() == 0); }
-TEST(HIPIntegrationTest, FimGEMV4) { EXPECT_TRUE(fim_gemv4() == 0); }
+int fim_gemv_lut(void)
+{
+    int ret = 0;
+    int in_size = 800;
+    int out_size = 3200;
+
+    /* __FIM_API__ call : Initialize FimRuntime */
+    FimInitialize(RT_TYPE_HIP, FIM_FP16);
+
+    FimExecuteDummy();
+
+    FimDesc* fim_desc = FimCreateDesc(1, 1, out_size, in_size, FIM_FP16, OP_GEMV);
+    /* __FIM_API__ call : Create FIM Buffer Object */
+    FimBo* host_input = FimCreateBo(fim_desc, MEM_TYPE_HOST, GEMV_INPUT);
+    FimBo* host_weight = FimCreateBo(fim_desc, MEM_TYPE_HOST, GEMV_WEIGHT);
+    FimBo* temp_weight = FimCreateBo(fim_desc, MEM_TYPE_HOST, GEMV_WEIGHT);
+    FimBo* host_reordered_weight = FimCreateBo(fim_desc, MEM_TYPE_HOST, GEMV_WEIGHT);
+    FimBo* device_input = FimCreateBo(fim_desc, MEM_TYPE_DEVICE, GEMV_INPUT);
+    FimBo* device_output = FimCreateBo(fim_desc, MEM_TYPE_DEVICE, GEMV_OUTPUT);
+    FimBo* preloaded_weight = FimCreateBo(fim_desc, MEM_TYPE_FIM, GEMV_WEIGHT);
+    FimBo* host_output = FimCreateBo(fim_desc, MEM_TYPE_HOST, GEMV_OUTPUT);
+    FimBo* golden_output = FimCreateBo(fim_desc, MEM_TYPE_HOST, GEMV_OUTPUT);
+
+    FimBo* dev_in;
+    FimBo* fim_weight;
+
+    /* Initialize the input, weight, output data */
+    std::string test_vector_data = TEST_VECTORS_DATA;
+    test_vector_data.append("/test_vectors/");
+
+    std::string input = test_vector_data + "load/gemv/gemv_input_1024x4096.dat";
+    std::string weight = test_vector_data + "load/gemv/gemv_weight_1024x4096.dat";
+    std::string output = test_vector_data + "load/gemv/gemv_output_1024x4096.dat";
+    std::string preload_weight = test_vector_data + "dump/gemv/gemv_preloaded_weight_1024x4096.dat";
+    std::string output_dump = test_vector_data + "dump/gemv/gemv_output_1024x4096.dat";
+
+    load_data(input.c_str(), (char*)host_input->data, host_input->size);
+    load_data(weight.c_str(), (char*)temp_weight->data, temp_weight->size);
+    load_data(output.c_str(), (char*)golden_output->data, out_size * sizeof(half));
+
+    for (int i = 0; i < fim_desc->bshape_r.h; i++) {
+        memcpy((half*)host_weight->data + i * fim_desc->bshape_r.w, (half*)temp_weight->data + i * fim_desc->bshape.w,
+               fim_desc->bshape_r.w * sizeof(half));
+    }
+
+    FimCopyMemory(device_input, host_input, HOST_TO_DEVICE);
+
+    /* __FIM_API__ call : Preload weight data on FIM memory */
+    FimConvertDataLayout(host_reordered_weight, host_weight, OP_GEMV);
+    FimCopyMemory(preloaded_weight, host_reordered_weight, HOST_TO_FIM);
+
+    FimInsertGemvBundle(reinterpret_cast<uint64_t>(host_weight->data), FimCreateGemvBundle(device_input, preloaded_weight));
+
+    FimGemvBundle* bundle = FimFindGemvBundle(reinterpret_cast<uint64_t>(host_weight->data));
+    dev_in = bundle->in;
+    fim_weight = bundle->wei;
+
+    /* __FIM_API__ call : Execute FIM kernel (GEMV) */
+    FimExecuteGEMV(device_output, dev_in, fim_weight);
+    FimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
+
+    dump_data(preload_weight.c_str(), (char*)preloaded_weight->data, preloaded_weight->size);
+    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
+    ret = compare_data((char*)golden_output->data, (char*)host_output->data, out_size * sizeof(half));
+
+    /* __FIM_API__ call : Destroy FIM Buffer Object */
+    FimDestroyBo(host_input);
+    FimDestroyBo(host_weight);
+    FimDestroyBo(temp_weight);
+    FimDestroyBo(host_output);
+    FimDestroyBo(device_input);
+    FimDestroyBo(device_output);
+    FimDestroyBo(preloaded_weight);
+    FimDestroyBo(host_reordered_weight);
+    FimDestroyBo(golden_output);
+    FimDestroyDesc(fim_desc);
+
+    /* __FIM_API__ call : Deinitialize FimRuntime */
+    FimDeinitialize();
+
+    return ret;
+}
+
+TEST(HIPIntegrationTest, FimGemvBatch) { EXPECT_TRUE(fim_gemv_batch() == 0); }
+TEST(HIPIntegrationTest, FimGemv256) { EXPECT_TRUE(fim_gemv_256() == 0); }
+TEST(HIPIntegrationTest, FimGemv512) { EXPECT_TRUE(fim_gemv_512() == 0); }
+TEST(HIPIntegrationTest, FimGemvDesc) { EXPECT_TRUE(fim_gemv_desc() == 0); }
+TEST(HIPIntegrationTest, FimGemvDescBatch) { EXPECT_TRUE(fim_gemv_desc_batch() == 0); }
+TEST(HIPIntegrationTest, FimGemvLut) { EXPECT_TRUE(fim_gemv_lut() == 0); }

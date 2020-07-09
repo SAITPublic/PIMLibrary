@@ -322,8 +322,7 @@ void align_shape(FimDesc* fim_desc, FimOpType op_type)
     if (op_type == OP_GEMV) {
         bs.w = 256 * ceil((float)bs.w / 256);
         bs.h = 4096 * ceil((float)bs.h / 4096);
-    }
-    else {
+    } else {
         bs.w = (128 * 1024) * ceil((float)bs.w / (128 * 1024));
     }
     fim_desc->bshape = bs;

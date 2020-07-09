@@ -249,8 +249,7 @@ int FimRuntime::insert_gemv_bundle(uint64_t w_addr, FimGemvBundle* fim_addr)
     std::unordered_map<uint64_t, FimGemvBundle*>::const_iterator found = weight_map_.find(w_addr);
     if (found == weight_map_.end()) {
         weight_map_.insert(std::make_pair(w_addr, fim_addr));
-    }
-    else {
+    } else {
         ret = -1;
     }
 

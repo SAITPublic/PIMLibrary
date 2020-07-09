@@ -18,8 +18,9 @@ typedef struct __TraceDataBst {
     char cmd;
 } TraceDataBst;
 
-class FimSimulator {
-public:
+class FimSimulator
+{
+   public:
     FimSimulator();
     ~FimSimulator();
     void initialize(const string& device_ini_file_name, const string& system_ini_file_name, size_t megs_of_memory,
@@ -36,21 +37,22 @@ public:
     void eltwise_add(void* output_data, uint16_t* reduced_output, int real_dim, int padded_dim, int num_batch);
     void compare_result_arr(uint16_t* test_output, size_t num_data, NumpyBurstType* output_npbst);
     void run();
-    
-    //function for test 
+
+    // function for test
     void vector_to_arr(vector<MemTraceData>& vec_trace_data, MemTraceData* trace_data);
     void set_data_for_eltwise(NumpyBurstType* input0, NumpyBurstType* input1, uint16_t* test_input);
     void set_data_for_bn(NumpyBurstType* input0, uint16_t* test_input);
     void compare_result(size_t num_data, NumpyBurstType* output_npbst);
     void read_memory_trace(const string& file_name, vector<MemTraceData>& vec_trace_data);
     void create_tv_for_gemv_test(NumpyBurstType* weight_npbst, uint16_t* test_weight);
-private:
+
+   private:
     void convert_arr_to_burst(void* data, size_t data_size, BurstType* bst);
     void push_trace(vector<TraceDataBst>* trace_bst);
     void push_trace_bn(vector<TraceDataBst>* trace_bst, int num_batch, int num_ch, int num_width);
     void convert_to_burst_trace(void* trace_data, vector<TraceDataBst>* trace_bst, size_t num_trace);
 
-private:
+   private:
     shared_ptr<FIMController> fim_controller_;
     shared_ptr<MultiChannelMemorySystem> mem_;
 
@@ -60,7 +62,4 @@ private:
     size_t cycle_;
 };
 
-
 #endif
-
-

@@ -141,21 +141,7 @@ int FimEmulator::execute_gemv_add(FimBo* output, FimBo* fim_data, FimMemTraceDat
     fim_sim_.execute_kernel((void*)fmtd32, fmtd32_size);
     fim_sim_.read_result_gemv(tmp_data_addr - fim_base_addr, out_dim);
     fim_sim_.get_reduced_result(sim_output, out_dim);
-/*
-    if (output->mem_type != MEM_TYPE_HOST) {
-        for (int i = 0; i < output->bshape.n; i++) {
-            for (int j = 0; j < fim_data->bshape_r.h; j++) {
-                ((half*)output->data)[i * fim_data->bshape_r.h + j] += ((half*)sim_output)[i * fim_data->bshape.h + j];
-            }
-        }
-    }
-*/
-    if (output->mem_type != MEM_TYPE_HOST) {
-        for (int i = 0; i < output->bshape.n; i++) {
-            hipMemcpy((half*)output->data + i * fim_data->bshape_r.h, (half*)sim_output + i * fim_data->bshape.h,
-                      fim_data->bshape_r.h * sizeof(half), hipMemcpyHostToDevice);
-        }
-    }
+    fim_sim_.eltwise_add(output->data, sim_output, fim_data->bshape_r.h, fim_data->bshape.h, output->bshape.n);
 
     delete sim_output;
 

@@ -276,6 +276,20 @@ __FIM_API__ int FimExecuteRelu(FimBo* output, FimBo* fim_data);
 __FIM_API__ int FimExecuteGEMV(FimBo* output, FimBo* operand0, FimBo* operand1);
 
 /**
+ * @brief Executes FIM GEMV + Add operation
+ *
+ * This API provides interface for FIM GEMV + Add operation.
+ * It performs output = output + fim_gemv_result
+ *
+ * @param output output buffer object of gemv
+ * @param operand0 input operand 0 ( weights). Should be of FIM Area
+ * @param operand1 vector input
+ *
+ * @return success or failure
+ */
+__FIM_API__ int FimExecuteGEMVAdd(FimBo* output, FimBo* operand0, FimBo* operand1);
+
+/**
  * @brief Executes Batch normalization operation.
  *
  * @param output output buffer object for BN operation
@@ -288,9 +302,6 @@ __FIM_API__ int FimExecuteGEMV(FimBo* output, FimBo* operand0, FimBo* operand1);
  *
  * @return success/failure
  */
-
-__FIM_API__ int FimExecuteGEMVAdd(FimBo* output, FimBo* operand0, FimBo* operand1);
-
 __FIM_API__ int FimExecuteBN(FimBo* output, FimBo* fim_data, FimBo* beta, FimBo* gamma, FimBo* mean, FimBo* variance,
                              double epsilon);
 
@@ -301,10 +312,39 @@ __FIM_API__ int FimExecuteBN(FimBo* output, FimBo* fim_data, FimBo* beta, FimBo*
  */
 __FIM_API__ int FimExecuteDummy(void);
 
+/**
+ * @brief Create Bundle used for gemv
+ *
+ * Contains input and weight addresses that are used several times for gemv operation
+ *
+ * @param input input buffer object for gemv
+ * @param weight weight buffer object for gemv
+ *
+ * @return Pointer to created gemv-bundle
+ */
 __FIM_API__ FimGemvBundle* FimCreateGemvBundle(FimBo* input, FimBo* weight);
 
+/**
+ * @brief Find proper gemv-bundle to use
+ *
+ * Finds a gemv-bundle that has weight and input memory slot to do gemv.
+ *
+ * @param w_addr weight address is searching key to find gemv-bundle
+ *
+ * @return Pointer to found gemv-bundle
+ */
 __FIM_API__ FimGemvBundle* FimFindGemvBundle(uint64_t w_addr);
 
+/**
+ * @brief Insert gemv-bundle to the map
+ *
+ * Insert gemv-bundle if there is no exsisting weight related to the given weight address.
+ *
+ * @param w_addr weight address is searching key to find gemv-bundle
+ * @param fim_addr pointer to gemv-bundle to be added on the map
+ *
+ * @return success or failure
+ */
 __FIM_API__ int FimInsertGemvBundle(uint64_t w_addr, FimGemvBundle* fim_addr);
 
 /**@}*/
