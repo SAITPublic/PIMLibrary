@@ -45,7 +45,7 @@ void KernelLauncher(const void* i_data, const void* w_data, const int num_batch,
 
     std::cout << "Calling FIMExecuteGEMV" << std::endl;
     /* __FIM_API__ call : Execute FIM kernel (GEMV) */
-    FimExecuteGEMV(device_output, device_input, preloaded_weight);
+    FimExecuteGemv(device_output, device_input, preloaded_weight);
 
     FimCopyMemory(o_data, device_output->data, sizeof(half) * num_batch * OUT_LENGTH, DEVICE_TO_HOST);
 

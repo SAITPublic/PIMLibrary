@@ -414,7 +414,7 @@ int FimExecuteMul(FimBo* output, void* scalar, FimBo* vector)
     return ret;
 }
 
-int FimExecuteGEMV(FimBo* output, FimBo* operand0, FimBo* operand1)
+int FimExecuteGemv(FimBo* output, FimBo* operand0, FimBo* operand1)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     FIM_PROFILE_TICK(ExecuteGEMV);
@@ -431,7 +431,7 @@ int FimExecuteGEMV(FimBo* output, FimBo* operand0, FimBo* operand1)
     return ret;
 }
 
-int FimExecuteGEMVAdd(FimBo* output, FimBo* operand0, FimBo* operand1)
+int FimExecuteGemvAdd(FimBo* output, FimBo* operand0, FimBo* operand1)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     FIM_PROFILE_TICK(ExecuteGEMVAdd);

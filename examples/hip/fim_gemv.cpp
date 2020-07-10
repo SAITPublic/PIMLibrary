@@ -53,7 +53,7 @@ int fim_gemv_batch(void)
     FimCopyMemory(preloaded_weight, host_reordered_weight, HOST_TO_DEVICE);
 
     /* __FIM_API__ call : Execute FIM kernel (GEMV) */
-    FimExecuteGEMV(device_output, device_input, preloaded_weight);
+    FimExecuteGemv(device_output, device_input, preloaded_weight);
 
     FimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
     dump_data(preload_weight.c_str(), (char*)preloaded_weight->data, preloaded_weight->size);
@@ -115,7 +115,7 @@ int fim_gemv_256(void)
     FimCopyMemory(preloaded_weight, host_reordered_weight, HOST_TO_DEVICE);
 
     /* __FIM_API__ call : Execute FIM kernel (GEMV) */
-    FimExecuteGEMV(device_output, device_input, preloaded_weight);
+    FimExecuteGemv(device_output, device_input, preloaded_weight);
 
     FimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
     dump_data(preload_weight.c_str(), (char*)preloaded_weight->data, preloaded_weight->size);
@@ -177,7 +177,7 @@ int fim_gemv_512(void)
     FimCopyMemory(preloaded_weight, host_reordered_weight, HOST_TO_DEVICE);
 
     /* __FIM_API__ call : Execute FIM kernel (GEMV) */
-    FimExecuteGEMV(device_output, device_input, preloaded_weight);
+    FimExecuteGemv(device_output, device_input, preloaded_weight);
 
     FimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
 
@@ -250,7 +250,7 @@ int fim_gemv_desc(void)
     FimCopyMemory(preloaded_weight, host_reordered_weight, HOST_TO_FIM);
 
     /* __FIM_API__ call : Execute FIM kernel (GEMV) */
-    FimExecuteGEMV(device_output, device_input, preloaded_weight);
+    FimExecuteGemv(device_output, device_input, preloaded_weight);
 
     FimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
 
@@ -330,7 +330,7 @@ int fim_gemv_desc_batch(void)
     FimCopyMemory(preloaded_weight, host_reordered_weight, HOST_TO_FIM);
 
     /* __FIM_API__ call : Execute FIM kernel (GEMV) */
-    FimExecuteGEMV(device_output, device_input, preloaded_weight);
+    FimExecuteGemv(device_output, device_input, preloaded_weight);
 
     FimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
 
@@ -415,7 +415,7 @@ int fim_gemv_lut(void)
     fim_weight = bundle->wei;
 
     /* __FIM_API__ call : Execute FIM kernel (GEMV) */
-    FimExecuteGEMV(device_output, dev_in, fim_weight);
+    FimExecuteGemv(device_output, dev_in, fim_weight);
     FimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
 
     dump_data(preload_weight.c_str(), (char*)preloaded_weight->data, preloaded_weight->size);
@@ -427,15 +427,13 @@ int fim_gemv_lut(void)
     FimDestroyBo(host_weight);
     FimDestroyBo(temp_weight);
     FimDestroyBo(host_output);
-    FimDestroyBo(device_input);
     FimDestroyBo(device_output);
-    FimDestroyBo(preloaded_weight);
     FimDestroyBo(host_reordered_weight);
     FimDestroyBo(golden_output);
     FimDestroyDesc(fim_desc);
 
     /* __FIM_API__ call : Deinitialize FimRuntime */
-    FimDeinitialize();
+    FimDeinitialize(); // device_input, preloaded_weight will be destroyed in FimDeinitialize()
 
     return ret;
 }

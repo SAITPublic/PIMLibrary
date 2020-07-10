@@ -273,7 +273,7 @@ __FIM_API__ int FimExecuteRelu(FimBo* output, FimBo* fim_data);
  *
  * @return success or failure
  */
-__FIM_API__ int FimExecuteGEMV(FimBo* output, FimBo* operand0, FimBo* operand1);
+__FIM_API__ int FimExecuteGemv(FimBo* output, FimBo* operand0, FimBo* operand1);
 
 /**
  * @brief Executes FIM GEMV + Add operation
@@ -287,7 +287,7 @@ __FIM_API__ int FimExecuteGEMV(FimBo* output, FimBo* operand0, FimBo* operand1);
  *
  * @return success or failure
  */
-__FIM_API__ int FimExecuteGEMVAdd(FimBo* output, FimBo* operand0, FimBo* operand1);
+__FIM_API__ int FimExecuteGemvAdd(FimBo* output, FimBo* operand0, FimBo* operand1);
 
 /**
  * @brief Executes Batch normalization operation.
