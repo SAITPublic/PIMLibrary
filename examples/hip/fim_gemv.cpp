@@ -408,7 +408,8 @@ int fim_gemv_lut(void)
     FimConvertDataLayout(host_reordered_weight, host_weight, OP_GEMV);
     FimCopyMemory(preloaded_weight, host_reordered_weight, HOST_TO_FIM);
 
-    FimInsertGemvBundle(reinterpret_cast<uint64_t>(host_weight->data), FimCreateGemvBundle(device_input, preloaded_weight));
+    FimInsertGemvBundle(reinterpret_cast<uint64_t>(host_weight->data),
+                        FimCreateGemvBundle(device_input, preloaded_weight));
 
     FimGemvBundle* bundle = FimFindGemvBundle(reinterpret_cast<uint64_t>(host_weight->data));
     dev_in = bundle->in;
@@ -433,7 +434,7 @@ int fim_gemv_lut(void)
     FimDestroyDesc(fim_desc);
 
     /* __FIM_API__ call : Deinitialize FimRuntime */
-    FimDeinitialize(); // device_input, preloaded_weight will be destroyed in FimDeinitialize()
+    FimDeinitialize();  // device_input, preloaded_weight will be destroyed in FimDeinitialize()
 
     return ret;
 }

@@ -240,21 +240,14 @@ int FimExecutor::execute_gemv(FimBo* output, FimBo* operand0, FimBo* operand1)
     FIM_PROFILE_TOCK(CreateCRFBin);
 
     FIM_PROFILE_TICK(RunGemvKernel);
+    hipLaunchKernelGGL(gemv_fim_64cu_16th_fp16, dim3(blocks), dim3(threads_per_block), 0, 0,
+                       (uint8_t*)g_fim_base_addr /* fim control base */, (uint8_t*)weight->data /* fim weight base */,
+                       (uint8_t*)fim_gemv_tmp_buffer_, /* fim hw output buffer */
+                       (uint8_t*)input->data, (uint8_t*)output->data, in_size, num_batch, out_size,
 #ifdef EMULATOR
-    for (int iter = 0; iter < 1; iter++) {
-#else
-    for (int iter = 0; iter < 100; iter++) {
+                       (FimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_,
 #endif
-        hipLaunchKernelGGL(gemv_fim_64cu_16th_fp16, dim3(blocks), dim3(threads_per_block), 0, 0,
-                           (uint8_t*)g_fim_base_addr /* fim control base */,
-                           (uint8_t*)weight->data /* fim weight base */,
-                           (uint8_t*)fim_gemv_tmp_buffer_, /* fim hw output buffer */
-                           (uint8_t*)input->data, (uint8_t*)output->data, in_size, num_batch, out_size,
-#ifdef EMULATOR
-                           (FimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_,
-#endif
-                           (uint8_t*)d_crf_bin_lut_ + crf_lut_offset, crf_size);
-    }
+                       (uint8_t*)d_crf_bin_lut_ + crf_lut_offset, crf_size);
     hipStreamSynchronize(NULL);
     FIM_PROFILE_TOCK(RunGemvKernel);
 #ifdef EMULATOR
@@ -298,21 +291,14 @@ int FimExecutor::execute_gemv_add(FimBo* output, FimBo* operand0, FimBo* operand
     FIM_PROFILE_TOCK(CreateCRFBin);
 
     FIM_PROFILE_TICK(RunGemvKernel);
+    hipLaunchKernelGGL(gemv_fim_64cu_16th_fp16, dim3(blocks), dim3(threads_per_block), 0, 0,
+                       (uint8_t*)g_fim_base_addr /* fim control base */, (uint8_t*)weight->data /* fim weight base */,
+                       (uint8_t*)fim_gemv_tmp_buffer_, /* fim hw output buffer */
+                       (uint8_t*)input->data, (uint8_t*)output->data, in_size, num_batch, out_size,
 #ifdef EMULATOR
-    for (int iter = 0; iter < 1; iter++) {
-#else
-    for (int iter = 0; iter < 100; iter++) {
+                       (FimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_,
 #endif
-        hipLaunchKernelGGL(gemv_fim_64cu_16th_fp16, dim3(blocks), dim3(threads_per_block), 0, 0,
-                           (uint8_t*)g_fim_base_addr /* fim control base */,
-                           (uint8_t*)weight->data /* fim weight base */,
-                           (uint8_t*)fim_gemv_tmp_buffer_, /* fim hw output buffer */
-                           (uint8_t*)input->data, (uint8_t*)output->data, in_size, num_batch, out_size,
-#ifdef EMULATOR
-                           (FimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_,
-#endif
-                           (uint8_t*)d_crf_bin_lut_ + crf_lut_offset, crf_size);
-    }
+                       (uint8_t*)d_crf_bin_lut_ + crf_lut_offset, crf_size);
     hipStreamSynchronize(NULL);
     FIM_PROFILE_TOCK(RunGemvKernel);
 #ifdef EMULATOR
