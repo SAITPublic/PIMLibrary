@@ -22,7 +22,7 @@ inline int compare_data_round_off(half* data_a, half* data_b, size_t size, doubl
     return 0;
 }
 
-int fim_bn_1(void)
+int fim_bn_1(bool block)
 {
     int ret = 0;
 
@@ -70,7 +70,8 @@ int fim_bn_1(void)
     FimConvertDataLayout(preloaded_fim_input, host_input, OP_BN);
 
     // /* __FIM_API__ call : Execute FIM kernel */
-    FimExecuteBN(device_output, preloaded_fim_input, host_beta, host_gamma, host_mean, host_variance, 1e-5);
+    FimExecuteBN(device_output, preloaded_fim_input, host_beta, host_gamma, host_mean, host_variance, 1e-5, block);
+    if (!block) FimSynchronize();
 
     FimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
 
@@ -95,4 +96,5 @@ int fim_bn_1(void)
 
     return ret;
 }
-TEST(HIPIntegrationTest, FimBN1) { EXPECT_TRUE(fim_bn_1() == 0); }
+TEST(HIPIntegrationTest, FimBN1Sync) { EXPECT_TRUE(fim_bn_1(true) == 0); }
+TEST(HIPIntegrationTest, FimBN1Async) { EXPECT_TRUE(fim_bn_1(false) == 0); }

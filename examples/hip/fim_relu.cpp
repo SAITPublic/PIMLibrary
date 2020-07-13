@@ -12,7 +12,7 @@
 
 using namespace std;
 
-int fim_relu_1(void)
+int fim_relu_1(bool block)
 {
     int ret = 0;
 
@@ -41,7 +41,8 @@ int fim_relu_1(void)
     FimCopyMemory(fim_input, host_input, HOST_TO_FIM);
 
     /* __FIM_API__ call : Execute FIM kernel */
-    FimExecuteRelu(device_output, fim_input);
+    FimExecuteRelu(device_output, fim_input, block);
+    if (!block) FimSynchronize();
 
     FimCopyMemory(host_output, device_output, FIM_TO_HOST);
 
@@ -62,7 +63,7 @@ int fim_relu_1(void)
     return ret;
 }
 
-int fim_relu_2(void)
+int fim_relu_2(bool block)
 {
     int ret = 0;
 
@@ -97,7 +98,8 @@ int fim_relu_2(void)
     FimCopyMemory(&fim_input, &host_input, HOST_TO_FIM);
 
     /* __FIM_API__ call : Execute FIM kernel */
-    FimExecuteRelu(&device_output, &fim_input);
+    FimExecuteRelu(&device_output, &fim_input, block);
+    if (!block) FimSynchronize();
 
     FimCopyMemory(&host_output, &device_output, FIM_TO_HOST);
 
@@ -118,7 +120,7 @@ int fim_relu_2(void)
     return ret;
 }
 
-int fim_relu_3(void)
+int fim_relu_3(bool block)
 {
     int ret = 0;
 
@@ -148,7 +150,8 @@ int fim_relu_3(void)
     FimCopyMemory(fim_input, host_input, HOST_TO_FIM);
 
     /* __FIM_API__ call : Execute FIM kernel */
-    FimExecuteRelu(device_output, fim_input);
+    FimExecuteRelu(device_output, fim_input, block);
+    if (!block) FimSynchronize();
 
     FimCopyMemory(host_output, device_output, FIM_TO_HOST);
 
@@ -169,6 +172,9 @@ int fim_relu_3(void)
     return ret;
 }
 
-TEST(HIPIntegrationTest, FimRelu1) { EXPECT_TRUE(fim_relu_1() == 0); }
-TEST(HIPIntegrationTest, FimRelu2) { EXPECT_TRUE(fim_relu_2() == 0); }
-TEST(HIPIntegrationTest, FimRelu3) { EXPECT_TRUE(fim_relu_3() == 0); }
+TEST(HIPIntegrationTest, FimRelu1Sync) { EXPECT_TRUE(fim_relu_1(true) == 0); }
+TEST(HIPIntegrationTest, FimRelu1Async) { EXPECT_TRUE(fim_relu_1(false) == 0); }
+TEST(HIPIntegrationTest, FimRelu2Sync) { EXPECT_TRUE(fim_relu_2(true) == 0); }
+TEST(HIPIntegrationTest, FimRelu2Async) { EXPECT_TRUE(fim_relu_2(false) == 0); }
+TEST(HIPIntegrationTest, FimRelu3Sync) { EXPECT_TRUE(fim_relu_3(true) == 0); }
+TEST(HIPIntegrationTest, FimRelu3Async) { EXPECT_TRUE(fim_relu_3(false) == 0); }

@@ -14,7 +14,7 @@
 
 using namespace std;
 
-int fim_gemv_batch(void)
+int fim_gemv_batch(bool block)
 {
     int ret = 0;
 
@@ -53,7 +53,9 @@ int fim_gemv_batch(void)
     FimCopyMemory(preloaded_weight, host_reordered_weight, HOST_TO_DEVICE);
 
     /* __FIM_API__ call : Execute FIM kernel (GEMV) */
-    FimExecuteGemv(device_output, device_input, preloaded_weight);
+    FimExecuteGemv(device_output, device_input, preloaded_weight, block);
+
+    if (!block) FimSynchronize();
 
     FimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
     dump_data(preload_weight.c_str(), (char*)preloaded_weight->data, preloaded_weight->size);
@@ -77,7 +79,7 @@ int fim_gemv_batch(void)
     return ret;
 }
 
-int fim_gemv_256(void)
+int fim_gemv_256(bool block)
 {
     int ret = 0;
 
@@ -115,7 +117,8 @@ int fim_gemv_256(void)
     FimCopyMemory(preloaded_weight, host_reordered_weight, HOST_TO_DEVICE);
 
     /* __FIM_API__ call : Execute FIM kernel (GEMV) */
-    FimExecuteGemv(device_output, device_input, preloaded_weight);
+    FimExecuteGemv(device_output, device_input, preloaded_weight, block);
+    if (!block) FimSynchronize();
 
     FimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
     dump_data(preload_weight.c_str(), (char*)preloaded_weight->data, preloaded_weight->size);
@@ -139,7 +142,7 @@ int fim_gemv_256(void)
     return ret;
 }
 
-int fim_gemv_512(void)
+int fim_gemv_512(bool block)
 {
     int ret = 0;
 
@@ -177,7 +180,8 @@ int fim_gemv_512(void)
     FimCopyMemory(preloaded_weight, host_reordered_weight, HOST_TO_DEVICE);
 
     /* __FIM_API__ call : Execute FIM kernel (GEMV) */
-    FimExecuteGemv(device_output, device_input, preloaded_weight);
+    FimExecuteGemv(device_output, device_input, preloaded_weight, block);
+    if (!block) FimSynchronize();
 
     FimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
 
@@ -201,7 +205,7 @@ int fim_gemv_512(void)
     return ret;
 }
 
-int fim_gemv_desc(void)
+int fim_gemv_desc(bool block)
 {
     int ret = 0;
     int in_size = 800;
@@ -250,7 +254,8 @@ int fim_gemv_desc(void)
     FimCopyMemory(preloaded_weight, host_reordered_weight, HOST_TO_FIM);
 
     /* __FIM_API__ call : Execute FIM kernel (GEMV) */
-    FimExecuteGemv(device_output, device_input, preloaded_weight);
+    FimExecuteGemv(device_output, device_input, preloaded_weight, block);
+    if (!block) FimSynchronize();
 
     FimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
 
@@ -276,7 +281,7 @@ int fim_gemv_desc(void)
     return ret;
 }
 
-int fim_gemv_desc_batch(void)
+int fim_gemv_desc_batch(bool block)
 {
     int ret = 0;
     int in_size = 800;
@@ -330,7 +335,8 @@ int fim_gemv_desc_batch(void)
     FimCopyMemory(preloaded_weight, host_reordered_weight, HOST_TO_FIM);
 
     /* __FIM_API__ call : Execute FIM kernel (GEMV) */
-    FimExecuteGemv(device_output, device_input, preloaded_weight);
+    FimExecuteGemv(device_output, device_input, preloaded_weight, block);
+    if (!block) FimSynchronize();
 
     FimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
 
@@ -357,7 +363,7 @@ int fim_gemv_desc_batch(void)
     return ret;
 }
 
-int fim_gemv_lut(void)
+int fim_gemv_lut(bool block)
 {
     int ret = 0;
     int in_size = 800;
@@ -416,7 +422,8 @@ int fim_gemv_lut(void)
     fim_weight = bundle->wei;
 
     /* __FIM_API__ call : Execute FIM kernel (GEMV) */
-    FimExecuteGemv(device_output, dev_in, fim_weight);
+    FimExecuteGemv(device_output, dev_in, fim_weight, block);
+    if (!block) FimSynchronize();
     FimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
 
     dump_data(preload_weight.c_str(), (char*)preloaded_weight->data, preloaded_weight->size);
@@ -439,9 +446,15 @@ int fim_gemv_lut(void)
     return ret;
 }
 
-TEST(HIPIntegrationTest, FimGemvBatch) { EXPECT_TRUE(fim_gemv_batch() == 0); }
-TEST(HIPIntegrationTest, FimGemv256) { EXPECT_TRUE(fim_gemv_256() == 0); }
-TEST(HIPIntegrationTest, FimGemv512) { EXPECT_TRUE(fim_gemv_512() == 0); }
-TEST(HIPIntegrationTest, FimGemvDesc) { EXPECT_TRUE(fim_gemv_desc() == 0); }
-TEST(HIPIntegrationTest, FimGemvDescBatch) { EXPECT_TRUE(fim_gemv_desc_batch() == 0); }
-TEST(HIPIntegrationTest, FimGemvLut) { EXPECT_TRUE(fim_gemv_lut() == 0); }
+TEST(HIPIntegrationTest, FimGemvBatchSync) { EXPECT_TRUE(fim_gemv_batch(true) == 0); }
+TEST(HIPIntegrationTest, FimGemvBatchAsync) { EXPECT_TRUE(fim_gemv_batch(false) == 0); }
+TEST(HIPIntegrationTest, FimGemv256Sync) { EXPECT_TRUE(fim_gemv_256(true) == 0); }
+TEST(HIPIntegrationTest, FimGemv256Async) { EXPECT_TRUE(fim_gemv_256(false) == 0); }
+TEST(HIPIntegrationTest, FimGemv512Sync) { EXPECT_TRUE(fim_gemv_512(true) == 0); }
+TEST(HIPIntegrationTest, FimGemv512Async) { EXPECT_TRUE(fim_gemv_512(false) == 0); }
+TEST(HIPIntegrationTest, FimGemvDescSync) { EXPECT_TRUE(fim_gemv_desc(true) == 0); }
+TEST(HIPIntegrationTest, FimGemvDescAsync) { EXPECT_TRUE(fim_gemv_desc(false) == 0); }
+TEST(HIPIntegrationTest, FimGemvDescBatchSync) { EXPECT_TRUE(fim_gemv_desc_batch(true) == 0); }
+TEST(HIPIntegrationTest, FimGemvDescBatchASync) { EXPECT_TRUE(fim_gemv_desc_batch(false) == 0); }
+TEST(HIPIntegrationTest, FimGemvLutSync) { EXPECT_TRUE(fim_gemv_lut(true) == 0); }
+TEST(HIPIntegrationTest, FimGemvLutAsync) { EXPECT_TRUE(fim_gemv_lut(false) == 0); }

@@ -12,7 +12,7 @@
 
 using namespace std;
 
-int fim_elt_mul_1(void)
+int fim_elt_mul_1(bool block)
 {
     int ret = 0;
 
@@ -45,7 +45,8 @@ int fim_elt_mul_1(void)
     FimCopyMemory(fim_input1, host_input1, HOST_TO_FIM);
 
     /* __FIM_API__ call : Execute FIM kernel (ELT_MUL) */
-    FimExecuteMul(device_output, fim_input0, fim_input1);
+    FimExecuteMul(device_output, fim_input0, fim_input1, block);
+    if (!block) FimSynchronize();
 
     FimCopyMemory(host_output, device_output, FIM_TO_HOST);
 
@@ -68,7 +69,7 @@ int fim_elt_mul_1(void)
     return ret;
 }
 
-int fim_elt_mul_2(void)
+int fim_elt_mul_2(bool block)
 {
     int ret = 0;
 
@@ -109,7 +110,8 @@ int fim_elt_mul_2(void)
     FimCopyMemory(&fim_input1, &host_input1, HOST_TO_FIM);
 
     /* __FIM_API__ call : Execute FIM kernel (ELT_MUL) */
-    FimExecuteMul(&device_output, &fim_input0, &fim_input1);
+    FimExecuteMul(&device_output, &fim_input0, &fim_input1, block);
+    if (!block) FimSynchronize();
 
     FimCopyMemory(&host_output, &device_output, FIM_TO_HOST);
 
@@ -132,7 +134,7 @@ int fim_elt_mul_2(void)
     return ret;
 }
 
-int fim_elt_mul_3(void)
+int fim_elt_mul_3(bool block)
 {
     int ret = 0;
 
@@ -165,7 +167,8 @@ int fim_elt_mul_3(void)
     FimCopyMemory(fim_input1, host_input1, HOST_TO_FIM);
 
     /* __FIM_API__ call : Execute FIM kernel (ELT_MUL) */
-    FimExecuteMul(device_output, fim_input0, fim_input1);
+    FimExecuteMul(device_output, fim_input0, fim_input1, block);
+    if (!block) FimSynchronize();
 
     FimCopyMemory(host_output, device_output, FIM_TO_HOST);
 
@@ -188,7 +191,7 @@ int fim_elt_mul_3(void)
     return ret;
 }
 
-int fim_elt_mul_4(void)
+int fim_elt_mul_4(bool block)
 {
     int ret = 0;
     int in_size = 128 * 768;
@@ -225,7 +228,8 @@ int fim_elt_mul_4(void)
     FimCopyMemory(fim_input1, host_input1, HOST_TO_FIM);
 
     /* __FIM_API__ call : Execute FIM kernel (ELT_MUL) */
-    FimExecuteMul(device_output, fim_input0, fim_input1);
+    FimExecuteMul(device_output, fim_input0, fim_input1, block);
+    if (!block) FimSynchronize();
 
     FimCopyMemory(host_output, device_output, FIM_TO_HOST);
 
@@ -249,7 +253,11 @@ int fim_elt_mul_4(void)
     return ret;
 }
 
-TEST(HIPIntegrationTest, FimEltMul1) { EXPECT_TRUE(fim_elt_mul_1() == 0); }
-TEST(HIPIntegrationTest, FimEltMul2) { EXPECT_TRUE(fim_elt_mul_2() == 0); }
-TEST(HIPIntegrationTest, FimEltMul3) { EXPECT_TRUE(fim_elt_mul_3() == 0); }
-TEST(HIPIntegrationTest, FimEltMul4) { EXPECT_TRUE(fim_elt_mul_4() == 0); }
+TEST(HIPIntegrationTest, FimEltMul1Sync) { EXPECT_TRUE(fim_elt_mul_1(true) == 0); }
+TEST(HIPIntegrationTest, FimEltMul1Async) { EXPECT_TRUE(fim_elt_mul_1(false) == 0); }
+TEST(HIPIntegrationTest, FimEltMul2Sync) { EXPECT_TRUE(fim_elt_mul_2(true) == 0); }
+TEST(HIPIntegrationTest, FimEltMul2Async) { EXPECT_TRUE(fim_elt_mul_2(false) == 0); }
+TEST(HIPIntegrationTest, FimEltMul3Sync) { EXPECT_TRUE(fim_elt_mul_3(true) == 0); }
+TEST(HIPIntegrationTest, FimEltMul3Async) { EXPECT_TRUE(fim_elt_mul_3(false) == 0); }
+TEST(HIPIntegrationTest, FimEltMul4Sync) { EXPECT_TRUE(fim_elt_mul_4(true) == 0); }
+TEST(HIPIntegrationTest, FimEltMul4Async) { EXPECT_TRUE(fim_elt_mul_4(false) == 0); }
