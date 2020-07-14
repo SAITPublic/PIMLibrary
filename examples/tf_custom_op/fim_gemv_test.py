@@ -54,7 +54,7 @@ class GemvTest(tf.test.TestCase):
     def testGemvCoverage(self):
         with self.test_session():
             minv = 0.5
-            maxv = 1.0
+            maxv = 1.0 
             batches = [1,4]
             sizes = [
                 (128, 768),
@@ -116,7 +116,9 @@ class GemvTest(tf.test.TestCase):
         t_output0 = tf.convert_to_tensor(output0, np.float16)
 
         a = tf.reshape(t_input0, [1, in_size])
-        w = tf.reshape(t_input1, [in_size, out_size])
+        # w = tf.reshape(t_input1, [in_size, out_size])
+        w = tf.reshape(t_input1, [out_size, in_size])
+        w = tf.transpose(w)
         o = tf.reshape(t_output0, [1, out_size])
 
         with self.test_session():
@@ -145,7 +147,9 @@ class GemvTest(tf.test.TestCase):
         t_output0 = tf.convert_to_tensor(output0, np.float16)
 
         a = tf.reshape(t_input0, [batch_size, in_size])
-        w = tf.reshape(t_input1, [in_size, out_size])
+        # w = tf.reshape(t_input1, [in_size, out_size])
+        w = tf.reshape(t_input1, [out_size, in_size])
+        w = tf.transpose(w)
         o = tf.reshape(t_output0, [batch_size, out_size])
 
         with self.test_session():
@@ -173,7 +177,9 @@ class GemvTest(tf.test.TestCase):
         t_output0 = tf.convert_to_tensor(output0, np.float16)
 
         a = tf.reshape(t_input0, [1, in_size])
-        w = tf.reshape(t_input1, [in_size, out_size])
+        # w = tf.reshape(t_input1, [in_size, out_size])
+        w = tf.reshape(t_input1, [out_size, in_size])
+        w = tf.transpose(w)
         o = tf.reshape(t_output0, [1, out_size])
 
         with self.test_session():
@@ -201,7 +207,9 @@ class GemvTest(tf.test.TestCase):
         t_output0 = tf.convert_to_tensor(output0, np.float16)
 
         a = tf.reshape(t_input0, [1, in_size])
-        w = tf.reshape(t_input1, [in_size, out_size])
+        # w = tf.reshape(t_input1, [in_size, out_size])
+        w = tf.reshape(t_input1, [out_size, in_size])
+        w = tf.transpose(w)
         o = tf.reshape(t_output0, [1, out_size])
 
         with self.test_session():
@@ -226,3 +234,4 @@ if __name__ == "__main__":
     tf_fim_ops.fim_init()
     tf.test.main()
     tf_fim_ops.fim_deinit()
+
