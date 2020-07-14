@@ -13,7 +13,6 @@ void KernelLauncher(const void* i_data, const void* w_data, const int num_batch,
 
     //    /* __FIM_API__ call : Initialize FimRuntime */
     //    FimInitialize(RT_TYPE_HIP, FIM_FP16);
-
     FimDesc* fim_desc = FimCreateDesc(num_batch, 1, OUT_LENGTH, IN_LENGTH, FIM_FP16, OP_GEMV);
     /* __FIM_API__ call : Create FIM Buffer Object */
     FimBo* host_input = FimCreateBo(fim_desc, MEM_TYPE_HOST, GEMV_INPUT);
@@ -29,7 +28,17 @@ void KernelLauncher(const void* i_data, const void* w_data, const int num_batch,
         memcpy(static_cast<half*>(host_input->data) + i * fim_desc->bshape.w,
                static_cast<const half*>(i_data) + i * IN_LENGTH, sizeof(half) * IN_LENGTH);
     }
-    FimCopyMemory((void*)host_weight->data, (void*)w_data, sizeof(half) * IN_LENGTH * OUT_LENGTH, HOST_TO_HOST);
+
+    // Old ver. FimCopyMemory from tensor weight to Fimbo structure
+    // FimCopyMemory((void*)host_weight->data, (void*)w_data, sizeof(half) * IN_LENGTH * OUT_LENGTH, HOST_TO_HOST);
+
+    // Transpose the weight matrix for FIM spec.
+    for(int i=0 ; i<IN_LENGTH ; i++) {
+        for(int j=0 ; j<OUT_LENGTH ; j++) {
+             memcpy( static_cast<half*>(host_weight->data) + ( j*IN_LENGTH + i ), static_cast<const half*>(w_data) + ( i*OUT_LENGTH + j), sizeof(half));
+        }
+    }
+
 
     /* Initialize the input, weight, output data */
     FimCopyMemory(device_input, host_input, HOST_TO_DEVICE);
@@ -84,8 +93,8 @@ class FimGemvOp : public OpKernel
         auto reorder = input_tensor2.flat<int32>();
 
         std::cout << "Input Num batches : " << num_batch << std::endl;
-        std::cout << "Weight Num rows : " << num_rows << std::endl;
-        std::cout << "Weight Num cols : " << num_cols << std::endl;
+        std::cout << "Weight Num inputs : " << num_rows << std::endl;
+        std::cout << "Weight Num outputs : " << num_cols << std::endl;
 
         // Create an output tensor
         Tensor* output_tensor = NULL;
@@ -96,6 +105,7 @@ class FimGemvOp : public OpKernel
         auto output = output_tensor->flat<Eigen::half>();
 
         // Call kernel
+	// num_rows(input) and num_cols(output) should be input like this
         KernelLauncher(input.data(), input1.data(), num_batch, num_rows, num_cols, output.data(), reorder.data()[0]);
     }
 };
