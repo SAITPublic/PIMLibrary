@@ -355,7 +355,7 @@ __FIM_API__ FimGemvBundle* FimFindGemvBundle(uint64_t w_addr);
  *
  * @return success or failure
  */
-__FIM_API__ int FimInsertGemvBundle(uint64_t w_addr, FimGemvBundle* fim_addr);
+__FIM_API__ int FimInsertGemvBundle(uint64_t w_addr, FimGemvBundle* bundle);
 
 /**@}*/
 #endif /* _FIM_RUNTIME_API_H_ */

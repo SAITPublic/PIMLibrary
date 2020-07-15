@@ -37,7 +37,7 @@ class FimRuntime
     int execute_sync();
 
     int execute_dummy(void);
-    int insert_gemv_bundle(uint64_t w_addr, FimGemvBundle* fim_addr);
+    int insert_gemv_bundle(uint64_t w_addr, FimGemvBundle* bundle);
     FimGemvBundle* find_gemv_bundle(uint64_t w_addr);
 
    private:

@@ -37,16 +37,14 @@ int FimRuntime::deinitialize(void)
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
 
-    fim_manager_->deinitialize();
-    fim_executor_->deinitialize();
-
     for (auto it = weight_map_.begin(); it != weight_map_.end(); ++it) {
-        free_memory(it->second->in, MEM_TYPE_DEVICE);
-        free_memory(it->second->wei, MEM_TYPE_FIM);
-        delete it->second->in;
-        delete it->second->wei;
+        free_memory(it->second->in);
+        free_memory(it->second->wei);
         delete it->second;
     }
+
+    fim_manager_->deinitialize();
+    fim_executor_->deinitialize();
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
@@ -252,14 +250,14 @@ FimGemvBundle* FimRuntime::find_gemv_bundle(uint64_t w_addr)
     return addr;
 }
 
-int FimRuntime::insert_gemv_bundle(uint64_t w_addr, FimGemvBundle* fim_addr)
+int FimRuntime::insert_gemv_bundle(uint64_t w_addr, FimGemvBundle* bundle)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
 
     std::unordered_map<uint64_t, FimGemvBundle*>::const_iterator found = weight_map_.find(w_addr);
     if (found == weight_map_.end()) {
-        weight_map_.insert(std::make_pair(w_addr, fim_addr));
+        weight_map_.insert(std::make_pair(w_addr, bundle));
     } else {
         ret = -1;
     }
