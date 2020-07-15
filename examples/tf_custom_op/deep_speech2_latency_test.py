@@ -27,6 +27,7 @@ from tensorflow.keras import Model
 tf.keras.backend.set_floatx('float16')
 initializer = tf.constant_initializer(value=0.1)
 profile_layer = True
+SEED = 1234
 
 # Supported rnn cells.
 SUPPORTED_RNN_LAYERS = {
@@ -160,6 +161,7 @@ class rnn_layer(tf.keras.layers.Layer):
             self.dir_layer = tf.keras.layers.RNN(self.fw_rnn)
 
     def call(self, inputs, training):
+        print('Rnn called')
         if self.is_batch_norm:
             inputs = batch_norm(self.float_type)(inputs, training)
 
@@ -203,17 +205,16 @@ class DeepSpeech2(tf.keras.Model):
             21, 11), strides=(2, 1), layer_id=2, dtype=self.float_type)
         self.rshape = tf.keras.layers.Reshape((-1, 81*_CONV_FILTERS))
         self.rnn_cell = SUPPORTED_RNNS[self.rnn_type]
-        self.rnn_layers = []
         self.lstm = tf.keras.Sequential()
         for layer_counter in xrange(self.num_rnn_layers):
             # No batch normalization on the first layer.
             is_batch_norm = (layer_counter != 0)
+            #is_batch_norm = False
             rnn_lyr = rnn_layer(rnn_type=self.rnn_type, rnn_hidden_size=self.rnn_hidden_size,
                                 layer_id=layer_counter + 1, is_batch_norm=is_batch_norm, is_bidirectional=self.is_bidirectional, dtype=self.float_type)
 #            self.fw_rnn = tf.keras.layers.LSTM(units= rnn_hidden_size, name="rnn_fw_{}".format(layer_counter),return_sequences=True)
 #            self.bw_rnn = tf.keras.layers.LSTM(units= rnn_hidden_size, name="rnn_bw_{}".format(layer_counter),go_backwards=True, return_sequences=True)
 #            rnn_lyr = tf.keras.layers.Bidirectional(self.fw_rnn, backward_layer=self.bw_rnn)
-            self.rnn_layers.append(rnn_lyr)
             self.lstm.add(rnn_lyr)
 
         self.bnorm = batch_norm(dtype=self.float_type)
@@ -229,7 +230,7 @@ class DeepSpeech2(tf.keras.Model):
 
         end = datetime.datetime.now()
         duration = end - start
-        print('Conv Durations', duration)
+        print('Conv Duration', duration)
 
         # output of conv_layer2 with the shape of
         # [batch_size (N), times (T), features (F), channels (C)].
@@ -253,46 +254,63 @@ class DeepSpeech2(tf.keras.Model):
         print('Fc+bnorm Duration', duration)
         return logits
 
-    #uncomment and use , if single rnn layers calls needed
-    def old__call__(self, inputs, training=False):
+def profile_ds2_eager(training=False):
 
-        start = datetime.datetime.now()
+     inputs = tf.random.uniform(shape=(4, 282, 161, 1), dtype=tf.float16)
 
-        value = self.conv_layer_one(inputs, training)
-        value = self.conv_layer_two(value, training)
+     conv_layer_one = conv_bn_layer(padding=(20, 5), filters=_CONV_FILTERS, kernel_size=(
+            41, 11), strides=(2, 2), layer_id=1, dtype=tf.float16)
+     conv_layer_two = conv_bn_layer(padding=(10, 5), filters=_CONV_FILTERS, kernel_size=(
+            21, 11), strides=(2, 1), layer_id=2, dtype=tf.float16)
 
-        end = datetime.datetime.now()
-        duration = end - start
-        print('Conv Durations', duration)
+     rshape = tf.keras.layers.Reshape((-1, 81*_CONV_FILTERS))
+     bn = tf.keras.layers.BatchNormalization(
+            momentum=_BATCH_NORM_DECAY, epsilon=_BATCH_NORM_EPSILON, fused=False, dtype=tf.float16)
 
-        # output of conv_layer2 with the shape of
-        # [batch_size (N), times (T), features (F), channels (C)].
-        # Convert the conv output to rnn input.
-        value = self.rshape(value)
-        # RNN layers.
+     lstm = tf.keras.Sequential()
+     lstm.add(tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(1600,
+                            kernel_initializer=tf.keras.initializers.RandomNormal(seed=SEED),
+                            recurrent_initializer=tf.keras.initializers.RandomNormal(seed=SEED),
+                            return_sequences=True,
+                            dtype='float16',
+                            trainable=False)))
+     for i in range(4):
+         lstm.add(bn)
+         lstm.add(tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(800,
+                            kernel_initializer=tf.keras.initializers.RandomNormal(seed=SEED),
+                            recurrent_initializer=tf.keras.initializers.RandomNormal(seed=SEED),
+                            return_sequences=True,
+                            dtype='float16',
+                            trainable=False)))
 
-        for layer_counter in xrange(self.num_rnn_layers):
-            start = datetime.datetime.now()
-            rnn_lyr = self.rnn_layers[layer_counter]
-            value = rnn_lyr(value, training)
+     bnorm = batch_norm(dtype=tf.float16)
+     dense = tf.keras.layers.Dense(
+            29, use_bias=False, dtype=tf.float16)
 
-            end = datetime.datetime.now()
-            duration = end - start
-            print('Rnn layer:', layer_counter, ' Duration: ', duration)
+     for i in range(5):
+       start = datetime.datetime.now()
+       value = conv_layer_one(inputs, training)
+       value = conv_layer_two(value, training)
+       end = datetime.datetime.now()
+       duration = end - start
+       print('Conv Duration:', duration)
 
-        start = datetime.datetime.now()
-        # FC layer with batch norm.
-        value = self.bnorm(value, training)
+       value = rshape(value)
+       start = datetime.datetime.now()
+       whole_seq_out = lstm(value,training=False)
+       end = datetime.datetime.now()
+       duration = end - start
+       print('Lstm Duration:', duration)
 
-        logits = self.dense(value)
+       start = datetime.datetime.now()
+       value = bnorm(value, training)
+       logits = dense(value)
+       end = datetime.datetime.now()
+       duration = end - start
+       print('Fc+bnorm Duration:', duration)
+       return logits
 
-        end = datetime.datetime.now()
-        duration = end - start
-        print('Fc+bnorm Durations', duration)
-        return logits
-
-
-def profile():
+def profile_ds2():
     # if we change to float32 , make sure to changes keras_backend at top of file
     dtype = tf.float16
     num_rnn_layers = 5
@@ -317,5 +335,5 @@ def profile():
         duration = end - start
         print('Duration', duration)
 
-
-profile()
+#profile_ds2()
+profile_ds2_eager()
