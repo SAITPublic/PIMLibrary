@@ -33,14 +33,6 @@ set(FIM_INIT_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/cc/kernels/fim_init.cc
 set(FIM_DEINIT_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/cc/kernels/fim_deinit.cc
             ${CMAKE_CURRENT_SOURCE_DIR}/cc/ops/fim_deinit_ops.cc)
 
-set(MIOPEN_ELT_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/cc/kernels/miopen_eltwise.cc
-            ${CMAKE_CURRENT_SOURCE_DIR}/cc/ops/miopen_eltwise_ops.cc)
-
-set(MIOPEN_ACT_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/cc/kernels/miopen_activation.cc
-            ${CMAKE_CURRENT_SOURCE_DIR}/cc/ops/miopen_activation_ops.cc)
-
-set(MIOPEN_BN_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/cc/kernels/miopen_bn.cc
-            ${CMAKE_CURRENT_SOURCE_DIR}/cc/ops/miopen_bn_ops.cc)
 include_directories(/opt/rocm/include)
 
 add_library(fim_gemv SHARED ${FIM_GEMV_SOURCES})
@@ -61,15 +53,6 @@ target_link_libraries(fim_init FimRuntime ${TF_LFLAGS})
 add_library(fim_deinit SHARED ${FIM_DEINIT_SOURCES})
 target_link_libraries(fim_deinit FimRuntime ${TF_LFLAGS})
 
-add_library(miopen_eltwise SHARED ${MIOPEN_ELT_SOURCES})
-target_link_libraries(miopen_eltwise MIOpen ${TF_LFLAGS})
-
-add_library(miopen_activation SHARED ${MIOPEN_ACT_SOURCES})
-target_link_libraries(miopen_activation MIOpen ${TF_LFLAGS})
-
-add_library(miopen_bn SHARED ${MIOPEN_BN_SOURCES})
-target_link_libraries(miopen_bn MIOpen ${TF_LFLAGS})
-
 install ( TARGETS fim_gemv LIBRARY DESTINATION
            /opt/rocm/lib)
 install ( TARGETS fim_eltwise LIBRARY DESTINATION
@@ -82,13 +65,8 @@ install ( TARGETS fim_init LIBRARY DESTINATION
            /opt/rocm/lib)
 install ( TARGETS fim_deinit LIBRARY DESTINATION
            /opt/rocm/lib)
-install ( TARGETS miopen_eltwise LIBRARY DESTINATION
-           /opt/rocm/lib)
-install ( TARGETS miopen_activation LIBRARY DESTINATION
-           /opt/rocm/lib)
-install ( TARGETS miopen_bn LIBRARY DESTINATION
-           /opt/rocm/lib)
 
 if("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
 install ( DIRECTORY python DESTINATION /opt/rocm/lib/tf_fim_ops )
+install ( FILES ${CMAKE_CURRENT_SOURCE_DIR}/__init__.py  DESTINATION /opt/rocm/lib/tf_fim_ops)
 endif()
