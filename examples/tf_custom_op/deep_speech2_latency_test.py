@@ -254,11 +254,11 @@ class DeepSpeech2(tf.keras.Model):
         print('Fc+bnorm Duration', duration)
         return logits
 
-def profile_ds2_eager(training=False):
+def profile_ds2_eager(batch_size=1,training=False):
 
-     inputs = tf.random.uniform(shape=(4, 282, 161, 1), dtype=tf.float16)
+     inputs = tf.random.uniform(shape=(batch_size, 237, 171, 1), dtype=tf.float16)
 
-     conv_layer_one = conv_bn_layer(padding=(20, 5), filters=_CONV_FILTERS, kernel_size=(
+     conv_layer_one = conv_bn_layer(padding=(0, 0), filters=_CONV_FILTERS, kernel_size=(
             41, 11), strides=(2, 2), layer_id=1, dtype=tf.float16)
      conv_layer_two = conv_bn_layer(padding=(10, 5), filters=_CONV_FILTERS, kernel_size=(
             21, 11), strides=(2, 1), layer_id=2, dtype=tf.float16)
@@ -268,12 +268,13 @@ def profile_ds2_eager(training=False):
             momentum=_BATCH_NORM_DECAY, epsilon=_BATCH_NORM_EPSILON, fused=False, dtype=tf.float16)
 
      lstm = tf.keras.Sequential()
-     lstm.add(tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(1600,
+     lstm.add(tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(800,
                             kernel_initializer=tf.keras.initializers.RandomNormal(seed=SEED),
                             recurrent_initializer=tf.keras.initializers.RandomNormal(seed=SEED),
                             return_sequences=True,
                             dtype='float16',
                             trainable=False)))
+     #lstm.add(tf.keras.layers.Concatenate(axis=-1))
      for i in range(4):
          lstm.add(bn)
          lstm.add(tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(800,
@@ -283,21 +284,28 @@ def profile_ds2_eager(training=False):
                             dtype='float16',
                             trainable=False)))
 
+         #Need to check issue with concat,ie non functional interface  
+         #lstm.add(tf.keras.layers.Concatenate(axis=-1))
+
      bnorm = batch_norm(dtype=tf.float16)
      dense = tf.keras.layers.Dense(
             29, use_bias=False, dtype=tf.float16)
 
      for i in range(5):
        start = datetime.datetime.now()
+       print('input shape',inputs.shape)
        value = conv_layer_one(inputs, training)
+       print('conv1 output shape',value.shape)
        value = conv_layer_two(value, training)
+       print('conv2 output shape',value.shape)
        end = datetime.datetime.now()
        duration = end - start
        print('Conv Duration:', duration)
 
        value = rshape(value)
        start = datetime.datetime.now()
-       whole_seq_out = lstm(value,training=False)
+       value = lstm(value,training=False)
+       print('lstm output shape' , value.shape)
        end = datetime.datetime.now()
        duration = end - start
        print('Lstm Duration:', duration)
@@ -305,10 +313,10 @@ def profile_ds2_eager(training=False):
        start = datetime.datetime.now()
        value = bnorm(value, training)
        logits = dense(value)
+       print('Fc output shape' , logits.shape)
        end = datetime.datetime.now()
        duration = end - start
        print('Fc+bnorm Duration:', duration)
-       return logits
 
 def profile_ds2():
     # if we change to float32 , make sure to changes keras_backend at top of file
