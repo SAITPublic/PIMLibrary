@@ -387,6 +387,7 @@ int fim_gemv_lut(bool block)
     FimBo* golden_output = FimCreateBo(fim_desc, MEM_TYPE_HOST, GEMV_OUTPUT);
 
     FimBo* dev_in;
+    FimBo* dev_out;
     FimBo* fim_weight;
 
     /* Initialize the input, weight, output data */
@@ -415,14 +416,15 @@ int fim_gemv_lut(bool block)
     FimCopyMemory(preloaded_weight, host_reordered_weight, HOST_TO_FIM);
 
     FimInsertGemvBundle(reinterpret_cast<uint64_t>(host_weight->data),
-                        FimCreateGemvBundle(device_input, preloaded_weight));
+                        FimCreateGemvBundle(device_input, preloaded_weight, device_output));
 
     FimGemvBundle* bundle = FimFindGemvBundle(reinterpret_cast<uint64_t>(host_weight->data));
     dev_in = bundle->in;
+    dev_out = bundle->out;
     fim_weight = bundle->wei;
 
     /* __FIM_API__ call : Execute FIM kernel (GEMV) */
-    FimExecuteGemv(device_output, dev_in, fim_weight, block);
+    FimExecuteGemv(dev_out, dev_in, fim_weight, block);
     if (!block) FimSynchronize();
     FimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
 

@@ -128,6 +128,7 @@ typedef struct __FimMemTraceData {
 typedef struct __FimGemvBundle {
     FimBo* in;
     FimBo* wei;
+    FimBo* out;
 } FimGemvBundle;
 
 #endif /* _FIM_DATA_TYPE_H_ */

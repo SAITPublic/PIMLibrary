@@ -40,6 +40,7 @@ int FimRuntime::deinitialize(void)
     for (auto it = weight_map_.begin(); it != weight_map_.end(); ++it) {
         free_memory(it->second->in);
         free_memory(it->second->wei);
+        free_memory(it->second->out);
         delete it->second;
     }
 

@@ -329,10 +329,11 @@ __FIM_API__ int FimExecuteDummy(void);
  *
  * @param input input buffer object for gemv
  * @param weight weight buffer object for gemv
+ * @param output output buffer object for gemv
  *
  * @return Pointer to created gemv-bundle
  */
-__FIM_API__ FimGemvBundle* FimCreateGemvBundle(FimBo* input, FimBo* weight);
+__FIM_API__ FimGemvBundle* FimCreateGemvBundle(FimBo* input, FimBo* weight, FimBo* output);
 
 /**
  * @brief Find proper gemv-bundle to use

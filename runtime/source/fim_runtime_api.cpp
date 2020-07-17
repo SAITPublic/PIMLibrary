@@ -516,7 +516,7 @@ int FimExecuteDummy(void)
     return ret;
 }
 
-FimGemvBundle* FimCreateGemvBundle(FimBo* input, FimBo* weight)
+FimGemvBundle* FimCreateGemvBundle(FimBo* input, FimBo* weight, FimBo* output)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     FIM_PROFILE_TICK(CreateGemvBundle);
@@ -533,6 +533,7 @@ FimGemvBundle* FimCreateGemvBundle(FimBo* input, FimBo* weight)
 
     bundle->in = input;
     bundle->wei = weight;
+    bundle->out = output;
 
     FIM_PROFILE_TOCK(CreateGemvBundle);
 
