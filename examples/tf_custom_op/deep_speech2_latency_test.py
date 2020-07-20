@@ -23,6 +23,7 @@ from six.moves import xrange    # pylint: disable=redefined-builtin
 import tensorflow as tf
 from tensorflow.keras import Input
 from tensorflow.keras import Model
+import tf_fim_ops
 
 tf.keras.backend.set_floatx('float16')
 initializer = tf.constant_initializer(value=0.1)
@@ -343,5 +344,8 @@ def profile_ds2():
         duration = end - start
         print('Duration', duration)
 
+
+tf_fim_ops.fim_init()
 #profile_ds2()
 profile_ds2_eager()
+tf_fim_ops.fim_deinit()
