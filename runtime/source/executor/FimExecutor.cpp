@@ -20,11 +20,9 @@ FimExecutor::FimExecutor(FimRuntimeType rt_type, FimPrecision precision)
     : rt_type_(rt_type), precision_(precision), thread_cnt_(16)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called ";
-
+    get_fim_block_info(&fbi_);
 #ifdef EMULATOR
     fim_emulator_ = fim::runtime::emulator::FimEmulator::get_instance();
-
-    get_fim_block_info(&fbi_);
     fmtd_size_per_ch_ = 20000;
     max_block_size_ = fbi_.num_fim_chan;
     max_fmtd_size_ = fmtd_size_per_ch_ * max_block_size_;
