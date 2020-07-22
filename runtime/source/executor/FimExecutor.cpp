@@ -23,7 +23,7 @@ FimExecutor::FimExecutor(FimRuntimeType rt_type, FimPrecision precision)
     get_fim_block_info(&fbi_);
 #ifdef EMULATOR
     fim_emulator_ = fim::runtime::emulator::FimEmulator::get_instance();
-    fmtd_size_per_ch_ = 20000;
+    fmtd_size_per_ch_ = 50000;
     max_block_size_ = fbi_.num_fim_chan;
     max_fmtd_size_ = fmtd_size_per_ch_ * max_block_size_;
 #endif
@@ -53,7 +53,7 @@ int FimExecutor::initialize(void)
     fim_manager_ = fim::runtime::manager::FimManager::get_instance(rt_type_, precision_);
 
     max_crf_size_ = 128;
-    max_crf_lut_size_ = 10;
+    max_crf_lut_size_ = 300;
     int max_srf_size = 2048;
 
     hipMalloc((void**)&d_crf_bin_lut_, (int)OP_DUMMY * max_crf_lut_size_ * max_crf_size_);

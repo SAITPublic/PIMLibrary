@@ -85,7 +85,7 @@ int FimEmulator::execute_gemv(FimBo* output, FimBo* fim_data, FimMemTraceData* f
                         "../external_libs/include/dramsim2/ini/system_hbm_vega20.ini", 256 * 64 * 2, 64, 1);
 #else
     fim_sim_.initialize("/opt/rocm/include/dramsim2/ini/HBM2_samsung_2M_16B_x64.ini",
-                        "/opt/rocm/include/dramsim2/ini/system_hbm_vega20_gemv.ini", 256 * 64 * 2, 64, 1);
+                        "/opt/rocm/include/dramsim2/ini/system_hbm_vega20.ini", 256 * 64 * 2, 64, 1);
 #endif
 
     uint64_t tmp_data_addr = reinterpret_cast<uint64_t>(temp_buf);
@@ -129,7 +129,7 @@ int FimEmulator::execute_gemv_add(FimBo* output, FimBo* fim_data, FimMemTraceDat
                         "../external_libs/include/dramsim2/ini/system_hbm_vega20.ini", 256 * 64 * 2, 64, 1);
 #else
     fim_sim_.initialize("/opt/rocm/include/dramsim2/ini/HBM2_samsung_2M_16B_x64.ini",
-                        "/opt/rocm/include/dramsim2/ini/system_hbm_vega20_gemv.ini", 256 * 64 * 2, 64, 1);
+                        "/opt/rocm/include/dramsim2/ini/system_hbm_vega20.ini", 256 * 64 * 2, 64, 1);
 #endif
 
     uint64_t tmp_data_addr = reinterpret_cast<uint64_t>(temp_buf);

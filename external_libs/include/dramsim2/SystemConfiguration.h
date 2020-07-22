@@ -142,7 +142,7 @@ extern unsigned tRTPL;
 extern unsigned tRTPS;
 
 extern std::string SIM_TRACE_FILE;
-extern std::string MEM_TRACE_FILE;
+extern std::string MEM_TRACE_PATH;
 extern bool SHOW_SIM_OUTPUT;
 extern bool LOG_OUTPUT;
 extern bool MEM_TRACE_OUTPUT;
