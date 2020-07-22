@@ -482,7 +482,7 @@ int FimExecuteBN(FimBo* output, FimBo* fim_data, FimBo* beta, FimBo* gamma, FimB
     return ret;
 }
 
-int FimSynchronize()
+int FimSynchronize(void)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     FIM_PROFILE_TICK(ExecuteSynchronize);

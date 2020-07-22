@@ -307,13 +307,13 @@ __FIM_API__ int FimExecuteBN(FimBo* output, FimBo* fim_data, FimBo* beta, FimBo*
                              double epsilon, bool block = false);
 
 /**
-* @brief Synchronization call for FIM commands
-*
-* This API blocks execution until all previously issues commands are completed
-*
-* @return
-*/
-__FIM_API__ int FimSynchronize();
+ * @brief Synchronization call for FIM commands
+ *
+ * This API blocks execution until all previously issues commands are completed
+ *
+ * @return
+ */
+__FIM_API__ int FimSynchronize(void);
 
 /**
  * @brief Execute Dummy operation in FIM

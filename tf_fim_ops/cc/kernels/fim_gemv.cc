@@ -33,12 +33,12 @@ void KernelLauncher(const void* i_data, const void* w_data, const int num_batch,
     // FimCopyMemory((void*)host_weight->data, (void*)w_data, sizeof(half) * IN_LENGTH * OUT_LENGTH, HOST_TO_HOST);
 
     // Transpose the weight matrix for FIM spec.
-    for(int i=0 ; i<IN_LENGTH ; i++) {
-        for(int j=0 ; j<OUT_LENGTH ; j++) {
-             memcpy( static_cast<half*>(host_weight->data) + ( j*IN_LENGTH + i ), static_cast<const half*>(w_data) + ( i*OUT_LENGTH + j), sizeof(half));
+    for (int i = 0; i < IN_LENGTH; i++) {
+        for (int j = 0; j < OUT_LENGTH; j++) {
+            memcpy(static_cast<half*>(host_weight->data) + (j * IN_LENGTH + i),
+                   static_cast<const half*>(w_data) + (i * OUT_LENGTH + j), sizeof(half));
         }
     }
-
 
     /* Initialize the input, weight, output data */
     FimCopyMemory(device_input, host_input, HOST_TO_DEVICE);
@@ -105,7 +105,7 @@ class FimGemvOp : public OpKernel
         auto output = output_tensor->flat<Eigen::half>();
 
         // Call kernel
-	// num_rows(input) and num_cols(output) should be input like this
+        // num_rows(input) and num_cols(output) should be input like this
         KernelLauncher(input.data(), input1.data(), num_batch, num_rows, num_cols, output.data(), reorder.data()[0]);
     }
 };
