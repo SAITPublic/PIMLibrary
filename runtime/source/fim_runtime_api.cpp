@@ -111,6 +111,11 @@ FimBo* FimCreateBo(FimDesc* fim_desc, FimMemType mem_type, FimMemFlag mem_flag)
         DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
         return nullptr;
     }
+
+#ifdef EMULATOR
+    pad_data(fim_bo->data, fim_desc, mem_flag);
+#endif
+
     FIM_PROFILE_TOCK(CreateBo);
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
