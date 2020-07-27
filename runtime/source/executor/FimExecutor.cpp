@@ -226,7 +226,7 @@ int FimExecutor::execute_gemv(FimBo* output, FimBo* operand0, FimBo* operand1, b
     FimBo* input = operand0;
     FimBo* weight = operand1;
     unsigned blocks = 64;
-    unsigned threads_per_block = 16;
+    unsigned threads_per_block = 64;
 
     int in_size = weight->bshape.w;
     int out_size = weight->bshape.h;
@@ -282,7 +282,7 @@ int FimExecutor::execute_gemv_add(FimBo* output, FimBo* operand0, FimBo* operand
     FimBo* input = operand0;
     FimBo* weight = operand1;
     unsigned blocks = 64;
-    unsigned threads_per_block = 16;
+    unsigned threads_per_block = 64;
 
     int in_size = weight->bshape.w;
     int out_size = weight->bshape.h;
