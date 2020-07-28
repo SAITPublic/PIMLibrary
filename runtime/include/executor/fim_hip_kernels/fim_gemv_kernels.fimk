@@ -66,7 +66,7 @@ __global__ void gemv_fim_fp16(volatile uint8_t* __restrict__ fim_ctr, volatile u
                 compute_gemv_2bank(fim_ctr, fim_weight, fim_input, num_in_tile, num_out_tile, i, j, b, ODD_BANK,
                                    offset);
             }
-            compute_col = (j + b) * fbi->num_grf_B;
+            compute_col = b * num_out_tile * fbi->num_grf_B + j * fbi->num_grf_B;
             add_transaction_all(fim_gemv_tmp_buffer, true, 0, 1, 0, compute_col, null_bst, offset, fbi->num_grf);
             change_fim_mode(fim_ctr, HAB_FIM_MODE, HAB_MODE, gemv_hab_fim_to_hab, offset);
         }
@@ -154,7 +154,7 @@ __global__ void gemv_fim_64cu_2th_fp16(volatile uint8_t* __restrict__ fim_ctr,
                 compute_gemv_2bank_64cu_2th(fim_ctr, fim_weight, fim_input, num_in_tile, num_out_tile, i, j, b,
                                             ODD_BANK, offset);
             }
-            compute_col = (j + b) * fbi->num_grf_B;
+            compute_col = b * num_out_tile * fbi->num_grf_B + j * fbi->num_grf_B;
             add_transaction_all_64cu_2th(fim_gemv_tmp_buffer, true, 0, 1, 0, compute_col, null_bst, offset,
                                          fbi->num_grf);
             change_fim_mode_64cu_2th(fim_ctr, HAB_FIM_MODE, HAB_MODE, gemv_hab_fim_to_hab, offset);
@@ -243,7 +243,7 @@ __global__ void gemv_fim_1cu_2th_fp16(volatile uint8_t* __restrict__ fim_ctr, vo
                                            offset);
             }
 
-            compute_col = (j + b) * fbi->num_grf_B;
+            compute_col = b * num_out_tile * fbi->num_grf_B + j * fbi->num_grf_B;
             add_transaction_all_1cu_2th(fim_gemv_tmp_buffer, true, 0, 1, 0, compute_col, null_bst, offset,
                                         fbi->num_grf);
             change_fim_mode_1cu_2th(fim_ctr, HAB_FIM_MODE, HAB_MODE, gemv_hab_fim_to_hab, offset);
