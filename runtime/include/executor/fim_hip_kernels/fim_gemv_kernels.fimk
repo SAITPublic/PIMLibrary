@@ -8,20 +8,16 @@
 #define COMPUTE_GEMV 1
 #define CHANGE_HAB_SB 1
 #define PARK_OUT 1
-
-#ifndef EMULATOR
 #define INTEGRAL_SUM 1
-#endif
 
-__global__ void gemv_fim_64cu_16th_fp16(volatile uint8_t* __restrict__ fim_ctr,
-                                        volatile uint8_t* __restrict__ fim_weight,
-                                        volatile uint8_t* __restrict__ fim_gemv_tmp_buffer,
-                                        volatile uint8_t* __restrict__ fim_input, volatile uint8_t* __restrict__ output,
-                                        int input_dim, int batch_dim, int output_dim,
+__global__ void gemv_fim_fp16(volatile uint8_t* __restrict__ fim_ctr, volatile uint8_t* __restrict__ fim_weight,
+                              volatile uint8_t* __restrict__ fim_gemv_tmp_buffer,
+                              volatile uint8_t* __restrict__ fim_input, volatile uint8_t* __restrict__ output,
+                              int input_dim, int batch_dim, int output_dim,
 #ifdef EMULATOR
-                                        FimMemTraceData* fmtd16, int* frd_size, int mt_width,
+                              FimMemTraceData* fmtd16, int* frd_size, int mt_width,
 #endif
-                                        uint8_t* crf_binary, int crf_size)
+                              uint8_t* crf_binary, int crf_size)
 {
 #ifdef EMULATOR
     g_fba = (uint64_t)fim_ctr;
@@ -47,43 +43,42 @@ __global__ void gemv_fim_64cu_16th_fp16(volatile uint8_t* __restrict__ fim_ctr,
     /* Radeon7(VEGA20) memory is 16GB but our target is 32GB system */
     /* so program_crf and chagne_fim_mode functions can not access to over 8GB in our system */
 #if PARK_IN
-    park_in_64cu_16th(fim_ctr, offset);
+    park_in(fim_ctr, offset);
 #endif
 
 #if CHANGE_SB_HAB
-    change_fim_mode_64cu_16th(fim_ctr, SB_MODE, HAB_MODE, null_bst, offset);
+    change_fim_mode(fim_ctr, SB_MODE, HAB_MODE, null_bst, offset);
 #endif
 
 #if PROGRAM_CRF
-    program_crf_64cu_16th(fim_ctr, crf_binary, crf_size, offset);
+    program_crf(fim_ctr, crf_binary, crf_size, offset);
 #endif
 
 #if COMPUTE_GEMV
     for (int b = 0; b < batch_dim; b++) {
         for (int j = 0; j < num_out_tile; j++) {
-            change_fim_mode_64cu_16th(fim_ctr, HAB_MODE, HAB_FIM_MODE, gemv_hab_to_hab_fim, offset);
+            change_fim_mode(fim_ctr, HAB_MODE, HAB_FIM_MODE, gemv_hab_to_hab_fim, offset);
             for (int i = 0; i < num_in_tile; i += 2) {
-                compute_gemv_2bank_64cu_16th(fim_ctr, fim_weight, fim_input, num_in_tile, num_out_tile, i, j, b,
-                                             EVEN_BANK, offset);
+                compute_gemv_2bank(fim_ctr, fim_weight, fim_input, num_in_tile, num_out_tile, i, j, b, EVEN_BANK,
+                                   offset);
             }
             for (int i = 1; i < num_in_tile; i += 2) {
-                compute_gemv_2bank_64cu_16th(fim_ctr, fim_weight, fim_input, num_in_tile, num_out_tile, i, j, b,
-                                             ODD_BANK, offset);
+                compute_gemv_2bank(fim_ctr, fim_weight, fim_input, num_in_tile, num_out_tile, i, j, b, ODD_BANK,
+                                   offset);
             }
             compute_col = (j + b) * fbi->num_grf_B;
-            add_transaction_all_64cu_16th(fim_gemv_tmp_buffer, true, 0, 1, 0, compute_col, null_bst, offset,
-                                          fbi->num_grf);
-            change_fim_mode_64cu_16th(fim_ctr, HAB_FIM_MODE, HAB_MODE, gemv_hab_fim_to_hab, offset);
+            add_transaction_all(fim_gemv_tmp_buffer, true, 0, 1, 0, compute_col, null_bst, offset, fbi->num_grf);
+            change_fim_mode(fim_ctr, HAB_FIM_MODE, HAB_MODE, gemv_hab_fim_to_hab, offset);
         }
     }
 #endif
 
 #if CHANGE_HAB_SB
-    change_fim_mode_64cu_16th(fim_ctr, HAB_MODE, SB_MODE, null_bst, offset);
+    change_fim_mode(fim_ctr, HAB_MODE, SB_MODE, null_bst, offset);
 #endif
 
 #if PARK_OUT
-    park_out_64cu_16th(fim_ctr, offset);
+    park_out(fim_ctr, offset);
 #endif
 
 #ifdef EMULATOR

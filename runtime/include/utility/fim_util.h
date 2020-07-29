@@ -125,21 +125,19 @@ __device__ void compute_gemv_2bank_64cu_2th(volatile uint8_t* __restrict__ fim_c
                                             int input_tile, int output_tile, int batch_idx, FimBankType bank_type,
                                             uint64_t offset);
 
-/* 64CU 16th functions */
+/* Multi blocks with multi threads functions according to host setting */
 
-__device__ void add_transaction_all_64cu_16th(volatile uint8_t* __restrict__ fim_addr, bool is_write, uint32_t bg,
-                                              uint32_t bank, uint32_t row, uint32_t col, uint8_t* burst,
-                                              uint64_t offset, int loop_cnt = 1);
-__device__ void change_fim_mode_64cu_16th(volatile uint8_t* __restrict__ fim_ctr, FimMode mode1, FimMode mode2,
-                                          uint8_t* change_mode_bin, uint64_t offset);
-__device__ void park_in_64cu_16th(volatile uint8_t* __restrict__ fim_ctr, uint64_t offset);
-__device__ void park_out_64cu_16th(volatile uint8_t* __restrict__ fim_ctr, uint64_t offset);
-__device__ void program_crf_64cu_16th(volatile uint8_t* __restrict__ fim_ctr, uint8_t* crf_bin, uint32_t cmd_size,
-                                      uint64_t offset);
-__device__ void compute_gemv_2bank_64cu_16th(volatile uint8_t* __restrict__ fim_ctr,
-                                             volatile uint8_t* __restrict__ fim_weight,
-                                             volatile uint8_t* __restrict__ fim_input, int num_in_tile,
-                                             int num_out_tile, int input_tile, int output_tile, int batch_idx,
-                                             FimBankType bank_type, uint64_t offset);
+__device__ void add_transaction_all(volatile uint8_t* __restrict__ fim_addr, bool is_write, uint32_t bg, uint32_t bank,
+                                    uint32_t row, uint32_t col, uint8_t* burst, uint64_t offset, int loop_cnt = 1);
+__device__ void change_fim_mode(volatile uint8_t* __restrict__ fim_ctr, FimMode mode1, FimMode mode2,
+                                uint8_t* change_mode_bin, uint64_t offset);
+__device__ void park_in(volatile uint8_t* __restrict__ fim_ctr, uint64_t offset);
+__device__ void park_out(volatile uint8_t* __restrict__ fim_ctr, uint64_t offset);
+__device__ void program_crf(volatile uint8_t* __restrict__ fim_ctr, uint8_t* crf_bin, uint32_t cmd_size,
+                            uint64_t offset);
+__device__ void compute_gemv_2bank(volatile uint8_t* __restrict__ fim_ctr, volatile uint8_t* __restrict__ fim_weight,
+                                   volatile uint8_t* __restrict__ fim_input, int num_in_tile, int num_out_tile,
+                                   int input_tile, int output_tile, int batch_idx, FimBankType bank_type,
+                                   uint64_t offset);
 
 #endif /* _FIM_UTIL_H_ */

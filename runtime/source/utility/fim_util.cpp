@@ -786,13 +786,12 @@ __device__ void park_out_64cu_2th(volatile uint8_t* __restrict__ fim_ctr, uint64
     GEN_READ_CMD(null_bst + offset, &fim_ctr[t_addr + offset]);
 }
 
-/* 64CU 16th functions */
+/* Multi blocks with multi threads functions according to host setting */
 
-__device__ void compute_gemv_2bank_64cu_16th(volatile uint8_t* __restrict__ fim_ctr,
-                                             volatile uint8_t* __restrict__ fim_weight,
-                                             volatile uint8_t* __restrict__ fim_input, int num_in_tile,
-                                             int num_out_tile, int input_tile, int output_tile, int batch_idx,
-                                             FimBankType bank_type, uint64_t offset)
+__device__ void compute_gemv_2bank(volatile uint8_t* __restrict__ fim_ctr, volatile uint8_t* __restrict__ fim_weight,
+                                   volatile uint8_t* __restrict__ fim_input, int num_in_tile, int num_out_tile,
+                                   int input_tile, int output_tile, int batch_idx, FimBankType bank_type,
+                                   uint64_t offset)
 {
     FimBlockInfo* fbi = &vega20_fbi;
     int cidx = hipBlockIdx_x;
@@ -808,35 +807,28 @@ __device__ void compute_gemv_2bank_64cu_16th(volatile uint8_t* __restrict__ fim_
     GEN_WRITE_CMD(&fim_ctr[c_addr + offset], &fim_input[i_addr + offset]);
     GEN_BLOCK_CMD(0);
 
-    add_transaction_all_64cu_16th(fim_weight, false, 0, (int)bank_type, row, col, null_bst, offset, fbi->num_grf_B);
-    add_transaction_all_64cu_16th(fim_weight, false, 0, (int)bank_type, row, col + 8, null_bst, offset, fbi->num_grf_B);
-    add_transaction_all_64cu_16th(fim_weight, false, 0, (int)bank_type, row, col + 16, null_bst, offset,
-                                  fbi->num_grf_B);
-    add_transaction_all_64cu_16th(fim_weight, false, 0, (int)bank_type, row, col + 24, null_bst, offset,
-                                  fbi->num_grf_B);
-    add_transaction_all_64cu_16th(fim_weight, false, 0, (int)bank_type, row, col + 32, null_bst, offset,
-                                  fbi->num_grf_B);
-    add_transaction_all_64cu_16th(fim_weight, false, 0, (int)bank_type, row, col + 40, null_bst, offset,
-                                  fbi->num_grf_B);
-    add_transaction_all_64cu_16th(fim_weight, false, 0, (int)bank_type, row, col + 48, null_bst, offset,
-                                  fbi->num_grf_B);
-    add_transaction_all_64cu_16th(fim_weight, false, 0, (int)bank_type, row, col + 56, null_bst, offset,
-                                  fbi->num_grf_B);
+    add_transaction_all(fim_weight, false, 0, (int)bank_type, row, col, null_bst, offset, fbi->num_grf_B);
+    add_transaction_all(fim_weight, false, 0, (int)bank_type, row, col + 8, null_bst, offset, fbi->num_grf_B);
+    add_transaction_all(fim_weight, false, 0, (int)bank_type, row, col + 16, null_bst, offset, fbi->num_grf_B);
+    add_transaction_all(fim_weight, false, 0, (int)bank_type, row, col + 24, null_bst, offset, fbi->num_grf_B);
+    add_transaction_all(fim_weight, false, 0, (int)bank_type, row, col + 32, null_bst, offset, fbi->num_grf_B);
+    add_transaction_all(fim_weight, false, 0, (int)bank_type, row, col + 40, null_bst, offset, fbi->num_grf_B);
+    add_transaction_all(fim_weight, false, 0, (int)bank_type, row, col + 48, null_bst, offset, fbi->num_grf_B);
+    add_transaction_all(fim_weight, false, 0, (int)bank_type, row, col + 56, null_bst, offset, fbi->num_grf_B);
 }
 
-__device__ void program_crf_64cu_16th(volatile uint8_t* __restrict__ fim_ctr, uint8_t* crf_bin, uint32_t cmd_size,
-                                      uint64_t offset)
+__device__ void program_crf(volatile uint8_t* __restrict__ fim_ctr, uint8_t* crf_bin, uint32_t cmd_size,
+                            uint64_t offset)
 {
     FimBlockInfo* fbi = &vega20_fbi;
 
     for (int i = 0; i < cmd_size; i += fbi->trans_size) {
-        add_transaction_all_64cu_16th(fim_ctr, true, 0, 1, 0x3fff, 0x4 + i, crf_bin + i, offset);
+        add_transaction_all(fim_ctr, true, 0, 1, 0x3fff, 0x4 + i, crf_bin + i, offset);
     }
 }
 
-__device__ void add_transaction_all_64cu_16th(volatile uint8_t* __restrict__ fim_addr, bool is_write, uint32_t bg,
-                                              uint32_t bank, uint32_t row, uint32_t col, uint8_t* burst,
-                                              uint64_t offset, int loop_cnt)
+__device__ void add_transaction_all(volatile uint8_t* __restrict__ fim_addr, bool is_write, uint32_t bg, uint32_t bank,
+                                    uint32_t row, uint32_t col, uint8_t* burst, uint64_t offset, int loop_cnt)
 {
     if (hipThreadIdx_x < 2 * loop_cnt) {
         FimBlockInfo* fbi = &vega20_fbi;
@@ -864,8 +856,8 @@ __device__ void add_transaction_all_64cu_16th(volatile uint8_t* __restrict__ fim
     GEN_BLOCK_CMD(0);
 }
 
-__device__ void change_fim_mode_64cu_16th(volatile uint8_t* __restrict__ fim_ctr, FimMode mode1, FimMode mode2,
-                                          uint8_t* change_mode_bin, uint64_t offset)
+__device__ void change_fim_mode(volatile uint8_t* __restrict__ fim_ctr, FimMode mode1, FimMode mode2,
+                                uint8_t* change_mode_bin, uint64_t offset)
 {
     FimBlockInfo* fbi = &vega20_fbi;
 #ifdef EMULATOR
@@ -880,29 +872,29 @@ __device__ void change_fim_mode_64cu_16th(volatile uint8_t* __restrict__ fim_ctr
 
     if (mode1 == SB_MODE) {
         if (mode2 == HAB_MODE) {
-            add_transaction_all_64cu_16th(fim_ctr, true, 0, 0, hab_row_addr, 0x1f, change_mode_bin, offset);
-            add_transaction_all_64cu_16th(fim_ctr, true, 0, 1, hab_row_addr, 0x1f, change_mode_bin, offset);
+            add_transaction_all(fim_ctr, true, 0, 0, hab_row_addr, 0x1f, change_mode_bin, offset);
+            add_transaction_all(fim_ctr, true, 0, 1, hab_row_addr, 0x1f, change_mode_bin, offset);
             if (fbi->num_banks >= 2) {
-                add_transaction_all_64cu_16th(fim_ctr, true, 2, 0, hab_row_addr, 0x1f, change_mode_bin, offset);
-                add_transaction_all_64cu_16th(fim_ctr, true, 2, 1, hab_row_addr, 0x1f, change_mode_bin, offset);
+                add_transaction_all(fim_ctr, true, 2, 0, hab_row_addr, 0x1f, change_mode_bin, offset);
+                add_transaction_all(fim_ctr, true, 2, 1, hab_row_addr, 0x1f, change_mode_bin, offset);
             }
         }
     } else if (mode1 == HAB_MODE) {
         if (mode2 == SB_MODE) {
-            add_transaction_all_64cu_16th(fim_ctr, true, 0, 0, sb_row_addr, 0x1f, change_mode_bin, offset);
-            add_transaction_all_64cu_16th(fim_ctr, true, 0, 1, sb_row_addr, 0x1f, change_mode_bin, offset);
+            add_transaction_all(fim_ctr, true, 0, 0, sb_row_addr, 0x1f, change_mode_bin, offset);
+            add_transaction_all(fim_ctr, true, 0, 1, sb_row_addr, 0x1f, change_mode_bin, offset);
         } else if (mode2 == HAB_FIM_MODE) {
-            add_transaction_all_64cu_16th(fim_ctr, true, 0, 0, 0x3fff, 0x0, change_mode_bin, offset);
+            add_transaction_all(fim_ctr, true, 0, 0, 0x3fff, 0x0, change_mode_bin, offset);
         }
     } else if (mode1 == HAB_FIM_MODE) {
         if (mode2 == HAB_MODE) {
-            add_transaction_all_64cu_16th(fim_ctr, true, 0, 0, 0x3fff, 0x0, change_mode_bin, offset);
+            add_transaction_all(fim_ctr, true, 0, 0, 0x3fff, 0x0, change_mode_bin, offset);
         }
     }
     GEN_BLOCK_CMD(0);
 }
 
-__device__ void park_in_64cu_16th(volatile uint8_t* __restrict__ fim_ctr, uint64_t offset)
+__device__ void park_in(volatile uint8_t* __restrict__ fim_ctr, uint64_t offset)
 {
     FimBlockInfo* fbi = &vega20_fbi;
     uint32_t cidx = hipBlockIdx_x;
@@ -915,7 +907,7 @@ __device__ void park_in_64cu_16th(volatile uint8_t* __restrict__ fim_ctr, uint64
     GEN_READ_CMD(null_bst + offset, &fim_ctr[t_addr + offset]);
 }
 
-__device__ void park_out_64cu_16th(volatile uint8_t* __restrict__ fim_ctr, uint64_t offset)
+__device__ void park_out(volatile uint8_t* __restrict__ fim_ctr, uint64_t offset)
 {
     if (hipThreadIdx_x >= 4) return;
 

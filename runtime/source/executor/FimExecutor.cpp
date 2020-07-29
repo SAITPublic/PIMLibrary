@@ -225,7 +225,7 @@ int FimExecutor::execute_gemv(FimBo* output, FimBo* operand0, FimBo* operand1, b
     int ret = 0;
     FimBo* input = operand0;
     FimBo* weight = operand1;
-    unsigned blocks = 64;
+    unsigned blocks = fbi_.num_fim_chan;
     unsigned threads_per_block = 64;
 
     int in_size = weight->bshape.w;
@@ -239,7 +239,7 @@ int FimExecutor::execute_gemv(FimBo* output, FimBo* operand0, FimBo* operand1, b
     FIM_PROFILE_TOCK(CreateCRFBin);
 
     FIM_PROFILE_TICK(RunGemvKernel);
-    hipLaunchKernelGGL(gemv_fim_64cu_16th_fp16, dim3(blocks), dim3(threads_per_block), 0, 0,
+    hipLaunchKernelGGL(gemv_fim_fp16, dim3(blocks), dim3(threads_per_block), 0, 0,
                        (uint8_t*)g_fim_base_addr /* fim control base */, (uint8_t*)weight->data /* fim weight base */,
                        (uint8_t*)fim_gemv_tmp_buffer_, /* fim hw output buffer */
                        (uint8_t*)input->data, (uint8_t*)output->data, in_size, num_batch, out_size,
@@ -281,7 +281,7 @@ int FimExecutor::execute_gemv_add(FimBo* output, FimBo* operand0, FimBo* operand
     int ret = 0;
     FimBo* input = operand0;
     FimBo* weight = operand1;
-    unsigned blocks = 64;
+    unsigned blocks = fbi_.num_fim_chan;
     unsigned threads_per_block = 64;
 
     int in_size = weight->bshape.w;
@@ -295,7 +295,7 @@ int FimExecutor::execute_gemv_add(FimBo* output, FimBo* operand0, FimBo* operand
     FIM_PROFILE_TOCK(CreateCRFBin);
 
     FIM_PROFILE_TICK(RunGemvKernel);
-    hipLaunchKernelGGL(gemv_fim_64cu_16th_fp16, dim3(blocks), dim3(threads_per_block), 0, 0,
+    hipLaunchKernelGGL(gemv_fim_fp16, dim3(blocks), dim3(threads_per_block), 0, 0,
                        (uint8_t*)g_fim_base_addr /* fim control base */, (uint8_t*)weight->data /* fim weight base */,
                        (uint8_t*)fim_gemv_tmp_buffer_, /* fim hw output buffer */
                        (uint8_t*)input->data, (uint8_t*)output->data, in_size, num_batch, out_size,
