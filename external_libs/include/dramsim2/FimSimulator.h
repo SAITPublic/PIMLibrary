@@ -25,21 +25,27 @@ class FimSimulator
     ~FimSimulator();
     void initialize(const string& device_ini_file_name, const string& system_ini_file_name, size_t megs_of_memory,
                     size_t num_fim_chan, size_t num_fim_rank);
-    void preload_data(void* data, size_t data_size);
-    void preload_data_with_addr(uint64_t addr, void* data, size_t data_size);
-    void execute_kernel(void* trace_data, size_t num_trace);
-    void execute_kernel_bn(void* trace_data, size_t num_trace, int num_batch, int num_ch, int num_width);
+    void deinitialize();
 
+    // allocate burst type memory.
     void alloc_burst(size_t preload_size, size_t output_size);
-    void read_result(uint64_t addr, size_t data_size);
-    void read_result_gemv(uint64_t addr, size_t data_dim);
-    void get_uint16_result(uint16_t* output_data, size_t num_data);
-    void get_reduced_result(uint16_t* output_data, size_t num_data);
+    // Write data to the address in order.
+    void preload_data_with_addr(uint64_t addr, void* data, size_t data_size);
+    // Execute memory traces. void* must be MemTraceData type.
+    void execute_kernel(void* trace_data, size_t num_trace);
+    // Read data from address in order. data is stored in output_burst_ variable
+    void read_result(uint16_t* output_data, uint64_t addr, size_t data_size);
+    // Read data from address. it uses only odd bank.
+    void read_result_gemv(uint16_t* output_data, uint64_t addr, size_t data_dim);
     void eltwise_add(void* output_data, uint16_t* reduced_output, int real_dim, int padded_dim, int num_batch);
-    void compare_result_arr(uint16_t* test_output, size_t num_data, NumpyBurstType* output_npbst);
-    void run();
+
+    // Todo : This should be integrated with the above functions.
+    void execute_kernel_bn(void* trace_data, size_t num_trace, int num_batch, int num_ch, int num_width);
+    void preload_data(void* data, size_t data_size);
+    void get_uint16_result(uint16_t* output_data, size_t num_data);
 
    private:
+    void run();
     void convert_arr_to_burst(void* data, size_t data_size, BurstType* bst);
     void push_trace(vector<TraceDataBst>* trace_bst);
     void push_trace_bn(vector<TraceDataBst>* trace_bst, int num_batch, int num_ch, int num_width);

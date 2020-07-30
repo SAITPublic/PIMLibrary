@@ -186,6 +186,9 @@ class FIMController
                         unsigned starting_col = 0);
 
     void preload_no_replacement(NumpyBurstType* operand, unsigned starting_row, unsigned starting_col);
+
+    void write_result_to_file(BurstType* result_bst, fim_bank_type bank_type, int output_dim, unsigned starting_row = 0,
+                              unsigned starting_col = 0);
 };
 
 #endif
