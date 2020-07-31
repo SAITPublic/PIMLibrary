@@ -520,21 +520,20 @@ __device__ void compute_elt_op_1cu_2th(volatile uint8_t* __restrict__ fim_input0
 }
 
 __device__ void compute_elt_op_64cu_16th(volatile uint8_t* __restrict__ fim_input0,
-                                       volatile uint8_t* __restrict__ fim_input1,
-                                       volatile uint8_t* __restrict__ fim_output, int num_tile, uint64_t offset)
+                                         volatile uint8_t* __restrict__ fim_input1,
+                                         volatile uint8_t* __restrict__ fim_output, int num_tile, uint64_t offset)
 {
     FimBlockInfo* fbi = &vega20_fbi;
 
     for (int i = 0; i < num_tile; i++) {
-        add_transaction_all_64cu_16th(fim_input0, false, 0, 0, 0, fbi->num_grf * i, null_bst, offset, fbi->num_grf);
-        add_transaction_all_64cu_16th(fim_input1, false, 0, 0, 0, fbi->num_grf * i, null_bst, offset, fbi->num_grf);
-        add_transaction_all_64cu_16th(fim_output, true, 0, 0, 0, fbi->num_grf * i, null_bst, offset, fbi->num_grf);
+        add_transaction_all(fim_input0, false, 0, 0, 0, fbi->num_grf * i, null_bst, offset, fbi->num_grf);
+        add_transaction_all(fim_input1, false, 0, 0, 0, fbi->num_grf * i, null_bst, offset, fbi->num_grf);
+        add_transaction_all(fim_output, true, 0, 0, 0, fbi->num_grf * i, null_bst, offset, fbi->num_grf);
 
-        add_transaction_all_64cu_16th(fim_input0, false, 0, 1, 0, fbi->num_grf * i, null_bst, offset, fbi->num_grf);
-        add_transaction_all_64cu_16th(fim_input1, false, 0, 1, 0, fbi->num_grf * i, null_bst, offset, fbi->num_grf);
-        add_transaction_all_64cu_16th(fim_output, true, 0, 1, 0, fbi->num_grf * i, null_bst, offset, fbi->num_grf);
-        add_transaction_all_64cu_16th(fim_output, true, 0, 1, 0, fbi->num_grf * i + fbi->num_grf - 1, null_bst, offset,
-                                    1);
+        add_transaction_all(fim_input0, false, 0, 1, 0, fbi->num_grf * i, null_bst, offset, fbi->num_grf);
+        add_transaction_all(fim_input1, false, 0, 1, 0, fbi->num_grf * i, null_bst, offset, fbi->num_grf);
+        add_transaction_all(fim_output, true, 0, 1, 0, fbi->num_grf * i, null_bst, offset, fbi->num_grf);
+        add_transaction_all(fim_output, true, 0, 1, 0, fbi->num_grf * i + fbi->num_grf - 1, null_bst, offset, 1);
     }
 }
 __device__ void compute_relu_1cu_2th(volatile uint8_t* __restrict__ fim_output, volatile uint8_t* __restrict__ fim_data,

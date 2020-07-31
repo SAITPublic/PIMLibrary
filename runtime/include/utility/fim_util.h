@@ -109,8 +109,8 @@ __device__ void compute_elt_op_1cu_2th(volatile uint8_t* __restrict__ fim_input0
                                        volatile uint8_t* __restrict__ fim_output, int num_tile, uint64_t offset);
 
 __device__ void compute_elt_op_64cu_16th(volatile uint8_t* __restrict__ fim_input0,
-                                       volatile uint8_t* __restrict__ fim_input1,
-                                       volatile uint8_t* __restrict__ fim_output, int num_tile, uint64_t offset);
+                                         volatile uint8_t* __restrict__ fim_input1,
+                                         volatile uint8_t* __restrict__ fim_output, int num_tile, uint64_t offset);
 /* 64CU 2TH functions */
 
 __device__ void add_transaction_all_64cu_2th(volatile uint8_t* __restrict__ fim_addr, bool is_write, uint32_t bg,
