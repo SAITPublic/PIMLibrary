@@ -4,6 +4,7 @@
 #include "FimTraceCoalescer.h"
 #include "dramsim2/FimSimulator.h"
 #include "fim_data_types.h"
+#include "manager/FimInfo.h"
 
 namespace fim
 {

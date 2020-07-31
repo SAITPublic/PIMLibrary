@@ -3,6 +3,7 @@
 
 #include "fim_crf_bins.h"
 #include "fim_data_types.h"
+#include "manager/FimInfo.h"
 #include "utility/fim_util.h"
 
 #ifdef EMULATOR

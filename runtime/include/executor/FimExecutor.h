@@ -5,6 +5,7 @@
 #include "fim_data_types.h"
 #include "hip/hip_fp16.h"
 #include "hip/hip_runtime.h"
+#include "manager/FimInfo.h"
 #include "manager/FimManager.h"
 
 namespace fim

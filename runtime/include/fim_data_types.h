@@ -6,21 +6,10 @@
 
 #define __FIM_API__
 
-/** TODO add the following function
-
-inline _Float16 convertF2H(float f_val) { return __float2half(f_val); }
-
-**/
-
 typedef enum __FimRuntimeType {
     RT_TYPE_HIP,
     RT_TYPE_OPENCL,
 } FimRuntimeType;
-
-typedef enum __FimAddrMap {
-    AMDGPU_VEGA20,
-} FimAddrMap;
-
 typedef enum __FimMemType {
     MEM_TYPE_HOST,
     MEM_TYPE_DEVICE,
@@ -77,54 +66,6 @@ typedef struct __FimDescriptor {
     FimPrecision precision;
     FimOpType op_type;
 } FimDesc;
-
-typedef enum __FimBankType {
-    EVEN_BANK,
-    ODD_BANK,
-    ALL_BANK,
-} FimBankType;
-
-typedef enum __FimMode {
-    SB_MODE,
-    HAB_MODE,
-    HAB_FIM_MODE,
-} FimMode;
-
-typedef struct __FimBlockInfo {
-    FimAddrMap fim_addr_map;
-    int num_banks;
-    int num_bank_groups;
-    int num_rank_bit;
-    int num_row_bit;
-    int num_col_high_bit;
-    int num_bank_high_bit;
-    int num_bankgroup_bit;
-    int num_bank_low_bit;
-    int num_chan_bit;
-    int num_col_low_bit;
-    int num_offset_bit;
-    int num_grf;
-    int num_grf_A;
-    int num_grf_B;
-    int num_srf;
-    int num_col;
-    int num_row;
-    int bl;
-    int num_fim_blocks;
-    int num_fim_rank;
-    int num_fim_chan;
-    int trans_size;
-    int num_out_per_grf;
-} FimBlockInfo;
-
-typedef struct __FimMemTraceData {
-    uint8_t data[32];
-    uint64_t addr;
-    int block_id;
-    int thread_id;
-    char cmd;
-} FimMemTraceData;
-
 typedef struct __FimGemvBundle {
     FimBo* in;
     FimBo* wei;

@@ -4,6 +4,7 @@
 #include <vector>
 #include "fim_data_types.h"
 #include "manager/FimCommand.h"
+#include "manager/FimInfo.h"
 
 namespace fim
 {

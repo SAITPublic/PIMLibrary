@@ -6,6 +6,7 @@
 #include <sstream>
 #include <vector>
 #include "fim_data_types.h"
+#include "manager/FimInfo.h"
 #include "utility/fim_log.h"
 
 namespace fim

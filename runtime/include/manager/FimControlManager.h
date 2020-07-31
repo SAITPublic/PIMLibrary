@@ -2,6 +2,7 @@
 #define _FIM_CONTROL_MANAGER_H_
 
 #include "fim_data_types.h"
+#include "manager/FimInfo.h"
 #include "manager/FimManager.h"
 
 namespace fim

@@ -5,6 +5,7 @@
 #include "fim_data_types.h"
 #include "hip/hip_fp16.h"
 #include "hip/hip_runtime.h"
+#include "manager/FimInfo.h"
 #include "utility/fim_log.h"
 
 /* TODO: get VEGA20 scheme from device driver */

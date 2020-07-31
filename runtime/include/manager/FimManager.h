@@ -5,6 +5,7 @@
 #include "manager/FimControlManager.h"
 #include "manager/FimCrfBinGen.h"
 #include "manager/FimDevice.h"
+#include "manager/FimInfo.h"
 #include "manager/FimMemoryManager.h"
 
 namespace fim

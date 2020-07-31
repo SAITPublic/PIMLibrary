@@ -3,6 +3,7 @@
 
 #include "fim_data_types.h"
 #include "internal/simple_heap.hpp"
+#include "manager/FimInfo.h"
 #include "manager/FimManager.h"
 
 namespace fim
