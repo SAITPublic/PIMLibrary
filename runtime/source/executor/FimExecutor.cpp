@@ -186,14 +186,14 @@ int FimExecutor::execute_mul(FimBo* output, FimBo* operand0, FimBo* operand1, bo
 {
     DLOG(INFO) << "called";
     int ret = 0;
-    unsigned blocks = 1;
-    unsigned threads_per_block = 2;
+    unsigned blocks = 64;
+    unsigned threads_per_block = 16;
 
     int lc = get_loop_counter(OP_ELT_MUL, output->size);
     int crf_lut_offset = (int)OP_ELT_MUL * max_crf_lut_size_ * max_crf_size_ + lc * max_crf_size_;
     int crf_size = h_crf_size_lut_[(int)OP_ELT_MUL * max_crf_lut_size_ + lc];
 
-    hipLaunchKernelGGL(elt_op_fim_1cu_2th_fp16, dim3(blocks), dim3(threads_per_block), 0, 0, (uint8_t*)operand0->data,
+    hipLaunchKernelGGL(elt_op_fim_64cu_16th_fp16, dim3(blocks), dim3(threads_per_block), 0, 0, (uint8_t*)operand0->data,
                        (uint8_t*)operand1->data, (uint8_t*)g_fim_base_addr, (uint8_t*)output->data, output->size,
 #ifdef EMULATOR
                        (FimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_,
