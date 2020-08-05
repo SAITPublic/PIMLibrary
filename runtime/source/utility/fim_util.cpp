@@ -2,25 +2,25 @@
 
 __host__ void get_fim_block_info(FimBlockInfo* fbi) { memcpy(fbi, &vega20_fbi, sizeof(FimBlockInfo)); }
 
-__device__ void integral_sum_for_gemv_gpu(void* out, void* in, int out_size, int reduce_size)
+__global__ __device__ void integral_sum_for_gemv_gpu(void* out, void* in, int out_size, int reduce_size)
 {
-    half t_output;
-    half* output = (half*)out;
-    half* input = (half*)in;
-    int out_num = out_size / sizeof(half) / reduce_size;
+    int bcnt = hipGridDim_x;
+    int tcnt = hipBlockDim_x;
     int bid = hipBlockIdx_x;
     int tid = hipThreadIdx_x;
-    int offset = tid * reduce_size;
-    int threads = hipBlockDim_x * hipGridDim_x;
+    int outcnt_per_thread = out_size / (bcnt * tcnt);
+    half* t_out = (half*)out;
+    half* t_in = (half*)in;
 
-    for (int i = bid; i < out_num; i += threads) {
-        t_output = 0;
-        input += offset;
-        for (int j = 0; j < reduce_size; j++) {
-            t_output += input[j];
+    int in_idx = bid * tcnt * reduce_size * outcnt_per_thread + tid * reduce_size * outcnt_per_thread;
+    int out_idx = bid * tcnt * outcnt_per_thread + tid * outcnt_per_thread;
+
+    for (int outcnt = 0; outcnt < outcnt_per_thread; outcnt++) {
+        for (int i = 0; i < reduce_size; i++) {
+            t_out[out_idx] += t_in[in_idx + i];
         }
-        output[i + tid] = t_output;
-        input += (reduce_size * threads);
+        t_out += 1;
+        t_in += reduce_size;
     }
 }
 
