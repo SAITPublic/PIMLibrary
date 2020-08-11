@@ -17,6 +17,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import os
 import datetime
 import numpy as np
 from six.moves import xrange    # pylint: disable=redefined-builtin
@@ -276,59 +277,40 @@ def profile_ds2_eager(batch_size=1,training=False):
                             time_major=False,
                             dtype='float16',
                             trainable=False)))
-     #lstm.add(tf.keras.layers.Concatenate(axis=-1))
-#     for i in range(4):
-#         lstm.add(bn)
-#         lstm.add(tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(800,
-#                            kernel_initializer=tf.keras.initializers.RandomNormal(seed=SEED),
-#                            recurrent_initializer=tf.keras.initializers.RandomNormal(seed=SEED),
-#                            return_sequences=True,
-#                            return_sequences=True,
-#                            dtype='float16',
-#                            trainable=False)))
-
-         #Need to check issue with concat,ie non functional interface  
-         #lstm.add(tf.keras.layers.Concatenate(axis=-1))
 
      bnorm = batch_norm(dtype=tf.float16)
      dense = tf.keras.layers.Dense(
             29, use_bias=False, dtype=tf.float16)
 
-#     for i in range(5):
-     start = datetime.datetime.now()
      print('input shape',inputs.shape)
      value = conv_layer_one(inputs, training)
      print('conv1 output shape',value.shape)
      value = conv_layer_two(value, training)
      print('conv2 output shape',value.shape)
-     end = datetime.datetime.now()
-     duration = end - start
-     print('Conv Duration:', duration)
 
+     os.system('bash -c \'echo "export ENABLE_FIM=0" >> fim_env \'')
+     os.system('bash -c \'source fim_env\'')
+     os.system('rm fim_env')
+     golden = rshape(value)
+     golden = lstm(golden,training=False)
+     print('gpu_lstm output shape' , golden.shape)
+
+     os.system('bash -c \'echo "export ENABLE_FIM=1" >> fim_env \'')
+     os.system('bash -c \'source fim_env\'')
+     os.system('rm fim_env')
      value = rshape(value)
-     start = datetime.datetime.now()
      value = lstm(value,training=False)
-     print('lstm output shape' , value.shape)
-# To make a golden lstm output. Comment out the below line when verifying it.
-     value.numpy().tofile('lstm_out.bin')
-     golden = np.fromfile('lstm_out.bin',dtype=np.float16)
-     golden = np.reshape(golden,value.shape)
+     print('fim_lstm output shape', value.shape)
+
      result = np.testing.assert_array_almost_equal(value,golden,decimal=5)
+
      print(result)
      print(golden)
      print(value)
 
-     end = datetime.datetime.now()
-     duration = end - start
-     print('Lstm Duration:', duration)
-
-     start = datetime.datetime.now()
      value = bnorm(value, training)
      logits = dense(value)
      print('Fc output shape' , logits.shape)
-     end = datetime.datetime.now()
-     duration = end - start
-     print('Fc+bnorm Duration:', duration)
 
 def profile_ds2():
     # if we change to float32 , make sure to changes keras_backend at top of file
