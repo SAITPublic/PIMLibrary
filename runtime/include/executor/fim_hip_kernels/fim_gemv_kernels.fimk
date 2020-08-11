@@ -94,8 +94,7 @@ __global__ void gemv_fim_fp16(volatile uint8_t* __restrict__ fim_ctr, volatile u
 #if INTEGRAL_SUM
     /* TODO: verify reduce sum in Target Mode */
     __syncthreads();
-    integral_sum_for_gemv_gpu((void*)output, (void*)fim_gemv_tmp_buffer, output_dim * fbi->num_out_per_grf * 2,
-                              fbi->num_out_per_grf);
+    integral_sum_for_gemv_gpu((void*)output, (void*)fim_gemv_tmp_buffer, output_dim, fbi->num_out_per_grf);
 #endif
 }
 
@@ -183,8 +182,7 @@ __global__ void gemv_fim_64cu_2th_fp16(volatile uint8_t* __restrict__ fim_ctr,
 #if INTEGRAL_SUM
     /* TODO: verify reduce sum in Target Mode */
     __syncthreads();
-    integral_sum_for_gemv_gpu((void*)output, (void*)fim_gemv_tmp_buffer, output_dim * fbi->num_out_per_grf * 2,
-                              fbi->num_out_per_grf);
+    integral_sum_for_gemv_gpu((void*)output, (void*)fim_gemv_tmp_buffer, output_dim, fbi->num_out_per_grf);
 #endif
 }
 
@@ -269,8 +267,7 @@ __global__ void gemv_fim_1cu_2th_fp16(volatile uint8_t* __restrict__ fim_ctr, vo
 
 #if INTEGRAL_SUM
     /* TODO: verify reduce sum in Target Mode */
-    integral_sum_for_gemv_gpu((void*)output, (void*)fim_gemv_tmp_buffer, output_dim * fbi->num_out_per_grf * 2,
-                              fbi->num_out_per_grf);
+    integral_sum_for_gemv_gpu((void*)output, (void*)fim_gemv_tmp_buffer, output_dim, fbi->num_out_per_grf);
 #endif
 }
 

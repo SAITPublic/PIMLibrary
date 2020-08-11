@@ -1,9 +1,8 @@
 #include <gtest/gtest.h>
 #include "hip/hip_fp16.h"
 #include "hip/hip_runtime.h"
-//#include "utility/fim_util.h"
 
-__global__ void integral_sum(void* out, void* in, int out_size, int reduce_size)
+__device__ void integral_sum_for_gemv_gpu(void* out, void* in, int out_size, int reduce_size)
 {
     int bcnt = hipGridDim_x;
     int tcnt = hipBlockDim_x;
@@ -20,9 +19,14 @@ __global__ void integral_sum(void* out, void* in, int out_size, int reduce_size)
         for (int i = 0; i < reduce_size; i++) {
             t_out[out_idx] += t_in[in_idx + i];
         }
-        out_idx++;
+        t_out += 1;
         t_in += reduce_size;
     }
+}
+
+__global__ void integral_sum(void* out, void* in, int out_size, int reduce_size)
+{
+    integral_sum_for_gemv_gpu(out, in, out_size, reduce_size);
 }
 
 int gpu_integral_sum(void)
