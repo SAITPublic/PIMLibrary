@@ -63,9 +63,9 @@ __device__ void GEN_READ_CMD(volatile uint8_t* __restrict__ dst, volatile uint8_
                              bool is_output = false);
 __device__ void GEN_BLOCK_CMD(int type = 0);
 __device__ void BLOCK_SYNC(int cu_ch_idx = 0, bool block_all_chan = true);
-__device__ void R_CMD(uint8_t* addr);
-__device__ void W_CMD(uint8_t* addr);
-__device__ void W_CMD_R(uint8_t* addr, uint8_t* src);
+__device__ void R_CMD(volatile uint8_t* __restrict__ addr);
+__device__ void W_CMD(volatile uint8_t* __restrict__ addr);
+__device__ void W_CMD_R(volatile uint8_t* __restrict__ addr, volatile uint8_t* __restrict__ src);
 __device__ void B_CMD(int type);
 
 /* 1CU 2TH functions */

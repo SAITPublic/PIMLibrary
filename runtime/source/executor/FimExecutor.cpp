@@ -223,6 +223,8 @@ int FimExecutor::execute_gemv(FimBo* output, FimBo* operand0, FimBo* operand1, b
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
+    int is_gemv_add = 0;
+
     FimBo* input = operand0;
     FimBo* weight = operand1;
     unsigned blocks = fbi_.num_fim_chan;
@@ -230,7 +232,10 @@ int FimExecutor::execute_gemv(FimBo* output, FimBo* operand0, FimBo* operand1, b
 
     int in_size = weight->bshape.w;
     int out_size = weight->bshape.h;
-    int num_batch = input->bshape.n;
+    int real_out_size = weight->bshape_r.h;
+    int n_batch = input->bshape.n;
+    int n_in_tile = in_size * sizeof(uint16_t) / fbi_.trans_size / fbi_.num_grf_A;
+    int n_out_tile = out_size / (blocks * fbi_.num_fim_blocks * fbi_.num_grf_B);
 
     FIM_PROFILE_TICK(CreateCRFBin);
     int lc = (get_loop_counter(OP_GEMV, in_size * sizeof(half)) + 1) / 8;
@@ -239,14 +244,14 @@ int FimExecutor::execute_gemv(FimBo* output, FimBo* operand0, FimBo* operand1, b
     FIM_PROFILE_TOCK(CreateCRFBin);
 
     FIM_PROFILE_TICK(RunGemvKernel);
-    hipLaunchKernelGGL(gemv_fim_fp16, dim3(blocks), dim3(threads_per_block), 0, 0,
+    hipLaunchKernelGGL(gemv_fim_64cu_64th_fp16, dim3(blocks), dim3(threads_per_block), 0, 0,
                        (uint8_t*)g_fim_base_addr /* fim control base */, (uint8_t*)weight->data /* fim weight base */,
                        (uint8_t*)fim_gemv_tmp_buffer_, /* fim hw output buffer */
-                       (uint8_t*)input->data, (uint8_t*)output->data, in_size, num_batch, out_size,
+                       (uint8_t*)input->data, (uint8_t*)output->data, n_batch, n_in_tile, n_out_tile, real_out_size,
 #ifdef EMULATOR
                        (FimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_,
 #endif
-                       (uint8_t*)d_crf_bin_lut_ + crf_lut_offset, crf_size);
+                       (uint8_t*)d_crf_bin_lut_ + crf_lut_offset, crf_size, is_gemv_add);
 #ifndef EMULATOR
     if (block) hipStreamSynchronize(NULL);
     FIM_PROFILE_TOCK(RunGemvKernel);
@@ -279,6 +284,8 @@ int FimExecutor::execute_gemv_add(FimBo* output, FimBo* operand0, FimBo* operand
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
+    int is_gemv_add = 1;
+
     FimBo* input = operand0;
     FimBo* weight = operand1;
     unsigned blocks = fbi_.num_fim_chan;
@@ -286,7 +293,10 @@ int FimExecutor::execute_gemv_add(FimBo* output, FimBo* operand0, FimBo* operand
 
     int in_size = weight->bshape.w;
     int out_size = weight->bshape.h;
-    int num_batch = input->bshape.n;
+    int real_out_size = weight->bshape_r.h;
+    int n_batch = input->bshape.n;
+    int n_in_tile = in_size * sizeof(uint16_t) / fbi_.trans_size / fbi_.num_grf_A;
+    int n_out_tile = out_size / (blocks * fbi_.num_fim_blocks * fbi_.num_grf_B);
 
     FIM_PROFILE_TICK(CreateCRFBin);
     int lc = (get_loop_counter(OP_GEMV, in_size * sizeof(half)) + 1) / 8;
@@ -295,14 +305,14 @@ int FimExecutor::execute_gemv_add(FimBo* output, FimBo* operand0, FimBo* operand
     FIM_PROFILE_TOCK(CreateCRFBin);
 
     FIM_PROFILE_TICK(RunGemvKernel);
-    hipLaunchKernelGGL(gemv_fim_fp16, dim3(blocks), dim3(threads_per_block), 0, 0,
+    hipLaunchKernelGGL(gemv_fim_64cu_64th_fp16, dim3(blocks), dim3(threads_per_block), 0, 0,
                        (uint8_t*)g_fim_base_addr /* fim control base */, (uint8_t*)weight->data /* fim weight base */,
                        (uint8_t*)fim_gemv_tmp_buffer_, /* fim hw output buffer */
-                       (uint8_t*)input->data, (uint8_t*)output->data, in_size, num_batch, out_size,
+                       (uint8_t*)input->data, (uint8_t*)output->data, n_batch, n_in_tile, n_out_tile, real_out_size,
 #ifdef EMULATOR
                        (FimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_,
 #endif
-                       (uint8_t*)d_crf_bin_lut_ + crf_lut_offset, crf_size);
+                       (uint8_t*)d_crf_bin_lut_ + crf_lut_offset, crf_size, is_gemv_add);
 #ifndef EMULATOR
     if (block) hipStreamSynchronize(NULL);
     FIM_PROFILE_TOCK(RunGemvKernel);

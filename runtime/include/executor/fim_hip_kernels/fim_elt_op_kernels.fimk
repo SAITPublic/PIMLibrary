@@ -76,6 +76,7 @@ __global__ void elt_op_fim_64cu_16th_fp16(volatile uint8_t* __restrict__ operand
 #endif
 }
 
+#if 0
 __global__ void elt_add_fim(uint8_t* fim_data, uint8_t* fim_ctr, uint8_t* output, unsigned int input_size,
 #ifdef EMULATOR
                             FimMemTraceData* fmtd, int* frd_size, int mt_width,
@@ -234,5 +235,6 @@ __global__ void elt_add_fim(uint8_t* fim_data, uint8_t* fim_ctr, uint8_t* output
     *frd_size = g_idx[0];
 #endif
 }
+#endif
 
 #endif /* _FIM_ELT_OP_KERNELS_FIMK_ */

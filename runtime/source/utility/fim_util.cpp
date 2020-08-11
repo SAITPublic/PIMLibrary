@@ -99,7 +99,6 @@ __host__ __device__ uint64_t addr_gen_safe(uint32_t chan, uint32_t rank, uint32_
 #ifdef EMULATOR
 extern uint64_t g_fba;
 extern int g_ridx[64];
-extern int g_idx[64];
 extern int m_width;
 extern FimMemTraceData* g_fmtd16;
 
@@ -173,46 +172,50 @@ __device__ void GEN_BLOCK_CMD(int type)
     __syncthreads();
 }
 
-__device__ void R_CMD(uint8_t* addr)
+__device__ void R_CMD(volatile uint8_t* __restrict__ addr)
 {
-    int row = hipBlockIdx_x * m_width;
-    int midx = row + atomicAdd(&g_idx[hipBlockIdx_x], 1);
+    int bid = hipBlockIdx_x;
+    int tid = hipThreadIdx_x;
+    int row = bid * m_width;
+    int ridx = row + atomicAdd(&g_ridx[bid], 1);
 
-    memset(g_fmtd16[midx].data, 0, 16);
-    g_fmtd16[midx].block_id = hipBlockIdx_x;
-    g_fmtd16[midx].thread_id = hipThreadIdx_x;
-    g_fmtd16[midx].addr = (uint64_t)addr - g_fba;
-    g_fmtd16[midx].cmd = 'R';
+    g_fmtd16[ridx].block_id = bid;
+    g_fmtd16[ridx].thread_id = tid;
+    g_fmtd16[ridx].addr = (uint64_t)addr - g_fba;
+    g_fmtd16[ridx].cmd = 'R';
 }
 
-__device__ void W_CMD(uint8_t* addr)
+__device__ void W_CMD(volatile uint8_t* __restrict__ addr)
 {
-    int row = hipBlockIdx_x * m_width;
-    int midx = row + atomicAdd(&g_idx[hipBlockIdx_x], 1);
+    int bid = hipBlockIdx_x;
+    int tid = hipThreadIdx_x;
+    int row = bid * m_width;
+    int ridx = row + atomicAdd(&g_ridx[bid], 1);
 
-    memset(g_fmtd16[midx].data, 0, 16);
-    g_fmtd16[midx].block_id = hipBlockIdx_x;
-    g_fmtd16[midx].thread_id = hipThreadIdx_x;
-    g_fmtd16[midx].addr = (uint64_t)addr - g_fba;
-    g_fmtd16[midx].cmd = 'W';
+    g_fmtd16[ridx].block_id = bid;
+    g_fmtd16[ridx].thread_id = tid;
+    g_fmtd16[ridx].addr = (uint64_t)addr - g_fba;
+    g_fmtd16[ridx].cmd = 'W';
 }
 
-__device__ void W_CMD_R(uint8_t* addr, uint8_t* src)
+__device__ void W_CMD_R(volatile uint8_t* __restrict__ addr, volatile uint8_t* __restrict__ src)
 {
-    int row = hipBlockIdx_x * m_width;
-    int midx = row + atomicAdd(&g_idx[hipBlockIdx_x], 1);
+    int bid = hipBlockIdx_x;
+    int tid = hipThreadIdx_x;
+    int row = bid * m_width;
+    int ridx = row + atomicAdd(&g_ridx[bid], 1);
 
-    memcpy(g_fmtd16[midx].data, (uint8_t*)src, 16);
-    g_fmtd16[midx].block_id = hipBlockIdx_x;
-    g_fmtd16[midx].thread_id = hipThreadIdx_x;
-    g_fmtd16[midx].addr = (uint64_t)addr - g_fba;
-    g_fmtd16[midx].cmd = 'W';
+    memcpy(g_fmtd16[ridx].data, (uint8_t*)src, 16);
+    g_fmtd16[ridx].block_id = bid;
+    g_fmtd16[ridx].thread_id = tid;
+    g_fmtd16[ridx].addr = (uint64_t)addr - g_fba;
+    g_fmtd16[ridx].cmd = 'W';
 }
 
 __device__ void B_CMD(int type)
 {
     int row = hipBlockIdx_x * m_width;
-    int midx = row + atomicAdd(&g_idx[hipBlockIdx_x], 1);
+    int midx = row + atomicAdd(&g_ridx[hipBlockIdx_x], 1);
 
     memset(g_fmtd16[midx].data, 0, 16);
     g_fmtd16[midx].block_id = hipBlockIdx_x;
@@ -220,22 +223,7 @@ __device__ void B_CMD(int type)
     g_fmtd16[midx].addr = 0;
     g_fmtd16[midx].cmd = 'B';
 
-    if (type == 0)
-        __syncthreads();
-    else
-        __threadfence();
-}
-
-__device__ void record(int bid, char mtype, uint64_t paddr)
-{
-    int row = bid * m_width;
-    int midx = row + g_idx[bid]++;
-
-    memset(g_fmtd16[midx].data, 0, 16);
-    g_fmtd16[midx].block_id = bid;
-    g_fmtd16[midx].thread_id = 0;
-    g_fmtd16[midx].addr = paddr;
-    g_fmtd16[midx].cmd = mtype;
+    (type == 0) ? __syncthreads(): __threadfence();
 }
 
 #else /* TARGET */
@@ -260,34 +248,89 @@ __device__ void GEN_BLOCK_CMD(int type)
 
 __device__ void BLOCK_SYNC(int cu_ch_idx, bool block_all_chan) { __syncthreads(); }
 
-__device__ void R_CMD(uint8_t* addr)
+__device__ void R_CMD(volatile uint8_t* __restrict__ addr)
 {
     asm volatile("global_load_dwordx4 v[24:27], %0, off\n\t" ::"v"(addr) : "v24", "v25", "v26", "v37");
 }
 
-__device__ void W_CMD(uint8_t* addr)
+__device__ void W_CMD(volatile uint8_t* __restrict__ addr)
 {
     asm volatile("global_store_dwordx4 %0, v[24:27], off\n\t" ::"v"(addr) : "v24", "v25", "v26", "v27");
 }
 
-__device__ void W_CMD_R(uint8_t* addr, uint8_t* src)
+__device__ void W_CMD_R(volatile uint8_t* __restrict__ addr, volatile uint8_t* __restrict__ src)
 {
-    if (hipThreadIdx_x == 0) {
-        asm volatile("global_load_dwordx4 v[20:23], %0, off\n\t" ::"v"(src) : "v20", "v21", "v22", "v23");
-        asm volatile("global_store_dwordx4 %0, v[20:23], off\n\t" ::"v"(addr) : "v20", "v21", "v22", "v23");
-    } else {
-        asm volatile("global_load_dwordx4 v[24:27], %0, off\n\t" ::"v"(src) : "v24", "v25", "v26", "v37");
-        asm volatile("global_store_dwordx4 %0, v[24:27], off\n\t" ::"v"(addr) : "v24", "v25", "v26", "v27");
+    switch (hipThreadIdx_x) {
+        case 0:
+            asm volatile("global_load_dwordx4 v[8:11], %0, off\n\t" ::"v"(src) : "v8", "v9", "v10", "v11");
+            asm volatile("global_store_dwordx4 %0, v[8:11], off\n\t" ::"v"(addr) : "v8", "v9", "v10", "v11");
+            break;
+        case 1:
+            asm volatile("global_load_dwordx4 v[12:15], %0, off\n\t" ::"v"(src) : "v12", "v13", "v14", "v15");
+            asm volatile("global_store_dwordx4 %0, v[12:15], off\n\t" ::"v"(addr) : "v12", "v13", "v14", "v15");
+            break;
+        case 2:
+            asm volatile("global_load_dwordx4 v[16:19], %0, off\n\t" ::"v"(src) : "v16", "v17", "v18", "v19");
+            asm volatile("global_store_dwordx4 %0, v[16:19], off\n\t" ::"v"(addr) : "v16", "v17", "v18", "v19");
+            break;
+        case 3:
+            asm volatile("global_load_dwordx4 v[20:23], %0, off\n\t" ::"v"(src) : "v20", "v21", "v22", "v23");
+            asm volatile("global_store_dwordx4 %0, v[20:23], off\n\t" ::"v"(addr) : "v20", "v21", "v22", "v23");
+            break;
+        case 4:
+            asm volatile("global_load_dwordx4 v[24:27], %0, off\n\t" ::"v"(src) : "v24", "v25", "v26", "v27");
+            asm volatile("global_store_dwordx4 %0, v[24:27], off\n\t" ::"v"(addr) : "v24", "v25", "v26", "v27");
+            break;
+        case 5:
+            asm volatile("global_load_dwordx4 v[28:31], %0, off\n\t" ::"v"(src) : "v28", "v29", "v30", "v31");
+            asm volatile("global_store_dwordx4 %0, v[28:31], off\n\t" ::"v"(addr) : "v28", "v29", "v30", "v31");
+            break;
+        case 6:
+            asm volatile("global_load_dwordx4 v[32:35], %0, off\n\t" ::"v"(src) : "v32", "v33", "v34", "v35");
+            asm volatile("global_store_dwordx4 %0, v[32:35], off\n\t" ::"v"(addr) : "v32", "v33", "v34", "v35");
+            break;
+        case 7:
+            asm volatile("global_load_dwordx4 v[36:39], %0, off\n\t" ::"v"(src) : "v36", "v37", "v38", "v39");
+            asm volatile("global_store_dwordx4 %0, v[36:39], off\n\t" ::"v"(addr) : "v36", "v37", "v38", "v39");
+            break;
+        case 8:
+            asm volatile("global_load_dwordx4 v[40:43], %0, off\n\t" ::"v"(src) : "v40", "v41", "v42", "v43");
+            asm volatile("global_store_dwordx4 %0, v[40:43], off\n\t" ::"v"(addr) : "v40", "v41", "v42", "v43");
+            break;
+        case 9:
+            asm volatile("global_load_dwordx4 v[44:47], %0, off\n\t" ::"v"(src) : "v44", "v45", "v46", "v47");
+            asm volatile("global_store_dwordx4 %0, v[44:47], off\n\t" ::"v"(addr) : "v44", "v45", "v46", "v47");
+            break;
+        case 10:
+            asm volatile("global_load_dwordx4 v[48:51], %0, off\n\t" ::"v"(src) : "v48", "v49", "v50", "v51");
+            asm volatile("global_store_dwordx4 %0, v[48:51], off\n\t" ::"v"(addr) : "v48", "v49", "v50", "v51");
+            break;
+        case 11:
+            asm volatile("global_load_dwordx4 v[52:55], %0, off\n\t" ::"v"(src) : "v52", "v53", "v54", "v55");
+            asm volatile("global_store_dwordx4 %0, v[52:55], off\n\t" ::"v"(addr) : "v52", "v53", "v54", "v55");
+            break;
+        case 12:
+            asm volatile("global_load_dwordx4 v[56:59], %0, off\n\t" ::"v"(src) : "v56", "v57", "v58", "v59");
+            asm volatile("global_store_dwordx4 %0, v[56:59], off\n\t" ::"v"(addr) : "v56", "v57", "v58", "v59");
+            break;
+        case 13:
+            asm volatile("global_load_dwordx4 v[60:63], %0, off\n\t" ::"v"(src) : "v60", "v61", "v62", "v63");
+            asm volatile("global_store_dwordx4 %0, v[60:63], off\n\t" ::"v"(addr) : "v60", "v61", "v62", "v63");
+            break;
+        case 14:
+            asm volatile("global_load_dwordx4 v[64:67], %0, off\n\t" ::"v"(src) : "v64", "v65", "v66", "v67");
+            asm volatile("global_store_dwordx4 %0, v[64:67], off\n\t" ::"v"(addr) : "v64", "v65", "v66", "v67");
+            break;
+        case 15:
+            asm volatile("global_load_dwordx4 v[68:71], %0, off\n\t" ::"v"(src) : "v68", "v69", "v70", "v71");
+            asm volatile("global_store_dwordx4 %0, v[68:71], off\n\t" ::"v"(addr) : "v68", "v69", "v70", "v71");
+            break;
+        default:
+            break;
     }
 }
 
-__device__ void B_CMD(int type)
-{
-    if (type == 0)
-        __syncthreads();
-    else
-        __threadfence();
-}
+__device__ void B_CMD(int type) { (type == 0) ? __syncthreads() : __threadfence(); }
 
 #endif /* EMULATOR */
 
