@@ -1,6 +1,17 @@
 #ifndef _FIM_ELT_OP_KERNELS_FIMK_
 #define _FIM_ELT_OP_KERNELS_FIMK_
 
+#define PREPARE_KERNEL 1
+#define PARK_IN 1
+#define CHANGE_SB_HAB 1
+#define PROGRAM_CRF 1
+#define CHANGE_HAB_HABFIM 1
+#define PROGRAM_CRF 1
+#define COMPUTE_ELT_OP 1
+#define CHANGE_HABFIM_HAB 1
+#define CHANGE_HAB_SB 1
+#define PARK_OUT 1
+
 __global__ void elt_op_fim_1cu_2th_fp16(volatile uint8_t* __restrict__ operand0,
                                         volatile uint8_t* __restrict__ operand1, volatile uint8_t* __restrict__ fim_ctr,
                                         volatile uint8_t* __restrict__ output, int size,
@@ -76,165 +87,144 @@ __global__ void elt_op_fim_64cu_16th_fp16(volatile uint8_t* __restrict__ operand
 #endif
 }
 
-#if 0
-__global__ void elt_add_fim(uint8_t* fim_data, uint8_t* fim_ctr, uint8_t* output, unsigned int input_size,
+__global__ void elt_add_fim(volatile uint8_t* __restrict__ operand0, volatile uint8_t* __restrict__ operand1,
+                            volatile uint8_t* __restrict__ fim_ctr, volatile uint8_t* __restrict__ output, int size,
 #ifdef EMULATOR
-                            FimMemTraceData* fmtd, int* frd_size, int mt_width,
+                            FimMemTraceData* fmtd16, int* frd_size, int mt_width,
 #endif
                             uint8_t* crf_binary, int crf_size)
 {
 #ifdef EMULATOR
-    g_idx[hipBlockIdx_x] = 0;
     g_fba = (uint64_t)fim_ctr;
-    g_fmtd16 = fmtd;
+    g_fmtd16 = fmtd16;
+    g_ridx[hipBlockIdx_x] = 0;
     m_width = mt_width;
+    __syncthreads();
+#endif
+    int trans_size = 32;
+    int num_col = 32;
+    int num_fim_blocks = 8;
+    int num_fim_chan = 64;
+    int num_grf = 8;
+    int num_bg = 4;
+    int num_ba = 4;
+    int out_dim = size / trans_size;
+    int num_tile = out_dim / (num_fim_blocks * num_fim_chan * num_grf) / 2;
+
+#ifdef EMULATOR
+    /* RA13 and RA12 is swapped in Aquabolt-XL core-die, we need to emulate this behavior in emulator mode */
+    /* 0x17ff : RA12<->RA13 swapped address in vega20 memory map */
     uint32_t hab_row_addr = 0x17ff;
     uint32_t sb_row_addr = 0x1fff;
 #else  /* TARGET */
     uint32_t hab_row_addr = 0x27ff;
     uint32_t sb_row_addr = 0x2fff;
 #endif /* EMULATOR */
-    FimBlockInfo* fbi = &vega20_fbi;
-    int num_blk = fbi->num_fim_blocks;
-    int num_g = fbi->num_grf;
-    int num_bg = fbi->num_bank_groups;
-    int num_ba = fbi->num_banks;
-    int num_ch = hipGridDim_x;
-    int num_rank = 1;
-    int num_col = 32;
-    int g_size = 32;
-    int i_size = input_size / sizeof(short);
-    unsigned int start_row = (((uint64_t)fim_data - (uint64_t)fim_ctr) >> 19) & 0x3FFF;
 
-    int num_p = num_blk * num_ch * num_g * (g_size / sizeof(short));
-    int num_t = i_size / num_p;
-
-    uint64_t addr;
+    int gidx = hipThreadIdx_x / 2;
     uint64_t offset = (hipThreadIdx_x % 2) * 0x10;
+    uint64_t addr, addr_even, addr_odd;
 
+    /* Radeon7(VEGA20) memory is 16GB but our target is 32GB system */
+    /* so program_crf and chagne_fim_mode functions can not access to over 8GB in our system */
+#if PARK_IN
+    addr = addr_gen(hipBlockIdx_x, 0, gidx / num_ba, gidx % num_ba, (1 << 12), 0);
+    R_CMD(&fim_ctr[addr + offset]);
+    R_CMD(&fim_ctr[addr + 0x8000 + offset]);
     B_CMD(0);
-    if (hipThreadIdx_x < num_bg * 2) {
-        addr = addr_gen(hipBlockIdx_x, 0, (hipThreadIdx_x / 2), 0, (1 << 12), 0);
-        R_CMD(&fim_ctr[addr + offset]);
+#endif
 
-        addr = addr_gen(hipBlockIdx_x, 0, (hipThreadIdx_x / 2), 1, (1 << 12), 0);
-        R_CMD(&fim_ctr[addr + offset]);
-
-        addr = addr_gen(hipBlockIdx_x, 0, (hipThreadIdx_x / 2), 2, (1 << 12), 0);
-        R_CMD(&fim_ctr[addr + offset]);
-
-        addr = addr_gen(hipBlockIdx_x, 0, (hipThreadIdx_x / 2), 3, (1 << 12), 0);
-        R_CMD(&fim_ctr[addr + offset]);
-    }
-    B_CMD(0);
-
-    if (hipThreadIdx_x < 2) {
-        addr = addr_gen(hipBlockIdx_x, 0, 0, 0, hab_row_addr, 0x1f);
+#if CHANGE_SB_HAB
+    if (hipThreadIdx_x < 4) {
+        addr = addr_gen(hipBlockIdx_x, 0, 0, gidx, hab_row_addr, 0x1f);
         W_CMD(&fim_ctr[addr + offset]);
 
-        addr = addr_gen(hipBlockIdx_x, 0, 0, 1, hab_row_addr, 0x1f);
-        W_CMD(&fim_ctr[addr + offset]);
-
-        addr = addr_gen(hipBlockIdx_x, 0, 2, 0, hab_row_addr, 0x1f);
-        W_CMD(&fim_ctr[addr + offset]);
-
-        addr = addr_gen(hipBlockIdx_x, 0, 2, 1, hab_row_addr, 0x1f);
+        addr = addr_gen(hipBlockIdx_x, 0, 2, gidx, hab_row_addr, 0x1f);
         W_CMD(&fim_ctr[addr + offset]);
     }
     B_CMD(0);
+#endif
 
+#if PROGRAM_CRF
     if (hipThreadIdx_x < 2 * crf_size) {
-        addr = addr_gen(hipBlockIdx_x, 0, 0, 1, 0x3fff, 0x4 + hipThreadIdx_x / 2);
+        addr = addr_gen(hipBlockIdx_x, 0, 0, 1, 0x3fff, 0x4 + gidx);
         W_CMD_R(&fim_ctr[addr + offset], crf_binary + hipThreadIdx_x * 16);
     }
     B_CMD(0);
+#endif
 
-    if (hipThreadIdx_x < 2 * crf_size) {
+#if CHANGE_HAB_HABFIM
+    if (hipThreadIdx_x < 2) {
         addr = addr_gen(hipBlockIdx_x, 0, 0, 0, 0x3fff, 0x0);
         W_CMD_R(&fim_ctr[addr + offset], elt_add_hab_to_hab_fim + hipThreadIdx_x * 16);
     }
     B_CMD(0);
+#endif
 
-    for (int tile_idx = 0; tile_idx < num_t; tile_idx++) {
-        unsigned int loc = tile_idx * num_g + (hipThreadIdx_x / 2);
-        unsigned int row = start_row + loc / num_col;
+#if COMPUTE_ELT_OP
+    for (int tile_idx = 0; tile_idx < num_tile; tile_idx++) {
+        unsigned int loc = tile_idx * num_grf + gidx;
+        unsigned int row = loc / num_col;
         unsigned int col = loc % num_col;
 
         addr = addr_gen(hipBlockIdx_x, 0, 0, 0, row, col);
-        R_CMD(&fim_ctr[addr + offset]);
+        addr_even = addr + offset;
+        addr_odd = addr_even + 0x2000;
+
+        R_CMD(&operand0[addr_even]);
         B_CMD(1);
 
-        R_CMD(&fim_ctr[addr + 0x2000 + offset]);
+        R_CMD(&operand1[addr_even]);
         B_CMD(1);
 
-        unsigned int output_loc = loc + num_t * num_g;
-        unsigned int output_row = start_row + output_loc / num_col;
-        unsigned int output_col = output_loc % num_col;
-
-        addr = addr_gen(hipBlockIdx_x, 0, 0, 1, output_row, output_col);
-        W_CMD(&fim_ctr[addr + offset]);
+        W_CMD(&output[addr_even]);
         B_CMD(1);
+
+        R_CMD(&operand0[addr_odd]);
+        B_CMD(1);
+
+        R_CMD(&operand1[addr_odd]);
+        B_CMD(1);
+
+        W_CMD(&output[addr_odd]);
+        B_CMD(1);
+
+        if (hipThreadIdx_x < 2) {
+            W_CMD(&output[addr_odd]);
+        }
+        B_CMD(0);
     }
+#endif
 
-    if (hipThreadIdx_x < 2 * crf_size) {
+#if CHANGE_HABFIM_HAB
+    if (hipThreadIdx_x < 2) {
         addr = addr_gen(hipBlockIdx_x, 0, 0, 0, 0x3fff, 0x0);
         W_CMD_R(&fim_ctr[addr + offset], elt_add_hab_fim_to_hab + hipThreadIdx_x * 16);
     }
     B_CMD(0);
+#endif
 
+#if CHANGE_HAB_SB
     if (hipThreadIdx_x < 4) {
-        addr = addr_gen(hipBlockIdx_x, 0, 0, hipThreadIdx_x / 2, sb_row_addr, 0x1f);
+        addr = addr_gen(hipBlockIdx_x, 0, 0, gidx, sb_row_addr, 0x1f);
         W_CMD(&fim_ctr[addr + offset]);
-        B_CMD(1);
-
-        addr = addr_gen(hipBlockIdx_x, 0, 0, hipThreadIdx_x / 2, (1 << 12), 0);
-        R_CMD(&fim_ctr[addr + offset]);
-        B_CMD(1);
     }
+    B_CMD(0);
+#endif
+
+#if PARK_OUT
+    if (hipThreadIdx_x < 4) {
+        addr = addr_gen(hipBlockIdx_x, 0, 0, gidx, (1 << 12), 0);
+        R_CMD(&fim_ctr[addr + offset]);
+    }
+    B_CMD(0);
+#endif
 
 #ifdef EMULATOR
     if (hipBlockIdx_x == 0 && hipThreadIdx_x == 0) {
-        unsigned int cidx = 0;
-        unsigned int rank = 0;
-        unsigned int bg = 0;
-        unsigned int ba = 0;
-        unsigned int rst_col = (i_size / 16) / (num_blk * num_ch * num_rank);
-
-        for (int x = 0; x < (i_size / 16); x += num_g) {
-            unsigned int row = start_row;
-            unsigned int col = rst_col;
-
-            for (int i = 0; i < num_g; i++) {
-                addr = addr_gen(cidx, rank, bg, ba + 1, row, col);
-                record(cidx, 'O', addr);
-                record(cidx, 'O', addr + 0x10);
-                col++;
-            }
-
-            ba += (num_ba / num_blk);
-            if (ba >= (num_ba / num_bg)) {
-                bg++;
-                ba = 0;
-            }
-            if (bg >= num_bg) {
-                bg = 0;
-                rank++;
-            }
-            if (rank >= num_rank) {
-                rank = 0;
-                cidx++;
-            }
-            if (cidx >= num_ch) {
-                cidx = 0;
-                start_row = row;
-                rst_col = col;
-            }
-        }
+        frd_size[0] = g_ridx[0];
     }
-
-    *frd_size = g_idx[0];
 #endif
 }
-#endif
 
 #endif /* _FIM_ELT_OP_KERNELS_FIMK_ */
