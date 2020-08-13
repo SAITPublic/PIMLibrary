@@ -29,10 +29,15 @@ def parse_fim_log_file(file_name, cols=None):
 	'''
 	df = pd.DataFrame([],columns = ['Module Name', 'API Name','begin','end', 'duration'])
 	df_buf = pd.DataFrame([],columns = ['Buffer Id', 'Creation Time (in ms)'])
+	df_logs = pd.DataFrame([],columns = ['Module', 'API', 'Time (in ms)'])
 	with open(file_name, 'r') as f:
 		for line in f:
 			if(line[0] == 'I'):
 				log  = line.split()
+				log_time = log[1].split(':')
+				log_time_s = int(log_time[0])*3600+int(log_time[1])*60+float(log_time[2])
+				log_time_ms = log_time_s*(10**3)
+				module_name = log[3].split(':')[0]
 				if(log[4] != '[START]' and log[4] != '[END]'):
 					if(len(log) == 9 and log[5] == 'time' and log[7] == ':'): #Buffer Logs
 						if(log[6] == '(us)'):
@@ -41,34 +46,42 @@ def parse_fim_log_file(file_name, cols=None):
 							div = 1
 						else:
 							print('Problem with buffer log: ', log)
-						log_data = {'Buffer Id':log[4], 'Creation Time (in ms)':(float(log[8])/div)}
+						log_name=log[4]
+						log_data = {'Buffer Id':log_name, 'Creation Time (in ms)':(float(log[8])/div)}
 						df_buf =df_buf.append(log_data, ignore_index=True)
+						#Add log to df_logs
+						log_data = {'Module':module_name, 'API':log_name, 'Time (in ms)':log_time_ms}
+						df_logs = df_logs.append(log_data, ignore_index=True)
 				else:
-					log_time = log[1].split(':')
-					log_time_s = int(log_time[0])*3600+int(log_time[1])*60+float(log_time[2])
-					log_time_ms = log_time_s*(10**3)
-					module_name = log[3].split(':')[0]
-					api_name = module_name + ':' + log[5]
-
+					log_name = log[5]
+					api_name = module_name + ': ' + log[5]
 					if(log[4] =='[START]'):
 						log_data = {'begin':log_time_ms, 'API Name':api_name, 'Module Name':module_name}
 						df =df.append(log_data, ignore_index=True)
+						#Add log to df_logs
+						log_data = {'Module':module_name, 'API':log_name+' [START]', 'Time (in ms)':log_time_ms}
+						df_logs = df_logs.append(log_data, ignore_index=True)
 					else:
 						row_idx = (df.index[(df['API Name'] == api_name) & (pd.isna(df.end))].tolist()[-1])
 						df.at[row_idx, 'end'] = log_time_ms #set end time
+						#Add log to df_logs
+						log_data = {'Module':module_name, 'API':log_name+' [END]', 'Time (in ms)':log_time_ms}
+						df_logs = df_logs.append(log_data, ignore_index=True)
 
 	#Set EndTime = BeginTime wherever Endtime is nan (not in log file)
 	df['end'] = np.where(pd.isna(df.end), df['begin'], df['end'])
 	#Set starting time to 0 ms
 	df['end'] = df['end'] - df['begin'][0]
 	df['begin'] = df['begin'] - df['begin'][0]
+	df_logs['Time (in ms)'] = df_logs['Time (in ms)'] - df_logs['Time (in ms)'][0]
 	#Set duration
 	df['duration'] = df['end'] - df['begin']
-
+	#Round off to 3 places
 	for col in ['begin', 'end','duration']:
 		df[col] = (df[col]).astype('float').round(3)
+	df_logs['Time (in ms)'] = (df_logs['Time (in ms)']).astype('float').round(3)
 
-	return df, df_buf
+	return df, df_buf, df_logs
 
 def parse_miopen_log_file(file_name, cols=None):
 	'''Parses MIOpen log file

@@ -44,12 +44,13 @@ def create(listEvntsName, evntStartTime, evntEndTime, listTagsName, title, plot_
             ))
             glyph = plot.quad(left="left", right="right", top="top", bottom="bottom",fill_color=colorPallete[clr_ctr], line_color=colorPallete[clr_ctr],
                               source=source)
+            glyphs.append(glyph)
             if(fim_plot):
                 if(listTagsName[i][j].endswith('.cpp')):
                     glyph.visible=False
                 else:
                     labels = Text(x='left', y='top', text='names', x_offset=0, y_offset=5, angle = 0.6, text_font_size='10pt')
-                    plot.add_glyph(source, labels)
+                    label_plots = plot.add_glyph(source, labels)
 
             clr_ctr+=1
             legend_items.append((listTagsName[i][j],[glyph]))
@@ -60,7 +61,7 @@ def create(listEvntsName, evntStartTime, evntEndTime, listTagsName, title, plot_
     xaxis = LinearAxis() 
     plot.add_layout(Grid(dimension=0, ticker=xaxis.ticker))
 
-    return plot
+    return plot, glyphs
 
 
 if __name__=='__main__':

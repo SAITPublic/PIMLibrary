@@ -1,3 +1,5 @@
+import copy
+
 def get_start_end_times(df, name_col='Kernel Operation', start_col = 'begin', end_col = 'end', fim_processing=False):
 	'''Function to extract start and end Times of events from pandas dataframe
 		df = Pandas dataframe contaning data
@@ -47,3 +49,17 @@ def get_start_end_times(df, name_col='Kernel Operation', start_col = 'begin', en
 		event_names.append(name)
 
 	return event_names, event_start_times, event_end_times, event_func_names
+
+def modify_plot_data(glyphs, original_glyphs_data, start_time, end_time):
+	for i in range(len(original_glyphs_data)):
+		new_data = copy.deepcopy(dict(original_glyphs_data[i]))
+		for j in range(len(new_data['left'])):
+			if (new_data['right'][j] < start_time) or (new_data['left'][j] > end_time) :
+				new_data['right'][j] = start_time
+				new_data['left'][j] = start_time
+				new_data['names'][j] = ''
+			elif new_data['right'][j] > end_time :
+				new_data['right'][j] = end_time
+			elif new_data['left'][j] < start_time :
+				new_data['left'][j] = start_time
+		glyphs[i].data_source.data = new_data
