@@ -67,6 +67,19 @@ sudo make install
 - Build in release mode if you want to install all Lib and Simulator to /opt/rocm/
 - Logs will be generated only in Debug mode in /tmp/ directory
 
+## DLOG Generation
+For generating debug logs, 
+1. Set log level
+``` 
+export FIM_LOG_LEVEL=<severity> 
+severity
+0 : INFO
+1 : WARNING
+2 : ERROR
+```
+2. Compile FIMLibrary in Debug mode. (cmake, build and install required) : use all and -d option in build script
+3. Execute application. Debug logs will be dumpred in /tmp/ directory with date and time as filename.
+
 # Testing
 
 ## How to run FimIntegrationTests
