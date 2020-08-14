@@ -34,7 +34,6 @@ int fim_gemv_batch(bool block)
 
     /* Initialize the input, weight, output data */
     std::string test_vector_data = TEST_VECTORS_DATA;
-    test_vector_data.append("/test_vectors/");
 
     std::string input = test_vector_data + "load/gemv/batch_input_2x256.dat";
     std::string weight = test_vector_data + "load/gemv/batch_weight_256x4096.dat";
@@ -99,7 +98,6 @@ int fim_gemv_256(bool block)
 
     /* Initialize the input, weight, output data */
     std::string test_vector_data = TEST_VECTORS_DATA;
-    test_vector_data.append("/test_vectors/");
 
     std::string input = test_vector_data + "load/gemv/input_256x1.dat";
     std::string weight = test_vector_data + "load/gemv/weight_256x4096.dat";
@@ -162,7 +160,6 @@ int fim_gemv_512(bool block)
 
     /* Initialize the input, weight, output data */
     std::string test_vector_data = TEST_VECTORS_DATA;
-    test_vector_data.append("/test_vectors/");
 
     std::string input = test_vector_data + "load/gemv/input_512x1.dat";
     std::string weight = test_vector_data + "load/gemv/weight_512x4096.dat";
@@ -231,7 +228,6 @@ int fim_gemv_desc(bool block)
 
     /* Initialize the input, weight, output data */
     std::string test_vector_data = TEST_VECTORS_DATA;
-    test_vector_data.append("/test_vectors/");
 
     std::string input = test_vector_data + "load/gemv/gemv_input_1024x4096.dat";
     std::string weight = test_vector_data + "load/gemv/gemv_weight_1024x4096.dat";
@@ -307,7 +303,6 @@ int fim_gemv_desc_batch(bool block)
 
     /* Initialize the input, weight, output data */
     std::string test_vector_data = TEST_VECTORS_DATA;
-    test_vector_data.append("/test_vectors/");
 
     std::string input = test_vector_data + "load/gemv/gemv_batch_input_4x1024.dat";
     std::string weight = test_vector_data + "load/gemv/gemv_batch_weight_1024x4096.dat";
@@ -393,7 +388,6 @@ int fim_gemv_lut(bool block)
 
     /* Initialize the input, weight, output data */
     std::string test_vector_data = TEST_VECTORS_DATA;
-    test_vector_data.append("/test_vectors/");
 
     std::string input = test_vector_data + "load/gemv/gemv_input_1024x4096.dat";
     std::string weight = test_vector_data + "load/gemv/gemv_weight_1024x4096.dat";
@@ -427,7 +421,7 @@ int fim_gemv_lut(bool block)
     /* __FIM_API__ call : Execute FIM kernel (GEMV) */
     FimExecuteGemv(dev_out, dev_in, fim_weight, block);
     if (!block) FimSynchronize();
-    FimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
+    FimCopyMemory(host_output, dev_out, DEVICE_TO_HOST);
 
     dump_data(preload_weight.c_str(), (char*)preloaded_weight->data, preloaded_weight->size);
     dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
@@ -438,13 +432,12 @@ int fim_gemv_lut(bool block)
     FimDestroyBo(host_weight);
     FimDestroyBo(temp_weight);
     FimDestroyBo(host_output);
-    FimDestroyBo(device_output);
     FimDestroyBo(host_reordered_weight);
     FimDestroyBo(golden_output);
     FimDestroyDesc(fim_desc);
 
     /* __FIM_API__ call : Deinitialize FimRuntime */
-    FimDeinitialize();  // device_input, preloaded_weight will be destroyed in FimDeinitialize()
+    FimDeinitialize();  // device_input, preloaded_weight, device_output will be destroyed in FimDeinitialize()
 
     return ret;
 }
@@ -478,7 +471,6 @@ int fim_gemv_lut_profile(bool block)
 
     /* Initialize the input, weight, output data */
     std::string test_vector_data = TEST_VECTORS_DATA;
-    test_vector_data.append("/test_vectors/");
 
     std::string input = test_vector_data + "load/gemv/gemv_input_1024x4096.dat";
     std::string weight = test_vector_data + "load/gemv/gemv_weight_1024x4096.dat";
@@ -523,7 +515,7 @@ int fim_gemv_lut_profile(bool block)
     std::cout << "[ " << iter << " execution time ]" << std::endl;
 #endif
 
-    FimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
+    FimCopyMemory(host_output, dev_out, DEVICE_TO_HOST);
     dump_data(preload_weight.c_str(), (char*)preloaded_weight->data, preloaded_weight->size);
     dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
     ret = compare_data((char*)golden_output->data, (char*)host_output->data, out_size * sizeof(half));
@@ -533,13 +525,12 @@ int fim_gemv_lut_profile(bool block)
     FimDestroyBo(host_weight);
     FimDestroyBo(temp_weight);
     FimDestroyBo(host_output);
-    FimDestroyBo(device_output);
     FimDestroyBo(host_reordered_weight);
     FimDestroyBo(golden_output);
     FimDestroyDesc(fim_desc);
 
     /* __FIM_API__ call : Deinitialize FimRuntime */
-    FimDeinitialize();  // device_input, preloaded_weight will be destroyed in FimDeinitialize()
+    FimDeinitialize();  // device_input, preloaded_weight, device_output will be destroyed in FimDeinitialize()
 
     return ret;
 }

@@ -69,4 +69,4 @@ int gpu_integral_sum(void)
     return 0;
 }
 
-TEST(HIPIntegrationTest, GpuIntegralSum) { EXPECT_TRUE(gpu_integral_sum() == 0); }
+TEST(UnitTest, GpuIntegralSum) { EXPECT_TRUE(gpu_integral_sum() == 0); }

@@ -66,7 +66,5 @@ install ( TARGETS fim_init LIBRARY DESTINATION
 install ( TARGETS fim_deinit LIBRARY DESTINATION
            /opt/rocm/lib)
 
-if("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
 install ( DIRECTORY python DESTINATION /opt/rocm/lib/tf_fim_ops )
 install ( FILES ${CMAKE_CURRENT_SOURCE_DIR}/__init__.py  DESTINATION /opt/rocm/lib/tf_fim_ops)
-endif()

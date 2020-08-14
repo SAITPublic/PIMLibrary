@@ -78,7 +78,7 @@ severity
 2 : ERROR
 ```
 2. Compile FIMLibrary in Debug mode. (cmake, build and install required) : use all and -d option in build script
-3. Execute application. Debug logs will be dumpred in /tmp/ directory with date and time as filename.
+3. Execute application. Debug logs will be dumped in /tmp/ directory with date and time as filename.
 
 # Testing
 

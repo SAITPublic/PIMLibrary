@@ -30,7 +30,6 @@ int fim_elt_mul_1(bool block)
     FimBo* device_output = FimCreateBo(LENGTH, 1, 1, 1, FIM_FP16, MEM_TYPE_FIM);
 
     std::string test_vector_data = TEST_VECTORS_DATA;
-    test_vector_data.append("/test_vectors/");
 
     std::string input0 = test_vector_data + "load/elt_mul/input0_256KB.dat";
     std::string input1 = test_vector_data + "load/elt_mul/input1_256KB.dat";
@@ -95,7 +94,6 @@ int fim_elt_mul_2(bool block)
     FimAllocMemory(&device_output);
 
     std::string test_vector_data = TEST_VECTORS_DATA;
-    test_vector_data.append("/test_vectors/");
     std::string input0 = test_vector_data + "load/elt_mul/input0_256KB.dat";
     std::string input1 = test_vector_data + "load/elt_mul/input1_256KB.dat";
     std::string output = test_vector_data + "load/elt_mul/output_256KB.dat";
@@ -152,7 +150,6 @@ int fim_elt_mul_3(bool block)
     FimBo* device_output = FimCreateBo(LENGTH * 2, 1, 1, 1, FIM_FP16, MEM_TYPE_FIM);
 
     std::string test_vector_data = TEST_VECTORS_DATA;
-    test_vector_data.append("/test_vectors/");
 
     std::string input0 = test_vector_data + "load/elt_mul/input0_512KB.dat";
     std::string input1 = test_vector_data + "load/elt_mul/input1_512KB.dat";
@@ -212,7 +209,6 @@ int fim_elt_mul_4(bool block)
     FimBo* device_output = FimCreateBo(fim_desc, MEM_TYPE_FIM);
 
     std::string test_vector_data = TEST_VECTORS_DATA;
-    test_vector_data.append("/test_vectors/");
     /* Initialize the input, weight, output data */
     std::string input0 = test_vector_data + "load/elt_mul/input0_256KB.dat";
     std::string input1 = test_vector_data + "load/elt_mul/input1_256KB.dat";
@@ -271,7 +267,6 @@ int fim_elt_mul_profile(bool block)
     FimBo* device_output = FimCreateBo(LENGTH, 1, 1, 1, FIM_FP16, MEM_TYPE_FIM);
 
     std::string test_vector_data = TEST_VECTORS_DATA;
-    test_vector_data.append("/test_vectors/");
 
     std::string input0 = test_vector_data + "load/elt_mul/input0_256KB.dat";
     std::string input1 = test_vector_data + "load/elt_mul/input1_256KB.dat";

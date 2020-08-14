@@ -28,7 +28,6 @@ int fim_sv_add_1(void)
     FimBo* device_output = FimCreateBo(LENGTH, 1, 1, 1, FIM_FP16, MEM_TYPE_FIM);
 
     std::string test_vector_data = TEST_VECTORS_DATA;
-    test_vector_data.append("/test_vectors/");
 
     std::string input0 = test_vector_data + "load/sv_add/scalar_2B.dat";
     std::string input1 = test_vector_data + "load/sv_add/vector_256KB.dat";
@@ -81,7 +80,6 @@ int fim_sv_mul_1(void)
     FimBo* device_output = FimCreateBo(LENGTH, 1, 1, 1, FIM_FP16, MEM_TYPE_FIM);
 
     std::string test_vector_data = TEST_VECTORS_DATA;
-    test_vector_data.append("/test_vectors/");
 
     std::string input0 = test_vector_data + "load/sv_mul/scalar_2B.dat";
     std::string input1 = test_vector_data + "load/sv_mul/vector_256KB.dat";

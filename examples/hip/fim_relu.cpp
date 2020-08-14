@@ -28,7 +28,6 @@ int fim_relu_1(bool block)
 
     /* Initialize the input, output data */
     std::string test_vector_data = TEST_VECTORS_DATA;
-    test_vector_data.append("/test_vectors/");
 
     std::string input = test_vector_data + "load/relu/input_256KB.dat";
     std::string output = test_vector_data + "load/relu/output_256KB.dat";
@@ -85,7 +84,6 @@ int fim_relu_2(bool block)
 
     /* Initialize the input, weight, output data */
     std::string test_vector_data = TEST_VECTORS_DATA;
-    test_vector_data.append("/test_vectors/");
 
     std::string input = test_vector_data + "load/relu/input_256KB.dat";
     std::string output = test_vector_data + "load/relu/output_256KB.dat";
@@ -136,7 +134,6 @@ int fim_relu_3(bool block)
 
     /* Initialize the input, output data */
     std::string test_vector_data = TEST_VECTORS_DATA;
-    test_vector_data.append("/test_vectors/");
 
     std::string input = test_vector_data + "load/relu/input_512KB.dat";
     std::string output = test_vector_data + "load/relu/output_512KB.dat";

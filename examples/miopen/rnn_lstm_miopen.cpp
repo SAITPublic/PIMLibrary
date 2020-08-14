@@ -178,7 +178,6 @@ int miopen_rnn_lstm()
 
     half *golden = new half[out_sz];
     std::string test_vector_data = TEST_VECTORS_DATA;
-    test_vector_data.append("/test_vectors/");
 
     std::string output_lstm = test_vector_data + "load/gemv/miopen_lstm.dat";
 

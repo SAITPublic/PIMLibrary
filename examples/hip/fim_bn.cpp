@@ -48,7 +48,6 @@ int fim_bn_1(bool block)
 
     /* Initialize the input, output data */
     std::string test_vector_data = TEST_VECTORS_DATA;
-    test_vector_data.append("/test_vectors/");
 
     std::string input = test_vector_data + "load/bn/input_256KB.dat";
     std::string beta = test_vector_data + "load/bn/beta_128B.dat";
