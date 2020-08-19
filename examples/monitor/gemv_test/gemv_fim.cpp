@@ -213,8 +213,8 @@ __global__ void gemv_fim(uint8_t* fim_ctr, uint8_t* fim_weight, uint8_t* fim_gem
     /* so program_crf and chagne_fim_mode functions can not access to over 8GB in our system */
 #if PARK_IN
     if (hipThreadIdx_x < num_bg * num_ba * 2) {
-        addr = addr_gen(hipBlockIdx_x, 0, gidx / num_ba, gidx % num_ba, (1 << 12), 0);
-        R_CMD(&fim_ctr[addr + offset]);
+        addr = addr_gen(hipBlockIdx_x, 0, gidx / num_ba, gidx % num_ba, 0, 0);
+        R_CMD(&fim_weight[addr + offset]);
     }
     B_CMD(0);
 #endif
@@ -351,9 +351,9 @@ __global__ void gemv_fim(uint8_t* fim_ctr, uint8_t* fim_weight, uint8_t* fim_gem
 #endif
 
 #if PARK_OUT
-    if (hipThreadIdx_x < 4) {
-        addr = addr_gen(hipBlockIdx_x, 0, 0, gidx, (1 << 12), 0);
-        R_CMD(&fim_ctr[addr + offset]);
+    if (hipThreadIdx_x < num_bg * num_ba * 2) {
+        addr = addr_gen(hipBlockIdx_x, 0, gidx / num_ba, gidx % num_ba, 0, 0);
+        R_CMD(&fim_weight[addr + offset]);
     }
     B_CMD(0);
 #endif

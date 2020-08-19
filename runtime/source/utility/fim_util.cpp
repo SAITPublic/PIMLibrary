@@ -407,7 +407,7 @@ __device__ void change_fim_mode_1cu_2th(volatile uint8_t* __restrict__ fim_ctr, 
     BLOCK_SYNC();
 }
 
-__device__ void park_in_1cu_2th(volatile uint8_t* __restrict__ fim_ctr, uint64_t offset)
+__device__ void park_1cu_2th(volatile uint8_t* __restrict__ fim_addr, uint64_t offset)
 {
     uint32_t cidx;
     uint32_t rank;
@@ -422,29 +422,10 @@ __device__ void park_in_1cu_2th(volatile uint8_t* __restrict__ fim_ctr, uint64_t
         for (rank = 0; rank < fbi->num_fim_rank; rank++) {
             for (b = 0; b < fbi->num_banks / fbi->num_bank_groups; b++) {
                 for (bg = 0; bg < fbi->num_bank_groups; bg++) {
-                    t_addr = addr_gen(cidx, rank, bg, b, (1 << 12), 0);
-                    GEN_READ_CMD(null_bst + offset, &fim_ctr[t_addr + offset]);
+                    t_addr = addr_gen(cidx, rank, bg, b, 0, 0);
+                    GEN_READ_CMD(null_bst + offset, &fim_addr[t_addr + offset]);
                 }
             }
-        }
-    }
-    BLOCK_SYNC();
-}
-
-__device__ void park_out_1cu_2th(volatile uint8_t* __restrict__ fim_ctr, uint64_t offset)
-{
-    uint32_t cidx;
-    uint32_t rank;
-    uint64_t t_addr;
-    FimBlockInfo* fbi = &vega20_fbi;
-
-    for (cidx = 0; cidx < fbi->num_fim_chan; cidx++) {
-        for (rank = 0; rank < fbi->num_fim_rank; rank++) {
-            t_addr = addr_gen(cidx, rank, 0, 0, (1 << 12), 0);
-            GEN_READ_CMD(null_bst + offset, &fim_ctr[t_addr + offset]);
-
-            t_addr = addr_gen(cidx, rank, 0, 1, (1 << 12), 0);
-            GEN_READ_CMD(null_bst + offset, &fim_ctr[t_addr + offset]);
         }
     }
     BLOCK_SYNC();
@@ -748,7 +729,7 @@ __device__ void change_fim_mode_64cu_2th(volatile uint8_t* __restrict__ fim_ctr,
     GEN_BLOCK_CMD(0);
 }
 
-__device__ void park_in_64cu_2th(volatile uint8_t* __restrict__ fim_ctr, uint64_t offset)
+__device__ void park_64cu_2th(volatile uint8_t* __restrict__ fim_addr, uint64_t offset)
 {
     uint32_t cidx = hipBlockIdx_x;
     uint32_t rank = 0;
@@ -759,23 +740,10 @@ __device__ void park_in_64cu_2th(volatile uint8_t* __restrict__ fim_ctr, uint64_
 
     for (b = 0; b < fbi->num_banks / fbi->num_bank_groups; b++) {
         for (bg = 0; bg < fbi->num_bank_groups; bg++) {
-            t_addr = addr_gen(cidx, rank, bg, b, (1 << 12), 0);
-            GEN_READ_CMD(null_bst + offset, &fim_ctr[t_addr + offset]);
+            t_addr = addr_gen(cidx, rank, bg, b, 0, 0);
+            GEN_READ_CMD(null_bst + offset, &fim_addr[t_addr + offset]);
         }
     }
-}
-
-__device__ void park_out_64cu_2th(volatile uint8_t* __restrict__ fim_ctr, uint64_t offset)
-{
-    uint32_t cidx = hipBlockIdx_x;
-    uint32_t rank = 0;
-    uint64_t t_addr;
-
-    t_addr = addr_gen(cidx, rank, 0, 0, (1 << 12), 0);
-    GEN_READ_CMD(null_bst + offset, &fim_ctr[t_addr + offset]);
-
-    t_addr = addr_gen(cidx, rank, 0, 1, (1 << 12), 0);
-    GEN_READ_CMD(null_bst + offset, &fim_ctr[t_addr + offset]);
 }
 
 /* Multi blocks with multi threads functions according to host setting */
@@ -883,7 +851,7 @@ __device__ void change_fim_mode(volatile uint8_t* __restrict__ fim_ctr, FimMode 
     GEN_BLOCK_CMD(0);
 }
 
-__device__ void park_in(volatile uint8_t* __restrict__ fim_ctr, uint64_t offset)
+__device__ void park(volatile uint8_t* __restrict__ fim_addr, uint64_t offset)
 {
     FimBlockInfo* fbi = &vega20_fbi;
     uint32_t cidx = hipBlockIdx_x;
@@ -892,19 +860,6 @@ __device__ void park_in(volatile uint8_t* __restrict__ fim_ctr, uint64_t offset)
     uint32_t rank = 0;
     uint64_t t_addr;
 
-    t_addr = addr_gen(cidx, rank, bg, b, (1 << 12), 0);
-    GEN_READ_CMD(null_bst + offset, &fim_ctr[t_addr + offset]);
-}
-
-__device__ void park_out(volatile uint8_t* __restrict__ fim_ctr, uint64_t offset)
-{
-    if (hipThreadIdx_x >= 4) return;
-
-    uint32_t cidx = hipBlockIdx_x;
-    uint32_t rank = 0;
-    uint32_t bank = hipThreadIdx_x / 2;
-    uint64_t t_addr;
-
-    t_addr = addr_gen(cidx, rank, 0, bank, (1 << 12), 0);
-    GEN_READ_CMD(null_bst + offset, &fim_ctr[t_addr + offset]);
+    t_addr = addr_gen(cidx, rank, bg, b, 0, 0);
+    GEN_READ_CMD(null_bst + offset, &fim_addr[t_addr + offset]);
 }

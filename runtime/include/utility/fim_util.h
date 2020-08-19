@@ -76,8 +76,7 @@ __device__ void add_transaction_all_1cu_2th(volatile uint8_t* __restrict__ fim_a
                                             int loop_cnt = 1);
 __device__ void change_fim_mode_1cu_2th(volatile uint8_t* __restrict__ fim_ctr, FimMode mode1, FimMode mode2,
                                         uint8_t* change_mode_bin, uint64_t offset);
-__device__ void park_in_1cu_2th(volatile uint8_t* __restrict__ fim_ctr, uint64_t offset);
-__device__ void park_out_1cu_2th(volatile uint8_t* __restrict__ fim_ctr, uint64_t offset);
+__device__ void park_1cu_2th(volatile uint8_t* __restrict__ fim_addr, uint64_t offset);
 __device__ void program_crf_1cu_2th(volatile uint8_t* __restrict__ fim_ctr, uint8_t* crf_bin, uint32_t cmd_size,
                                     uint64_t offset);
 __device__ void program_srf_1cu_2th(volatile uint8_t* __restrict__ fim_ctr, uint8_t* srf_bin, uint32_t srf_bin_size,
@@ -120,8 +119,7 @@ __device__ void add_transaction_all_64cu_2th(volatile uint8_t* __restrict__ fim_
                                              int loop_cnt = 1);
 __device__ void change_fim_mode_64cu_2th(volatile uint8_t* __restrict__ fim_ctr, FimMode mode1, FimMode mode2,
                                          uint8_t* change_mode_bin, uint64_t offset);
-__device__ void park_in_64cu_2th(volatile uint8_t* __restrict__ fim_ctr, uint64_t offset);
-__device__ void park_out_64cu_2th(volatile uint8_t* __restrict__ fim_ctr, uint64_t offset);
+__device__ void park_64cu_2th(volatile uint8_t* __restrict__ fim_addr, uint64_t offset);
 __device__ void program_crf_64cu_2th(volatile uint8_t* __restrict__ fim_ctr, uint8_t* crf_bin, uint32_t cmd_size,
                                      uint64_t offset);
 __device__ void compute_gemv_2bank_64cu_2th(volatile uint8_t* __restrict__ fim_ctr,
@@ -136,8 +134,7 @@ __device__ void add_transaction_all(volatile uint8_t* __restrict__ fim_addr, boo
                                     uint32_t row, uint32_t col, uint8_t* burst, uint64_t offset, int loop_cnt = 1);
 __device__ void change_fim_mode(volatile uint8_t* __restrict__ fim_ctr, FimMode mode1, FimMode mode2,
                                 uint8_t* change_mode_bin, uint64_t offset);
-__device__ void park_in(volatile uint8_t* __restrict__ fim_ctr, uint64_t offset);
-__device__ void park_out(volatile uint8_t* __restrict__ fim_ctr, uint64_t offset);
+__device__ void park(volatile uint8_t* __restrict__ fim_addr, uint64_t offset);
 __device__ void program_crf(volatile uint8_t* __restrict__ fim_ctr, uint8_t* crf_bin, uint32_t cmd_size,
                             uint64_t offset);
 __device__ void compute_gemv_2bank(volatile uint8_t* __restrict__ fim_ctr, volatile uint8_t* __restrict__ fim_weight,

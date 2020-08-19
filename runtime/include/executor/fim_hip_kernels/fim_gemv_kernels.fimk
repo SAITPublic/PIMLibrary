@@ -37,7 +37,7 @@ __global__ void gemv_fim_fp16(volatile uint8_t* __restrict__ fim_ctr, volatile u
     /* Radeon7(VEGA20) memory is 16GB but our target is 32GB system */
     /* so program_crf and chagne_fim_mode functions can not access to over 8GB in our system */
 #if PARK_IN
-    park_in(fim_ctr, offset);
+    park(fim_weight, offset);
 #endif
 
 #if CHANGE_SB_HAB
@@ -72,7 +72,7 @@ __global__ void gemv_fim_fp16(volatile uint8_t* __restrict__ fim_ctr, volatile u
 #endif
 
 #if PARK_OUT
-    park_out(fim_ctr, offset);
+    park(fim_weight, offset);
 #endif
 
 #ifdef EMULATOR
@@ -116,7 +116,7 @@ __global__ void gemv_fim_64cu_2th_fp16(volatile uint8_t* __restrict__ fim_ctr,
     /* Radeon7(VEGA20) memory is 16GB but our target is 32GB system */
     /* so program_crf and chagne_fim_mode functions can not access to over 8GB in our system */
 #if PARK_IN
-    park_in_64cu_2th(fim_ctr, offset);
+    park_64cu_2th(fim_weight, offset);
 #endif
 
 #if CHANGE_SB_HAB
@@ -152,7 +152,7 @@ __global__ void gemv_fim_64cu_2th_fp16(volatile uint8_t* __restrict__ fim_ctr,
 #endif
 
 #if PARK_OUT
-    park_out_64cu_2th(fim_ctr, offset);
+    park_64cu_2th(fim_weight, offset);
 #endif
 
 #ifdef EMULATOR
@@ -195,7 +195,7 @@ __global__ void gemv_fim_1cu_2th_fp16(volatile uint8_t* __restrict__ fim_ctr, vo
     /* Radeon7(VEGA20) memory is 16GB but our target is 32GB system */
     /* so program_crf and chagne_fim_mode functions can not access to over 8GB in our system */
 #if PARK_IN
-    park_in_1cu_2th(fim_ctr, offset);
+    park_1cu_2th(fim_weight, offset);
 #endif
 
 #if CHANGE_SB_HAB
@@ -232,7 +232,7 @@ __global__ void gemv_fim_1cu_2th_fp16(volatile uint8_t* __restrict__ fim_ctr, vo
 #endif
 
 #if PARK_OUT
-    park_out_1cu_2th(fim_ctr, offset);
+    park_1cu_2th(fim_weight, offset);
 #endif
 
 #ifdef EMULATOR
@@ -279,7 +279,7 @@ __global__ void gemv_fim_64cu_64th_fp16(volatile uint8_t* __restrict__ fim_ctr,
 
 #if PREPARE_KERNEL
     int num_col = 32;
-//  int num_bg = 4;
+    int num_bg = 4;
     int num_ba = 4;
     int num_grf = 8;
     int trans_size = 32;
@@ -297,7 +297,7 @@ __global__ void gemv_fim_64cu_64th_fp16(volatile uint8_t* __restrict__ fim_ctr,
 #if PARK_IN
     /* num_bg * num_ba * 2 */
     if (hipThreadIdx_x < 32) {
-        addr = addr_gen(hipBlockIdx_x, 0, gidx >> 2, gidx % num_ba, (1 << 12), 0);
+        addr = addr_gen(hipBlockIdx_x, 0, gidx >> 2, gidx % num_ba, 0, 0);
         R_CMD(&fim_ctr[addr + offset]);
     }
     B_CMD(0);
@@ -435,9 +435,9 @@ __global__ void gemv_fim_64cu_64th_fp16(volatile uint8_t* __restrict__ fim_ctr,
 #endif
 
 #if PARK_OUT
-    if (hipThreadIdx_x < 4) {
-        addr = addr_gen(hipBlockIdx_x, 0, 0, gidx, (1 << 12), 0);
-        R_CMD(&fim_ctr[addr + offset]);
+    if (hipThreadIdx_x < num_bg * num_ba * 2) {
+        addr = addr_gen(hipBlockIdx_x, 0, gidx / num_ba, gidx % num_ba, 0, 0);
+        R_CMD(&fim_weight[addr + offset]);
     }
     B_CMD(0);
 #endif

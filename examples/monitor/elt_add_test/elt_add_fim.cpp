@@ -124,17 +124,17 @@ __global__ void elt_add_fim(uint8_t* fim_data, uint8_t* fim_ctr, uint8_t* output
 
     /* park in */
     if (hipThreadIdx_x < num_bg * 2) {
-        addr = addr_gen(hipBlockIdx_x, 0, (hipThreadIdx_x / 2), 0, (1 << 12), 0);
-        R_CMD(&fim_ctr[addr + offset]);
+        addr = addr_gen(hipBlockIdx_x, 0, (hipThreadIdx_x / 2), 0, 0, 0);
+        R_CMD(&fim_data[addr + offset]);
 
-        addr = addr_gen(hipBlockIdx_x, 0, (hipThreadIdx_x / 2), 1, (1 << 12), 0);
-        R_CMD(&fim_ctr[addr + offset]);
+        addr = addr_gen(hipBlockIdx_x, 0, (hipThreadIdx_x / 2), 1, 0, 0);
+        R_CMD(&fim_data[addr + offset]);
 
-        addr = addr_gen(hipBlockIdx_x, 0, (hipThreadIdx_x / 2), 2, (1 << 12), 0);
-        R_CMD(&fim_ctr[addr + offset]);
+        addr = addr_gen(hipBlockIdx_x, 0, (hipThreadIdx_x / 2), 2, 0, 0);
+        R_CMD(&fim_data[addr + offset]);
 
-        addr = addr_gen(hipBlockIdx_x, 0, (hipThreadIdx_x / 2), 3, (1 << 12), 0);
-        R_CMD(&fim_ctr[addr + offset]);
+        addr = addr_gen(hipBlockIdx_x, 0, (hipThreadIdx_x / 2), 3, 0, 0);
+        R_CMD(&fim_data[addr + offset]);
     }
     B_CMD(0);
 
@@ -202,12 +202,23 @@ __global__ void elt_add_fim(uint8_t* fim_data, uint8_t* fim_ctr, uint8_t* output
         addr = addr_gen(hipBlockIdx_x, 0, 0, hipThreadIdx_x / 2, (0x2fff), 0x1f);
         W_CMD(&fim_ctr[addr + offset]);
         B_CMD(1);
-
-        /* park out */
-        addr = addr_gen(hipBlockIdx_x, 0, 0, hipThreadIdx_x / 2, (1 << 12), 0);
-        R_CMD(&fim_ctr[addr + offset]);
-        B_CMD(1);
     }
+
+    /* park out */
+    if (hipThreadIdx_x < num_bg * 2) {
+        addr = addr_gen(hipBlockIdx_x, 0, (hipThreadIdx_x / 2), 0, 0, 0);
+        R_CMD(&fim_data[addr + offset]);
+
+        addr = addr_gen(hipBlockIdx_x, 0, (hipThreadIdx_x / 2), 1, 0, 0);
+        R_CMD(&fim_data[addr + offset]);
+
+        addr = addr_gen(hipBlockIdx_x, 0, (hipThreadIdx_x / 2), 2, 0, 0);
+        R_CMD(&fim_data[addr + offset]);
+
+        addr = addr_gen(hipBlockIdx_x, 0, (hipThreadIdx_x / 2), 3, 0, 0);
+        R_CMD(&fim_data[addr + offset]);
+    }
+    B_CMD(0);
 }
 
 int main(int argc, char* argv[])

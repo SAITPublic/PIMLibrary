@@ -205,9 +205,10 @@ __global__ void elt_add_fim(uint8_t* operand0, uint8_t* operand1, uint8_t* fim_c
     /* Radeon7(VEGA20) memory is 16GB but our target is 32GB system */
     /* so program_crf and chagne_fim_mode functions can not access to over 8GB in our system */
 #if PARK_IN
-    addr = addr_gen(hipBlockIdx_x, 0, gidx / num_ba, gidx % num_ba, (1 << 12), 0);
-    R_CMD(&fim_ctr[addr + offset]);
-    R_CMD(&fim_ctr[addr + 0x8000 + offset]);
+
+    addr = addr_gen(hipBlockIdx_x, 0, gidx / num_ba, gidx % num_ba, 0, 0);
+    R_CMD(&operand0[addr + offset]);
+    R_CMD(&operand0[addr + 0x8000 + offset]);
     B_CMD(0);
 #endif
 
@@ -298,10 +299,9 @@ __global__ void elt_add_fim(uint8_t* operand0, uint8_t* operand1, uint8_t* fim_c
 #endif
 
 #if PARK_OUT
-    if (hipThreadIdx_x < 4) {
-        addr = addr_gen(hipBlockIdx_x, 0, 0, gidx, (1 << 12), 0);
-        R_CMD(&fim_ctr[addr + offset]);
-    }
+    addr = addr_gen(hipBlockIdx_x, 0, gidx / num_ba, gidx % num_ba, 0, 0);
+    R_CMD(&operand0[addr + offset]);
+    R_CMD(&operand0[addr + 0x8000 + offset]);
     B_CMD(0);
 #endif
 }
