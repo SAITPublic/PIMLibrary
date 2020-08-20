@@ -209,14 +209,22 @@ __global__ void elt_add_fim(uint8_t* operand0, uint8_t* operand1, uint8_t* fim_c
 #endif
 
 #if CHANGE_SB_HAB
-    if (hipThreadIdx_x < 4) {
-        addr = addr_gen(hipBlockIdx_x, 0, 0, gidx, 0x27ff, 0x1f);
-        W_CMD(&fim_ctr[addr + offset]);
-
+  if (hipThreadIdx_x < 2) {
         addr = addr_gen(hipBlockIdx_x, 0, 2, gidx, 0x27ff, 0x1f);
         W_CMD(&fim_ctr[addr + offset]);
+        B_CMD(1);
+        addr = addr_gen(hipBlockIdx_x, 0, 2, gidx+1, 0x27ff, 0x1f);
+        W_CMD(&fim_ctr[addr + offset]);
+        B_CMD(1);
+        addr = addr_gen(hipBlockIdx_x, 0, 0, gidx, 0x27ff, 0x1f);
+        W_CMD(&fim_ctr[addr + offset]);
+        B_CMD(1);
+        addr = addr_gen(hipBlockIdx_x, 0, 0, gidx+1, 0x27ff, 0x1f);
+        W_CMD(&fim_ctr[addr + offset]);
+        B_CMD(1);
     }
     B_CMD(0);
+    
 #endif
 
 #if PROGRAM_CRF

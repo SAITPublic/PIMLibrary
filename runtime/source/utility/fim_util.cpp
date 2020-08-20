@@ -448,12 +448,10 @@ __device__ void change_fim_mode_1cu_2th(volatile uint8_t* __restrict__ fim_ctr, 
 
     if (mode1 == SB_MODE) {
         if (mode2 == HAB_MODE) {
+            add_transaction_all_1cu_2th(fim_ctr, true, 2, 0, hab_row_addr, 0x1f, change_mode_bin, offset);
+            add_transaction_all_1cu_2th(fim_ctr, true, 2, 1, hab_row_addr, 0x1f, change_mode_bin, offset);
             add_transaction_all_1cu_2th(fim_ctr, true, 0, 0, hab_row_addr, 0x1f, change_mode_bin, offset);
             add_transaction_all_1cu_2th(fim_ctr, true, 0, 1, hab_row_addr, 0x1f, change_mode_bin, offset);
-            if (fbi->num_banks >= 2) {
-                add_transaction_all_1cu_2th(fim_ctr, true, 2, 0, hab_row_addr, 0x1f, change_mode_bin, offset);
-                add_transaction_all_1cu_2th(fim_ctr, true, 2, 1, hab_row_addr, 0x1f, change_mode_bin, offset);
-            }
         }
     } else if (mode1 == HAB_MODE) {
         if (mode2 == SB_MODE) {
@@ -793,12 +791,10 @@ __device__ void change_fim_mode_64cu_2th(volatile uint8_t* __restrict__ fim_ctr,
 
     if (mode1 == SB_MODE) {
         if (mode2 == HAB_MODE) {
+            add_transaction_all_64cu_2th(fim_ctr, true, 2, 0, hab_row_addr, 0x1f, change_mode_bin, offset);
+            add_transaction_all_64cu_2th(fim_ctr, true, 2, 1, hab_row_addr, 0x1f, change_mode_bin, offset);
             add_transaction_all_64cu_2th(fim_ctr, true, 0, 0, hab_row_addr, 0x1f, change_mode_bin, offset);
             add_transaction_all_64cu_2th(fim_ctr, true, 0, 1, hab_row_addr, 0x1f, change_mode_bin, offset);
-            if (fbi->num_banks >= 2) {
-                add_transaction_all_64cu_2th(fim_ctr, true, 2, 0, hab_row_addr, 0x1f, change_mode_bin, offset);
-                add_transaction_all_64cu_2th(fim_ctr, true, 2, 1, hab_row_addr, 0x1f, change_mode_bin, offset);
-            }
         }
     } else if (mode1 == HAB_MODE) {
         if (mode2 == SB_MODE) {
@@ -932,12 +928,10 @@ __device__ void change_fim_mode(volatile uint8_t* __restrict__ fim_ctr, FimMode 
 
     if (mode1 == SB_MODE) {
         if (mode2 == HAB_MODE) {
+            add_transaction_all(fim_ctr, true, 2, 0, hab_row_addr, 0x1f, change_mode_bin, offset);
+            add_transaction_all(fim_ctr, true, 2, 1, hab_row_addr, 0x1f, change_mode_bin, offset);
             add_transaction_all(fim_ctr, true, 0, 0, hab_row_addr, 0x1f, change_mode_bin, offset);
             add_transaction_all(fim_ctr, true, 0, 1, hab_row_addr, 0x1f, change_mode_bin, offset);
-            if (fbi->num_banks >= 2) {
-                add_transaction_all(fim_ctr, true, 2, 0, hab_row_addr, 0x1f, change_mode_bin, offset);
-                add_transaction_all(fim_ctr, true, 2, 1, hab_row_addr, 0x1f, change_mode_bin, offset);
-            }
         }
     } else if (mode1 == HAB_MODE) {
         if (mode2 == SB_MODE) {
