@@ -267,7 +267,7 @@ __device__ void W_CMD(volatile uint8_t* __restrict__ addr)
 
 __device__ void W_CMD_R(volatile uint8_t* __restrict__ addr, volatile uint8_t* __restrict__ src)
 {
-    ((ulonglong4*)addr)[0] = ((ulonglong4*)src)[0];
+    ((int4*)addr)[0] = ((int4*)src)[0];
 }
 
 __device__ void B_CMD(int type) { (type == 0) ? __syncthreads() : __threadfence(); }
