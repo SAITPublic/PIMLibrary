@@ -106,7 +106,6 @@ __global__ void elt_add_fim(volatile uint8_t* __restrict__ operand0, volatile ui
     int num_fim_blocks = 8;
     int num_fim_chan = 64;
     int num_grf = 8;
-    int num_bg = 4;
     int num_ba = 4;
     int out_dim = size / trans_size;
     int num_tile = out_dim / (num_fim_blocks * num_fim_chan * num_grf) / 2;
@@ -139,13 +138,13 @@ __global__ void elt_add_fim(volatile uint8_t* __restrict__ operand0, volatile ui
         addr = addr_gen(hipBlockIdx_x, 0, 2, gidx, hab_row_addr, 0x1f);
         W_CMD(&fim_ctr[addr + offset]);
         B_CMD(1);
-        addr = addr_gen(hipBlockIdx_x, 0, 2, gidx+1, hab_row_addr, 0x1f);
+        addr = addr_gen(hipBlockIdx_x, 0, 2, gidx + 1, hab_row_addr, 0x1f);
         W_CMD(&fim_ctr[addr + offset]);
         B_CMD(1);
         addr = addr_gen(hipBlockIdx_x, 0, 0, gidx, hab_row_addr, 0x1f);
         W_CMD(&fim_ctr[addr + offset]);
         B_CMD(1);
-        addr = addr_gen(hipBlockIdx_x, 0, 0, gidx+1, hab_row_addr, 0x1f);
+        addr = addr_gen(hipBlockIdx_x, 0, 0, gidx + 1, hab_row_addr, 0x1f);
         W_CMD(&fim_ctr[addr + offset]);
         B_CMD(1);
     }

@@ -33,84 +33,87 @@ extern "C" uint64_t fmm_map_fim(uint32_t, uint32_t, uint64_t);
 
 __device__ inline void R_CMD(uint8_t* src)
 {
-    asm volatile("global_load_dwordx4 v[24:27], %0, off, glc, slc" ::"v"(src));
+    asm volatile("global_load_dwordx4 v[24:27], %0, off, glc, slc" ::"v"(src) : "v24", "v25", "v26", "v27");
 }
 
 __device__ inline void W_CMD(uint8_t* dst)
 {
-    asm volatile("global_store_dwordx4 %0, v[24:27], off, glc, slc" ::"v"(dst));
+    asm volatile("global_store_dwordx4 %0, v[24:27], off, glc, slc" ::"v"(dst) : "v24", "v25", "v26", "v27");
 }
 
 __device__ inline void W_CMD_R(uint8_t* dst, uint8_t* src)
 {
+    ((int4*)dst)[0] = ((int4*)src)[0];
+#if 0
     switch (hipThreadIdx_x) {
         case 0:
-            asm volatile("global_load_dwordx4 v[8:11], %0, off, glc, slc" ::"v"(src));
+            asm volatile("global_load_dwordx4 v[8:11], %0, off, glc, slc" ::"v"(src): "v8", "v9, "v10", "v11");
             asm volatile("global_store_dwordx4 %0, v[8:11], off, glc, slc" ::"v"(dst));
             break;
         case 1:
-            asm volatile("global_load_dwordx4 v[12:15], %0, off, glc, slc" ::"v"(src));
+            asm volatile("global_load_dwordx4 v[12:15], %0, off, glc, slc" ::"v"(src): "v12", "v13, "v14", "v15");
             asm volatile("global_store_dwordx4 %0, v[12:15], off, glc, slc" ::"v"(dst));
             break;
         case 2:
-            asm volatile("global_load_dwordx4 v[16:19], %0, off, glc, slc" ::"v"(src));
+            asm volatile("global_load_dwordx4 v[16:19], %0, off, glc, slc" ::"v"(src): "v16", "v17, "v18", "v19");
             asm volatile("global_store_dwordx4 %0, v[16:19], off, glc, slc" ::"v"(dst));
             break;
         case 3:
-            asm volatile("global_load_dwordx4 v[20:23], %0, off, glc, slc" ::"v"(src));
+            asm volatile("global_load_dwordx4 v[20:23], %0, off, glc, slc" ::"v"(src): "v20", "v21, "v22", "v23");
             asm volatile("global_store_dwordx4 %0, v[20:23], off, glc, slc" ::"v"(dst));
             break;
         case 4:
-            asm volatile("global_load_dwordx4 v[24:27], %0, off, glc, slc" ::"v"(src));
+            asm volatile("global_load_dwordx4 v[24:27], %0, off, glc, slc" ::"v"(src): "v24", "v25, "v26", "v27");
             asm volatile("global_store_dwordx4 %0, v[24:27], off, glc, slc" ::"v"(dst));
             break;
         case 5:
-            asm volatile("global_load_dwordx4 v[28:31], %0, off, glc, slc" ::"v"(src));
+            asm volatile("global_load_dwordx4 v[28:31], %0, off, glc, slc" ::"v"(src): "v28", "v29, "v30", "v31");
             asm volatile("global_store_dwordx4 %0, v[28:31], off, glc, slc" ::"v"(dst));
             break;
         case 6:
-            asm volatile("global_load_dwordx4 v[32:35], %0, off, glc, slc" ::"v"(src));
+            asm volatile("global_load_dwordx4 v[32:35], %0, off, glc, slc" ::"v"(src): "v32", "v33, "v34", "v35");
             asm volatile("global_store_dwordx4 %0, v[32:35], off, glc, slc" ::"v"(dst));
             break;
         case 7:
-            asm volatile("global_load_dwordx4 v[36:39], %0, off, glc, slc" ::"v"(src));
+            asm volatile("global_load_dwordx4 v[36:39], %0, off, glc, slc" ::"v"(src): "v36", "v37, "v38", "v39");
             asm volatile("global_store_dwordx4 %0, v[36:39], off, glc, slc" ::"v"(dst));
             break;
         case 8:
-            asm volatile("global_load_dwordx4 v[40:43], %0, off, glc, slc" ::"v"(src));
+            asm volatile("global_load_dwordx4 v[40:43], %0, off, glc, slc" ::"v"(src): "v40", "v41, "v42", "v43");
             asm volatile("global_store_dwordx4 %0, v[40:43], off, glc, slc" ::"v"(dst));
             break;
         case 9:
-            asm volatile("global_load_dwordx4 v[44:47], %0, off, glc, slc" ::"v"(src));
+            asm volatile("global_load_dwordx4 v[44:47], %0, off, glc, slc" ::"v"(src): "v44", "v45, "v46", "v47");
             asm volatile("global_store_dwordx4 %0, v[44:47], off, glc, slc" ::"v"(dst));
             break;
         case 10:
-            asm volatile("global_load_dwordx4 v[48:51], %0, off, glc, slc" ::"v"(src));
+            asm volatile("global_load_dwordx4 v[48:51], %0, off, glc, slc" ::"v"(src): "v48", "v49, "v50", "v51");
             asm volatile("global_store_dwordx4 %0, v[48:51], off, glc, slc" ::"v"(dst));
             break;
         case 11:
-            asm volatile("global_load_dwordx4 v[52:55], %0, off, glc, slc" ::"v"(src));
+            asm volatile("global_load_dwordx4 v[52:55], %0, off, glc, slc" ::"v"(src): "v52", "v53, "v54", "v55");
             asm volatile("global_store_dwordx4 %0, v[52:55], off, glc, slc" ::"v"(dst));
             break;
         case 12:
-            asm volatile("global_load_dwordx4 v[56:59], %0, off, glc, slc" ::"v"(src));
+            asm volatile("global_load_dwordx4 v[56:59], %0, off, glc, slc" ::"v"(src): "v56", "v57, "v58", "v59");
             asm volatile("global_store_dwordx4 %0, v[56:59], off, glc, slc" ::"v"(dst));
             break;
         case 13:
-            asm volatile("global_load_dwordx4 v[60:63], %0, off, glc, slc" ::"v"(src));
+            asm volatile("global_load_dwordx4 v[60:63], %0, off, glc, slc" ::"v"(src): "v60", "v61, "v62", "v63");
             asm volatile("global_store_dwordx4 %0, v[60:63], off, glc, slc" ::"v"(dst));
             break;
         case 14:
-            asm volatile("global_load_dwordx4 v[64:67], %0, off, glc, slc" ::"v"(src));
+            asm volatile("global_load_dwordx4 v[64:67], %0, off, glc, slc" ::"v"(src): "v64", "v65, "v66", "v67");
             asm volatile("global_store_dwordx4 %0, v[64:67], off, glc, slc" ::"v"(dst));
             break;
         case 15:
-            asm volatile("global_load_dwordx4 v[68:71], %0, off, glc, slc" ::"v"(src));
+            asm volatile("global_load_dwordx4 v[68:71], %0, off, glc, slc" ::"v"(src)): "v68", "v69, "v70", "v71");
             asm volatile("global_store_dwordx4 %0, v[68:71], off, glc, slc" ::"v"(dst));
             break;
         default:
             break;
     }
+#endif
 }
 
 __device__ inline void W_CMD_R_2TH(uint8_t* dst, uint8_t* src)
@@ -209,22 +212,22 @@ __global__ void elt_add_fim(uint8_t* operand0, uint8_t* operand1, uint8_t* fim_c
 #endif
 
 #if CHANGE_SB_HAB
-  if (hipThreadIdx_x < 2) {
+    if (hipThreadIdx_x < 2) {
         addr = addr_gen(hipBlockIdx_x, 0, 2, gidx, 0x27ff, 0x1f);
         W_CMD(&fim_ctr[addr + offset]);
         B_CMD(1);
-        addr = addr_gen(hipBlockIdx_x, 0, 2, gidx+1, 0x27ff, 0x1f);
+        addr = addr_gen(hipBlockIdx_x, 0, 2, gidx + 1, 0x27ff, 0x1f);
         W_CMD(&fim_ctr[addr + offset]);
         B_CMD(1);
         addr = addr_gen(hipBlockIdx_x, 0, 0, gidx, 0x27ff, 0x1f);
         W_CMD(&fim_ctr[addr + offset]);
         B_CMD(1);
-        addr = addr_gen(hipBlockIdx_x, 0, 0, gidx+1, 0x27ff, 0x1f);
+        addr = addr_gen(hipBlockIdx_x, 0, 0, gidx + 1, 0x27ff, 0x1f);
         W_CMD(&fim_ctr[addr + offset]);
         B_CMD(1);
     }
     B_CMD(0);
-    
+
 #endif
 
 #if PROGRAM_CRF

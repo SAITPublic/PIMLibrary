@@ -17,7 +17,7 @@ extern "C" uint64_t fmm_map_fim(uint32_t, uint32_t, uint64_t);
 #define PROGRAM_CRF 1
 #define CHANGE_HAB_HABFIM 1
 #define PROGRAM_CRF 1
-#define COMPUTE_ELT_OP 1
+#define COMPUTE_GEMV 1
 #define CHANGE_HABFIM_HAB 1
 #define CHANGE_HAB_SB 1
 #define PARK_OUT 1
@@ -33,85 +33,89 @@ extern "C" uint64_t fmm_map_fim(uint32_t, uint32_t, uint64_t);
 
 __device__ inline void R_CMD(uint8_t* src)
 {
-    asm volatile("global_load_dwordx4 v[24:27], %0, off, glc, slc" ::"v"(src));
+    asm volatile("global_load_dwordx4 v[24:27], %0, off, glc, slc" ::"v"(src): "v24", "v25", "v26", "v27");
 }
 
 __device__ inline void W_CMD(uint8_t* dst)
 {
-    asm volatile("global_store_dwordx4 %0, v[24:27], off, glc, slc" ::"v"(dst));
+    asm volatile("global_store_dwordx4 %0, v[24:27], off, glc, slc" ::"v"(dst): "v24", "v25", "v26", "v27");
 }
 
 __device__ inline void W_CMD_R(uint8_t* dst, uint8_t* src)
 {
+    ((int4*)dst)[0] = ((int4*)src)[0];
+#if 0
     switch (hipThreadIdx_x) {
         case 0:
-            asm volatile("global_load_dwordx4 v[8:11], %0, off, glc, slc" ::"v"(src));
+            asm volatile("global_load_dwordx4 v[8:11], %0, off, glc, slc" ::"v"(src): "v8", "v9, "v10", "v11");
             asm volatile("global_store_dwordx4 %0, v[8:11], off, glc, slc" ::"v"(dst));
             break;
         case 1:
-            asm volatile("global_load_dwordx4 v[12:15], %0, off, glc, slc" ::"v"(src));
+            asm volatile("global_load_dwordx4 v[12:15], %0, off, glc, slc" ::"v"(src): "v12", "v13, "v14", "v15");
             asm volatile("global_store_dwordx4 %0, v[12:15], off, glc, slc" ::"v"(dst));
             break;
         case 2:
-            asm volatile("global_load_dwordx4 v[16:19], %0, off, glc, slc" ::"v"(src));
+            asm volatile("global_load_dwordx4 v[16:19], %0, off, glc, slc" ::"v"(src): "v16", "v17, "v18", "v19");
             asm volatile("global_store_dwordx4 %0, v[16:19], off, glc, slc" ::"v"(dst));
             break;
         case 3:
-            asm volatile("global_load_dwordx4 v[20:23], %0, off, glc, slc" ::"v"(src));
+            asm volatile("global_load_dwordx4 v[20:23], %0, off, glc, slc" ::"v"(src): "v20", "v21, "v22", "v23");
             asm volatile("global_store_dwordx4 %0, v[20:23], off, glc, slc" ::"v"(dst));
             break;
         case 4:
-            asm volatile("global_load_dwordx4 v[24:27], %0, off, glc, slc" ::"v"(src));
+            asm volatile("global_load_dwordx4 v[24:27], %0, off, glc, slc" ::"v"(src): "v24", "v25, "v26", "v27");
             asm volatile("global_store_dwordx4 %0, v[24:27], off, glc, slc" ::"v"(dst));
             break;
         case 5:
-            asm volatile("global_load_dwordx4 v[28:31], %0, off, glc, slc" ::"v"(src));
+            asm volatile("global_load_dwordx4 v[28:31], %0, off, glc, slc" ::"v"(src): "v28", "v29, "v30", "v31");
             asm volatile("global_store_dwordx4 %0, v[28:31], off, glc, slc" ::"v"(dst));
             break;
         case 6:
-            asm volatile("global_load_dwordx4 v[32:35], %0, off, glc, slc" ::"v"(src));
+            asm volatile("global_load_dwordx4 v[32:35], %0, off, glc, slc" ::"v"(src): "v32", "v33, "v34", "v35");
             asm volatile("global_store_dwordx4 %0, v[32:35], off, glc, slc" ::"v"(dst));
             break;
         case 7:
-            asm volatile("global_load_dwordx4 v[36:39], %0, off, glc, slc" ::"v"(src));
+            asm volatile("global_load_dwordx4 v[36:39], %0, off, glc, slc" ::"v"(src): "v36", "v37, "v38", "v39");
             asm volatile("global_store_dwordx4 %0, v[36:39], off, glc, slc" ::"v"(dst));
             break;
         case 8:
-            asm volatile("global_load_dwordx4 v[40:43], %0, off, glc, slc" ::"v"(src));
+            asm volatile("global_load_dwordx4 v[40:43], %0, off, glc, slc" ::"v"(src): "v40", "v41, "v42", "v43");
             asm volatile("global_store_dwordx4 %0, v[40:43], off, glc, slc" ::"v"(dst));
             break;
         case 9:
-            asm volatile("global_load_dwordx4 v[44:47], %0, off, glc, slc" ::"v"(src));
+            asm volatile("global_load_dwordx4 v[44:47], %0, off, glc, slc" ::"v"(src): "v44", "v45, "v46", "v47");
             asm volatile("global_store_dwordx4 %0, v[44:47], off, glc, slc" ::"v"(dst));
             break;
         case 10:
-            asm volatile("global_load_dwordx4 v[48:51], %0, off, glc, slc" ::"v"(src));
+            asm volatile("global_load_dwordx4 v[48:51], %0, off, glc, slc" ::"v"(src): "v48", "v49, "v50", "v51");
             asm volatile("global_store_dwordx4 %0, v[48:51], off, glc, slc" ::"v"(dst));
             break;
         case 11:
-            asm volatile("global_load_dwordx4 v[52:55], %0, off, glc, slc" ::"v"(src));
+            asm volatile("global_load_dwordx4 v[52:55], %0, off, glc, slc" ::"v"(src): "v52", "v53, "v54", "v55");
             asm volatile("global_store_dwordx4 %0, v[52:55], off, glc, slc" ::"v"(dst));
             break;
         case 12:
-            asm volatile("global_load_dwordx4 v[56:59], %0, off, glc, slc" ::"v"(src));
+            asm volatile("global_load_dwordx4 v[56:59], %0, off, glc, slc" ::"v"(src): "v56", "v57, "v58", "v59");
             asm volatile("global_store_dwordx4 %0, v[56:59], off, glc, slc" ::"v"(dst));
             break;
         case 13:
-            asm volatile("global_load_dwordx4 v[60:63], %0, off, glc, slc" ::"v"(src));
+            asm volatile("global_load_dwordx4 v[60:63], %0, off, glc, slc" ::"v"(src): "v60", "v61, "v62", "v63");
             asm volatile("global_store_dwordx4 %0, v[60:63], off, glc, slc" ::"v"(dst));
             break;
         case 14:
-            asm volatile("global_load_dwordx4 v[64:67], %0, off, glc, slc" ::"v"(src));
+            asm volatile("global_load_dwordx4 v[64:67], %0, off, glc, slc" ::"v"(src): "v64", "v65, "v66", "v67");
             asm volatile("global_store_dwordx4 %0, v[64:67], off, glc, slc" ::"v"(dst));
             break;
         case 15:
-            asm volatile("global_load_dwordx4 v[68:71], %0, off, glc, slc" ::"v"(src));
+            asm volatile("global_load_dwordx4 v[68:71], %0, off, glc, slc" ::"v"(src)): "v68", "v69, "v70", "v71");
             asm volatile("global_store_dwordx4 %0, v[68:71], off, glc, slc" ::"v"(dst));
             break;
         default:
             break;
     }
+#endif
 }
+
 
 __device__ inline void W_CMD_R_2TH(uint8_t* dst, uint8_t* src)
 {
@@ -186,7 +190,7 @@ __device__ uint64_t addr_gen(unsigned int ch, unsigned int rank, unsigned int bg
     return addr;
 }
 
-__global__ void gemv_fim(uint8_t* fim_ctr, uint8_t* weight, uint8_t* gemv_tmp_buffer, uint8_t* input, int batch_dim,
+__global__ void gemv_fim(uint8_t* fim_ctr, uint8_t* fim_weight, uint8_t* fim_gemv_tmp_buffer, uint8_t* fim_input, int batch_dim,
                          int n_in_tile, int n_out_tile, uint8_t* crf_binary, int crf_size, uint8_t* hab_to_fim,
                          uint8_t* fim_to_hab)
 {
@@ -220,13 +224,13 @@ __global__ void gemv_fim(uint8_t* fim_ctr, uint8_t* weight, uint8_t* gemv_tmp_bu
         addr = addr_gen(hipBlockIdx_x, 0, 2, gidx, 0x27ff, 0x1f);
         W_CMD(&fim_ctr[addr + offset]);
         B_CMD(1);
-        addr = addr_gen(hipBlockIdx_x, 0, 2, gidx+1, 0x27ff, 0x1f);
+        addr = addr_gen(hipBlockIdx_x, 0, 2, gidx + 1, 0x27ff, 0x1f);
         W_CMD(&fim_ctr[addr + offset]);
         B_CMD(1);
         addr = addr_gen(hipBlockIdx_x, 0, 0, gidx, 0x27ff, 0x1f);
         W_CMD(&fim_ctr[addr + offset]);
         B_CMD(1);
-        addr = addr_gen(hipBlockIdx_x, 0, 0, gidx+1, 0x27ff, 0x1f);
+        addr = addr_gen(hipBlockIdx_x, 0, 0, gidx + 1, 0x27ff, 0x1f);
         W_CMD(&fim_ctr[addr + offset]);
         B_CMD(1);
     }
@@ -245,20 +249,18 @@ __global__ void gemv_fim(uint8_t* fim_ctr, uint8_t* weight, uint8_t* gemv_tmp_bu
     if (hipThreadIdx_x < 2 * num_grf) {
         for (int b_idx = 0; b_idx < batch_dim; b_idx++) {
             for (int o_idx = 0; o_idx < num_out_tile; o_idx++) {
-                if (hipThreadIdx_x < 2) {
-                    addr = addr_gen(hipBlockIdx_x, 0, 0, 0, 0x3fff, 0x0);
-                    W_CMD_R(&fim_ctr[addr + offset], hab_to_fim + hipThreadIdx_x * 16);
-                }
-                B_CMD(0);
+                addr = addr_gen(hipBlockIdx_x, 0, 0, 0, 0x3fff, 0x0);
+                W_CMD_R(&fim_ctr[addr + offset], hab_to_fim + (hipThreadIdx_x % 2) * 16);
+                B_CMD(1);
 
-                uint64_t i_offset = b_idx * num_in_tile * num_grf + gidx;
+                uint64_t i_offset = b_idx * num_in_tile * num_grf * trans_size;
                 int r_offset = o_idx * num_in_tile / 2;
 
                 for (int i_idx = 0; i_idx < num_in_tile; i_idx += 2) {
-                    uint64_t i_addr = (i_offset + i_idx * num_grf) * trans_size;
+                    uint64_t i_addr = i_offset + (i_idx * num_grf * trans_size) + hipThreadIdx_x * 16;
                     addr = addr_gen(hipBlockIdx_x, 0, 0, 1, 0x3fff, 0x8 + gidx);
-                    W_CMD_R(&fim_ctr[addr + offset], &fim_input[i_addr + offset]);
-                    B_CMD(0);
+                    W_CMD_R(&fim_ctr[addr + offset], &fim_input[i_addr]);
+                    B_CMD(1);
 
                     row = (i_idx / 2 + r_offset) * 2;
                     col = gidx;
@@ -286,14 +288,14 @@ __global__ void gemv_fim(uint8_t* fim_ctr, uint8_t* weight, uint8_t* gemv_tmp_bu
 
                     addr = addr_gen(hipBlockIdx_x, 0, 0, 0, row + 1, col + 24);
                     R_CMD(&fim_weight[addr + offset]);
-                    B_CMD(0);
+                    B_CMD(1);
                 }
 
                 for (int i_idx = 1; i_idx < num_in_tile; i_idx += 2) {
-                    uint64_t i_addr = (i_offset + i_idx * num_grf) * trans_size;
+                    uint64_t i_addr = i_offset + (i_idx * num_grf * trans_size) + hipThreadIdx_x * 16;
                     addr = addr_gen(hipBlockIdx_x, 0, 0, 1, 0x3fff, 0x8 + gidx);
-                    W_CMD_R(&fim_ctr[addr + offset], &fim_input[i_addr + offset]);
-                    B_CMD(0);
+                    W_CMD_R(&fim_ctr[addr + offset], &fim_input[i_addr]);
+                    B_CMD(1);
 
                     row = (i_idx / 2 + r_offset) * 2;
                     col = gidx;
@@ -321,7 +323,7 @@ __global__ void gemv_fim(uint8_t* fim_ctr, uint8_t* weight, uint8_t* gemv_tmp_bu
 
                     addr = addr_gen(hipBlockIdx_x, 0, 0, 1, row + 1, col + 24);
                     R_CMD(&fim_weight[addr + offset]);
-                    B_CMD(0);
+                    B_CMD(1);
                 }
                 loc = b_idx * num_out_tile * num_grf + o_idx * num_grf + gidx;
                 row = loc / num_col;
@@ -329,16 +331,15 @@ __global__ void gemv_fim(uint8_t* fim_ctr, uint8_t* weight, uint8_t* gemv_tmp_bu
 
                 addr = addr_gen(hipBlockIdx_x, 0, 0, 1, row, col);
                 W_CMD(&fim_gemv_tmp_buffer[addr + offset]);
-                B_CMD(0);
+                B_CMD(1);
 
-                if (hipThreadIdx_x < 2) {
-                    addr = addr_gen(hipBlockIdx_x, 0, 0, 0, 0x3fff, 0x0);
-                    W_CMD_R(&fim_ctr[addr + offset], fim_to_hab + hipThreadIdx_x * 16);
-                }
-                B_CMD(0);
+                addr = addr_gen(hipBlockIdx_x, 0, 0, 0, 0x3fff, 0x0);
+                W_CMD_R(&fim_ctr[addr + offset], fim_to_hab + (hipThreadIdx_x % 2) * 16);
+                B_CMD(1);
             }
         }
     }
+	B_CMD(0);
 #endif
 
 #if CHANGE_HAB_SB

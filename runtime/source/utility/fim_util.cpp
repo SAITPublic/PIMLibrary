@@ -257,12 +257,12 @@ __device__ void BLOCK_SYNC(int cu_ch_idx, bool block_all_chan) { __syncthreads()
 
 __device__ void R_CMD(volatile uint8_t* __restrict__ addr)
 {
-    asm volatile("global_load_dwordx4 v[24:27], %0, off, glc, slc\n\t" ::"v"(addr) : "v24", "v25", "v26", "v27");
+    asm volatile("global_load_dwordx4 v[24:27], %0, off, glc, slc" ::"v"(addr) : "v24", "v25", "v26", "v27");
 }
 
 __device__ void W_CMD(volatile uint8_t* __restrict__ addr)
 {
-    asm volatile("global_store_dwordx4 %0, v[24:27], off, glc, slc\n\t" ::"v"(addr) : "v24", "v25", "v26", "v27");
+    asm volatile("global_store_dwordx4 %0, v[24:27], off, glc, slc" ::"v"(addr) : "v24", "v25", "v26", "v27");
 }
 
 __device__ void W_CMD_R(volatile uint8_t* __restrict__ addr, volatile uint8_t* __restrict__ src)
@@ -375,7 +375,6 @@ __device__ void add_transaction_all_1cu_2th(volatile uint8_t* __restrict__ fim_a
 __device__ void change_fim_mode_1cu_2th(volatile uint8_t* __restrict__ fim_ctr, FimMode mode1, FimMode mode2,
                                         uint8_t* change_mode_bin, uint64_t offset)
 {
-    FimBlockInfo* fbi = &vega20_fbi;
 #ifdef EMULATOR
     /* RA13 and RA12 is swapped in Aquabolt-XL core-die, we need to emulate this behavior in emulator mode */
     /* 0x17ff : RA12<->RA13 swapped address in vega20 memory map */
@@ -697,7 +696,6 @@ __device__ void add_transaction_all_64cu_2th(volatile uint8_t* __restrict__ fim_
                                              int loop_cnt)
 {
     uint64_t t_addr;
-    FimBlockInfo* fbi = &vega20_fbi;
     int cidx = hipBlockIdx_x;
     int rank = 0;
 
@@ -718,7 +716,6 @@ __device__ void add_transaction_all_64cu_2th(volatile uint8_t* __restrict__ fim_
 __device__ void change_fim_mode_64cu_2th(volatile uint8_t* __restrict__ fim_ctr, FimMode mode1, FimMode mode2,
                                          uint8_t* change_mode_bin, uint64_t offset)
 {
-    FimBlockInfo* fbi = &vega20_fbi;
 #ifdef EMULATOR
     /* RA13 and RA12 is swapped in Aquabolt-XL core-die, we need to emulate this behavior in emulator mode */
     /* 0x17ff : RA12<->RA13 swapped address in vega20 memory map */
@@ -773,7 +770,6 @@ __device__ void park_out_64cu_2th(volatile uint8_t* __restrict__ fim_ctr, uint64
     uint32_t cidx = hipBlockIdx_x;
     uint32_t rank = 0;
     uint64_t t_addr;
-    FimBlockInfo* fbi = &vega20_fbi;
 
     t_addr = addr_gen(cidx, rank, 0, 0, (1 << 12), 0);
     GEN_READ_CMD(null_bst + offset, &fim_ctr[t_addr + offset]);
@@ -855,7 +851,6 @@ __device__ void add_transaction_all(volatile uint8_t* __restrict__ fim_addr, boo
 __device__ void change_fim_mode(volatile uint8_t* __restrict__ fim_ctr, FimMode mode1, FimMode mode2,
                                 uint8_t* change_mode_bin, uint64_t offset)
 {
-    FimBlockInfo* fbi = &vega20_fbi;
 #ifdef EMULATOR
     /* RA13 and RA12 is swapped in Aquabolt-XL core-die, we need to emulate this behavior in emulator mode */
     /* 0x17ff : RA12<->RA13 swapped address in vega20 memory map */
@@ -909,7 +904,6 @@ __device__ void park_out(volatile uint8_t* __restrict__ fim_ctr, uint64_t offset
     uint32_t rank = 0;
     uint32_t bank = hipThreadIdx_x / 2;
     uint64_t t_addr;
-    FimBlockInfo* fbi = &vega20_fbi;
 
     t_addr = addr_gen(cidx, rank, 0, bank, (1 << 12), 0);
     GEN_READ_CMD(null_bst + offset, &fim_ctr[t_addr + offset]);
