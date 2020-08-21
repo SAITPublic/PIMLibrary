@@ -34,29 +34,36 @@ __host__ __device__ uint32_t mask_by_bit(uint32_t value, uint32_t start, uint32_
 __host__ __device__ uint64_t addr_gen(uint32_t chan, uint32_t rank, uint32_t bankgroup, uint32_t bank, uint32_t row,
                                       uint32_t col)
 {
-    uint64_t addr = 0;
+    /* vega20 memory map info */
+    int num_row_bit = 14;
+    int num_col_high_bit = 3;
+    int num_bank_high_bit = 1;
+    int num_bankgroup_bit = 2;
+    int num_bank_low_bit = 1;
+    int num_chan_bit = 6;
+    int num_offset_bit = 5;
 
-    FimBlockInfo* fbi = &vega20_fbi;
+    uint64_t addr = 0;
 
     addr = rank;
 
-    addr <<= fbi->num_row_bit;
+    addr <<= num_row_bit;
     addr |= row;
 
-    addr <<= fbi->num_col_high_bit;
+    addr <<= num_col_high_bit;
     addr |= mask_by_bit(col, 4, 2);
 
-    addr <<= fbi->num_bank_high_bit;
+    addr <<= num_bank_high_bit;
     addr |= mask_by_bit(bank, 1, 1);
 
-    addr <<= fbi->num_bankgroup_bit;
+    addr <<= num_bankgroup_bit;
     addr |= bankgroup;
 
-    addr <<= fbi->num_bank_low_bit;
+    addr <<= num_bank_low_bit;
     addr |= mask_by_bit(bank, 0, 0);
 
-    addr <<= fbi->num_chan_bit - 1;
-    addr |= mask_by_bit(chan, fbi->num_chan_bit - 1, 1);
+    addr <<= num_chan_bit - 1;
+    addr |= mask_by_bit(chan, num_chan_bit - 1, 1);
 
     addr <<= 1;
     addr |= mask_by_bit(col, 1, 1);
@@ -67,7 +74,7 @@ __host__ __device__ uint64_t addr_gen(uint32_t chan, uint32_t rank, uint32_t ban
     addr <<= 1;
     addr |= mask_by_bit(col, 0, 0);
 
-    addr <<= fbi->num_offset_bit;
+    addr <<= num_offset_bit;
 
 #ifdef TARGET
     /* we assume fim kernel run on vega20(32GB) system */
