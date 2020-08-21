@@ -497,7 +497,7 @@ int fim_gemv_lut_profile(bool block)
     int iter;
 #ifdef TARGET
     FIM_PROFILE_TICK_A(GEMV_E2E);
-    for (iter = 0; iter < 100; iter++) {
+    for (iter = 0; iter < 1000; iter++) {
 #else
     for (iter = 0; iter < 1; iter++) {
 #endif

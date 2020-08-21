@@ -8,8 +8,7 @@
 #define COMPUTE_GEMV 1
 #define CHANGE_HAB_SB 1
 #define PARK_OUT 1
-
-#ifndef EMULATOR
+#ifdef TARGET
 #define INTEGRAL_SUM 1
 #endif
 
@@ -276,15 +275,16 @@ __global__ void gemv_fim_64cu_64th_fp16(volatile uint8_t* __restrict__ fim_ctr,
     int num_in_tile = n_in_tile;
     int num_out_tile = n_out_tile;
 
-    int gidx = hipThreadIdx_x / 2;
-    uint64_t offset = (hipThreadIdx_x % 2) * 0x10;
+    int gidx = hipThreadIdx_x >> 1;
+    uint64_t offset = (hipThreadIdx_x % 2) << 4;
     uint64_t addr;
 #endif
     /* Radeon7(VEGA20) memory is 16GB but our target is 32GB system */
     /* so program_crf and chagne_fim_mode functions can not access to over 8GB in our system */
 #if PARK_IN
-    if (hipThreadIdx_x < num_bg * num_ba * 2) {
-        addr = addr_gen(hipBlockIdx_x, 0, gidx / num_ba, gidx % num_ba, (1 << 12), 0);
+    /* num_bg * num_ba * 2 */
+    if (hipThreadIdx_x < 32) {
+        addr = addr_gen(hipBlockIdx_x, 0, gidx >> 2, gidx % num_ba, (1 << 12), 0);
         R_CMD(&fim_ctr[addr + offset]);
     }
     B_CMD(0);
@@ -309,7 +309,7 @@ __global__ void gemv_fim_64cu_64th_fp16(volatile uint8_t* __restrict__ fim_ctr,
 #endif
 
 #if PROGRAM_CRF
-    if (hipThreadIdx_x < 2 * crf_size) {
+    if (hipThreadIdx_x < (crf_size << 1)) {
         addr = addr_gen(hipBlockIdx_x, 0, 0, 1, 0x3fff, 0x4 + gidx);
         W_CMD_R(&fim_ctr[addr + offset], crf_binary + hipThreadIdx_x * 16);
     }
@@ -317,25 +317,25 @@ __global__ void gemv_fim_64cu_64th_fp16(volatile uint8_t* __restrict__ fim_ctr,
 #endif
 
 #if COMPUTE_GEMV
-    if (hipThreadIdx_x < 2 * num_grf) {
+    if (hipThreadIdx_x < 16 /* 2 * num_grf */) {
         for (int b_idx = 0; b_idx < batch_dim; b_idx++) {
             for (int o_idx = 0; o_idx < num_out_tile; o_idx++) {
                 if (hipThreadIdx_x < 2) {
                     addr = addr_gen(hipBlockIdx_x, 0, 0, 0, 0x3fff, 0x0);
-                    W_CMD_R(&fim_ctr[addr + offset], gemv_hab_to_hab_fim + hipThreadIdx_x * 16);
+                    W_CMD_R(&fim_ctr[addr + offset], gemv_hab_to_hab_fim + (hipThreadIdx_x << 4));
                 }
                 B_CMD(0);
 
-                uint64_t i_offset = b_idx * num_in_tile * num_grf + gidx;
-                int r_offset = o_idx * num_in_tile / 2;
+                uint64_t i_offset = (b_idx * num_in_tile << 3) + gidx;
+                int r_offset = (o_idx * num_in_tile) >> 1;
 
                 for (int i_idx = 0; i_idx < num_in_tile; i_idx += 2) {
-                    uint64_t i_addr = (i_offset + i_idx * num_grf) * trans_size;
+                    uint64_t i_addr = (i_offset + (i_idx << 3)) << 5;
                     addr = addr_gen(hipBlockIdx_x, 0, 0, 1, 0x3fff, 0x8 + gidx);
                     W_CMD_R(&fim_ctr[addr + offset], &fim_input[i_addr + offset]);
                     B_CMD(0);
 
-                    row = (i_idx / 2 + r_offset) * 2;
+                    row = ((i_idx >> 1) + r_offset) << 1;
                     col = gidx;
 
                     addr = addr_gen(hipBlockIdx_x, 0, 0, 0, row, col);
@@ -365,12 +365,12 @@ __global__ void gemv_fim_64cu_64th_fp16(volatile uint8_t* __restrict__ fim_ctr,
                 }
 
                 for (int i_idx = 1; i_idx < num_in_tile; i_idx += 2) {
-                    uint64_t i_addr = (i_offset + i_idx * num_grf) * trans_size;
+                    uint64_t i_addr = (i_offset + (i_idx << 3)) << 5;
                     addr = addr_gen(hipBlockIdx_x, 0, 0, 1, 0x3fff, 0x8 + gidx);
                     W_CMD_R(&fim_ctr[addr + offset], &fim_input[i_addr + offset]);
                     B_CMD(0);
 
-                    row = (i_idx / 2 + r_offset) * 2;
+                    row = ((i_idx >> 1) + r_offset) << 1;
                     col = gidx;
 
                     addr = addr_gen(hipBlockIdx_x, 0, 0, 1, row, col);
@@ -399,7 +399,7 @@ __global__ void gemv_fim_64cu_64th_fp16(volatile uint8_t* __restrict__ fim_ctr,
                     B_CMD(0);
                 }
                 loc = b_idx * num_out_tile * num_grf + o_idx * num_grf + gidx;
-                row = loc / num_col;
+                row = loc >> 5; // loc / num_col
                 col = loc % num_col;
 
                 addr = addr_gen(hipBlockIdx_x, 0, 0, 1, row, col);
@@ -408,7 +408,7 @@ __global__ void gemv_fim_64cu_64th_fp16(volatile uint8_t* __restrict__ fim_ctr,
 
                 if (hipThreadIdx_x < 2) {
                     addr = addr_gen(hipBlockIdx_x, 0, 0, 0, 0x3fff, 0x0);
-                    W_CMD_R(&fim_ctr[addr + offset], gemv_hab_fim_to_hab + hipThreadIdx_x * 16);
+                    W_CMD_R(&fim_ctr[addr + offset], gemv_hab_fim_to_hab + (hipThreadIdx_x << 4));
                 }
                 B_CMD(0);
             }
@@ -441,15 +441,15 @@ __global__ void gemv_fim_64cu_64th_fp16(volatile uint8_t* __restrict__ fim_ctr,
 
 #if INTEGRAL_SUM
     /* TODO: verify reduce sum in Target Mode */
-    int bg = hipThreadIdx_x / 16;
-    int ba = 2 * (hipThreadIdx_x / 8 % 2) + 1;
-    int out_idx = hipBlockIdx_x * 64 + hipThreadIdx_x;
+    int bg = hipThreadIdx_x >> 4;
+    int ba = (((hipThreadIdx_x >> 3) % 2) << 1) + 1;
+    int out_idx = (hipBlockIdx_x << 6) + hipThreadIdx_x;
     half t_output;
     for (int i = 0; i < batch_dim * num_out_tile; i++) {
         if (out_idx < output_dim) {
             t_output = 0;
-            row = i / 4;
-            col = hipThreadIdx_x % 8 + i % 4 * 8;
+            row = i >> 2;
+            col = hipThreadIdx_x % 8 + (i % 4) << 3;
             addr = addr_gen(hipBlockIdx_x, 0, bg, ba, row, col);
             for (int j = 0; j < 16; j++) {
                 t_output += fim_gemv_tmp_buffer[addr + j];
