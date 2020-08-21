@@ -8,7 +8,7 @@
 #include <utility>
 #include <vector>
 #include "half.hpp"
-
+#include "fim_runtime_api.h"
 #include "utility/fim_dump.hpp"
 #define LENGTH (64 * 1024)
 
@@ -27,6 +27,9 @@ inline int compare_data_round_off(half *data_a, half *data_b, size_t size, doubl
 
 int miopen_rnn_lstm()
 {
+    /* __FIM_API__ call : Initialize FimRuntime */
+    FimInitialize(RT_TYPE_HIP, FIM_FP16);
+
     void *in_dev, *hx_dev, *out_dev, *wei_dev, *cx_dev, *workspace_dev, *hy_dev, *cy_dev;
     miopenTensorDescriptor_t input_tensor, hidden_tensor, weight_tensor, output_tensor;
     std::vector<miopenTensorDescriptor_t> input_tensors;
@@ -192,6 +195,9 @@ int miopen_rnn_lstm()
     miopenDestroyRNNDescriptor(rnnDesc);
 
     miopenDestroy(handle);
+
+    /* __FIM_API__ call : Deinitialize FimRuntime */
+    FimDeinitialize();
 
     return ret;
 }
