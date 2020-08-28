@@ -12,11 +12,13 @@ if [ ! $result -eq 0 ]; then
     mkdir -p $WORKSPACE
 
     # Start docker images (only once)
-      docker run -it --user root --device=/dev/kfd --device=/dev/dri --group-add video \
+      docker run -it --user root --network=host --device=/dev/kfd --device=/dev/dri --group-add video --ipc=host --shm-size 16G \
                  -e LOCAL_USER_ID=`id -u $USER` \
                  --security-opt seccomp:unconfined \
                  --cap-add=ALL --privileged \
                  -e DISPLAY=$DISPLAY \
+                 -p 8080:8080 \
+                 --dns 10.41.128.98 \
                  -v /dev:/dev \
                  -v /lib/modules:/lib/modules \
                  -v $HOME/.ssh:/home/user/.ssh \
