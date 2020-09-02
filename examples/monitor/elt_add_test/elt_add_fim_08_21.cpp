@@ -23,11 +23,7 @@ __device__ inline void W_CMD(uint8_t* addr)
     asm volatile("global_store_dwordx4 %0, v[24:27], off, glc, slc\n\t" ::"v"(addr) : "v24", "v25", "v26", "v27");
 }
 
-__device__ inline void W_CMD_R(uint8_t* addr, uint8_t* src)
-{
-    ((int4*)addr)[0] = ((int4*)src)[0];
-}
-
+__device__ inline void W_CMD_R(uint8_t* addr, uint8_t* src) { ((int4*)addr)[0] = ((int4*)src)[0]; }
 
 /*
 __device__ inline void W_CMD_R(uint8_t* addr, uint8_t* src)
@@ -163,7 +159,6 @@ __global__ void elt_add_fim(uint8_t* fim_data, uint8_t* fim_ctr, uint8_t* output
         addr = addr_gen(hipBlockIdx_x, 0, 0, 1, (0x27ff), 0x1f);
         W_CMD(&fim_ctr[addr + offset]);
         B_CMD(1);
-
     }
     B_CMD(0);
 

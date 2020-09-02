@@ -27,13 +27,13 @@ class FimRuntime
     int copy_memory(void* dst, void* src, size_t size, FimMemCpyType cpy_type);
     int copy_memory(FimBo* dst, FimBo* src, FimMemCpyType cpy_type);
 
-    int execute_add(FimBo* output, FimBo* operand0, FimBo* operand1, bool block = false);
-    int execute_mul(FimBo* output, FimBo* operand0, FimBo* operand1, bool block = false);
-    int execute_relu(FimBo* output, FimBo* fim_data, bool block = false);
-    int execute_gemv(FimBo* output, FimBo* operand0, FimBo* operand1, bool block = false);
-    int execute_gemv_add(FimBo* output, FimBo* operand0, FimBo* operand1, bool block = false);
+    int execute_add(FimBo* output, FimBo* operand0, FimBo* operand1, void* stream, bool block = false);
+    int execute_mul(FimBo* output, FimBo* operand0, FimBo* operand1, void* stream, bool block = false);
+    int execute_relu(FimBo* output, FimBo* fim_data, void* stream, bool block = false);
+    int execute_gemv(FimBo* output, FimBo* operand0, FimBo* operand1, void* stream, bool block = false);
+    int execute_gemv_add(FimBo* output, FimBo* operand0, FimBo* operand1, void* stream, bool block = false);
     int execute_bn(FimBo* output, FimBo* fim_data, FimBo* beta, FimBo* gamma, FimBo* mean, FimBo* variance,
-                   double epsilon, bool block = false);
+                   double epsilon, void* stream, bool block = false);
     int execute_sync();
 
     int execute_dummy(void);

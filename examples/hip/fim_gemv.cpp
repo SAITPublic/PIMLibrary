@@ -53,7 +53,7 @@ int fim_gemv_batch(bool block)
     FimCopyMemory(preloaded_weight, host_reordered_weight, HOST_TO_DEVICE);
 
     /* __FIM_API__ call : Execute FIM kernel (GEMV) */
-    FimExecuteGemv(device_output, device_input, preloaded_weight, block);
+    FimExecuteGemv(device_output, device_input, preloaded_weight, nullptr, block);
 
     if (!block) FimSynchronize();
 
@@ -116,7 +116,7 @@ int fim_gemv_256(bool block)
     FimCopyMemory(preloaded_weight, host_reordered_weight, HOST_TO_DEVICE);
 
     /* __FIM_API__ call : Execute FIM kernel (GEMV) */
-    FimExecuteGemv(device_output, device_input, preloaded_weight, block);
+    FimExecuteGemv(device_output, device_input, preloaded_weight, nullptr, block);
     if (!block) FimSynchronize();
 
     FimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
@@ -178,7 +178,7 @@ int fim_gemv_512(bool block)
     FimCopyMemory(preloaded_weight, host_reordered_weight, HOST_TO_DEVICE);
 
     /* __FIM_API__ call : Execute FIM kernel (GEMV) */
-    FimExecuteGemv(device_output, device_input, preloaded_weight, block);
+    FimExecuteGemv(device_output, device_input, preloaded_weight, nullptr, block);
     if (!block) FimSynchronize();
 
     FimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
@@ -251,7 +251,7 @@ int fim_gemv_desc(bool block)
     FimCopyMemory(preloaded_weight, host_reordered_weight, HOST_TO_FIM);
 
     /* __FIM_API__ call : Execute FIM kernel (GEMV) */
-    FimExecuteGemv(device_output, device_input, preloaded_weight, block);
+    FimExecuteGemv(device_output, device_input, preloaded_weight, nullptr, block);
     if (!block) FimSynchronize();
 
     FimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
@@ -331,7 +331,7 @@ int fim_gemv_desc_batch(bool block)
     FimCopyMemory(preloaded_weight, host_reordered_weight, HOST_TO_FIM);
 
     /* __FIM_API__ call : Execute FIM kernel (GEMV) */
-    FimExecuteGemv(device_output, device_input, preloaded_weight, block);
+    FimExecuteGemv(device_output, device_input, preloaded_weight, nullptr, block);
     if (!block) FimSynchronize();
 
     FimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
@@ -419,7 +419,7 @@ int fim_gemv_lut(bool block)
     fim_weight = bundle->wei;
 
     /* __FIM_API__ call : Execute FIM kernel (GEMV) */
-    FimExecuteGemv(dev_out, dev_in, fim_weight, block);
+    FimExecuteGemv(dev_out, dev_in, fim_weight, nullptr, block);
     if (!block) FimSynchronize();
     FimCopyMemory(host_output, dev_out, DEVICE_TO_HOST);
 

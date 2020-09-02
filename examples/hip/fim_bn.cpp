@@ -69,7 +69,8 @@ int fim_bn_1(bool block)
     FimConvertDataLayout(preloaded_fim_input, host_input, OP_BN);
 
     // /* __FIM_API__ call : Execute FIM kernel */
-    FimExecuteBN(device_output, preloaded_fim_input, host_beta, host_gamma, host_mean, host_variance, 1e-5, block);
+    FimExecuteBN(device_output, preloaded_fim_input, host_beta, host_gamma, host_mean, host_variance, 1e-5, nullptr,
+                 block);
     if (!block) FimSynchronize();
 
     FimCopyMemory(host_output, device_output, DEVICE_TO_HOST);

@@ -40,7 +40,7 @@ int fim_relu_1(bool block)
     FimCopyMemory(fim_input, host_input, HOST_TO_FIM);
 
     /* __FIM_API__ call : Execute FIM kernel */
-    FimExecuteRelu(device_output, fim_input, block);
+    FimExecuteRelu(device_output, fim_input, nullptr, block);
     if (!block) FimSynchronize();
 
     FimCopyMemory(host_output, device_output, FIM_TO_HOST);
@@ -96,7 +96,7 @@ int fim_relu_2(bool block)
     FimCopyMemory(&fim_input, &host_input, HOST_TO_FIM);
 
     /* __FIM_API__ call : Execute FIM kernel */
-    FimExecuteRelu(&device_output, &fim_input, block);
+    FimExecuteRelu(&device_output, &fim_input, nullptr, block);
     if (!block) FimSynchronize();
 
     FimCopyMemory(&host_output, &device_output, FIM_TO_HOST);
@@ -147,7 +147,7 @@ int fim_relu_3(bool block)
     FimCopyMemory(fim_input, host_input, HOST_TO_FIM);
 
     /* __FIM_API__ call : Execute FIM kernel */
-    FimExecuteRelu(device_output, fim_input, block);
+    FimExecuteRelu(device_output, fim_input, nullptr, block);
     if (!block) FimSynchronize();
 
     FimCopyMemory(host_output, device_output, FIM_TO_HOST);

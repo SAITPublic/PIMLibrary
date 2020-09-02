@@ -150,66 +150,66 @@ int FimRuntime::copy_memory(FimBo* dst, FimBo* src, FimMemCpyType cpy_type)
     return ret;
 }
 
-int FimRuntime::execute_add(FimBo* output, FimBo* operand0, FimBo* operand1, bool block)
+int FimRuntime::execute_add(FimBo* output, FimBo* operand0, FimBo* operand1, void* stream, bool block)
 {
     DLOG(INFO) << "called";
     int ret = 0;
 
-    ret = fim_executor_->execute_add(output, operand0, operand1, block);
+    ret = fim_executor_->execute_add(output, operand0, operand1, (hipStream_t)stream, block);
 
     return ret;
 }
 
-int FimRuntime::execute_mul(FimBo* output, FimBo* operand0, FimBo* operand1, bool block)
+int FimRuntime::execute_mul(FimBo* output, FimBo* operand0, FimBo* operand1, void* stream, bool block)
 {
     DLOG(INFO) << "called";
     int ret = 0;
 
-    ret = fim_executor_->execute_mul(output, operand0, operand1, block);
+    ret = fim_executor_->execute_mul(output, operand0, operand1, (hipStream_t)stream, block);
 
     return ret;
 }
 
-int FimRuntime::execute_gemv(FimBo* output, FimBo* operand0, FimBo* operand1, bool block)
+int FimRuntime::execute_gemv(FimBo* output, FimBo* operand0, FimBo* operand1, void* stream, bool block)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
 
-    ret = fim_executor_->execute_gemv(output, operand0, operand1, block);
+    ret = fim_executor_->execute_gemv(output, operand0, operand1, (hipStream_t)stream, block);
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
 
-int FimRuntime::execute_gemv_add(FimBo* output, FimBo* operand0, FimBo* operand1, bool block)
+int FimRuntime::execute_gemv_add(FimBo* output, FimBo* operand0, FimBo* operand1, void* stream, bool block)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
 
-    ret = fim_executor_->execute_gemv_add(output, operand0, operand1, block);
+    ret = fim_executor_->execute_gemv_add(output, operand0, operand1, (hipStream_t)stream, block);
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
 
-int FimRuntime::execute_relu(FimBo* output, FimBo* fim_data, bool block)
+int FimRuntime::execute_relu(FimBo* output, FimBo* fim_data, void* stream, bool block)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
 
-    ret = fim_executor_->execute_relu(output, fim_data, block);
+    ret = fim_executor_->execute_relu(output, fim_data, (hipStream_t)stream, block);
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
 
 int FimRuntime::execute_bn(FimBo* output, FimBo* fim_data, FimBo* beta, FimBo* gamma, FimBo* mean, FimBo* variance,
-                           double epsilon, bool block)
+                           double epsilon, void* stream, bool block)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
 
-    ret = fim_executor_->execute_bn(output, fim_data, beta, gamma, mean, variance, epsilon, block);
+    ret = fim_executor_->execute_bn(output, fim_data, beta, gamma, mean, variance, epsilon, (hipStream_t)stream, block);
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;

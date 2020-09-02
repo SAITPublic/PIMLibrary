@@ -2,7 +2,8 @@ import re
 import argparse
 
 #file_name = 'uif_output_traces/umc15device_die0_15/cmd_debug_A_cha.log'
-file_name = 'uif_v6_results/umc15device_die0_2/cmd_debug_A_cha.log'
+#file_name = 'uif_v6_results/umc15device_die0_2/cmd_debug_A_cha.log'
+file_name = 'uif_v8_results_09_07/channel_0/cmd_debug_A_cha.log'
 
 act_sid = 0
 act_bank = 0

@@ -7,8 +7,8 @@
 #include <memory>
 #include <utility>
 #include <vector>
-#include "half.hpp"
 #include "fim_runtime_api.h"
+#include "half.hpp"
 #include "utility/fim_dump.hpp"
 #define LENGTH (64 * 1024)
 

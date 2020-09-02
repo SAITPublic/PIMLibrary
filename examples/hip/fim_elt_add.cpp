@@ -46,7 +46,7 @@ int fim_elt_add_1(bool block)
     FimCopyMemory(fim_input1, host_input1, HOST_TO_FIM);
 
     /* __FIM_API__ call : Execute FIM kernel (ELT_ADD) */
-    FimExecuteAdd(device_output, fim_input0, fim_input1, block);
+    FimExecuteAdd(device_output, fim_input0, fim_input1, nullptr, block);
 
     if (!block) FimSynchronize();
 
@@ -111,7 +111,7 @@ int fim_elt_add_2(bool block)
     FimCopyMemory(&fim_input1, &host_input1, HOST_TO_FIM);
 
     /* __FIM_API__ call : Execute FIM kernel (ELT_ADD) */
-    FimExecuteAdd(&device_output, &fim_input0, &fim_input1, block);
+    FimExecuteAdd(&device_output, &fim_input0, &fim_input1, nullptr, block);
 
     if (!block) FimSynchronize();
 
@@ -168,7 +168,7 @@ int fim_elt_add_3(bool block)
     FimCopyMemory(fim_input1, host_input1, HOST_TO_FIM);
 
     /* __FIM_API__ call : Execute FIM kernel (ELT_ADD) */
-    FimExecuteAdd(device_output, fim_input0, fim_input1, block);
+    FimExecuteAdd(device_output, fim_input0, fim_input1, nullptr, block);
     if (!block) FimSynchronize();
 
     FimCopyMemory(host_output, device_output, FIM_TO_HOST);
@@ -228,7 +228,7 @@ int fim_elt_add_4(bool block)
     FimCopyMemory(fim_input1, host_input1, HOST_TO_FIM);
 
     /* __FIM_API__ call : Execute FIM kernel (ELT_ADD) */
-    FimExecuteAdd(device_output, fim_input0, fim_input1, block);
+    FimExecuteAdd(device_output, fim_input0, fim_input1, nullptr, block);
     if (!block) FimSynchronize();
 
     FimCopyMemory(host_output, device_output, FIM_TO_HOST);
@@ -292,7 +292,7 @@ int fim_elt_add_profile(bool block)
     FIM_PROFILE_TICK_A(ELT_ADD_1);
     for (iter = 0; iter < 1000; iter++) {
 #endif
-        FimExecuteAdd(device_output, fim_input0, fim_input1, block);
+        FimExecuteAdd(device_output, fim_input0, fim_input1, nullptr, block);
 
         if (!block) FimSynchronize();
 #ifdef TARGET

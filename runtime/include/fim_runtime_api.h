@@ -210,10 +210,13 @@ __FIM_API__ int FimCopyMemory(FimBo* dst, FimBo* src, FimMemCpyType cpy_type);
  * @param output output Buffer object
  * @param operand0 input 1 of add operations- conveted data
  * @param operand1 input 2 of add operations
- *
+ * @param stream void pointer to stream identifier. default=nullptr
+ * @param block enable/disable synchronization. default=false
+ * 
  * @return success/failure
  */
-__FIM_API__ int FimExecuteAdd(FimBo* output, FimBo* operand0, FimBo* operand1, bool block = false);
+__FIM_API__ int FimExecuteAdd(FimBo* output, FimBo* operand0, FimBo* operand1, void* stream = nullptr,
+                              bool block = false);
 
 /**
  * @brief Execute add scalar operation on FIM
@@ -226,7 +229,7 @@ __FIM_API__ int FimExecuteAdd(FimBo* output, FimBo* operand0, FimBo* operand1, b
  *
  * @return success/failure
  */
-__FIM_API__ int FimExecuteAdd(FimBo* output, void* scalar, FimBo* vector, bool block = false);
+__FIM_API__ int FimExecuteAdd(FimBo* output, void* scalar, FimBo* vector, void* stream = nullptr, bool block = false);
 
 /**
  * @brief Executes Mul vector operation in FIM
@@ -234,10 +237,13 @@ __FIM_API__ int FimExecuteAdd(FimBo* output, void* scalar, FimBo* vector, bool b
  * @param output output buffer object
  * @param operand0 first operand for Mul operations ( converted data)
  * @param operand1 second operand for Mul Operations.
+ * @param stream void pointer to stream identifier. default=nullptr
+ * @param block enable/disable synchronization. default=false
  *
  * @return
  */
-__FIM_API__ int FimExecuteMul(FimBo* output, FimBo* operand0, FimBo* operand1, bool block = false);
+__FIM_API__ int FimExecuteMul(FimBo* output, FimBo* operand0, FimBo* operand1, void* stream = nullptr,
+                              bool block = false);
 
 /**
  * @brief Executes Mul Scalar operation in FIM
@@ -245,20 +251,24 @@ __FIM_API__ int FimExecuteMul(FimBo* output, FimBo* operand0, FimBo* operand1, b
  * @param output output buffer object
  * @param scalar scalar value to be multiplied to vector
  * @param vector vector input
- *
+ * @param stream void pointer to stream identifier. default=nullptr
+ * @param block enable/disable synchronization. default=false
+ * 
  * @return success/failure
  */
-__FIM_API__ int FimExecuteMul(FimBo* output, void* scalar, FimBo* vector, bool block = false);
+__FIM_API__ int FimExecuteMul(FimBo* output, void* scalar, FimBo* vector, void* stream = nullptr, bool block = false);
 
 /**
  * @brief Executes FIM Relu operations
  *
  * @param output Output Buffer object
  * @param fim_data input buffer object
- *
+ * @param stream void pointer to stream identifier. default=nullptr
+ * @param block enable/disable synchronization. default=false
+ * 
  * @return success/failure
  */
-__FIM_API__ int FimExecuteRelu(FimBo* output, FimBo* fim_data, bool block = false);
+__FIM_API__ int FimExecuteRelu(FimBo* output, FimBo* fim_data, void* stream = nullptr, bool block = false);
 
 /**
  * @brief Executes FIM GEMV operation
@@ -270,11 +280,14 @@ __FIM_API__ int FimExecuteRelu(FimBo* output, FimBo* fim_data, bool block = fals
  * @param output output buffer object of gemv
  * @param operand0 input operand 0 ( weights). Should be of FIM Area
  * @param operand1 vector input
- *
+ * @param stream void pointer to stream identifier. default=nullptr
+ * @param block enable/disable synchronization. default=false
+ * 
  * @return success or failure
  */
 
-__FIM_API__ int FimExecuteGemv(FimBo* output, FimBo* operand0, FimBo* operand1, bool block = false);
+__FIM_API__ int FimExecuteGemv(FimBo* output, FimBo* operand0, FimBo* operand1, void* stream = nullptr,
+                               bool block = false);
 
 /**
  * @brief Executes FIM GEMV + Add operation
@@ -288,7 +301,8 @@ __FIM_API__ int FimExecuteGemv(FimBo* output, FimBo* operand0, FimBo* operand1, 
  *
  * @return success or failure
  */
-__FIM_API__ int FimExecuteGemvAdd(FimBo* output, FimBo* operand0, FimBo* operand1, bool block = false);
+__FIM_API__ int FimExecuteGemvAdd(FimBo* output, FimBo* operand0, FimBo* operand1, void* stream = nullptr,
+                                  bool block = false);
 
 /**
  * @brief Executes Batch normalization operation.
@@ -300,11 +314,13 @@ __FIM_API__ int FimExecuteGemvAdd(FimBo* output, FimBo* operand0, FimBo* operand
  * @param mean Fim Buffer object having mean values for BN operation
  * @param variance Fim Buffer object having variance for BN operation
  * @param epsilon epsilon value for BN operation
+ * @param stream void pointer to stream identifier. default=nullptr
+ * @param block enable/disable synchronization. default=false
  *
  * @return success/failure
  */
 __FIM_API__ int FimExecuteBN(FimBo* output, FimBo* fim_data, FimBo* beta, FimBo* gamma, FimBo* mean, FimBo* variance,
-                             double epsilon, bool block = false);
+                             double epsilon, void* stream = nullptr, bool block = false);
 
 /**
  * @brief Synchronization call for FIM commands

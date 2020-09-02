@@ -27,18 +27,15 @@ class Timer
     std::chrono::time_point<std::chrono::steady_clock> et;
 };
 
-
-void PrintHalf(const char * str , const void *data , int idx)
+void PrintHalf(const char* str, const void* data, int idx)
 {
-
-    half x = ((half *)data)[idx] ;
+    half x = ((half*)data)[idx];
     std::cout << str << float(x) << std::endl;
-
 }
 
 void KernelLauncher(const void* i_data, const void* w_data, const void* h_data, const void* c_data,
-                    std::vector<int> in_len, std::vector<int> hid_len, int bi_dir, int ws_len,
-                    void* ws_data , void* ho_data, void* co_data, void* o_data)
+                    std::vector<int> in_len, std::vector<int> hid_len, int bi_dir, int ws_len, void* ws_data,
+                    void* ho_data, void* co_data, void* o_data)
 {
     std::cout << "Launcher for FIM_Lstm" << std::endl;
 
@@ -56,7 +53,7 @@ void KernelLauncher(const void* i_data, const void* w_data, const void* h_data, 
     std::vector<int> out_len({out_h});  // output tensor length
 
     int batch_size = in_len[0];
-    //int batch_size = 1;
+    // int batch_size = 1;
     t.start();
     std::array<int, 2> in_lens = {{in_len[0], in_len.back()}};
     std::array<int, 2> out_lens = {{in_len[0], out_len[0]}};
@@ -78,7 +75,7 @@ void KernelLauncher(const void* i_data, const void* w_data, const void* h_data, 
     miopenSetTensorDescriptor(hidden_tensor, miopenHalf, 3, hid_len.data(), nullptr);
 
     int layer = hid_len[0] / bi_dir;  // Number of hidden stacks
-    int wei_hh = hid_len[2];  // Hidden state length
+    int wei_hh = hid_len[2];          // Hidden state length
     miopenRNNMode_t mode = miopenLSTM;
     miopenRNNBiasMode_t biasMode = miopenRNNNoBias;
     miopenRNNDirectionMode_t directionMode;
@@ -89,59 +86,57 @@ void KernelLauncher(const void* i_data, const void* w_data, const void* h_data, 
     miopenSetRNNDescriptor(rnnDesc, wei_hh, layer, inMode, directionMode, mode, biasMode, algo, miopenHalf);
     miopenGetRNNParamsDescriptor(handle, rnnDesc, input_tensor, weight_tensor, miopenHalf);
 
-
-    //Todo: can be removed , useful to debug params size.
-    if(0){
-      t.start();
-      size_t in_sz = 0;
-      size_t out_sz = 0;
-      size_t wei_sz = 0;
-      size_t hy_sz = 0;
-      size_t workSpace_sz;
-      miopenGetRNNInputTensorSize(handle, rnnDesc, nseq, input_tensors.data(), &in_sz);
-      miopenGetRNNInputTensorSize(handle, rnnDesc, nseq, output_tensors.data(), &out_sz);
-      miopenGetRNNHiddenTensorSize(handle, rnnDesc, nseq, input_tensors.data(), &hy_sz);
-      miopenGetRNNWorkspaceSize(handle, rnnDesc, nseq, input_tensors.data(), &workSpace_sz);
-      miopenGetRNNParamsSize(handle, rnnDesc, input_tensors[0], &wei_sz, miopenHalf);
-      std::cout << "In size " << in_sz << std::endl;
-      std::cout << "Out size " << out_sz << std::endl ;
-      std::cout << "Param size " << wei_sz << std::endl ;
-      std::cout << "Workspace size " << workSpace_sz << std::endl ;
-      miopenGetRNNParamsSize(handle, rnnDesc, input_tensors[0], &wei_sz, miopenHalf);
-      t.stop();
-      std::cout << "Duration debug: " << t.gettime_ms() << std::endl;
+    // Todo: can be removed , useful to debug params size.
+    if (0) {
+        t.start();
+        size_t in_sz = 0;
+        size_t out_sz = 0;
+        size_t wei_sz = 0;
+        size_t hy_sz = 0;
+        size_t workSpace_sz;
+        miopenGetRNNInputTensorSize(handle, rnnDesc, nseq, input_tensors.data(), &in_sz);
+        miopenGetRNNInputTensorSize(handle, rnnDesc, nseq, output_tensors.data(), &out_sz);
+        miopenGetRNNHiddenTensorSize(handle, rnnDesc, nseq, input_tensors.data(), &hy_sz);
+        miopenGetRNNWorkspaceSize(handle, rnnDesc, nseq, input_tensors.data(), &workSpace_sz);
+        miopenGetRNNParamsSize(handle, rnnDesc, input_tensors[0], &wei_sz, miopenHalf);
+        std::cout << "In size " << in_sz << std::endl;
+        std::cout << "Out size " << out_sz << std::endl;
+        std::cout << "Param size " << wei_sz << std::endl;
+        std::cout << "Workspace size " << workSpace_sz << std::endl;
+        miopenGetRNNParamsSize(handle, rnnDesc, input_tensors[0], &wei_sz, miopenHalf);
+        t.stop();
+        std::cout << "Duration debug: " << t.gettime_ms() << std::endl;
     }
 
-
-    //PrintHalf("Inputb ",i_data,0);
-    //PrintHalf("Inputb ",i_data,7);
-    //PrintHalf("Outputb ", o_data,0);
-    //PrintHalf("Outputb ",o_data,7);
-    //PrintHalf("h_data",h_data,0);
-    //PrintHalf("h_data",h_data,7);
-    //PrintHalf("c_data",c_data,0);
-    //PrintHalf("c_data",c_data,7);
-    //PrintHalf("Weightb " ,w_data,0);
-    //PrintHalf("Weightb " ,w_data,7);
+    // PrintHalf("Inputb ",i_data,0);
+    // PrintHalf("Inputb ",i_data,7);
+    // PrintHalf("Outputb ", o_data,0);
+    // PrintHalf("Outputb ",o_data,7);
+    // PrintHalf("h_data",h_data,0);
+    // PrintHalf("h_data",h_data,7);
+    // PrintHalf("c_data",c_data,0);
+    // PrintHalf("c_data",c_data,7);
+    // PrintHalf("Weightb " ,w_data,0);
+    // PrintHalf("Weightb " ,w_data,7);
     t.start();
     hipStreamSynchronize(NULL);
     miopenRNNForwardInference(handle, rnnDesc, nseq, input_tensors.data(), i_data, hidden_tensor, h_data, hidden_tensor,
                               c_data, weight_tensor, w_data, output_tensors.data(), o_data, hidden_tensor, ho_data,
-                              hidden_tensor, co_data,  ws_data, ws_len);
+                              hidden_tensor, co_data, ws_data, ws_len);
     hipStreamSynchronize(NULL);
     t.stop();
     std::cout << "RNNfwd Duration: " << t.gettime_ms() << std::endl;
 
-    //PrintHalf("Input ",i_data,0);
-    //PrintHalf("Input ",i_data,7);
-    //PrintHalf("Output ", o_data,0);
-    //PrintHalf("Output ",o_data,7);
-    //PrintHalf("h_data",h_data,0);
-    //PrintHalf("h_data",h_data,7);
-    //PrintHalf("c_data",c_data,0);
-    //PrintHalf("c_data",c_data,7);
-    //PrintHalf("Weight " ,w_data,0);
-    //PrintHalf("Weight " ,w_data,7);
+    // PrintHalf("Input ",i_data,0);
+    // PrintHalf("Input ",i_data,7);
+    // PrintHalf("Output ", o_data,0);
+    // PrintHalf("Output ",o_data,7);
+    // PrintHalf("h_data",h_data,0);
+    // PrintHalf("h_data",h_data,7);
+    // PrintHalf("c_data",c_data,0);
+    // PrintHalf("c_data",c_data,7);
+    // PrintHalf("Weight " ,w_data,0);
+    // PrintHalf("Weight " ,w_data,7);
 
     miopenDestroyTensorDescriptor(output_tensor);
     miopenDestroyTensorDescriptor(weight_tensor);
@@ -180,7 +175,7 @@ class FimLstmOp : public OpKernel
         const Tensor& ws_len_tensor = context->input(5);
         auto ws_len = ws_len_tensor.flat<int32>().data()[0];
 
-        //NOTE: We start from 1 as 0th entry is always 2 for 2x memory
+        // NOTE: We start from 1 as 0th entry is always 2 for 2x memory
         std::vector<int> input_dims;
         for (int i = 1; i < input_tensor.dims(); i++) input_dims.push_back(input_tensor.dim_size(i));
 
@@ -193,8 +188,8 @@ class FimLstmOp : public OpKernel
         Tensor* cell_out_tensor = NULL;
         Tensor* ws_out_tensor = NULL;
 
-        //Todo , figure out correct output siz , why does doc state 2d when there is output for each timestep
-        TensorShape tshape = TensorShape({2*input_dims[0], input_dims[1] , 2*hidden_dims[2]});
+        // Todo , figure out correct output siz , why does doc state 2d when there is output for each timestep
+        TensorShape tshape = TensorShape({2 * input_dims[0], input_dims[1], 2 * hidden_dims[2]});
 
         OP_REQUIRES_OK(context, context->allocate_output(0, tshape, &output_tensor));
         auto output = output_tensor->flat<Eigen::half>();
@@ -205,16 +200,14 @@ class FimLstmOp : public OpKernel
         OP_REQUIRES_OK(context, context->allocate_output(2, cell_states_tensor.shape(), &cell_out_tensor));
         auto co = cell_out_tensor->flat<Eigen::half>();
 
-        TensorShape wshape = TensorShape({1,ws_len});
+        TensorShape wshape = TensorShape({1, ws_len});
         OP_REQUIRES_OK(context, context->allocate_output(3, wshape, &ws_out_tensor));
         auto ws = ws_out_tensor->flat<Eigen::half>();
 
-
         t.start();
-        //PrintHalf("Input received",input.data(),0);
-        KernelLauncher(input.data(), weights.data(), hidden_states.data(), cell_states.data(),
-                       input_dims, hidden_dims, bi_dir, ws_len,
-                       ws.data(), ho.data(), co.data(), output.data());
+        // PrintHalf("Input received",input.data(),0);
+        KernelLauncher(input.data(), weights.data(), hidden_states.data(), cell_states.data(), input_dims, hidden_dims,
+                       bi_dir, ws_len, ws.data(), ho.data(), co.data(), output.data());
         t.stop();
         std::cout << "Kernel Duration: " << t.gettime_ms() << std::endl;
     }

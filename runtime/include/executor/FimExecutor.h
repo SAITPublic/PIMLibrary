@@ -26,13 +26,13 @@ class FimExecutor
     int get_loop_counter(FimOpType op_type, int input_size);
     void create_crf_lut();
 
-    int execute_add(FimBo* output, FimBo* operand0, FimBo* operand1, bool block);
-    int execute_mul(FimBo* output, FimBo* operand0, FimBo* operand1, bool block);
-    int execute_relu(FimBo* output, FimBo* fim_data, bool block);
-    int execute_gemv(FimBo* output, FimBo* operand0, FimBo* operand1, bool block);
-    int execute_gemv_add(FimBo* output, FimBo* operand0, FimBo* operand1, bool block);
+    int execute_add(FimBo* output, FimBo* operand0, FimBo* operand1, hipStream_t stream, bool block);
+    int execute_mul(FimBo* output, FimBo* operand0, FimBo* operand1, hipStream_t stream, bool block);
+    int execute_relu(FimBo* output, FimBo* fim_data, hipStream_t stream, bool block);
+    int execute_gemv(FimBo* output, FimBo* operand0, FimBo* operand1, hipStream_t stream, bool block);
+    int execute_gemv_add(FimBo* output, FimBo* operand0, FimBo* operand1, hipStream_t stream, bool block);
     int execute_bn(FimBo* output, FimBo* fim_data, FimBo* beta, FimBo* gamma, FimBo* mean, FimBo* variance,
-                   double epsilon, bool block);
+                   double epsilon, hipStream_t stream, bool block);
     int execute_sync();
     int execute_dummy(void);
 

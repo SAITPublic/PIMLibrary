@@ -337,7 +337,7 @@ int main(int argc, char* argv[])
       ARG2 : gpu-id
       ARG3 : block size
     ********************************************/
-    //uint64_t bsize = 8589934592;  // 8 * 1024 * 1024 * 1024;
+    // uint64_t bsize = 8589934592;  // 8 * 1024 * 1024 * 1024;
     uint64_t bsize = 17179869184;  // 16 * 1024 * 1024 * 1024;
     fim_base = fmm_map_fim(1, gpu_id, bsize);
     std::cout << std::hex << "fimBaseAddr = " << fim_base << std::endl;
