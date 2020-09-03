@@ -322,6 +322,58 @@ int fim_elt_add_profile(bool block)
     return ret;
 }
 
+int fim_elt_add_batch(int batch)
+{
+    int ret = 0;
+
+    /* __FIM_API__ call : Initialize FimRuntime */
+    FimInitialize(RT_TYPE_HIP, FIM_FP16);
+
+    /* __FIM_API__ call : Create FIM Buffer Object */
+    FimBo* host_input0 = FimCreateBo(batch * LENGTH, 1, 1, 1, FIM_FP16, MEM_TYPE_HOST);
+    FimBo* host_input1 = FimCreateBo(batch * LENGTH, 1, 1, 1, FIM_FP16, MEM_TYPE_HOST);
+    FimBo* host_output = FimCreateBo(batch * LENGTH, 1, 1, 1, FIM_FP16, MEM_TYPE_HOST);
+    FimBo* golden_output = FimCreateBo(batch * LENGTH, 1, 1, 1, FIM_FP16, MEM_TYPE_HOST);
+
+    FimBo* fim_input1 = FimCreateBo(batch * LENGTH, 1, 1, 1, FIM_FP16, MEM_TYPE_FIM);
+    FimBo* device_output = FimCreateBo(batch * LENGTH, 1, 1, 1, FIM_FP16, MEM_TYPE_FIM);
+    FimBo* fim_input0 = FimCreateBo(batch * LENGTH, 1, 1, 1, FIM_FP16, MEM_TYPE_FIM);
+
+    /* __FIM_API__ call : Preload weight data on FIM memory */
+    FimCopyMemory(fim_input0, host_input0, HOST_TO_FIM);
+    FimCopyMemory(fim_input1, host_input1, HOST_TO_FIM);
+
+    FimExecuteDummy();
+/* __FIM_API__ call : Execute FIM kernel (ELT_ADD) */
+#ifdef TARGET
+    int iter;
+    FIM_PROFILE_TICK_A(ELT_ADD_1);
+    for (iter = 0; iter < 1000; iter++)
+        FimExecuteAdd(device_output, fim_input0, fim_input1, false);
+
+    FimSynchronize();
+    FIM_PROFILE_TOCK_A(ELT_ADD_1);
+    std::cout << "[ " << iter << " execution time batch ]" << std::endl;
+#endif
+
+    FimCopyMemory(host_output, device_output, FIM_TO_HOST);
+
+    /* __FIM_API__ call : Free memory */
+    FimDestroyBo(host_input0);
+    FimDestroyBo(host_input1);
+    FimDestroyBo(host_output);
+    FimDestroyBo(golden_output);
+    FimDestroyBo(device_output);
+    FimDestroyBo(fim_input0);
+    FimDestroyBo(fim_input1);
+
+    /* __FIM_API__ call : Deinitialize FimRuntime */
+    FimDeinitialize();
+
+    return 0;
+}
+
+
 TEST(HIPIntegrationTest, FimEltAdd1Sync) { EXPECT_TRUE(fim_elt_add_1(true) == 0); }
 TEST(HIPIntegrationTest, FimEltAdd1Async) { EXPECT_TRUE(fim_elt_add_1(false) == 0); }
 TEST(HIPIntegrationTest, FimEltAdd2Sync) { EXPECT_TRUE(fim_elt_add_2(true) == 0); }
@@ -331,3 +383,12 @@ TEST(HIPIntegrationTest, FimEltAdd3Async) { EXPECT_TRUE(fim_elt_add_3(false) == 
 TEST(HIPIntegrationTest, FimEltAdd4Sync) { EXPECT_TRUE(fim_elt_add_4(true) == 0); }
 TEST(HIPIntegrationTest, FimEltAdd4ASync) { EXPECT_TRUE(fim_elt_add_4(false) == 0); }
 TEST(HIPIntegrationTest, FimEltAddProfileSync) { EXPECT_TRUE(fim_elt_add_profile(true) == 0); }
+TEST(HIPIntegrationTest, FimEltAddBatch1) { EXPECT_TRUE(fim_elt_add_batch(1) == 0); }
+TEST(HIPIntegrationTest, FimEltAddBatch2) { EXPECT_TRUE(fim_elt_add_batch(2) == 0); }
+TEST(HIPIntegrationTest, FimEltAddBatch4) { EXPECT_TRUE(fim_elt_add_batch(4) == 0); }
+TEST(HIPIntegrationTest, FimEltAddBatch8) { EXPECT_TRUE(fim_elt_add_batch(8) == 0); }
+TEST(HIPIntegrationTest, FimEltAddBatch16) { EXPECT_TRUE(fim_elt_add_batch(16) == 0); }
+TEST(HIPIntegrationTest, FimEltAddBatch32) { EXPECT_TRUE(fim_elt_add_batch(32) == 0); }
+TEST(HIPIntegrationTest, FimEltAddBatch64) { EXPECT_TRUE(fim_elt_add_batch(64) == 0); }
+TEST(HIPIntegrationTest, FimEltAddBatch128) { EXPECT_TRUE(fim_elt_add_batch(128) == 0); }
+TEST(HIPIntegrationTest, FimEltAddBatch256) { EXPECT_TRUE(fim_elt_add_batch(256) == 0); }
