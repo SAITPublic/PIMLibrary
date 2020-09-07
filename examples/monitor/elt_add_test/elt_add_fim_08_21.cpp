@@ -163,14 +163,14 @@ __global__ void elt_add_fim(uint8_t* fim_data, uint8_t* fim_ctr, uint8_t* output
     B_CMD(0);
 
     /* set crf binary */
-    if (hipThreadIdx_x < 2 * crf_size) {
+    if (hipThreadIdx_x < 2) {
         addr = addr_gen(hipBlockIdx_x, 0, 0, 1, (0x3fff), 0x4 + hipThreadIdx_x / 2);
         W_CMD_R(&fim_ctr[addr + offset], crf_binary + hipThreadIdx_x * 16);
     }
     B_CMD(0);
 
     /* change HAB mode to HAB_FIM mode */
-    if (hipThreadIdx_x < 2 * crf_size) {
+    if (hipThreadIdx_x < 2) {
         addr = addr_gen(hipBlockIdx_x, 0, 0, 0, (0x3fff), 0x0);
         W_CMD_R(&fim_ctr[addr + offset], hab_to_fim + hipThreadIdx_x * 16);
     }
@@ -199,7 +199,7 @@ __global__ void elt_add_fim(uint8_t* fim_data, uint8_t* fim_ctr, uint8_t* output
     }
 
     /* change HAB_FIM mode to HAB mode */
-    if (hipThreadIdx_x < 2 * crf_size) {
+    if (hipThreadIdx_x < 2) {
         addr = addr_gen(hipBlockIdx_x, 0, 0, 0, (0x3fff), 0x0);
         W_CMD_R(&fim_ctr[addr + offset], fim_to_hab + hipThreadIdx_x * 16);
     }
@@ -289,7 +289,7 @@ int main(int argc, char* argv[])
     const unsigned threadsPerBlock = 16;
 
     hipLaunchKernelGGL(elt_add_fim, dim3(blocks), dim3(threadsPerBlock), 0, 0, (uint8_t*)fim_base, (uint8_t*)fim_base,
-                       (uint8_t*)0, input_size, (uint8_t*)crf_bin_d, 1, (uint8_t*)mode1_d, (uint8_t*)mode2_d);
+                       (uint8_t*)0, input_size, (uint8_t*)crf_bin_d, 32, (uint8_t*)mode1_d, (uint8_t*)mode2_d);
 
     hipDeviceSynchronize();
 

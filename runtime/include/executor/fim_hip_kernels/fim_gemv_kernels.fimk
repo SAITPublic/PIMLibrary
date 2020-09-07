@@ -322,9 +322,9 @@ __global__ void gemv_fim_64cu_64th_fp16(volatile uint8_t* __restrict__ fim_ctr,
 #endif
 
 #if PROGRAM_CRF
-    if (hipThreadIdx_x < (crf_size << 1)) {
+    if (hipThreadIdx_x < (crf_size >> 4)) {
         addr = addr_gen(hipBlockIdx_x, 0, 0, 1, 0x3fff, 0x4 + gidx);
-        W_CMD_R(&fim_ctr[addr + offset], crf_binary + hipThreadIdx_x * 16);
+        W_CMD_R(&fim_ctr[addr + offset], crf_binary + (hipThreadIdx_x << 4));
     }
     B_CMD(0);
 #endif

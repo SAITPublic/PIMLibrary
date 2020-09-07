@@ -103,6 +103,9 @@ void FimCrfBinGen::create_fim_cmd(FimOpType op_type, int input_size, int output_
 
     cmds_.push_back(FimCommand(FimCmdType::EXIT, 0));
 
+    int nop_cnt = 8 - cmds_.size() % 8;
+    for (int i = 0; i < nop_cnt; i++) cmds_.push_back(FimCommand(FimCmdType::NOP, 0));
+
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
 }
 
@@ -164,6 +167,9 @@ void FimCrfBinGen::create_fim_cmd(FimOpType op_type, int lc)
     }
 
     cmds_.push_back(FimCommand(FimCmdType::EXIT, 0));
+
+    int nop_cnt = 8 - cmds_.size() % 8;
+    for (int i = 0; i < nop_cnt; i++) cmds_.push_back(FimCommand(FimCmdType::NOP, 0));
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
 }
