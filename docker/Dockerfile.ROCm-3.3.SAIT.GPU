@@ -1,4 +1,4 @@
-FROM rocm/tensorflow:rocm3.3-tf2.1-dev
+FROM rocm/tensorflow:rocm3.3-tf2.2-rc2-dev
 MAINTAINER Shashidhar G <shashidhar.g@samsung.com>
 
 # Default env setup to pass through damn proxy..
@@ -14,12 +14,6 @@ RUN dpkg -i /tmp/files/sudo*
 RUN sed -i '/# Host alias /iDefaults\tenv_keep="http_proxy https_proxy ftp_proxy"' /etc/sudoers
 RUN sed -i 's/archive.ubuntu.com/kr.archive.ubuntu.com/g' /etc/apt/sources.list
 
-RUN apt-get update
-
-RUN apt-get --yes --allow-unauthenticated install openssl
-
-RUN apt-get update
-
 RUN export http_proxy="http://75.12.251.5:8080"
 RUN export https_proxy="http://75.12.251.5:8080"
 ENV http_proxy http://75.12.251.5:8080
@@ -34,6 +28,13 @@ RUN ls -al /etc/ssl/certs/SMRC.pem && \
     cat /etc/ca-certificates.conf | grep SMRC
 
 RUN curl https://bazel.build/bazel-release.pub.gpg | sudo apt-key add -
+
+RUN apt-get update
+
+RUN apt-get --yes --allow-unauthenticated install openssl
+
+RUN apt-get update
+
 # Build Requirements
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends
 RUN apt-get update
