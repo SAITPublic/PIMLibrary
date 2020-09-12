@@ -238,7 +238,6 @@ int fim_gemv_desc(bool block)
     load_data(input.c_str(), (char*)host_input->data, host_input->size);
     load_data(weight.c_str(), (char*)temp_weight->data, temp_weight->size);
     load_data(output.c_str(), (char*)golden_output->data, out_size * sizeof(half));
-
     for (int i = 0; i < fim_desc->bshape_r.h; i++) {
         memcpy((half*)host_weight->data + i * fim_desc->bshape_r.w, (half*)temp_weight->data + i * fim_desc->bshape.w,
                fim_desc->bshape_r.w * sizeof(half));

@@ -16,11 +16,14 @@ int FimInitialize(FimRuntimeType rt_type, FimPrecision precision)
 {
     fim_alloc_done = false;
     if (!log_initialized) {
-        FLAGS_minloglevel = FIM_LOG_LEVEL;
         google::InitGoogleLogging("FIMLibrary");
+        FLAGS_minloglevel = FIM_LOG_LEVEL;
+#if CONSOLE
+        FLAGS_logtostderr = 1;
+        FLAGS_stderrthreshold = 0;
+#endif
         log_initialized = true;
     }
-
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     FIM_PROFILE_TICK(Initialize);
     int ret = 0;

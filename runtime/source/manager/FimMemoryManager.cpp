@@ -596,16 +596,26 @@ void FimMemoryManager::FimBlockAllocator::free(void* ptr, size_t length) const
 
 uint64_t FimMemoryManager::FimBlockAllocator::allocate_fim_block(size_t bsize) const
 {
+    if (fim_alloc_done == true) return 0;
+
     // Get GPU ID
     FILE* fd;
     char path[256];
     uint32_t gpu_id;
+    int max_topology = 3;
+    int node_id = 0;
 
-    snprintf(path, 256, "/sys/devices/virtual/kfd/kfd/topology/nodes/1/gpu_id");
-    fd = fopen(path, "r");
-    if (!fd) return -1;
-    if (fscanf(fd, "%ul", &gpu_id) != 1) return -1;
-    fclose(fd);
+    for (int i = 0; i < max_topology; i++) {
+        snprintf(path, 256, "/sys/devices/virtual/kfd/kfd/topology/nodes/%d/gpu_id", i);
+        fd = fopen(path, "r");
+        if (!fd) return -1;
+        if (fscanf(fd, "%ul", &gpu_id) != 1) return -1;
+        fclose(fd);
+        if (gpu_id != 0) {
+            node_id = i;
+            break;
+        }
+    }
 
     uint64_t ret = 0;
     /********************************************
@@ -614,7 +624,7 @@ uint64_t FimMemoryManager::FimBlockAllocator::allocate_fim_block(size_t bsize) c
       ARG3 : block size
     ********************************************/
     if (!fim_alloc_done) {
-        ret = fmm_map_fim(1, gpu_id, bsize);
+        ret = fmm_map_fim(node_id, gpu_id, bsize);
         fim_alloc_done = true;
         g_fim_base_addr = ret;
     }

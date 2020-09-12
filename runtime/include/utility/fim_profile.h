@@ -6,12 +6,10 @@
 long long getTickCount(void);
 double getTickFrequency(void);
 
-#define CONSOL 0
-
 #ifdef PROFILE
 #define FIM_PROFILE_TICK(name) long long __tick_##name = getTickCount()
 
-#if CONSOL
+#if CONSOLE
 #define FIM_PROFILE_TOCK(name)                                                                                     \
     std::cout << #name                                                                                             \
               << " time (ms) : " << ((double(getTickCount() - __tick_##name) / (double)getTickFrequency())) * 1000 \

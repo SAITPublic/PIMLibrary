@@ -38,8 +38,8 @@ int gpu_integral_sum(void)
     half* in;
     half* out;
 
-    hipMalloc((void**)&in, in_size * sizeof(half));
-    hipMalloc((void**)&out, out_size * sizeof(half));
+    hipHostMalloc((void**)&in, in_size * sizeof(half));
+    hipHostMalloc((void**)&out, out_size * sizeof(half));
 
     unsigned max_threads = 64;
     unsigned blocks = 64;
@@ -63,8 +63,8 @@ int gpu_integral_sum(void)
     }
 #endif
 
-    hipFree(in);
-    hipFree(out);
+    hipHostFree(in);
+    hipHostFree(out);
 
     return 0;
 }

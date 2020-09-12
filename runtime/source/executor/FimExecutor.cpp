@@ -44,10 +44,13 @@ int FimExecutor::initialize(void)
     DLOG(INFO) << "[START] " << __FUNCTION__ << " Intialization done ";
 
     int ret = 0;
+    int device_id = 0;
+    int device_cnt = 0;
     hipGetDeviceProperties(&dev_prop_, 0);
     DLOG(INFO) << " System minor " << dev_prop_.minor << std::endl;
     DLOG(INFO) << " System major " << dev_prop_.major << std::endl;
     DLOG(INFO) << " agent prop name " << dev_prop_.name << std::endl;
+    DLOG(INFO) << " device id " << device_id << std::endl;
     DLOG(INFO) << " hip Device prop succeeded " << std::endl;
 
     fim_manager_ = fim::runtime::manager::FimManager::get_instance(rt_type_, precision_);
@@ -103,21 +106,23 @@ int FimExecutor::deinitialize(void)
 void FimExecutor::create_crf_lut()
 {
     uint8_t* temp_crf = new uint8_t[max_crf_size_];
+    uint8_t* temp_dst = nullptr;
     int crf_size = 0;
 
     int num_op_type = (int)OP_DUMMY;
 
     for (int j = 0; j < max_crf_lut_size_; j++) {
         fim_manager_->fim_crf_generator_->gen_binary_with_loop(OP_GEMV, j * 8 - 1, temp_crf, &crf_size);
-        memcpy(d_crf_bin_lut_ + (int)OP_GEMV * max_crf_lut_size_ * max_crf_size_ + j * max_crf_size_, temp_crf,
-               crf_size);
+        temp_dst = d_crf_bin_lut_ + (int)OP_GEMV * max_crf_lut_size_ * max_crf_size_ + j * max_crf_size_;
+        fim_manager_->copy_memory((void*)temp_dst, (void*)temp_crf, crf_size, HOST_TO_DEVICE);
         h_crf_size_lut_[(int)OP_GEMV * max_crf_lut_size_ + j] = crf_size;
     }
 
     for (int i = 1; i < num_op_type; i++) {
         for (int j = 0; j < max_crf_lut_size_; j++) {
             fim_manager_->fim_crf_generator_->gen_binary_with_loop((FimOpType)i, j, temp_crf, &crf_size);
-            memcpy(d_crf_bin_lut_ + i * max_crf_lut_size_ * max_crf_size_ + j * max_crf_size_, temp_crf, crf_size);
+            temp_dst =  d_crf_bin_lut_ + i * max_crf_lut_size_ * max_crf_size_ + j * max_crf_size_;
+            fim_manager_->copy_memory((void*)temp_dst, (void*)temp_crf, crf_size, HOST_TO_DEVICE);
             h_crf_size_lut_[i * max_crf_lut_size_ + j] = crf_size;
         }
     }

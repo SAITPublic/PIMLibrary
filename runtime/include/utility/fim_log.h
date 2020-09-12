@@ -5,4 +5,6 @@
 #include <glog/logging.h>
 #include <stdio.h>
 
+#define CONSOLE 0
+
 #endif /* _FIM_LOG_H_ */

@@ -315,9 +315,9 @@ void pad_data(void* input, FimDesc* fim_desc, FimMemFlag mem_flag)
 {
     if (mem_flag == GEMV_INPUT) {
         for (int i = 0; i < fim_desc->bshape.n; i++) {
-            for (int j = fim_desc->bshape_r.w; j < fim_desc->bshape.w; j++) {
-                ((half*)input)[i * fim_desc->bshape.w + j] = half(0);
-            }
+            half* temp_dst = &((half*)input)[i * fim_desc->bshape.w];
+            int bsize = (fim_desc->bshape.w - fim_desc->bshape_r.w) * sizeof(half);
+            hipMemset((void*)temp_dst, 0x0, bsize);
         }
     }
     int padded_size = fim_desc->bshape.n * fim_desc->bshape.c * fim_desc->bshape.h * fim_desc->bshape.w;
