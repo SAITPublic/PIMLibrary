@@ -112,7 +112,7 @@ void FimExecutor::create_crf_lut()
     int num_op_type = (int)OP_DUMMY;
 
     for (int j = 0; j < max_crf_lut_size_; j++) {
-        fim_manager_->fim_crf_generator_->gen_binary_with_loop(OP_GEMV, j * 8 - 1, temp_crf, &crf_size);
+        fim_manager_->fim_crf_generator_->gen_binary_with_loop(OP_GEMV, j, temp_crf, &crf_size);
         temp_dst = d_crf_bin_lut_ + (int)OP_GEMV * max_crf_lut_size_ * max_crf_size_ + j * max_crf_size_;
         fim_manager_->copy_memory((void*)temp_dst, (void*)temp_crf, crf_size, HOST_TO_DEVICE);
         h_crf_size_lut_[(int)OP_GEMV * max_crf_lut_size_ + j] = crf_size;
@@ -237,24 +237,26 @@ int FimExecutor::execute_gemv(FimBo* output, FimBo* operand0, FimBo* operand1, h
     unsigned blocks = fbi_.num_fim_chan;
     unsigned threads_per_block = 64;
 
-    int in_size = weight->bshape.w;
+    int memory_size = weight->bshape.w;
+    int compute_size = 128 * ceil((float)weight->bshape_r.w / 128);
     int out_size = weight->bshape.h;
     int real_out_size = weight->bshape_r.h;
     int n_batch = input->bshape.n;
-    int n_in_tile = in_size * sizeof(uint16_t) / fbi_.trans_size / fbi_.num_grf_A;
-    int n_out_tile = out_size / (blocks * fbi_.num_fim_blocks * fbi_.num_grf_B);
+    int n_compute_tile = compute_size * sizeof(uint16_t) / fbi_.trans_size / fbi_.num_grf_A;
+    int n_memory_tile = memory_size * sizeof(uint16_t) / fbi_.trans_size / fbi_.num_grf_A;
+    int n_out_tile = out_size / (fbi_.num_fim_chan * fbi_.num_fim_blocks * fbi_.num_grf_B);
 
     FIM_PROFILE_TICK(CreateCRFBin);
-    int lc = (get_loop_counter(OP_GEMV, in_size * sizeof(half)) + 1) / 8;
-    int crf_lut_offset = (int)OP_GEMV * max_crf_lut_size_ * max_crf_size_ + lc * max_crf_size_;
-    int crf_size = h_crf_size_lut_[(int)OP_GEMV * max_crf_lut_size_ + lc];
+    int crf_lut_offset = (int)OP_GEMV * max_crf_lut_size_ * max_crf_size_ + n_compute_tile * max_crf_size_;
+    int crf_size = h_crf_size_lut_[(int)OP_GEMV * max_crf_lut_size_ + n_compute_tile];
     FIM_PROFILE_TOCK(CreateCRFBin);
 
     FIM_PROFILE_TICK(RunGemvKernel);
     hipLaunchKernelGGL(gemv_fim_64cu_64th_fp16, dim3(blocks), dim3(threads_per_block), 0, stream,
                        (uint8_t*)g_fim_base_addr /* fim control base */, (uint8_t*)weight->data /* fim weight base */,
                        (uint8_t*)fim_gemv_tmp_buffer_, /* fim hw output buffer */
-                       (uint8_t*)input->data, (uint8_t*)output->data, n_batch, n_in_tile, n_out_tile, real_out_size,
+                       (uint8_t*)input->data, (uint8_t*)output->data, n_batch, n_memory_tile, n_compute_tile,
+                       n_out_tile, real_out_size,
 #ifdef EMULATOR
                        (FimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_,
 #endif
@@ -298,24 +300,26 @@ int FimExecutor::execute_gemv_add(FimBo* output, FimBo* operand0, FimBo* operand
     unsigned blocks = fbi_.num_fim_chan;
     unsigned threads_per_block = 64;
 
-    int in_size = weight->bshape.w;
+    int memory_size = weight->bshape.w;
+    int compute_size = 128 * ceil((float)weight->bshape_r.w / 128);
     int out_size = weight->bshape.h;
     int real_out_size = weight->bshape_r.h;
     int n_batch = input->bshape.n;
-    int n_in_tile = in_size * sizeof(uint16_t) / fbi_.trans_size / fbi_.num_grf_A;
+    int n_compute_tile = compute_size * sizeof(uint16_t) / fbi_.trans_size / fbi_.num_grf_A;
+    int n_memory_tile = memory_size * sizeof(uint16_t) / fbi_.trans_size / fbi_.num_grf_A;
     int n_out_tile = out_size / (blocks * fbi_.num_fim_blocks * fbi_.num_grf_B);
 
     FIM_PROFILE_TICK(CreateCRFBin);
-    int lc = (get_loop_counter(OP_GEMV, in_size * sizeof(half)) + 1) / 8;
-    int crf_lut_offset = (int)OP_GEMV * max_crf_lut_size_ * max_crf_size_ + lc * max_crf_size_;
-    int crf_size = h_crf_size_lut_[(int)OP_GEMV * max_crf_lut_size_ + lc];
+    int crf_lut_offset = (int)OP_GEMV * max_crf_lut_size_ * max_crf_size_ + n_compute_tile * max_crf_size_;
+    int crf_size = h_crf_size_lut_[(int)OP_GEMV * max_crf_lut_size_ + n_compute_tile];
     FIM_PROFILE_TOCK(CreateCRFBin);
 
     FIM_PROFILE_TICK(RunGemvKernel);
     hipLaunchKernelGGL(gemv_fim_64cu_64th_fp16, dim3(blocks), dim3(threads_per_block), 0, stream,
                        (uint8_t*)g_fim_base_addr /* fim control base */, (uint8_t*)weight->data /* fim weight base */,
                        (uint8_t*)fim_gemv_tmp_buffer_, /* fim hw output buffer */
-                       (uint8_t*)input->data, (uint8_t*)output->data, n_batch, n_in_tile, n_out_tile, real_out_size,
+                       (uint8_t*)input->data, (uint8_t*)output->data, n_batch, n_memory_tile, n_compute_tile,
+                       n_out_tile, real_out_size,
 #ifdef EMULATOR
                        (FimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_,
 #endif

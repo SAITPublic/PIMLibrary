@@ -15,7 +15,7 @@
 __global__ void gemv_fim_fp16(volatile uint8_t* __restrict__ fim_ctr, volatile uint8_t* __restrict__ fim_weight,
                               volatile uint8_t* __restrict__ fim_gemv_tmp_buffer,
                               volatile uint8_t* __restrict__ fim_input, volatile uint8_t* __restrict__ output,
-                              int batch_dim, int num_in_tile, int num_out_tile, int output_dim,
+                              int batch_dim, int n_memory_tile, int n_compute_tile, int num_out_tile, int output_dim,
 #ifdef EMULATOR
                               FimMemTraceData* fmtd16, int* frd_size, int mt_width,
 #endif
@@ -52,12 +52,12 @@ __global__ void gemv_fim_fp16(volatile uint8_t* __restrict__ fim_ctr, volatile u
     for (int b = 0; b < batch_dim; b++) {
         for (int j = 0; j < num_out_tile; j++) {
             change_fim_mode(fim_ctr, HAB_MODE, HAB_FIM_MODE, gemv_hab_to_hab_fim, offset);
-            for (int i = 0; i < num_in_tile; i += 2) {
-                compute_gemv_2bank(fim_ctr, fim_weight, fim_input, num_in_tile, num_out_tile, i, j, b, EVEN_BANK,
+            for (int i = 0; i < n_compute_tile; i += 2) {
+                compute_gemv_2bank(fim_ctr, fim_weight, fim_input, n_memory_tile, num_out_tile, i, j, b, EVEN_BANK,
                                    offset);
             }
-            for (int i = 1; i < num_in_tile; i += 2) {
-                compute_gemv_2bank(fim_ctr, fim_weight, fim_input, num_in_tile, num_out_tile, i, j, b, ODD_BANK,
+            for (int i = 1; i < n_compute_tile; i += 2) {
+                compute_gemv_2bank(fim_ctr, fim_weight, fim_input, n_memory_tile, num_out_tile, i, j, b, ODD_BANK,
                                    offset);
             }
             compute_col = b * num_out_tile * fbi->num_grf_B + j * fbi->num_grf_B;
@@ -93,7 +93,7 @@ __global__ void gemv_fim_64cu_2th_fp16(volatile uint8_t* __restrict__ fim_ctr,
                                        volatile uint8_t* __restrict__ fim_weight,
                                        volatile uint8_t* __restrict__ fim_gemv_tmp_buffer,
                                        volatile uint8_t* __restrict__ fim_input, volatile uint8_t* __restrict__ output,
-                                       int batch_dim, int num_in_tile, int num_out_tile, int output_dim,
+                                       int batch_dim, int n_memory_tile, int n_compute_tile, int num_out_tile, int output_dim,
 #ifdef EMULATOR
                                        FimMemTraceData* fmtd16, int* frd_size, int mt_width,
 #endif
@@ -131,12 +131,12 @@ __global__ void gemv_fim_64cu_2th_fp16(volatile uint8_t* __restrict__ fim_ctr,
     for (int b = 0; b < batch_dim; b++) {
         for (int j = 0; j < num_out_tile; j++) {
             change_fim_mode_64cu_2th(fim_ctr, HAB_MODE, HAB_FIM_MODE, gemv_hab_to_hab_fim, offset);
-            for (int i = 0; i < num_in_tile; i += 2) {
-                compute_gemv_2bank_64cu_2th(fim_ctr, fim_weight, fim_input, num_in_tile, num_out_tile, i, j, b,
+            for (int i = 0; i < n_compute_tile; i += 2) {
+                compute_gemv_2bank_64cu_2th(fim_ctr, fim_weight, fim_input, n_memory_tile, num_out_tile, i, j, b,
                                             EVEN_BANK, offset);
             }
-            for (int i = 1; i < num_in_tile; i += 2) {
-                compute_gemv_2bank_64cu_2th(fim_ctr, fim_weight, fim_input, num_in_tile, num_out_tile, i, j, b,
+            for (int i = 1; i < n_compute_tile; i += 2) {
+                compute_gemv_2bank_64cu_2th(fim_ctr, fim_weight, fim_input, n_memory_tile, num_out_tile, i, j, b,
                                             ODD_BANK, offset);
             }
             compute_col = b * num_out_tile * fbi->num_grf_B + j * fbi->num_grf_B;
@@ -172,7 +172,7 @@ __global__ void gemv_fim_64cu_2th_fp16(volatile uint8_t* __restrict__ fim_ctr,
 __global__ void gemv_fim_1cu_2th_fp16(volatile uint8_t* __restrict__ fim_ctr, volatile uint8_t* __restrict__ fim_weight,
                                       volatile uint8_t* __restrict__ fim_gemv_tmp_buffer,
                                       volatile uint8_t* __restrict__ fim_input, volatile uint8_t* __restrict__ output,
-                                      int batch_dim, int num_in_tile, int num_out_tile, int output_dim,
+                                      int batch_dim, int n_memory_tile, int n_compute_tile, int num_out_tile, int output_dim,
 #ifdef EMULATOR
                                       FimMemTraceData* fmtd16, int* frd_size, int mt_width,
 #endif
@@ -210,12 +210,12 @@ __global__ void gemv_fim_1cu_2th_fp16(volatile uint8_t* __restrict__ fim_ctr, vo
     for (int b = 0; b < batch_dim; b++) {
         for (int j = 0; j < num_out_tile; j++) {
             change_fim_mode_1cu_2th(fim_ctr, HAB_MODE, HAB_FIM_MODE, gemv_hab_to_hab_fim, offset);
-            for (int i = 0; i < num_in_tile; i += 2) {
-                compute_gemv_2bank_1cu_2th(fim_ctr, fim_weight, fim_input, num_in_tile, num_out_tile, i, j, b,
+            for (int i = 0; i < n_compute_tile; i += 2) {
+                compute_gemv_2bank_1cu_2th(fim_ctr, fim_weight, fim_input, n_memory_tile, num_out_tile, i, j, b,
                                            EVEN_BANK, offset);
             }
-            for (int i = 1; i < num_in_tile; i += 2) {
-                compute_gemv_2bank_1cu_2th(fim_ctr, fim_weight, fim_input, num_in_tile, num_out_tile, i, j, b, ODD_BANK,
+            for (int i = 1; i < n_compute_tile; i += 2) {
+                compute_gemv_2bank_1cu_2th(fim_ctr, fim_weight, fim_input, n_memory_tile, num_out_tile, i, j, b, ODD_BANK,
                                            offset);
             }
 
@@ -263,7 +263,8 @@ __global__ void gemv_fim_64cu_64th_fp16(volatile uint8_t* __restrict__ fim_ctr,
                                         volatile uint8_t* __restrict__ fim_weight,
                                         volatile uint8_t* __restrict__ fim_gemv_tmp_buffer,
                                         volatile uint8_t* __restrict__ fim_input, volatile uint8_t* __restrict__ output,
-                                        int batch_dim, int n_in_tile, int n_out_tile, int output_dim,
+                                        int batch_dim, int n_memory_tile, int n_compute_tile, int n_out_tile,
+                                        int output_dim,
 #ifdef EMULATOR
                                         FimMemTraceData* fmtd16, int* frd_size, int mt_width,
 #endif
@@ -285,7 +286,7 @@ __global__ void gemv_fim_64cu_64th_fp16(volatile uint8_t* __restrict__ fim_ctr,
     int trans_size = 32;
     int loc, row, col;
 
-    int num_in_tile = n_in_tile;
+    int num_in_tile = n_compute_tile;
     int num_out_tile = n_out_tile;
 
     int gidx = hipThreadIdx_x >> 1;
@@ -337,10 +338,10 @@ __global__ void gemv_fim_64cu_64th_fp16(volatile uint8_t* __restrict__ fim_ctr,
                 W_CMD_R(&fim_ctr[addr + offset], gemv_hab_to_hab_fim + ((hipThreadIdx_x % 2) << 4));
                 B_CMD(1);
 
-                uint64_t i_offset = (b_idx * num_in_tile << 3) + gidx;
-                int r_offset = (o_idx * num_in_tile) >> 1;
+                uint64_t i_offset = (b_idx * n_memory_tile << 3) + gidx;
+                int r_offset = (o_idx * n_memory_tile) >> 1;
 
-                for (int i_idx = 0; i_idx < num_in_tile; i_idx += 2) {
+                for (int i_idx = 0; i_idx < n_compute_tile; i_idx += 2) {
                     uint64_t i_addr = (i_offset + (i_idx << 3)) << 5;
                     addr = addr_gen(hipBlockIdx_x, 0, 0, 1, 0x3fff, 0x8 + gidx);
                     W_CMD_R(&fim_ctr[addr + offset], &fim_input[i_addr + offset]);
@@ -375,7 +376,7 @@ __global__ void gemv_fim_64cu_64th_fp16(volatile uint8_t* __restrict__ fim_ctr,
                     B_CMD(1);
                 }
 
-                for (int i_idx = 1; i_idx < num_in_tile; i_idx += 2) {
+                for (int i_idx = 1; i_idx < n_compute_tile; i_idx += 2) {
                     uint64_t i_addr = (i_offset + (i_idx << 3)) << 5;
                     addr = addr_gen(hipBlockIdx_x, 0, 0, 1, 0x3fff, 0x8 + gidx);
                     W_CMD_R(&fim_ctr[addr + offset], &fim_input[i_addr + offset]);

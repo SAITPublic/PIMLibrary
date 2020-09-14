@@ -212,7 +212,7 @@ __FIM_API__ int FimCopyMemory(FimBo* dst, FimBo* src, FimMemCpyType cpy_type);
  * @param operand1 input 2 of add operations
  * @param stream void pointer to stream identifier. default=nullptr
  * @param block enable/disable synchronization. default=false
- * 
+ *
  * @return success/failure
  */
 __FIM_API__ int FimExecuteAdd(FimBo* output, FimBo* operand0, FimBo* operand1, void* stream = nullptr,
@@ -253,7 +253,7 @@ __FIM_API__ int FimExecuteMul(FimBo* output, FimBo* operand0, FimBo* operand1, v
  * @param vector vector input
  * @param stream void pointer to stream identifier. default=nullptr
  * @param block enable/disable synchronization. default=false
- * 
+ *
  * @return success/failure
  */
 __FIM_API__ int FimExecuteMul(FimBo* output, void* scalar, FimBo* vector, void* stream = nullptr, bool block = false);
@@ -265,7 +265,7 @@ __FIM_API__ int FimExecuteMul(FimBo* output, void* scalar, FimBo* vector, void* 
  * @param fim_data input buffer object
  * @param stream void pointer to stream identifier. default=nullptr
  * @param block enable/disable synchronization. default=false
- * 
+ *
  * @return success/failure
  */
 __FIM_API__ int FimExecuteRelu(FimBo* output, FimBo* fim_data, void* stream = nullptr, bool block = false);
@@ -282,7 +282,7 @@ __FIM_API__ int FimExecuteRelu(FimBo* output, FimBo* fim_data, void* stream = nu
  * @param operand1 vector input
  * @param stream void pointer to stream identifier. default=nullptr
  * @param block enable/disable synchronization. default=false
- * 
+ *
  * @return success or failure
  */
 
