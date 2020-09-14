@@ -33,7 +33,7 @@ class FimExecutor
     int execute_gemv_add(FimBo* output, FimBo* operand0, FimBo* operand1, hipStream_t stream, bool block);
     int execute_bn(FimBo* output, FimBo* fim_data, FimBo* beta, FimBo* gamma, FimBo* mean, FimBo* variance,
                    double epsilon, hipStream_t stream, bool block);
-    int execute_sync();
+    int execute_sync(hipStream_t stream);
     int execute_dummy(void);
 
     int preprocess_srf(FimBo* beta, FimBo* gamma, FimBo* mean, FimBo* variance, double epsilon, uint8_t* srf_binary);

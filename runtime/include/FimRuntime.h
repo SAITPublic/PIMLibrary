@@ -34,7 +34,7 @@ class FimRuntime
     int execute_gemv_add(FimBo* output, FimBo* operand0, FimBo* operand1, void* stream, bool block = false);
     int execute_bn(FimBo* output, FimBo* fim_data, FimBo* beta, FimBo* gamma, FimBo* mean, FimBo* variance,
                    double epsilon, void* stream, bool block = false);
-    int execute_sync();
+    int execute_sync(void* stream);
 
     int execute_dummy(void);
     int insert_gemv_bundle(uint64_t w_addr, FimGemvBundle* bundle);

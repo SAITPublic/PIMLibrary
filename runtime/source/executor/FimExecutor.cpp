@@ -169,7 +169,7 @@ int FimExecutor::execute_add(FimBo* output, FimBo* operand0, FimBo* operand1, hi
                        (uint8_t*)d_crf_bin_lut_ + crf_lut_offset, crf_size);
 
 #ifdef EMULATOR
-    hipStreamSynchronize(NULL);
+    hipStreamSynchronize(stream);
     hipMemcpy((void*)h_fmtd16_size_, (void*)d_fmtd16_size_, sizeof(int), hipMemcpyDeviceToHost);
     hipMemcpy((void*)h_fmtd16_, (void*)d_fmtd16_, sizeof(FimMemTraceData) * max_fmtd_size_, hipMemcpyDeviceToHost);
 
@@ -208,7 +208,7 @@ int FimExecutor::execute_mul(FimBo* output, FimBo* operand0, FimBo* operand1, hi
                        (uint8_t*)d_crf_bin_lut_ + crf_lut_offset, crf_size);
 
 #ifdef EMULATOR
-    hipStreamSynchronize(NULL);
+    hipStreamSynchronize(stream);
     hipMemcpy((void*)h_fmtd16_size_, (void*)d_fmtd16_size_, sizeof(int), hipMemcpyDeviceToHost);
     hipMemcpy((void*)h_fmtd16_, (void*)d_fmtd16_, sizeof(FimMemTraceData) * max_fmtd_size_, hipMemcpyDeviceToHost);
 
@@ -264,7 +264,7 @@ int FimExecutor::execute_gemv(FimBo* output, FimBo* operand0, FimBo* operand1, h
     FIM_PROFILE_TOCK(RunGemvKernel);
 #endif
 #ifdef EMULATOR
-    hipStreamSynchronize(NULL);
+    hipStreamSynchronize(stream);
     FIM_PROFILE_TOCK(RunGemvKernel);
 
     FIM_PROFILE_TICK(RunGemvEmulation);
@@ -325,7 +325,7 @@ int FimExecutor::execute_gemv_add(FimBo* output, FimBo* operand0, FimBo* operand
     FIM_PROFILE_TOCK(RunGemvKernel);
 #endif
 #ifdef EMULATOR
-    hipStreamSynchronize(NULL);
+    hipStreamSynchronize(stream);
     FIM_PROFILE_TOCK(RunGemvKernel);
 
     FIM_PROFILE_TICK(RunGemvEmulation);
@@ -367,7 +367,7 @@ int FimExecutor::execute_relu(FimBo* output, FimBo* fim_data, hipStream_t stream
                        (uint8_t*)d_crf_bin_lut_ + crf_lut_offset, crf_size);
 
 #ifdef EMULATOR
-    hipStreamSynchronize(NULL);
+    hipStreamSynchronize(stream);
     hipMemcpy((void*)h_fmtd16_size_, (void*)d_fmtd16_size_, sizeof(int), hipMemcpyDeviceToHost);
     hipMemcpy((void*)h_fmtd16_, (void*)d_fmtd16_, sizeof(FimMemTraceData) * max_fmtd_size_, hipMemcpyDeviceToHost);
 
@@ -462,7 +462,7 @@ int FimExecutor::execute_bn(FimBo* output, FimBo* fim_data, FimBo* beta, FimBo* 
                        (uint8_t*)d_crf_bin_lut_ + crf_lut_offset, crf_size, (uint8_t*)d_srf_bin_buffer_, srf_size);
 
 #ifdef EMULATOR
-    hipStreamSynchronize(NULL);
+    hipStreamSynchronize(stream);
     hipMemcpy((void*)h_fmtd16_size_, (void*)d_fmtd16_size_, sizeof(int), hipMemcpyDeviceToHost);
     hipMemcpy((void*)h_fmtd16_, (void*)d_fmtd16_, sizeof(FimMemTraceData) * max_fmtd_size_, hipMemcpyDeviceToHost);
 
@@ -482,7 +482,7 @@ int FimExecutor::execute_bn(FimBo* output, FimBo* fim_data, FimBo* beta, FimBo* 
     return ret;
 }
 
-int FimExecutor::execute_sync() { hipStreamSynchronize(NULL); }
+int FimExecutor::execute_sync(hipStream_t stream) { hipStreamSynchronize(stream); }
 int FimExecutor::execute_dummy(void)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";

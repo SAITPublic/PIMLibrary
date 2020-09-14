@@ -491,7 +491,7 @@ int FimExecuteBN(FimBo* output, FimBo* fim_data, FimBo* beta, FimBo* gamma, FimB
     return ret;
 }
 
-int FimSynchronize(void)
+int FimSynchronize(void* stream)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     FIM_PROFILE_TICK(ExecuteSynchronize);
@@ -501,7 +501,7 @@ int FimSynchronize(void)
         DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
         return -1;
     }
-    ret = fim_runtime->execute_sync();
+    ret = fim_runtime->execute_sync(stream);
     FIM_PROFILE_TOCK(ExecuteSynchronize);
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";

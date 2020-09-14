@@ -329,7 +329,7 @@ __FIM_API__ int FimExecuteBN(FimBo* output, FimBo* fim_data, FimBo* beta, FimBo*
  *
  * @return
  */
-__FIM_API__ int FimSynchronize(void);
+__FIM_API__ int FimSynchronize(void* stream = nullptr);
 
 /**
  * @brief Execute Dummy operation in FIM

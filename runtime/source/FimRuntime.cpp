@@ -215,12 +215,12 @@ int FimRuntime::execute_bn(FimBo* output, FimBo* fim_data, FimBo* beta, FimBo* g
     return ret;
 }
 
-int FimRuntime::execute_sync()
+int FimRuntime::execute_sync(void* stream)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
 
-    ret = fim_executor_->execute_sync();
+    ret = fim_executor_->execute_sync((hipStream_t)stream);
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
