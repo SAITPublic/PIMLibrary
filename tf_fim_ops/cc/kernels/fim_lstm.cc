@@ -118,12 +118,12 @@ void KernelLauncher(const void* i_data, const void* w_data, const void* h_data, 
     // PrintHalf("c_data",c_data,7);
     // PrintHalf("Weightb " ,w_data,0);
     // PrintHalf("Weightb " ,w_data,7);
+    FimSynchronize();
     t.start();
-    hipStreamSynchronize(NULL);
     miopenRNNForwardInference(handle, rnnDesc, nseq, input_tensors.data(), i_data, hidden_tensor, h_data, hidden_tensor,
                               c_data, weight_tensor, w_data, output_tensors.data(), o_data, hidden_tensor, ho_data,
                               hidden_tensor, co_data, ws_data, ws_len);
-    hipStreamSynchronize(NULL);
+    FimSynchronize();
     t.stop();
     std::cout << "RNNfwd Duration: " << t.gettime_ms() << std::endl;
 
@@ -170,10 +170,12 @@ class FimLstmOp : public OpKernel
         auto cell_states = cell_states_tensor.flat<Eigen::half>();
 
         const Tensor& bi_dir_tensor = context->input(4);
-        auto bi_dir = bi_dir_tensor.flat<int32>().data()[0];
+        int bi_dir;
+        FimCopyMemory((void*)&bi_dir, (void*)bi_dir_tensor.flat<int32>().data(), sizeof(int), DEVICE_TO_HOST);
 
         const Tensor& ws_len_tensor = context->input(5);
-        auto ws_len = ws_len_tensor.flat<int32>().data()[0];
+        int ws_len;
+        FimCopyMemory((void*)&ws_len, (void*)ws_len_tensor.flat<int32>().data(), sizeof(int), DEVICE_TO_HOST);
 
         // NOTE: We start from 1 as 0th entry is always 2 for 2x memory
         std::vector<int> input_dims;
