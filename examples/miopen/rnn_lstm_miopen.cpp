@@ -103,14 +103,14 @@ int miopen_rnn_lstm()
     wei_sz /= sizeof(half);
     workSpace_sz /= sizeof(half);
 
-    hipMalloc(&in_dev, sizeof(half) * in_sz);
-    hipMalloc(&hx_dev, sizeof(half) * hy_sz);
-    hipMalloc(&out_dev, sizeof(half) * out_sz);
-    hipMalloc(&wei_dev, sizeof(half) * wei_sz);
-    hipMalloc(&cx_dev, sizeof(half) * hy_sz);
-    hipMalloc(&workspace_dev, sizeof(half) * workSpace_sz);
-    hipMalloc(&hy_dev, sizeof(half) * hy_sz);
-    hipMalloc(&cy_dev, sizeof(half) * hy_sz);
+    hipHostMalloc(&in_dev, sizeof(half) * in_sz);
+    hipHostMalloc(&hx_dev, sizeof(half) * hy_sz);
+    hipHostMalloc(&out_dev, sizeof(half) * out_sz);
+    hipHostMalloc(&wei_dev, sizeof(half) * wei_sz);
+    hipHostMalloc(&cx_dev, sizeof(half) * hy_sz);
+    hipHostMalloc(&workspace_dev, sizeof(half) * workSpace_sz);
+    hipHostMalloc(&hy_dev, sizeof(half) * hy_sz);
+    hipHostMalloc(&cy_dev, sizeof(half) * hy_sz);
 
     /******************************
     Initialization begin
@@ -195,6 +195,17 @@ int miopen_rnn_lstm()
     miopenDestroyRNNDescriptor(rnnDesc);
 
     miopenDestroy(handle);
+
+    hipHostFree(&in_dev);
+    hipHostFree(&hx_dev);
+    hipHostFree(&out_dev);
+    hipHostFree(&wei_dev);
+    hipHostFree(&cx_dev);
+    hipHostFree(&workspace_dev);
+    hipHostFree(&hy_dev);
+    hipHostFree(&cy_dev);
+
+    free(golden);
 
     /* __FIM_API__ call : Deinitialize FimRuntime */
     FimDeinitialize();
