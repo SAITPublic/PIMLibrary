@@ -374,7 +374,7 @@ int FimExecuteAdd(FimBo* output, void* scalar, FimBo* vector, void* stream, bool
     int num_vector = vector->size / sizeof(uint16_t);
     FimBo* padded_scalar = FimCreateBo(num_vector, 1, 1, 1, FIM_FP16, MEM_TYPE_FIM);
     for (int i = 0; i < num_vector; i++) {
-        memcpy((char*)padded_scalar->data + i * sizeof(uint16_t), (char*)(scalar), sizeof(uint16_t));
+        fim_runtime->copy_memory((void*)((char*)padded_scalar->data + i * sizeof(uint16_t)), scalar, sizeof(uint16_t), HOST_TO_FIM);
     }
 
     ret = fim_runtime->execute_add(output, vector, padded_scalar, stream, block);
@@ -412,7 +412,7 @@ int FimExecuteMul(FimBo* output, void* scalar, FimBo* vector, void* stream, bool
     int num_vector = vector->size / sizeof(uint16_t);
     FimBo* padded_scalar = FimCreateBo(num_vector, 1, 1, 1, FIM_FP16, MEM_TYPE_FIM);
     for (int i = 0; i < num_vector; i++) {
-        memcpy((char*)padded_scalar->data + i * sizeof(uint16_t), (char*)(scalar), sizeof(uint16_t));
+        fim_runtime->copy_memory((void*)((char*)padded_scalar->data + i * sizeof(uint16_t)), scalar, sizeof(uint16_t), HOST_TO_FIM);
     }
 
     ret = fim_runtime->execute_mul(output, vector, padded_scalar, stream, block);

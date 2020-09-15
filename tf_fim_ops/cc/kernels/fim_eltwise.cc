@@ -17,12 +17,12 @@ void KernelLauncher(const void* inp0_data, const void* inp1_data, int N, int is_
     FimBo* fim_input1 = FimCreateBo(fim_desc, MEM_TYPE_FIM);
     FimBo* device_output = FimCreateBo(fim_desc, MEM_TYPE_FIM);
 
-    FimCopyMemory((void*)fim_input1->data, (void*)inp1_data, sizeof(half) * N, HOST_TO_FIM);
+    FimCopyMemory((void*)fim_input1->data, (void*)inp1_data, sizeof(uint16_t) * N, HOST_TO_FIM);
 
     if (is_scalar == 1) {
-        half fim_input0;
+        uint16_t fim_input0;
 
-        FimCopyMemory((void*)&fim_input0, (void*)inp0_data, sizeof(half), HOST_TO_FIM);
+        FimCopyMemory((void*)&fim_input0, (void*)inp0_data, sizeof(uint16_t), DEVICE_TO_HOST);
 
         if (op == 0) {
             std::cout << "Calling FIMExecuteAdd" << std::endl;
@@ -34,7 +34,7 @@ void KernelLauncher(const void* inp0_data, const void* inp1_data, int N, int is_
     } else {
         FimBo* fim_input0 = FimCreateBo(fim_desc, MEM_TYPE_FIM);
 
-        FimCopyMemory((void*)fim_input0->data, (void*)inp0_data, sizeof(half) * N, HOST_TO_FIM);
+        FimCopyMemory((void*)fim_input0->data, (void*)inp0_data, sizeof(uint16_t) * N, HOST_TO_FIM);
 
         if (op == 0) {
             std::cout << "Calling FIMExecuteAdd" << std::endl;
@@ -47,7 +47,7 @@ void KernelLauncher(const void* inp0_data, const void* inp1_data, int N, int is_
         FimDestroyBo(fim_input0);
     }
 
-    FimCopyMemory((void*)out_data, (void*)device_output->data, sizeof(half) * N, FIM_TO_HOST);
+    FimCopyMemory((void*)out_data, (void*)device_output->data, sizeof(uint16_t) * N, FIM_TO_HOST);
 
     /* __FIM_API__ call : Free memory */
     FimDestroyBo(device_output);
@@ -70,7 +70,8 @@ class FimEltwiseOp : public OpKernel
         auto input1 = input_tensor1.flat<Eigen::half>();
 
         const Tensor& input_tensor2 = context->input(2);
-        auto op = input_tensor2.flat<int32>();
+        int op;
+        FimCopyMemory((void*)&op,(void*)input_tensor2.flat<int32>().data(), sizeof(int), DEVICE_TO_HOST);
 
         int N0 = input0.size();
         int N1 = input1.size();
@@ -101,13 +102,13 @@ class FimEltwiseOp : public OpKernel
             OP_REQUIRES_OK(context, context->allocate_output(0, input_tensor0.shape(), &output_tensor));
             auto output = output_tensor->template flat<Eigen::half>();
             // Call kernel
-            KernelLauncher(input1.data(), input0.data(), N0, is_scalar, output.data(), op.data()[0]);
+            KernelLauncher(input1.data(), input0.data(), N0, is_scalar, output.data(), op);
 
         } else {
             OP_REQUIRES_OK(context, context->allocate_output(0, input_tensor1.shape(), &output_tensor));
             auto output = output_tensor->template flat<Eigen::half>();
             // Call kernel
-            KernelLauncher(input0.data(), input1.data(), N1, is_scalar, output.data(), op.data()[0]);
+            KernelLauncher(input0.data(), input1.data(), N1, is_scalar, output.data(), op);
         }
     }
 };
