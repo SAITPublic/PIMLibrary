@@ -288,19 +288,19 @@ def profile_ds2_eager(batch_size=1,training=False):
      value = conv_layer_two(value, training)
      print('conv2 output shape',value.shape)
 
-     os.system('bash -c \'echo "export ENABLE_FIM=0" >> fim_env \'')
-     os.system('bash -c \'source fim_env\'')
-     os.system('rm fim_env')
+     orig_env = os.environ['ENABLE_FIM']
+
+     os.environ['ENABLE_FIM'] = '0'
      golden = rshape(value)
      golden = lstm(golden,training=False)
      print('gpu_lstm output shape' , golden.shape)
 
-     os.system('bash -c \'echo "export ENABLE_FIM=1" >> fim_env \'')
-     os.system('bash -c \'source fim_env\'')
-     os.system('rm fim_env')
+     os.environ['ENABLE_FIM'] = '1'
      value = rshape(value)
      value = lstm(value,training=False)
      print('fim_lstm output shape', value.shape)
+
+     os.environ['ENABLE_FIM'] = orig_env
 
      result = np.testing.assert_array_almost_equal(value,golden,decimal=5)
 

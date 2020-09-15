@@ -121,7 +121,7 @@ void FimExecutor::create_crf_lut()
     for (int i = 1; i < num_op_type; i++) {
         for (int j = 0; j < max_crf_lut_size_; j++) {
             fim_manager_->fim_crf_generator_->gen_binary_with_loop((FimOpType)i, j, temp_crf, &crf_size);
-            temp_dst =  d_crf_bin_lut_ + i * max_crf_lut_size_ * max_crf_size_ + j * max_crf_size_;
+            temp_dst = d_crf_bin_lut_ + i * max_crf_lut_size_ * max_crf_size_ + j * max_crf_size_;
             fim_manager_->copy_memory((void*)temp_dst, (void*)temp_crf, crf_size, HOST_TO_DEVICE);
             h_crf_size_lut_[i * max_crf_lut_size_ + j] = crf_size;
         }

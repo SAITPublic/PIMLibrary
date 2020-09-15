@@ -71,7 +71,7 @@ class FimEltwiseOp : public OpKernel
 
         const Tensor& input_tensor2 = context->input(2);
         int op;
-        FimCopyMemory((void*)&op,(void*)input_tensor2.flat<int32>().data(), sizeof(int), DEVICE_TO_HOST);
+        FimCopyMemory((void*)&op, (void*)input_tensor2.flat<int32>().data(), sizeof(int), DEVICE_TO_HOST);
 
         int N0 = input0.size();
         int N1 = input1.size();

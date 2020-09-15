@@ -2,6 +2,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <iostream>
+#include "half.hpp"
 #include "hip/hip_runtime.h"
 #include "utility/fim_dump.hpp"
 #include "utility/fim_log.h"
@@ -107,7 +108,9 @@ int FimEmulator::execute_gemv_add(FimBo* output, FimBo* fim_data, FimMemTraceDat
     int ret = 0;
     uint16_t* sim_output = nullptr;
 
-    int out_dim = fim_data->bshape.h * output->bshape.n;
+    int num_batch = output->bshape.n;
+    int out_num = fim_data->bshape.h;
+    int out_dim = out_num * num_batch;
     sim_output = new uint16_t[out_dim];
     fim_sim_.initialize("/opt/rocm/include/dramsim2/ini/HBM2_samsung_2M_16B_x64.ini",
                         "/opt/rocm/include/dramsim2/ini/system_hbm_vega20.ini", 256 * 64 * 2, 64, 1);
@@ -118,8 +121,20 @@ int FimEmulator::execute_gemv_add(FimBo* output, FimBo* fim_data, FimMemTraceDat
     fim_sim_.preload_data_with_addr(fim_data_addr - fim_base_addr, fim_data->data, fim_data->size);
     fim_sim_.execute_kernel((void*)fmtd32, fmtd32_size);
     fim_sim_.read_result_gemv(sim_output, tmp_data_addr - fim_base_addr, out_dim);
-    fim_sim_.eltwise_add(output->data, sim_output, fim_data->bshape_r.h, fim_data->bshape.h, output->bshape.n);
 
+    int out_num_r = fim_data->bshape_r.h;
+    int out_size_r = out_num_r * num_batch * sizeof(uint16_t);
+    void* output_host = malloc(out_size_r);
+    hipMemcpy(output_host, output->data, out_size_r, hipMemcpyDeviceToHost);
+    for (int b = 0; b < num_batch; b++) {
+        for (int i = 0; i < out_num_r; i++) {
+            (reinterpret_cast<half_float::half*>(output_host))[b * out_num_r + i] +=
+                (reinterpret_cast<half_float::half*>(sim_output))[b * out_num + i];
+        }
+    }
+    hipMemcpy(output->data, output_host, out_size_r, hipMemcpyHostToDevice);
+
+    free(output_host);
     delete sim_output;
 
     return ret;
