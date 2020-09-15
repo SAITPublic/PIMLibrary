@@ -311,19 +311,24 @@ void align_shape(FimDesc* fim_desc, FimOpType op_type)
     fim_desc->bshape = bs;
 }
 
-void pad_data(void* input, FimDesc* fim_desc, FimMemFlag mem_flag)
+void pad_data(void* input, FimDesc* fim_desc, FimMemType mem_type, FimMemFlag mem_flag)
 {
-    if (mem_flag == GEMV_INPUT) {
-        for (int i = 0; i < fim_desc->bshape.n; i++) {
-            half* temp_dst = &((half*)input)[i * fim_desc->bshape.w];
-            int bsize = (fim_desc->bshape.w - fim_desc->bshape_r.w) * sizeof(half);
-            hipMemset((void*)temp_dst, 0x0, bsize);
+    if (mem_flag == GEMV_INPUT && mem_type == MEM_TYPE_HOST) {
+        if (mem_type == MEM_TYPE_HOST) {
+            for (int i = 0; i < fim_desc->bshape.n; i++) {
+                for (int j = fim_desc->bshape_r.w; j < fim_desc->bshape.w; j++) {
+                    ((half*)input)[i * fim_desc->bshape.w + j] = half(0);
+                }
+            }
+        } else {
+            if (fim_desc->bshape_r.w != fim_desc->bshape.w)
+                hipMemset(input, 0, fim_desc->bshape.n * fim_desc->bshape.w * sizeof(half));
         }
     }
-    int padded_size = fim_desc->bshape.n * fim_desc->bshape.c * fim_desc->bshape.h * fim_desc->bshape.w;
-    int real_size = fim_desc->bshape_r.n * fim_desc->bshape_r.c * fim_desc->bshape_r.h * fim_desc->bshape_r.w;
 
     if (mem_flag == ELT_OP) {
+        int padded_size = fim_desc->bshape.n * fim_desc->bshape.c * fim_desc->bshape.h * fim_desc->bshape.w;
+        int real_size = fim_desc->bshape_r.n * fim_desc->bshape_r.c * fim_desc->bshape_r.h * fim_desc->bshape_r.w;
         for (int i = real_size; i < padded_size; i++) {
             ((half*)input)[i] = half(0);
         }

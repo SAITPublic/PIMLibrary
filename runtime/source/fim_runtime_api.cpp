@@ -116,7 +116,7 @@ FimBo* FimCreateBo(FimDesc* fim_desc, FimMemType mem_type, FimMemFlag mem_flag)
     }
 
 #ifdef EMULATOR
-    pad_data(fim_bo->data, fim_desc, mem_flag);
+    pad_data(fim_bo->data, fim_desc, mem_type, mem_flag);
 #endif
 
     FIM_PROFILE_TOCK(CreateBo);

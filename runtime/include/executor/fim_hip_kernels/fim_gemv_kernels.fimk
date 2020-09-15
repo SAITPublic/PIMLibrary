@@ -93,7 +93,8 @@ __global__ void gemv_fim_64cu_2th_fp16(volatile uint8_t* __restrict__ fim_ctr,
                                        volatile uint8_t* __restrict__ fim_weight,
                                        volatile uint8_t* __restrict__ fim_gemv_tmp_buffer,
                                        volatile uint8_t* __restrict__ fim_input, volatile uint8_t* __restrict__ output,
-                                       int batch_dim, int n_memory_tile, int n_compute_tile, int num_out_tile, int output_dim,
+                                       int batch_dim, int n_memory_tile, int n_compute_tile, int num_out_tile,
+                                       int output_dim,
 #ifdef EMULATOR
                                        FimMemTraceData* fmtd16, int* frd_size, int mt_width,
 #endif
@@ -172,7 +173,8 @@ __global__ void gemv_fim_64cu_2th_fp16(volatile uint8_t* __restrict__ fim_ctr,
 __global__ void gemv_fim_1cu_2th_fp16(volatile uint8_t* __restrict__ fim_ctr, volatile uint8_t* __restrict__ fim_weight,
                                       volatile uint8_t* __restrict__ fim_gemv_tmp_buffer,
                                       volatile uint8_t* __restrict__ fim_input, volatile uint8_t* __restrict__ output,
-                                      int batch_dim, int n_memory_tile, int n_compute_tile, int num_out_tile, int output_dim,
+                                      int batch_dim, int n_memory_tile, int n_compute_tile, int num_out_tile,
+                                      int output_dim,
 #ifdef EMULATOR
                                       FimMemTraceData* fmtd16, int* frd_size, int mt_width,
 #endif
@@ -215,8 +217,8 @@ __global__ void gemv_fim_1cu_2th_fp16(volatile uint8_t* __restrict__ fim_ctr, vo
                                            EVEN_BANK, offset);
             }
             for (int i = 1; i < n_compute_tile; i += 2) {
-                compute_gemv_2bank_1cu_2th(fim_ctr, fim_weight, fim_input, n_memory_tile, num_out_tile, i, j, b, ODD_BANK,
-                                           offset);
+                compute_gemv_2bank_1cu_2th(fim_ctr, fim_weight, fim_input, n_memory_tile, num_out_tile, i, j, b,
+                                           ODD_BANK, offset);
             }
 
             compute_col = b * num_out_tile * fbi->num_grf_B + j * fbi->num_grf_B;

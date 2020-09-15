@@ -25,8 +25,9 @@ void KernelLauncher(const void* i_data, const void* w_data, const int num_batch,
 
     // Copy , incement using descriptors bshape.w
     for (int i = 0; i < num_batch; i++) {
-        memcpy(static_cast<half*>(host_input->data) + i * fim_desc->bshape.w,
-               static_cast<const half*>(i_data) + i * IN_LENGTH, sizeof(half) * IN_LENGTH);
+        FimCopyMemory((void*)(static_cast<half*>(host_input->data) + i * fim_desc->bshape.w),
+                      (void*)(static_cast<const half*>(i_data) + i * IN_LENGTH), sizeof(half) * IN_LENGTH,
+                      DEVICE_TO_HOST);
     }
 
     // Old ver. FimCopyMemory from tensor weight to Fimbo structure
@@ -35,8 +36,9 @@ void KernelLauncher(const void* i_data, const void* w_data, const int num_batch,
     // Transpose the weight matrix for FIM spec.
     for (int i = 0; i < IN_LENGTH; i++) {
         for (int j = 0; j < OUT_LENGTH; j++) {
-            memcpy(static_cast<half*>(host_weight->data) + (j * IN_LENGTH + i),
-                   static_cast<const half*>(w_data) + (i * OUT_LENGTH + j), sizeof(half));
+            FimCopyMemory((void*)(static_cast<half*>(host_weight->data) + (j * IN_LENGTH + i)),
+                          (void*)(static_cast<const half*>(w_data) + (i * OUT_LENGTH + j)), sizeof(half),
+                          DEVICE_TO_HOST);
         }
     }
 
@@ -90,7 +92,8 @@ class FimGemvOp : public OpKernel
         int num_cols = input_tensor1.dim_size(1);
 
         const Tensor& input_tensor2 = context->input(2);
-        auto reorder = input_tensor2.flat<int32>();
+        int reorder;
+        FimCopyMemory((void*)&reorder, (void*)input_tensor2.flat<int32>().data(), sizeof(int), DEVICE_TO_HOST);
 
         std::cout << "Input Num batches : " << num_batch << std::endl;
         std::cout << "Weight Num inputs : " << num_rows << std::endl;
@@ -106,7 +109,7 @@ class FimGemvOp : public OpKernel
 
         // Call kernel
         // num_rows(input) and num_cols(output) should be input like this
-        KernelLauncher(input.data(), input1.data(), num_batch, num_rows, num_cols, output.data(), reorder.data()[0]);
+        KernelLauncher(input.data(), input1.data(), num_batch, num_rows, num_cols, output.data(), reorder);
     }
 };
 

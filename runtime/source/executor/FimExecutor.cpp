@@ -239,6 +239,7 @@ int FimExecutor::execute_gemv(FimBo* output, FimBo* operand0, FimBo* operand1, h
 
     int memory_size = weight->bshape.w;
     int compute_size = 128 * ceil((float)weight->bshape_r.w / 128);
+    if (compute_size < 256) compute_size = 256;
     int out_size = weight->bshape.h;
     int real_out_size = weight->bshape_r.h;
     int n_batch = input->bshape.n;
@@ -302,6 +303,7 @@ int FimExecutor::execute_gemv_add(FimBo* output, FimBo* operand0, FimBo* operand
 
     int memory_size = weight->bshape.w;
     int compute_size = 128 * ceil((float)weight->bshape_r.w / 128);
+    if (compute_size < 256) compute_size = 256;
     int out_size = weight->bshape.h;
     int real_out_size = weight->bshape_r.h;
     int n_batch = input->bshape.n;
