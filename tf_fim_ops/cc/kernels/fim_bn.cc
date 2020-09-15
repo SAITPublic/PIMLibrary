@@ -8,8 +8,7 @@
 using namespace tensorflow;  // NOLINT(build/namespaces)
 
 void KernelLauncher(const void* inp_data, const int N, const int DIMS, const void* mean, const void* var,
-                    const void* beta, const void* gamma, const double epsilon, std::vector<int>& in_dims,
-                    void* out_data)
+                    const void* beta, const void* gamma, const void* epsilon, std::vector<int>& in_dims, void* out_data)
 {
     const int BATCH = in_dims[0];
     const int CH = in_dims[1];
@@ -18,36 +17,39 @@ void KernelLauncher(const void* inp_data, const int N, const int DIMS, const voi
 
     /* __FIM_API__ call : Create FIM Buffer Object */
     FimBo* host_input = FimCreateBo(WIDTH, HEIGHT, CH, BATCH, FIM_FP16, MEM_TYPE_HOST);
-    FimBo* fim_mean = FimCreateBo(1, 1, CH, 1, FIM_FP16, MEM_TYPE_FIM);
-    FimBo* fim_var = FimCreateBo(1, 1, CH, 1, FIM_FP16, MEM_TYPE_FIM);
-    FimBo* fim_beta = FimCreateBo(1, 1, CH, 1, FIM_FP16, MEM_TYPE_FIM);
-    FimBo* fim_gamma = FimCreateBo(1, 1, CH, 1, FIM_FP16, MEM_TYPE_FIM);
+    FimBo* host_mean = FimCreateBo(1, 1, CH, 1, FIM_FP16, MEM_TYPE_HOST);
+    FimBo* host_var = FimCreateBo(1, 1, CH, 1, FIM_FP16, MEM_TYPE_HOST);
+    FimBo* host_beta = FimCreateBo(1, 1, CH, 1, FIM_FP16, MEM_TYPE_HOST);
+    FimBo* host_gamma = FimCreateBo(1, 1, CH, 1, FIM_FP16, MEM_TYPE_HOST);
+    double host_epsilon = 0.0;
 
     FimBo* preloaded_fim_input = FimCreateBo(WIDTH, HEIGHT, CH, BATCH, FIM_FP16, MEM_TYPE_FIM);
     FimBo* device_output = FimCreateBo(WIDTH, HEIGHT, CH, BATCH, FIM_FP16, MEM_TYPE_FIM);
 
-    FimCopyMemory((void*)host_input->data, (void*)inp_data, sizeof(half) * N, HOST_TO_HOST);
+    FimCopyMemory((void*)host_input->data, (void*)inp_data, sizeof(half) * N, DEVICE_TO_HOST);
 
     /* __FIM_API__ call : Preload input data on FIM memory */
     FimConvertDataLayout(preloaded_fim_input, host_input, OP_BN);
 
-    FimCopyMemory(fim_mean->data, (void*)mean, sizeof(half) * CH, HOST_TO_FIM);
-    FimCopyMemory(fim_var->data, (void*)var, sizeof(half) * CH, HOST_TO_FIM);
-    FimCopyMemory(fim_gamma->data, (void*)gamma, sizeof(half) * CH, HOST_TO_FIM);
-    FimCopyMemory(fim_beta->data, (void*)beta, sizeof(half) * CH, HOST_TO_FIM);
+    FimCopyMemory(host_mean->data, (void*)mean, sizeof(half) * CH, DEVICE_TO_HOST);
+    FimCopyMemory(host_var->data, (void*)var, sizeof(half) * CH, DEVICE_TO_HOST);
+    FimCopyMemory(host_gamma->data, (void*)gamma, sizeof(half) * CH, DEVICE_TO_HOST);
+    FimCopyMemory(host_beta->data, (void*)beta, sizeof(half) * CH, DEVICE_TO_HOST);
+    FimCopyMemory((void*)&host_epsilon, (void*)epsilon, sizeof(double), DEVICE_TO_HOST);
 
-    // /* __FIM_API__ call : Execute FIM kernel */
-    FimExecuteBN(device_output, preloaded_fim_input, fim_beta, fim_gamma, fim_mean, fim_var, epsilon);
+    /* __FIM_API__ call : Execute FIM kernel */
+    FimExecuteBN(device_output, preloaded_fim_input, host_beta, host_gamma, host_mean, host_var, host_epsilon);
+    FimSynchronize();
 
     FimCopyMemory((void*)out_data, (void*)device_output->data, sizeof(half) * N, FIM_TO_HOST);
 
     /* __FIM_API__ call : Free memory */
     FimDestroyBo(host_input);
+    FimDestroyBo(host_mean);
+    FimDestroyBo(host_var);
+    FimDestroyBo(host_beta);
+    FimDestroyBo(host_gamma);
     FimDestroyBo(preloaded_fim_input);
-    FimDestroyBo(fim_mean);
-    FimDestroyBo(fim_var);
-    FimDestroyBo(fim_beta);
-    FimDestroyBo(fim_gamma);
     FimDestroyBo(device_output);
 }
 
@@ -91,7 +93,7 @@ class FimBnOp : public OpKernel
             in_dims.push_back(input_tensor.dim_size(i));
         }
         // Call kernel
-        KernelLauncher(input.data(), N, DIMS, mean.data(), var.data(), beta.data(), gamma.data(), epsilon.data()[0],
+        KernelLauncher(input.data(), N, DIMS, mean.data(), var.data(), beta.data(), gamma.data(), epsilon.data(),
                        in_dims, output.data());
     }
 };
