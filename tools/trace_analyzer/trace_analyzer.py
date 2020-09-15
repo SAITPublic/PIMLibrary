@@ -15,6 +15,8 @@ rw_bank = 0
 rw_pseudo_ch = 0
 rw_col = 0
 
+auto_pre = 0
+
 parser = argparse.ArgumentParser()
 parser.add_argument('--path', required=False)
 parser.add_argument('--sid', required=False, type=int)
@@ -35,8 +37,9 @@ def convert_param(func, clock, addr: int, time) :
     global rw_bank
     global rw_col
     global rw_pseudo_ch
-
-    if (func == "ACTCMD") :
+    global auto_pre
+    func = func.replace("CMD", "")
+    if (func == "ACT") :
         if (clock == "R_r0") :
             act_sid = (addr >> 2) & 0b1
             act_bank = (addr >> 3)
@@ -54,7 +57,8 @@ def convert_param(func, clock, addr: int, time) :
                 print("%s  SID:%s  PC:%s  BA:%2s  ROW:%6s    @ %s" %(func, act_sid, act_pseudo_ch, act_bank, hex(act_row), time))
             act_row = act_bank = act_sid = act_pseudo_ch = 0
     else :
-        if (clock == "C_r") :      
+        if (clock == "C_r") :
+            auto_pre |= addr & 0b1111
             rw_bank |= (addr >> 4) 
         if (clock == "C_f") :
             rw_pseudo_ch |= (addr >> 7) & 0b1
@@ -62,9 +66,11 @@ def convert_param(func, clock, addr: int, time) :
             rw_col |= (addr >> 1) & 0b1 
             rw_col |= ((addr >> 3) & 0b1111) << 1
 
+            if (auto_pre == 0b1101 or auto_pre ==0b1001 ) :
+                func = func + "A"
             if ((args.sid == rw_sid and args.pc == rw_pseudo_ch) or (args.sid==None and args.pc==None)) :
-	            print("%6s  SID:%s  PC:%s  BA:%2s  COL:%6s    @ %s" %(func, rw_sid, rw_pseudo_ch, rw_bank, rw_col, time))
-            rw_col = rw_bank = rw_sid = rw_pseudo_ch = 0
+	            print("%3s  SID:%s  PC:%s  BA:%2s  COL:%6s    @ %s" %(func, rw_sid, rw_pseudo_ch, rw_bank, rw_col, time))
+            rw_col = rw_bank = rw_sid = rw_pseudo_ch = auto_pre = 0
 
 with open(file_name) as f:
     for line in f:
