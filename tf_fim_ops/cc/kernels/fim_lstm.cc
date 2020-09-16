@@ -1,5 +1,6 @@
 #include <miopen/miopen.h>
 #include <iostream>
+#include "fim_runtime_api.h"
 #include "hip/hip_fp16.h"
 #include "tensorflow/core/framework/op.h"
 #include "tensorflow/core/framework/op_kernel.h"
