@@ -1,0 +1,15 @@
+-tc_load_ucode=1
+-tsl_load_ucode=0
+//-load_ucode=tcore
+//-skiptextbuffering
+-d=gpu.1
+-eofe=0
+-log
+//-dispclk=600000
+-pm4ib=system -pm4rb=system -tc_TCorePreferSysmemInternally
+////-debug=1 
+//-mcprintdebug=1
+//-mccheckpat=1
+//-zfb
+-disable_libdce
+

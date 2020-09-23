@@ -1,0 +1,11 @@
+-pr
+-eofe
+-fskip
+-v=error
+-d=gpu.1
+-log
+-disable_libdce
+-tc_DefaultCopyUtil=HostCopy
+-templimit
+-hbmtemplimit
+-mall_bypass_frwk=1
