@@ -135,6 +135,43 @@ __global__ void mul_test(uint8_t* fim_ctr, uint8_t* fim_data, uint8_t* fim_data2
     }
     B_CMD(0);
 
+#if 0
+    /* write to odd banks in reverse order */
+    W_CMD(&fim_ctr[(0x31e000 & TARGET_MASK) + offset]);
+    B_CMD(1);
+    W_CMD(&fim_ctr[(0x30e000 & TARGET_MASK) + offset]);
+    B_CMD(1);
+    W_CMD(&fim_ctr[(0x31a000 & TARGET_MASK) + offset]);
+    B_CMD(1);
+    W_CMD(&fim_ctr[(0x30a000 & TARGET_MASK) + offset]);
+    B_CMD(1);
+    W_CMD(&fim_ctr[(0x316000 & TARGET_MASK) + offset]);
+    B_CMD(1);
+    W_CMD(&fim_ctr[(0x306000 & TARGET_MASK) + offset]);
+    B_CMD(1);
+    W_CMD(&fim_ctr[(0x312000 & TARGET_MASK) + offset]);
+    B_CMD(1);
+    W_CMD(&fim_ctr[(0x302000 & TARGET_MASK) + offset]);
+    B_CMD(1);
+    /* write to even banks in reverse order */
+    W_CMD(&fim_ctr[(0x31c000 & TARGET_MASK) + offset]);
+    B_CMD(1);
+    W_CMD(&fim_ctr[(0x30c000 & TARGET_MASK) + offset]);
+    B_CMD(1);
+    W_CMD(&fim_ctr[(0x318000 & TARGET_MASK) + offset]);
+    B_CMD(1);
+    W_CMD(&fim_ctr[(0x308000 & TARGET_MASK) + offset]);
+    B_CMD(1);
+    W_CMD(&fim_ctr[(0x314000 & TARGET_MASK) + offset]);
+    B_CMD(1);
+    W_CMD(&fim_ctr[(0x304000 & TARGET_MASK) + offset]);
+    B_CMD(1);
+    W_CMD(&fim_ctr[(0x310000 & TARGET_MASK) + offset]);
+    B_CMD(1);
+    W_CMD(&fim_ctr[(0x300000 & TARGET_MASK) + offset]);
+    B_CMD(1);
+#endif
+
     /* park in */
     R_CMD(&fim_ctr[(0x280000 & TARGET_MASK) + offset]);
     R_CMD(&fim_ctr[(0x282000 & TARGET_MASK) + offset]);
@@ -172,12 +209,12 @@ __global__ void mul_test(uint8_t* fim_ctr, uint8_t* fim_data, uint8_t* fim_data2
     W_CMD_R(&fim_ctr[(0x3fff00000 & TARGET_MASK) + offset], hab_to_fim + hipThreadIdx_x * 16);
     B_CMD(1);
 
-    /* add */
-    R_CMD(&fim_data[0x0 + offset]);
+    /* MUL */
+    R_CMD(&fim_data[0x0 + offset]); // MOV even_bank to grf_A
     B_CMD(1);
-    R_CMD(&fim_data2[0x0 + offset]);
+    R_CMD(&fim_data2[0x0 + offset]); // MUL grf_A, EVEN_BANK
     B_CMD(1);
-    W_CMD(&output[0x0 + offset]);
+    W_CMD(&output[0x0 + offset]); // NOP
 //    W_CMD(&output[0x0 + offset]);
 //    W_CMD(&output[0x0 + offset]);
 //    W_CMD(&output[0x0 + offset]);

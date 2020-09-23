@@ -112,8 +112,8 @@ __device__ uint64_t addr_gen(unsigned int ch, unsigned int rank, unsigned int bg
     return addr;
 }
 
-__global__ void elt_add_fim(uint8_t* fim_ctr, uint8_t* fim_data, uint8_t* output,
-                            uint8_t* crf_binary, uint8_t* hab_to_fim, uint8_t* fim_to_hab, uint8_t* test_input1)
+__global__ void mov_test(uint8_t* fim_ctr, uint8_t* fim_data, uint8_t* output,
+                         uint8_t* crf_binary, uint8_t* hab_to_fim, uint8_t* fim_to_hab, uint8_t* test_input1)
 {
     uint64_t offset = hipBlockIdx_x * 0x100 + hipThreadIdx_x * 0x10;
 
@@ -135,6 +135,43 @@ __global__ void elt_add_fim(uint8_t* fim_ctr, uint8_t* fim_data, uint8_t* output
     W_CMD_R(&fim_data[(0x1C000 & TARGET_MASK) + offset], test_input1 + hipThreadIdx_x * 16);
     W_CMD_R(&fim_data[(0x1E000 & TARGET_MASK) + offset], test_input1 + hipThreadIdx_x * 16);
     B_CMD(1);
+
+#if 0
+    /* write to odd banks in reverse order */
+    W_CMD(&fim_ctr[(0x31e000 & TARGET_MASK) + offset]);
+    B_CMD(1);
+    W_CMD(&fim_ctr[(0x30e000 & TARGET_MASK) + offset]);
+    B_CMD(1);
+    W_CMD(&fim_ctr[(0x31a000 & TARGET_MASK) + offset]);
+    B_CMD(1);
+    W_CMD(&fim_ctr[(0x30a000 & TARGET_MASK) + offset]);
+    B_CMD(1);
+    W_CMD(&fim_ctr[(0x316000 & TARGET_MASK) + offset]);
+    B_CMD(1);
+    W_CMD(&fim_ctr[(0x306000 & TARGET_MASK) + offset]);
+    B_CMD(1);
+    W_CMD(&fim_ctr[(0x312000 & TARGET_MASK) + offset]);
+    B_CMD(1);
+    W_CMD(&fim_ctr[(0x302000 & TARGET_MASK) + offset]);
+    B_CMD(1);
+    /* write to even banks in reverse order */
+    W_CMD(&fim_ctr[(0x31c000 & TARGET_MASK) + offset]);
+    B_CMD(1);
+    W_CMD(&fim_ctr[(0x30c000 & TARGET_MASK) + offset]);
+    B_CMD(1);
+    W_CMD(&fim_ctr[(0x318000 & TARGET_MASK) + offset]);
+    B_CMD(1);
+    W_CMD(&fim_ctr[(0x308000 & TARGET_MASK) + offset]);
+    B_CMD(1);
+    W_CMD(&fim_ctr[(0x314000 & TARGET_MASK) + offset]);
+    B_CMD(1);
+    W_CMD(&fim_ctr[(0x304000 & TARGET_MASK) + offset]);
+    B_CMD(1);
+    W_CMD(&fim_ctr[(0x310000 & TARGET_MASK) + offset]);
+    B_CMD(1);
+    W_CMD(&fim_ctr[(0x300000 & TARGET_MASK) + offset]);
+    B_CMD(1);
+#endif
 
     /* park in */
     R_CMD(&fim_ctr[(0x280000 & TARGET_MASK) + offset]);
@@ -174,9 +211,9 @@ __global__ void elt_add_fim(uint8_t* fim_ctr, uint8_t* fim_data, uint8_t* output
     B_CMD(1);
 
     /* MOV */
-    R_CMD(&fim_data[0x0 + offset]);
+    R_CMD(&fim_data[0x0 + offset]); // MOV even_bank to grf_A
     B_CMD(1);
-    W_CMD(&output[0x0 + offset]);
+    W_CMD(&output[0x0 + offset]); // NOP
     B_CMD(1);
 
     /* change HAB_FIM mode to HAB mode */
@@ -286,7 +323,7 @@ int main(int argc, char* argv[])
     const unsigned blocks = 1;
     const unsigned threadsPerBlock = 2;
 
-    hipLaunchKernelGGL(elt_add_fim, dim3(blocks), dim3(threadsPerBlock), 0, 0, (uint8_t*)fim_base, (uint8_t*)fim_base,
+    hipLaunchKernelGGL(mov_test, dim3(blocks), dim3(threadsPerBlock), 0, 0, (uint8_t*)fim_base, (uint8_t*)fim_base,
                        (uint8_t*)fim_base + 0x100000, (uint8_t*)crf_bin_d, (uint8_t*)mode1_d, (uint8_t*)mode2_d, (uint8_t*)test1_d);
 
     hipDeviceSynchronize();
