@@ -11,6 +11,8 @@
 #define PARK_OUT 1
 #define INTEGRAL_SUM 1
 
+#define RADEON7 0
+
 extern "C" uint64_t fmm_map_fim(uint32_t, uint32_t, uint64_t);
 
 #define CHECK(cmd)                                                                                              \
@@ -22,17 +24,17 @@ extern "C" uint64_t fmm_map_fim(uint32_t, uint32_t, uint64_t);
         }                                                                                                       \
     }
 
-__device__ inline void R_CMD(uint8_t* src)
+__device__ inline void R_CMD(volatile uint8_t* src)
 {
     asm volatile("global_load_dwordx4 v[24:27], %0, off, glc, slc" ::"v"(src) : "v24", "v25", "v26", "v27");
 }
 
-__device__ inline void W_CMD(uint8_t* dst)
+__device__ inline void W_CMD(volatile uint8_t* dst)
 {
     asm volatile("global_store_dwordx4 %0, v[24:27], off, glc, slc" ::"v"(dst) : "v24", "v25", "v26", "v27");
 }
 
-__device__ inline void W_CMD_R(uint8_t* dst, uint8_t* src) { ((int4*)dst)[0] = ((int4*)src)[0]; }
+__device__ inline void W_CMD_R(volatile uint8_t* dst, volatile uint8_t* src) { ((int4*)dst)[0] = ((int4*)src)[0]; }
 
 __device__ inline void B_CMD(int type)
 {
@@ -95,27 +97,17 @@ __device__ uint64_t addr_gen(unsigned int ch, unsigned int rank, unsigned int bg
 
     addr <<= num_offset_bit_;
 
+#if RADEON7
+    uint64_t mask = 0x1FFFFFFFF;
+    addr &= mask;
+#endif
     return addr;
 }
 
-uint8_t gemv_crf[32] = {
-    0x00, 0x80, 0x10, 0x3b, 0x02, 0x38, 0x00, 0xe0, 0x00, 0x80, 0x18, 0x3b, 0x02, 0x38, 0x00, 0xe0,
-    0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-};
-
-uint8_t gemv_hab_to_hab_fim[32] = {
-    0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-};
-
-uint8_t gemv_hab_fim_to_hab[32] = {
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-};
-
-__global__ void gemv_fim_64cu_64th_fp16(uint8_t* fim_ctr, uint8_t* fim_weight, uint8_t* fim_gemv_tmp_buffer,
-                                        uint8_t* fim_input, uint8_t* output, int batch_dim, int n_in_tile,
-                                        int n_out_tile, int output_dim)
+__global__ void gemv_fim_64cu_64th_fp16(volatile uint8_t* fim_ctr, volatile uint8_t* fim_weight, volatile uint8_t* fim_gemv_tmp_buffer,
+                                        volatile uint8_t* fim_input, volatile uint8_t* output, 
+                                        int batch_dim, int n_in_tile, int n_out_tile, int output_dim,
+                                        volatile uint8_t* gemv_crf, volatile uint8_t* hab_to_fim, volatile uint8_t* fim_to_hab)
 {
     int num_col = 32;
     int num_bg = 4;
@@ -171,7 +163,7 @@ __global__ void gemv_fim_64cu_64th_fp16(uint8_t* fim_ctr, uint8_t* fim_weight, u
         for (int b_idx = 0; b_idx < batch_dim; b_idx++) {
             for (int o_idx = 0; o_idx < num_out_tile; o_idx++) {
                 addr = addr_gen(hipBlockIdx_x, 0, 0, 0, 0x3fff, 0x0);
-                W_CMD_R(&fim_ctr[addr + offset], gemv_hab_to_hab_fim + ((hipThreadIdx_x % 2) << 4));
+                W_CMD_R(&fim_ctr[addr + offset], hab_to_fim + ((hipThreadIdx_x % 2) << 4));
                 B_CMD(1);
 
                 uint64_t i_offset = (b_idx * num_in_tile << 3) + gidx;
@@ -188,24 +180,31 @@ __global__ void gemv_fim_64cu_64th_fp16(uint8_t* fim_ctr, uint8_t* fim_weight, u
 
                     addr = addr_gen(hipBlockIdx_x, 0, 0, 0, row, col);
                     R_CMD(&fim_weight[addr + offset]);
+                    B_CMD(1);
 
                     addr = addr_gen(hipBlockIdx_x, 0, 0, 0, row, col + 8);
                     R_CMD(&fim_weight[addr + offset]);
+                    B_CMD(1);
 
                     addr = addr_gen(hipBlockIdx_x, 0, 0, 0, row, col + 16);
                     R_CMD(&fim_weight[addr + offset]);
+                    B_CMD(1);
 
                     addr = addr_gen(hipBlockIdx_x, 0, 0, 0, row, col + 24);
                     R_CMD(&fim_weight[addr + offset]);
+                    B_CMD(1);
 
                     addr = addr_gen(hipBlockIdx_x, 0, 0, 0, row + 1, col);
                     R_CMD(&fim_weight[addr + offset]);
+                    B_CMD(1);
 
                     addr = addr_gen(hipBlockIdx_x, 0, 0, 0, row + 1, col + 8);
                     R_CMD(&fim_weight[addr + offset]);
+                    B_CMD(1);
 
                     addr = addr_gen(hipBlockIdx_x, 0, 0, 0, row + 1, col + 16);
                     R_CMD(&fim_weight[addr + offset]);
+                    B_CMD(1);
 
                     addr = addr_gen(hipBlockIdx_x, 0, 0, 0, row + 1, col + 24);
                     R_CMD(&fim_weight[addr + offset]);
@@ -223,24 +222,31 @@ __global__ void gemv_fim_64cu_64th_fp16(uint8_t* fim_ctr, uint8_t* fim_weight, u
 
                     addr = addr_gen(hipBlockIdx_x, 0, 0, 1, row, col);
                     R_CMD(&fim_weight[addr + offset]);
+                    B_CMD(1);
 
                     addr = addr_gen(hipBlockIdx_x, 0, 0, 1, row, col + 8);
                     R_CMD(&fim_weight[addr + offset]);
+                    B_CMD(1);
 
                     addr = addr_gen(hipBlockIdx_x, 0, 0, 1, row, col + 16);
                     R_CMD(&fim_weight[addr + offset]);
+                    B_CMD(1);
 
                     addr = addr_gen(hipBlockIdx_x, 0, 0, 1, row, col + 24);
                     R_CMD(&fim_weight[addr + offset]);
+                    B_CMD(1);
 
                     addr = addr_gen(hipBlockIdx_x, 0, 0, 1, row + 1, col);
                     R_CMD(&fim_weight[addr + offset]);
+                    B_CMD(1);
 
                     addr = addr_gen(hipBlockIdx_x, 0, 0, 1, row + 1, col + 8);
                     R_CMD(&fim_weight[addr + offset]);
+                    B_CMD(1);
 
                     addr = addr_gen(hipBlockIdx_x, 0, 0, 1, row + 1, col + 16);
                     R_CMD(&fim_weight[addr + offset]);
+                    B_CMD(1);
 
                     addr = addr_gen(hipBlockIdx_x, 0, 0, 1, row + 1, col + 24);
                     R_CMD(&fim_weight[addr + offset]);
@@ -255,7 +261,7 @@ __global__ void gemv_fim_64cu_64th_fp16(uint8_t* fim_ctr, uint8_t* fim_weight, u
                 B_CMD(1);
 
                 addr = addr_gen(hipBlockIdx_x, 0, 0, 0, 0x3fff, 0x0);
-                W_CMD_R(&fim_ctr[addr + offset], gemv_hab_fim_to_hab + ((hipThreadIdx_x % 2) << 4));
+                W_CMD_R(&fim_ctr[addr + offset], fim_to_hab + ((hipThreadIdx_x % 2) << 4));
                 B_CMD(1);
             }
         }
@@ -283,7 +289,7 @@ __global__ void gemv_fim_64cu_64th_fp16(uint8_t* fim_ctr, uint8_t* fim_weight, u
     int bg = hipThreadIdx_x >> 4;
     int ba = (((hipThreadIdx_x >> 3) % 2) << 1) + 1;
     int out_idx = (hipBlockIdx_x << 6) + hipThreadIdx_x;
-    half t_output;
+    uint16_t t_output;
     for (int i = 0; i < batch_dim * num_out_tile; i++) {
         if (out_idx < output_dim) {
             t_output = 0;
@@ -293,7 +299,7 @@ __global__ void gemv_fim_64cu_64th_fp16(uint8_t* fim_ctr, uint8_t* fim_weight, u
             for (int j = 0; j < 16; j++) {
                 t_output += fim_gemv_tmp_buffer[addr + j];
             }
-            ((half*)output)[out_idx] = ((half*)output)[out_idx] + t_output;
+            ((uint16_t*)output)[out_idx] = ((uint16_t*)output)[out_idx] + t_output;
         }
     }
 #endif
@@ -304,6 +310,8 @@ int main(int argc, char* argv[])
     uint64_t fim_base;
     uint16_t* input;
     uint16_t* output;
+    uint64_t *mode1_d, *mode2_d, *crf_bin_d;
+    uint64_t *mode1_h, *mode2_h, *crf_bin_h;
     size_t N = 4;
     size_t Nbytes = N * sizeof(uint64_t);
     static int device = 0;
@@ -337,13 +345,45 @@ int main(int argc, char* argv[])
       ARG2 : gpu-id
       ARG3 : block size
     ********************************************/
-    // uint64_t bsize = 8589934592;  // 8 * 1024 * 1024 * 1024;
+#if RADEON7
+    uint64_t bsize = 8589934592;  // 8 * 1024 * 1024 * 1024;
+#else
     uint64_t bsize = 17179869184;  // 16 * 1024 * 1024 * 1024;
+#endif
     fim_base = fmm_map_fim(1, gpu_id, bsize);
     std::cout << std::hex << "fimBaseAddr = " << fim_base << std::endl;
 
     CHECK(hipMalloc(&input, in_size * sizeof(uint16_t)));
     CHECK(hipMalloc(&output, out_size * sizeof(uint16_t)));
+
+    crf_bin_h = (uint64_t*)malloc(Nbytes);
+    CHECK(crf_bin_h == 0 ? hipErrorOutOfMemory : hipSuccess);
+    mode1_h = (uint64_t*)malloc(Nbytes);
+    CHECK(mode1_h == 0 ? hipErrorOutOfMemory : hipSuccess);
+    mode2_h = (uint64_t*)malloc(Nbytes);
+    CHECK(mode2_h == 0 ? hipErrorOutOfMemory : hipSuccess);
+
+    crf_bin_h[0] = 0xe00078023b108000;
+    crf_bin_h[1] = 0xe00078023b188000;
+    crf_bin_h[2] = 0xf000000000000007;
+    crf_bin_h[3] = 0x0000000000000000;
+    mode1_h[0] = 0x0000000000000001;
+    mode1_h[1] = 0x0000000000000000;
+    mode1_h[2] = 0x0000010000000000;
+    mode1_h[3] = 0x0000000000000000;
+    mode2_h[0] = 0x0000000000000000;
+    mode2_h[1] = 0x0000000000000000;
+    mode2_h[2] = 0x0000000000000000;
+    mode2_h[3] = 0x0000000000000000;
+
+    CHECK(hipMalloc(&crf_bin_d, Nbytes));
+    CHECK(hipMalloc(&mode1_d, Nbytes));
+    CHECK(hipMalloc(&mode2_d, Nbytes));
+
+    CHECK(hipMemcpy(crf_bin_d, crf_bin_h, Nbytes, hipMemcpyHostToDevice));
+    CHECK(hipMemcpy(mode1_d, mode1_h, Nbytes, hipMemcpyHostToDevice));
+    CHECK(hipMemcpy(mode2_d, mode2_h, Nbytes, hipMemcpyHostToDevice));
+
 
     int n_in_tile = in_size * sizeof(uint16_t) / trans_size / num_grf;
     int n_out_tile = out_size / (num_fim_chan * num_fim_blocks * num_grf);
@@ -352,11 +392,19 @@ int main(int argc, char* argv[])
     const unsigned threadsPerBlock = 64;
 
     hipLaunchKernelGGL(gemv_fim_64cu_64th_fp16, dim3(blocks), dim3(threadsPerBlock), 0, 0,
-                       (uint8_t*)fim_base /* ctr  base */, (uint8_t*)fim_base + 0x100000 /* weight */,
+                       (uint8_t*)fim_base /* ctr base */, (uint8_t*)fim_base /* weight */,
                        (uint8_t*)fim_base + 0x200000, /* fim hw output */
-                       (uint8_t*)input, (uint8_t*)output, 1, n_in_tile, n_out_tile, out_size);
+                       (uint8_t*)input, (uint8_t*)output, 1, n_in_tile, n_out_tile, out_size,
+                       (uint8_t*)crf_bin_d, (uint8_t*)mode1_d, (uint8_t*)mode2_d);
     hipStreamSynchronize(NULL);
 
+    free(mode1_h);
+    free(mode2_h);
+    free(crf_bin_h);
+
+    hipFree(mode1_d);
+    hipFree(mode2_d);
+    hipFree(crf_bin_d);
     hipFree(input);
     hipFree(output);
 }
