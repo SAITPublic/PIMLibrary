@@ -85,16 +85,23 @@ bool fim_repeat_allocate_free(void)
 
 bool fim_allocate_exceed_blocksize(void)
 {
-    FimBo fim_weight = {.size = LENGTH * sizeof(half) * 1024 * 1024, .mem_type = MEM_TYPE_FIM};
+    std::vector<FimBo> fimObjPtr;
 
     FimInitialize(RT_TYPE_HIP, FIM_FP16);
 
+    int ret;
     while (true) {
-        int ret = FimAllocMemory(&fim_weight);
-        if (ret) return false;
+        FimBo fim_weight = {.size = LENGTH * sizeof(half) * 1024 * 1024, .mem_type = MEM_TYPE_FIM};
+        ret = FimAllocMemory(&fim_weight);
+        if (ret) break;
+        fimObjPtr.push_back(fim_weight);
     }
 
+    for (int i = 0; i < fimObjPtr.size(); i++) FimFreeMemory(&fimObjPtr[i]);
+
     FimDeinitialize();
+
+    if (ret) return false;
 
     return true;
 }
