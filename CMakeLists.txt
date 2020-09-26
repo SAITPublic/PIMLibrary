@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5.1)
-project(FIM_LIBRARY)
 
+project(FIM_LIBRARY)
 #Define minimum version for GCC
 set(GCC_EXPECTED_VERSION 4.9.0)
 if(GCC_EXPECTED_VERSION VERSION_GREATER CMAKE_CXX_COMPILER_VERSION)
@@ -28,8 +28,8 @@ message(STATUS "Build Type is ${CMAKE_BUILD_TYPE}")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BUILD_DIR})
 
 # Set CMake Flags
-set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -Wno-unused-command-line-argument")
-set(CMAKE_C_FLAGS "-std=c11")
+set(CMAKE_CXX_FLAGS "-std=c++14 -Wall -Wno-unused-command-line-argument")
+set(CMAKE_C_FLAGS "-std=c14")
 
 if("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DRELEASE_FIM -DPROFILE -O3")
@@ -46,7 +46,8 @@ include_directories("${PROJECT_SOURCE_DIR}/runtime/include"
                     "${PROJECT_SOURCE_DIR}/tools/crfcodegen/include"
                     "${PROJECT_SOURCE_DIR}/tools/profiler/include"
                     "${ROCM_PATH}/include")
-link_directories("${ROCM_PATH}/hsa/lib" "${ROCM_PATH}/libhsakmt/lib" "${ROCM_PATH}/lib" "${PROJECT_SOURCE_DIR}/external_libs")
+#link_directories("${ROCM_PATH}/hsa/lib" "${ROCM_PATH}/libhsakmt/lib" "${ROCM_PATH}/lib" "${PROJECT_SOURCE_DIR}/external_libs")
+link_directories("${ROCM_PATH}/hip/lib" "${ROCM_PATH}/hsa/lib" "${ROCM_PATH}/libhsakmt/lib" "${ROCM_PATH}/lib" "${PROJECT_SOURCE_DIR}/external_libs")
 
 #for test vectors default data path
 add_definitions(-DTEST_VECTORS_DATA="${PROJECT_SOURCE_DIR}/test_vectors/")
@@ -68,4 +69,4 @@ add_subdirectory(runtime)
 add_subdirectory(examples)
 add_subdirectory(tools)
 add_subdirectory(external_libs)
-add_subdirectory(tf_fim_ops)
+add_subdirectory(py_fim_ops)
