@@ -1,3 +1,6 @@
 from py_fim_ops.python.py_fim_init_ops import py_fim_init
 from py_fim_ops.python.py_fim_deinit_ops import py_fim_deinit
 from py_fim_ops.python.py_fim_eltwise_ops import py_fim_eltwise
+from py_fim_ops.python.py_fim_bn_ops import py_fim_bn
+from py_fim_ops.python.py_fim_activation_ops import py_fim_activation
+from py_fim_ops.python.py_fim_gemv_ops import py_fim_gemv

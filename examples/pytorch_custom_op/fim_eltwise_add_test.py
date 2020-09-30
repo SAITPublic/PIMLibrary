@@ -177,4 +177,4 @@ if __name__ == '__main__':
 
     py_fim_ops.py_fim_init()
     unittest.main()
-    py_fim_ops.fim_deinit()
+    py_fim_ops.py_fim_deinit()
