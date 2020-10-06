@@ -3,7 +3,8 @@
 #include "hip/hip_runtime.h"
 
 #define TARGET_MASK (0x1FFFFFFFF)
-//#define TARGET_MASK (0xFFFFFFFFF)
+//#define TARGET_MASK (0xFFFFFFFFFFFFFFFF)
+#define CHANNEL 8
 
 extern "C" uint64_t fmm_map_fim(uint32_t, uint32_t, uint64_t);
 
@@ -16,17 +17,17 @@ extern "C" uint64_t fmm_map_fim(uint32_t, uint32_t, uint64_t);
         }                                                                                                       \
     }
 
-__device__ inline void R_CMD(uint8_t* addr)
+__device__ inline void R_CMD(volatile uint8_t* addr)
 {
     asm volatile("global_load_dwordx4 v[24:27], %0, off, glc, slc\n\t" ::"v"(addr) : "v24", "v25", "v26", "v27");
 }
 
-__device__ inline void W_CMD(uint8_t* addr)
+__device__ inline void W_CMD(volatile uint8_t* addr)
 {
     asm volatile("global_store_dwordx4 %0, v[24:27], off, glc, slc\n\t" ::"v"(addr) : "v24", "v25", "v26", "v27");
 }
 
-__device__ inline void W_CMD_R(uint8_t* addr, uint8_t* src) { ((int4*)addr)[0] = ((int4*)src)[0]; }
+__device__ inline void W_CMD_R(volatile uint8_t* addr, volatile uint8_t* src) { ((int4*)addr)[0] = ((int4*)src)[0]; }
 
 /*
 __device__ inline void W_CMD_R(uint8_t* addr, uint8_t* src)
@@ -34,11 +35,11 @@ __device__ inline void W_CMD_R(uint8_t* addr, uint8_t* src)
     if (hipThreadIdx_x == 0) {
         asm volatile("global_load_dwordx4 v[20:23], %0, off, glc, slc\n\t" ::"v"(src) : "v20", "v21", "v22", "v23");
         asm volatile("s_waitcnt vmcnt(0) lgkmcnt(0)");
-        asm volatile("global_store_dwordx4 %0, v[20:23], off, glc, slc\n\t" ::"v"(addr) : "v20", "v21", "v22", "v23");
+        asm volatile("global_store_dwordx4 %0, v[20:23], off, glc, slc\n\t" ::"v"addr : "v20", "v21", "v22", "v23");
     } else {
         asm volatile("global_load_dwordx4 v[24:27], %0, off, glc, slc\n\t" ::"v"(src) : "v24", "v25", "v26", "v27");
         asm volatile("s_waitcnt vmcnt(0) lgkmcnt(0)");
-        asm volatile("global_store_dwordx4 %0, v[24:27], off, glc, slc\n\t" ::"v"(addr) : "v24", "v25", "v26", "v27");
+        asm volatile("global_store_dwordx4 %0, v[24:27], off, glc, slc\n\t" ::"v"addr : "v24", "v25", "v26", "v27");
     }
 }
 */
@@ -54,14 +55,14 @@ __device__ inline void B_CMD(int type)
     }
 }
 
-__device__ inline unsigned int mask_by_bit(unsigned int value, int start, int end)
+__host__ __device__ inline unsigned int mask_by_bit(unsigned int value, int start, int end)
 {
     int length = start - end + 1;
     value = value >> end;
     return value & ((1 << length) - 1);
 }
 
-__device__ uint64_t addr_gen(unsigned int ch, unsigned int rank, unsigned int bg, unsigned int ba, unsigned int row,
+__host__ __device__ uint64_t addr_gen(unsigned int ch, unsigned int rank, unsigned int bg, unsigned int ba, unsigned int row,
                              unsigned int col)
 {
     int num_row_bit_ = 14;
@@ -112,136 +113,145 @@ __device__ uint64_t addr_gen(unsigned int ch, unsigned int rank, unsigned int bg
     return addr;
 }
 
-__global__ void mov_test(uint8_t* fim_ctr, uint8_t* fim_data, uint8_t* output,
-                         uint8_t* crf_binary, uint8_t* hab_to_fim, uint8_t* fim_to_hab, uint8_t* test_input1)
+__global__ void mov_test(volatile uint8_t* fim_ctr, volatile uint8_t* fim_data, volatile uint8_t* output,
+                         volatile uint8_t* crf_binary, volatile uint8_t* hab_to_fim, volatile uint8_t* fim_to_hab, volatile uint8_t* test_input1)
 {
-    uint64_t offset = hipBlockIdx_x * 0x100 + hipThreadIdx_x * 0x10;
+    uint64_t offset = hipThreadIdx_x * 0x10;
+    uint64_t addr;
+    int ch = CHANNEL;
 
-    /* write data to all banks */
-    W_CMD_R(&fim_data[(0x0 & TARGET_MASK) + offset], test_input1 + hipThreadIdx_x * 16);
-    W_CMD_R(&fim_data[(0x2000 & TARGET_MASK) + offset], test_input1 + hipThreadIdx_x * 16);
-    W_CMD_R(&fim_data[(0x4000 & TARGET_MASK) + offset], test_input1 + hipThreadIdx_x * 16);
-    W_CMD_R(&fim_data[(0x6000 & TARGET_MASK) + offset], test_input1 + hipThreadIdx_x * 16);
-    W_CMD_R(&fim_data[(0x8000 & TARGET_MASK) + offset], test_input1 + hipThreadIdx_x * 16);
-    W_CMD_R(&fim_data[(0xA000 & TARGET_MASK) + offset], test_input1 + hipThreadIdx_x * 16);
-    W_CMD_R(&fim_data[(0xC000 & TARGET_MASK) + offset], test_input1 + hipThreadIdx_x * 16);
-    W_CMD_R(&fim_data[(0xE000 & TARGET_MASK) + offset], test_input1 + hipThreadIdx_x * 16);
-    W_CMD_R(&fim_data[(0x10000 & TARGET_MASK) + offset], test_input1 + hipThreadIdx_x * 16);
-    W_CMD_R(&fim_data[(0x12000 & TARGET_MASK) + offset], test_input1 + hipThreadIdx_x * 16);
-    W_CMD_R(&fim_data[(0x14000 & TARGET_MASK) + offset], test_input1 + hipThreadIdx_x * 16);
-    W_CMD_R(&fim_data[(0x16000 & TARGET_MASK) + offset], test_input1 + hipThreadIdx_x * 16);
-    W_CMD_R(&fim_data[(0x18000 & TARGET_MASK) + offset], test_input1 + hipThreadIdx_x * 16);
-    W_CMD_R(&fim_data[(0x1A000 & TARGET_MASK) + offset], test_input1 + hipThreadIdx_x * 16);
-    W_CMD_R(&fim_data[(0x1C000 & TARGET_MASK) + offset], test_input1 + hipThreadIdx_x * 16);
-    W_CMD_R(&fim_data[(0x1E000 & TARGET_MASK) + offset], test_input1 + hipThreadIdx_x * 16);
+    /* write data to even banks */
+    addr = addr_gen(ch, 0, 0, 0, 0, 0);
+    W_CMD_R(&fim_data[addr + offset], test_input1 + hipThreadIdx_x * 16);
+    addr = addr_gen(ch, 0, 0, 2, 0, 0);
+    W_CMD_R(&fim_data[addr + offset], test_input1 + hipThreadIdx_x * 16);
+    addr = addr_gen(ch, 0, 1, 0, 0, 0);
+    W_CMD_R(&fim_data[addr + offset], test_input1 + hipThreadIdx_x * 16);
+    addr = addr_gen(ch, 0, 1, 2, 0, 0);
+    W_CMD_R(&fim_data[addr + offset], test_input1 + hipThreadIdx_x * 16);
+    addr = addr_gen(ch, 0, 2, 0, 0, 0);
+    W_CMD_R(&fim_data[addr + offset], test_input1 + hipThreadIdx_x * 16);
+    addr = addr_gen(ch, 0, 2, 2, 0, 0);
+    W_CMD_R(&fim_data[addr + offset], test_input1 + hipThreadIdx_x * 16);
+    addr = addr_gen(ch, 0, 3, 0, 0, 0);
+    W_CMD_R(&fim_data[addr + offset], test_input1 + hipThreadIdx_x * 16);
+    addr = addr_gen(ch, 0, 3, 2, 0, 0);
+    W_CMD_R(&fim_data[addr + offset], test_input1 + hipThreadIdx_x * 16);
     B_CMD(1);
-
-#if 0
-    /* write to odd banks in reverse order */
-    W_CMD(&fim_ctr[(0x31e000 & TARGET_MASK) + offset]);
-    B_CMD(1);
-    W_CMD(&fim_ctr[(0x30e000 & TARGET_MASK) + offset]);
-    B_CMD(1);
-    W_CMD(&fim_ctr[(0x31a000 & TARGET_MASK) + offset]);
-    B_CMD(1);
-    W_CMD(&fim_ctr[(0x30a000 & TARGET_MASK) + offset]);
-    B_CMD(1);
-    W_CMD(&fim_ctr[(0x316000 & TARGET_MASK) + offset]);
-    B_CMD(1);
-    W_CMD(&fim_ctr[(0x306000 & TARGET_MASK) + offset]);
-    B_CMD(1);
-    W_CMD(&fim_ctr[(0x312000 & TARGET_MASK) + offset]);
-    B_CMD(1);
-    W_CMD(&fim_ctr[(0x302000 & TARGET_MASK) + offset]);
-    B_CMD(1);
-    /* write to even banks in reverse order */
-    W_CMD(&fim_ctr[(0x31c000 & TARGET_MASK) + offset]);
-    B_CMD(1);
-    W_CMD(&fim_ctr[(0x30c000 & TARGET_MASK) + offset]);
-    B_CMD(1);
-    W_CMD(&fim_ctr[(0x318000 & TARGET_MASK) + offset]);
-    B_CMD(1);
-    W_CMD(&fim_ctr[(0x308000 & TARGET_MASK) + offset]);
-    B_CMD(1);
-    W_CMD(&fim_ctr[(0x314000 & TARGET_MASK) + offset]);
-    B_CMD(1);
-    W_CMD(&fim_ctr[(0x304000 & TARGET_MASK) + offset]);
-    B_CMD(1);
-    W_CMD(&fim_ctr[(0x310000 & TARGET_MASK) + offset]);
-    B_CMD(1);
-    W_CMD(&fim_ctr[(0x300000 & TARGET_MASK) + offset]);
-    B_CMD(1);
-#endif
 
     /* park in */
-    R_CMD(&fim_ctr[(0x280000 & TARGET_MASK) + offset]);
-    R_CMD(&fim_ctr[(0x282000 & TARGET_MASK) + offset]);
-    R_CMD(&fim_ctr[(0x290000 & TARGET_MASK) + offset]);
-    R_CMD(&fim_ctr[(0x292000 & TARGET_MASK) + offset]);
-    R_CMD(&fim_ctr[(0x284000 & TARGET_MASK) + offset]);
-    R_CMD(&fim_ctr[(0x286000 & TARGET_MASK) + offset]);
-    R_CMD(&fim_ctr[(0x294000 & TARGET_MASK) + offset]);
-    R_CMD(&fim_ctr[(0x296000 & TARGET_MASK) + offset]);
-    R_CMD(&fim_ctr[(0x288000 & TARGET_MASK) + offset]);
-    R_CMD(&fim_ctr[(0x28A000 & TARGET_MASK) + offset]);
-    R_CMD(&fim_ctr[(0x298000 & TARGET_MASK) + offset]);
-    R_CMD(&fim_ctr[(0x29A000 & TARGET_MASK) + offset]);
-    R_CMD(&fim_ctr[(0x28C000 & TARGET_MASK) + offset]);
-    R_CMD(&fim_ctr[(0x28E000 & TARGET_MASK) + offset]);
-    R_CMD(&fim_ctr[(0x29C000 & TARGET_MASK) + offset]);
-    R_CMD(&fim_ctr[(0x29E000 & TARGET_MASK) + offset]);
+    addr = addr_gen(ch, 0, 0, 0, 0, 0);
+    R_CMD(&fim_ctr[addr + offset]);
+    addr = addr_gen(ch, 0, 0, 1, 0, 0);
+    R_CMD(&fim_ctr[addr + offset]);
+    addr = addr_gen(ch, 0, 0, 2, 0, 0);
+    R_CMD(&fim_ctr[addr + offset]);
+    addr = addr_gen(ch, 0, 0, 3, 0, 0);
+    R_CMD(&fim_ctr[addr + offset]);
+    addr = addr_gen(ch, 0, 1, 0, 0, 0);
+    R_CMD(&fim_ctr[addr + offset]);
+    addr = addr_gen(ch, 0, 1, 1, 0, 0);
+    R_CMD(&fim_ctr[addr + offset]);
+    addr = addr_gen(ch, 0, 1, 2, 0, 0);
+    R_CMD(&fim_ctr[addr + offset]);
+    addr = addr_gen(ch, 0, 1, 3, 0, 0);
+    R_CMD(&fim_ctr[addr + offset]);
+    addr = addr_gen(ch, 0, 2, 0, 0, 0);
+    R_CMD(&fim_ctr[addr + offset]);
+    addr = addr_gen(ch, 0, 2, 1, 0, 0);
+    R_CMD(&fim_ctr[addr + offset]);
+    addr = addr_gen(ch, 0, 2, 2, 0, 0);
+    R_CMD(&fim_ctr[addr + offset]);
+    addr = addr_gen(ch, 0, 2, 3, 0, 0);
+    R_CMD(&fim_ctr[addr + offset]);
+    addr = addr_gen(ch, 0, 3, 0, 0, 0);
+    R_CMD(&fim_ctr[addr + offset]);
+    addr = addr_gen(ch, 0, 3, 1, 0, 0);
+    R_CMD(&fim_ctr[addr + offset]);
+    addr = addr_gen(ch, 0, 3, 2, 0, 0);
+    R_CMD(&fim_ctr[addr + offset]);
+    addr = addr_gen(ch, 0, 3, 3, 0, 0);
+    R_CMD(&fim_ctr[addr + offset]);
     B_CMD(1);
 
     /* change SB mode to HAB mode */
-    W_CMD(&fim_ctr[(0x27ffe80a0 & TARGET_MASK) + offset]);
+    addr = addr_gen(ch, 0, 2, 0, 0x27ff, 0x1f);
+    W_CMD(&fim_ctr[addr + offset]);
     B_CMD(1);
-    W_CMD(&fim_ctr[(0x27ffea0a0 & TARGET_MASK) + offset]);
+    addr = addr_gen(ch, 0, 2, 1, 0x27ff, 0x1f);
+    W_CMD(&fim_ctr[addr + offset]);
     B_CMD(1);
-    W_CMD(&fim_ctr[(0x27ffe00a0 & TARGET_MASK) + offset]);
+    addr = addr_gen(ch, 0, 0, 0, 0x27ff, 0x1f);
+    W_CMD(&fim_ctr[addr + offset]);
     B_CMD(1);
-    W_CMD(&fim_ctr[(0x27ffe20a0 & TARGET_MASK) + offset]);
+    addr = addr_gen(ch, 0, 0, 1, 0x27ff, 0x1f);
+    W_CMD(&fim_ctr[addr + offset]);
     B_CMD(1);
 
     /* set crf binary */
-    W_CMD_R(&fim_ctr[(0x3fff22000 & TARGET_MASK) + offset], crf_binary + hipThreadIdx_x * 16);
+    addr = addr_gen(ch, 0, 0, 1, 0x3fff, 0x4);
+    W_CMD_R(&fim_ctr[addr + offset], crf_binary + hipThreadIdx_x * 16);
     B_CMD(1);
 
     /* change HAB mode to HAB_FIM mode */
-    W_CMD_R(&fim_ctr[(0x3fff00000 & TARGET_MASK) + offset], hab_to_fim + hipThreadIdx_x * 16);
+    addr = addr_gen(ch, 0, 0, 0, 0x3fff, 0x0);
+    W_CMD_R(&fim_ctr[addr + offset], hab_to_fim + hipThreadIdx_x * 16);
     B_CMD(1);
 
     /* MOV */
-    R_CMD(&fim_data[0x0 + offset]); // MOV even_bank to grf_A
+    addr = addr_gen(ch, 0, 0, 0, 0, 0);
+    R_CMD(&fim_data[addr + offset]); // MOV even_bank to grf_A
     B_CMD(1);
-    W_CMD(&output[0x0 + offset]); // NOP
+    addr = addr_gen(ch, 0, 0, 0, 0, 0);
+    W_CMD(&output[addr + offset]); // NOP
     B_CMD(1);
 
     /* change HAB_FIM mode to HAB mode */
-    W_CMD_R(&fim_ctr[(0x3fff00000 & TARGET_MASK) + offset], fim_to_hab + hipThreadIdx_x * 16);
+    addr = addr_gen(ch, 0, 0, 0, 0x3fff, 0x0);
+    W_CMD_R(&fim_ctr[addr + offset], fim_to_hab + hipThreadIdx_x * 16);
     B_CMD(1);
 
     /* change HAB mode to SB mode */
-    W_CMD(&fim_ctr[(0x2fffe00a0 & TARGET_MASK) + offset]);
-    W_CMD(&fim_ctr[(0x2fffe20a0 & TARGET_MASK) + offset]);
+    addr = addr_gen(ch, 0, 0, 0, 0x2fff, 0x1f);
+    W_CMD(&fim_ctr[addr + offset]);
+    addr = addr_gen(ch, 0, 0, 1, 0x2fff, 0x1f);
+    W_CMD(&fim_ctr[addr + offset]);
     B_CMD(1);
 
     /* park out */
-    R_CMD(&fim_ctr[(0x100000000 & TARGET_MASK) + offset]);
-    R_CMD(&fim_ctr[(0x100004000 & TARGET_MASK) + offset]);
-    R_CMD(&fim_ctr[(0x100008000 & TARGET_MASK) + offset]);
-    R_CMD(&fim_ctr[(0x10000c000 & TARGET_MASK) + offset]);
-    R_CMD(&fim_ctr[(0x100002000 & TARGET_MASK) + offset]);
-    R_CMD(&fim_ctr[(0x100006000 & TARGET_MASK) + offset]);
-    R_CMD(&fim_ctr[(0x10000a000 & TARGET_MASK) + offset]);
-    R_CMD(&fim_ctr[(0x10000e000 & TARGET_MASK) + offset]);
-    R_CMD(&fim_ctr[(0x100010000 & TARGET_MASK) + offset]);
-    R_CMD(&fim_ctr[(0x100014000 & TARGET_MASK) + offset]);
-    R_CMD(&fim_ctr[(0x100018000 & TARGET_MASK) + offset]);
-    R_CMD(&fim_ctr[(0x10001c000 & TARGET_MASK) + offset]);
-    R_CMD(&fim_ctr[(0x100012000 & TARGET_MASK) + offset]);
-    R_CMD(&fim_ctr[(0x100016000 & TARGET_MASK) + offset]);
-    R_CMD(&fim_ctr[(0x10001a000 & TARGET_MASK) + offset]);
-    R_CMD(&fim_ctr[(0x10001e000 & TARGET_MASK) + offset]);
+    addr = addr_gen(ch, 0, 0, 0, 0, 0);
+    R_CMD(&fim_ctr[addr + offset]);
+    addr = addr_gen(ch, 0, 0, 1, 0, 0);
+    R_CMD(&fim_ctr[addr + offset]);
+    addr = addr_gen(ch, 0, 0, 2, 0, 0);
+    R_CMD(&fim_ctr[addr + offset]);
+    addr = addr_gen(ch, 0, 0, 3, 0, 0);
+    R_CMD(&fim_ctr[addr + offset]);
+    addr = addr_gen(ch, 0, 1, 0, 0, 0);
+    R_CMD(&fim_ctr[addr + offset]);
+    addr = addr_gen(ch, 0, 1, 1, 0, 0);
+    R_CMD(&fim_ctr[addr + offset]);
+    addr = addr_gen(ch, 0, 1, 2, 0, 0);
+    R_CMD(&fim_ctr[addr + offset]);
+    addr = addr_gen(ch, 0, 1, 3, 0, 0);
+    R_CMD(&fim_ctr[addr + offset]);
+    addr = addr_gen(ch, 0, 2, 0, 0, 0);
+    R_CMD(&fim_ctr[addr + offset]);
+    addr = addr_gen(ch, 0, 2, 1, 0, 0);
+    R_CMD(&fim_ctr[addr + offset]);
+    addr = addr_gen(ch, 0, 2, 2, 0, 0);
+    R_CMD(&fim_ctr[addr + offset]);
+    addr = addr_gen(ch, 0, 2, 3, 0, 0);
+    R_CMD(&fim_ctr[addr + offset]);
+    addr = addr_gen(ch, 0, 3, 0, 0, 0);
+    R_CMD(&fim_ctr[addr + offset]);
+    addr = addr_gen(ch, 0, 3, 1, 0, 0);
+    R_CMD(&fim_ctr[addr + offset]);
+    addr = addr_gen(ch, 0, 3, 2, 0, 0);
+    R_CMD(&fim_ctr[addr + offset]);
+    addr = addr_gen(ch, 0, 3, 3, 0, 0);
+    R_CMD(&fim_ctr[addr + offset]);
+
     B_CMD(1);
 }
 
@@ -328,21 +338,30 @@ int main(int argc, char* argv[])
 
     hipDeviceSynchronize();
 
-    CHECK(hipMemcpy(output_h, (uint8_t*)fim_base + 0x100000, Nbytes, hipMemcpyDeviceToHost));
+    uint64_t addr_offset;
+    addr_offset = addr_gen(CHANNEL, 0, 0, 0, 0, 0);
+    CHECK(hipMemcpy(output_h, (uint8_t*)fim_base + 0x100000 + addr_offset, Nbytes, hipMemcpyDeviceToHost));
     printf("%#018lx %#018lx %#018lx %#018lx\n", output_h[3], output_h[2], output_h[1], output_h[0]);
-    CHECK(hipMemcpy(output_h, (uint8_t*)fim_base + 0x110000, Nbytes, hipMemcpyDeviceToHost));
+    addr_offset = addr_gen(CHANNEL, 0, 0, 2, 0, 0);
+    CHECK(hipMemcpy(output_h, (uint8_t*)fim_base + 0x100000 + addr_offset, Nbytes, hipMemcpyDeviceToHost));
     printf("%#018lx %#018lx %#018lx %#018lx\n", output_h[3], output_h[2], output_h[1], output_h[0]);
-    CHECK(hipMemcpy(output_h, (uint8_t*)fim_base + 0x104000, Nbytes, hipMemcpyDeviceToHost));
+    addr_offset = addr_gen(CHANNEL, 0, 1, 0, 0, 0);
+    CHECK(hipMemcpy(output_h, (uint8_t*)fim_base + 0x100000 + addr_offset, Nbytes, hipMemcpyDeviceToHost));
     printf("%#018lx %#018lx %#018lx %#018lx\n", output_h[3], output_h[2], output_h[1], output_h[0]);
-    CHECK(hipMemcpy(output_h, (uint8_t*)fim_base + 0x114000, Nbytes, hipMemcpyDeviceToHost));
+    addr_offset = addr_gen(CHANNEL, 0, 1, 2, 0, 0);
+    CHECK(hipMemcpy(output_h, (uint8_t*)fim_base + 0x100000 + addr_offset, Nbytes, hipMemcpyDeviceToHost));
     printf("%#018lx %#018lx %#018lx %#018lx\n", output_h[3], output_h[2], output_h[1], output_h[0]);
-    CHECK(hipMemcpy(output_h, (uint8_t*)fim_base + 0x108000, Nbytes, hipMemcpyDeviceToHost));
+    addr_offset = addr_gen(CHANNEL, 0, 2, 0, 0, 0);
+    CHECK(hipMemcpy(output_h, (uint8_t*)fim_base + 0x100000 + addr_offset, Nbytes, hipMemcpyDeviceToHost));
     printf("%#018lx %#018lx %#018lx %#018lx\n", output_h[3], output_h[2], output_h[1], output_h[0]);
-    CHECK(hipMemcpy(output_h, (uint8_t*)fim_base + 0x118000, Nbytes, hipMemcpyDeviceToHost));
+    addr_offset = addr_gen(CHANNEL, 0, 2, 2, 0, 0);
+    CHECK(hipMemcpy(output_h, (uint8_t*)fim_base + 0x100000 + addr_offset, Nbytes, hipMemcpyDeviceToHost));
     printf("%#018lx %#018lx %#018lx %#018lx\n", output_h[3], output_h[2], output_h[1], output_h[0]);
-    CHECK(hipMemcpy(output_h, (uint8_t*)fim_base + 0x10C000, Nbytes, hipMemcpyDeviceToHost));
+    addr_offset = addr_gen(CHANNEL, 0, 3, 0, 0, 0);
+    CHECK(hipMemcpy(output_h, (uint8_t*)fim_base + 0x100000 + addr_offset, Nbytes, hipMemcpyDeviceToHost));
     printf("%#018lx %#018lx %#018lx %#018lx\n", output_h[3], output_h[2], output_h[1], output_h[0]);
-    CHECK(hipMemcpy(output_h, (uint8_t*)fim_base + 0x11C000, Nbytes, hipMemcpyDeviceToHost));
+    addr_offset = addr_gen(CHANNEL, 0, 3, 2, 0, 0);
+    CHECK(hipMemcpy(output_h, (uint8_t*)fim_base + 0x100000 + addr_offset, Nbytes, hipMemcpyDeviceToHost));
     printf("%#018lx %#018lx %#018lx %#018lx\n", output_h[3], output_h[2], output_h[1], output_h[0]);
 
     free(mode1_h);
