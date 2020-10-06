@@ -64,4 +64,5 @@ install ( TARGETS py_fim_gemv LIBRARY DESTINATION
            /opt/rocm/lib)
 
 install ( DIRECTORY python DESTINATION /opt/rocm/lib/py_fim_ops )
+install ( DIRECTORY modules DESTINATION /opt/rocm/lib/py_fim_ops )
 install ( FILES ${CMAKE_CURRENT_SOURCE_DIR}/__init__.py  DESTINATION /opt/rocm/lib/py_fim_ops)

@@ -12,6 +12,8 @@ void KernelLauncher(const void* inp_data, const int N, const int DIMS, const voi
     const int HEIGHT = in_dims[2];
     const int WIDTH = in_dims[3];
 
+    std::cout << "Launcher for FIM_BN" << std::endl;
+
     /* __FIM_API__ call : Create FIM Buffer Object */
     FimBo* host_input = FimCreateBo(WIDTH, HEIGHT, CH, BATCH, FIM_FP16, MEM_TYPE_HOST);
     FimBo* host_mean = FimCreateBo(1, 1, CH, 1, FIM_FP16, MEM_TYPE_HOST);
@@ -34,6 +36,7 @@ void KernelLauncher(const void* inp_data, const int N, const int DIMS, const voi
     FimCopyMemory(host_beta->data, (void*)beta, sizeof(half) * CH, DEVICE_TO_HOST);
     FimCopyMemory((void*)&host_epsilon, (void*)epsilon, sizeof(double), DEVICE_TO_HOST);
 
+    std::cout << "Calling FIMExecuteBN" << std::endl;
     /* __FIM_API__ call : Execute FIM kernel */
     FimExecuteBN(device_output, preloaded_fim_input, host_beta, host_gamma, host_mean, host_var, host_epsilon);
     FimSynchronize();
