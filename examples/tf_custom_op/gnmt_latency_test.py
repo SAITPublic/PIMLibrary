@@ -3,6 +3,7 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 import time
+import tf_fim_ops
 
 tf.keras.backend.set_floatx('float16')
 SEED = 1234
@@ -20,9 +21,11 @@ def profile_gnmt(batch_size=1):
     print('Embedded Shape: (batch_size, timestep, units){}'.format(embedded_sequence.shape))
 
 
+    eval_time = []
     for i in range(NUM_ITER):
         #Encoder
         print('Iteration number : (iteration) {}'.format(i))
+        it_start = time.time()
         start = time.time()
         output = tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(HIDDEN_UNITS,
                                kernel_initializer=tf.keras.initializers.RandomNormal(seed=SEED),
@@ -86,5 +89,10 @@ def profile_gnmt(batch_size=1):
                                dtype='float16',
                                trainable=False)(output)
         print('Time taken for Decoder {} sec\n'.format(time.time() - start))
+        eval_time.append(time.time() - it_start)
 
+    print('Time taken for iteration {} sec\n'.format(eval_time))
+
+tf_fim_ops.fim_init()
 profile_gnmt(BATCH_SIZE)
+tf_fim_ops.fim_deinit()
