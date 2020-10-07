@@ -1,98 +1,245 @@
-import numpy as np
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
+from tabulate import tabulate
+
 import time
 import tf_fim_ops
 
-tf.keras.backend.set_floatx('float16')
 SEED = 1234
-BATCH_SIZE = 1
-MAX_LENGTH = 50
-HIDDEN_UNITS = 1024
-NUM_ITER = 5
+
+# GNMT model configuration
+HIDDEN_SIZE = 1024
+MAX_SEQ_LENGTH = 100
+EMBEDDING_DIM = 1024
 VOCAB_SIZE = 32000
+BATCH_SIZE = 1
 
-def profile_gnmt(batch_size=1):
-    input_seq = tf.random.uniform(shape=(batch_size, MAX_LENGTH), dtype=tf.float16)
-    print('Input Shape: (batch_size, timestep, units){}'.format(input_seq.shape))
+# Number of evaluation iterations
+NUM_ITERATIONS = 2
 
-    embedded_sequence = tf.keras.layers.Embedding(VOCAB_SIZE, HIDDEN_UNITS, input_length=MAX_LENGTH)(input_seq)
-    print('Embedded Shape: (batch_size, timestep, units){}'.format(embedded_sequence.shape))
+tf.keras.backend.set_floatx('float16')
 
+# Performance table for different layers
+eval_time = []
 
-    eval_time = []
-    for i in range(NUM_ITER):
-        #Encoder
-        print('Iteration number : (iteration) {}'.format(i))
-        it_start = time.time()
-        start = time.time()
-        output = tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(HIDDEN_UNITS,
-                               kernel_initializer=tf.keras.initializers.RandomNormal(seed=SEED),
-                               recurrent_initializer=tf.keras.initializers.RandomNormal(seed=SEED),
+# Encoder class GNMT model
+class Encoder(tf.keras.Model):
+  def __init__(self, vocab_size, embedding_dim, enc_units, batch_sz, initializer):
+    super(Encoder, self).__init__()
+    self.batch_sz = batch_sz
+    self.enc_units = enc_units
+    self.embedding = tf.keras.layers.Embedding(vocab_size, embedding_dim)
+
+    self.lstm1 = tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(enc_units,
+                           kernel_initializer=initializer,
+                           recurrent_initializer=initializer,
+                           return_sequences=True,
+                           dtype='float16',
+                           trainable=False))
+    self.lstm2 = tf.keras.layers.LSTM(enc_units,
+                           kernel_initializer=initializer,
+                           recurrent_initializer=initializer,
+                           return_sequences=True,
+                           dtype='float16',
+                           trainable=False)
+    self.lstm3 = tf.keras.layers.LSTM(enc_units,
+                           kernel_initializer=initializer,
+                           recurrent_initializer=initializer,
+                           return_sequences=True,
+                           dtype='float16',
+                           trainable=False)
+    self.lstm4 = tf.keras.layers.LSTM(enc_units,
+                           kernel_initializer=initializer,
+                           recurrent_initializer=initializer,
+                           return_sequences=True,
+                           return_state=True,
+                           dtype='float16',
+                           trainable=False)
+
+  def call(self, input_seq, hidden):
+    start = time.time()
+    x = self.embedding(input_seq)
+    eval_time.append(["Encoder Embedding", (time.time() - start) * 1000])
+
+    output = self.lstm1(x)
+    output = self.lstm2(output)
+    output = self.lstm3(output)
+    output, h_state, c_state = self.lstm4(output)
+    eval_time.append(["Encoder LSTM", (time.time() - start) * 1000])
+
+    return output, h_state, c_state
+
+  def initialize_hidden_state(self):
+    return tf.zeros((self.batch_sz, self.enc_units))
+
+# Bahdanau Style Additive attention implementation
+class BahdanauAttention(tf.keras.layers.Layer):
+  def __init__(self, units):
+    super(BahdanauAttention, self).__init__()
+    self.W1 = tf.keras.layers.Dense(units)
+    self.W2 = tf.keras.layers.Dense(units)
+    self.V = tf.keras.layers.Dense(1)
+
+  def call(self, query, values):
+    # query hidden state shape == (batch_size, hidden size)
+    # query_with_time_axis shape == (batch_size, 1, hidden size)
+    # values shape == (batch_size, max_len, hidden size)
+    # we are doing this to broadcast addition along the time axis to calculate the score
+    query_with_time_axis = tf.expand_dims(query, 1)
+
+    # score shape == (batch_size, max_length, 1)
+    # we get 1 at the last axis because we are applying score to self.V
+    # the shape of the tensor before applying self.V is (batch_size, max_length, units)
+    score = self.V(tf.nn.tanh(
+        self.W1(query_with_time_axis) + self.W2(values)))
+
+    # attention_weights shape == (batch_size, max_length, 1)
+    attention_weights = tf.nn.softmax(score, axis=1)
+
+    # context_vector shape after sum == (batch_size, hidden_size)
+    context_vector = attention_weights * values
+    context_vector = tf.reduce_sum(context_vector, axis=1)
+
+    return context_vector, attention_weights
+
+# Decoder implementation for GNMT model
+class Decoder(tf.keras.Model):
+  def __init__(self, vocab_size, embedding_dim, dec_units, batch_sz, initializer):
+    super(Decoder, self).__init__()
+    self.batch_sz = batch_sz
+    self.dec_units = dec_units
+    self.embedding = tf.keras.layers.Embedding(vocab_size, embedding_dim)
+    self.lstm1 = tf.keras.layers.LSTM(dec_units,
+                               kernel_initializer=initializer,
+                               recurrent_initializer=initializer,
                                return_sequences=True,
                                dtype='float16',
-                               trainable=False))(embedded_sequence)
-        output = tf.keras.layers.LSTM(HIDDEN_UNITS,
-                               kernel_initializer=tf.keras.initializers.RandomNormal(seed=SEED),
-                               recurrent_initializer=tf.keras.initializers.RandomNormal(seed=SEED),
+                               trainable=False)
+    self.lstm2 = tf.keras.layers.LSTM(dec_units,
+                               kernel_initializer=initializer,
+                               recurrent_initializer=initializer,
                                return_sequences=True,
                                dtype='float16',
-                               trainable=False)(output)
-        output  = tf.keras.layers.LSTM(HIDDEN_UNITS,
-                               kernel_initializer=tf.keras.initializers.RandomNormal(seed=SEED),
-                               recurrent_initializer=tf.keras.initializers.RandomNormal(seed=SEED),
+                               trainable=False)
+    self.lstm3 = tf.keras.layers.LSTM(dec_units,
+                               kernel_initializer=initializer,
+                               recurrent_initializer=initializer,
                                return_sequences=True,
                                dtype='float16',
-                               trainable=False)(output)
-        output, memory_state, carry_state = tf.keras.layers.LSTM(HIDDEN_UNITS,
-                               kernel_initializer=tf.keras.initializers.RandomNormal(seed=SEED),
-                               recurrent_initializer=tf.keras.initializers.RandomNormal(seed=SEED),
+                               trainable=False)
+    self.lstm4 = tf.keras.layers.LSTM(dec_units,
+                               kernel_initializer=initializer,
+                               recurrent_initializer=initializer,
                                return_sequences=True,
                                return_state=True,
                                dtype='float16',
-                               trainable=False)(output)
+                               trainable=False)
+    self.fc = tf.keras.layers.Dense(vocab_size)
 
-        print('Time taken for Encoder {} sec\n'.format(time.time() - start))
-        print('encoder dimensions: (batch_size, timestep, units){}'.format(output.shape))
-        print('hidden dimensions: (batch_size, units){}'.format(memory_state.shape))
+    # used for attention
+    self.attention = BahdanauAttention(self.dec_units)
 
-        # Attention Layer
+
+  def call(self, x, hidden, enc_output, perf_dict):
+    start = time.time()
+    # enc_output shape == (batch_size, max_length, hidden_size)
+    context_vector, attention_weights = self.attention(hidden, enc_output)
+    perf_dict["Attention"] += ((time.time() - start) * 1000)
+
+    start = time.time()
+    # x shape after passing through embedding == (batch_size, 1, embedding_dim)
+    x = self.embedding(x)
+    perf_dict["Decoder Embedding"] += ((time.time() - start) * 1000)
+
+    start = time.time()
+    # x shape after concatenation == (batch_size, 1, embedding_dim + hidden_size)
+    # passing the concatenated vector to the LSTM
+    x = tf.concat([tf.expand_dims(context_vector, 1), x], axis=-1)
+    output = self.lstm1(x)
+    x = tf.concat([tf.expand_dims(context_vector, 1), output], axis=-1)
+    output = self.lstm2(x)
+    x = tf.concat([tf.expand_dims(context_vector, 1), output], axis=-1)
+    output = self.lstm3(x)
+    x = tf.concat([tf.expand_dims(context_vector, 0), output], axis=-1)
+    output, h_state, c_state = self.lstm4(x)
+    perf_dict["Decoder LSTM"] += ((time.time() - start) * 1000)
+
+    start = time.time()
+    # output shape == (batch_size * 1, hidden_size)
+    output = tf.reshape(output, (-1, output.shape[2]))
+    perf_dict["Reshape"] += ((time.time() - start) * 1000)
+
+    start = time.time()
+    # output shape == (batch_size, vocab)
+    x = self.fc(output)
+    perf_dict["Dense"] += ((time.time() - start) * 1000)
+
+    return x, h_state, attention_weights
+
+def create_gnmt_model(vocab_size, embed_dim, hidden, max_len, batch_size, initializer):
+    encoder = Encoder(vocab_size, embed_dim, hidden, batch_size, initializer)
+    decoder = Decoder(vocab_size, embed_dim, hidden, batch_size, initializer)
+
+    return encoder, decoder
+
+def evaluate(sentence, encoder, decoder, eval_time, max_length_targ=MAX_SEQ_LENGTH):
+
+    inputs = tf.convert_to_tensor(sentence)
+
+    print('Input dimensions: (batch_size, timestep, units){}'.format(inputs.shape))
+    h_state = [tf.zeros((1, HIDDEN_SIZE))]
+    c_state = [tf.zeros((1, HIDDEN_SIZE))]
+
+    enc_out, enc_hidden, enc_carry = encoder(inputs, [h_state, c_state])
+
+    print('encoder output dimensions: {}'.format(enc_out.shape))
+    print('encoder final hidden state dimensions: {}'.format(enc_hidden.shape))
+    print('encoder final carry state dimensions: {}'.format(enc_carry.shape))
+
+    dec_hidden = enc_hidden
+    dec_input = tf.expand_dims([0], 0)
+
+    # for profiling of decoder
+    dec_dict = {"Attention": 0, "Decoder Embedding": 0, "Decoder LSTM": 0, "Reshape": 0, "Dense": 0}
+
+    for t in range(max_length_targ):
+        predictions, dec_hidden, attention_weights = decoder(dec_input,
+                                                         dec_hidden,
+                                                         enc_out,
+                                                         dec_dict)
+
+        predicted_id = tf.argmax(predictions[0]).numpy()
+
+        # the predicted ID is fed back into the model
+        dec_input = tf.expand_dims([predicted_id], 0)
+
+    for key, val in dec_dict.items():
+        eval_time.append([key,val])
+
+def gnmt_model_run():
+    tf_fim_ops.fim_init()
+
+    initializer = tf.keras.initializers.RandomNormal(seed=SEED)
+    input_seq   = tf.random.uniform(shape=(BATCH_SIZE, MAX_SEQ_LENGTH), dtype=tf.float16)
+
+    encoder, decoder = create_gnmt_model(VOCAB_SIZE, EMBEDDING_DIM, HIDDEN_SIZE, MAX_SEQ_LENGTH, BATCH_SIZE, initializer)
+
+    # model and gpu initialization
+    evaluate(input_seq, encoder, decoder, eval_time)
+    encoder.summary()
+    decoder.summary()
+
+    for x in range(NUM_ITERATIONS):
+        eval_time.clear()
+
         start = time.time()
-        output = tf.keras.layers.AdditiveAttention(1)([output, memory_state])
-        print('Time taken for Attention {} sec\n'.format(time.time() - start))
+        evaluate(input_seq, encoder, decoder, eval_time)
+        eval_time.append(["End to End", (time.time() - start) * 1000])
 
-        # Decoder Layer
-        start = time.time()
-        output = tf.keras.layers.LSTM(HIDDEN_UNITS,
-                               kernel_initializer=tf.keras.initializers.RandomNormal(seed=SEED),
-                               recurrent_initializer=tf.keras.initializers.RandomNormal(seed=SEED),
-                               return_sequences=True,
-                               dtype='float16',
-                               trainable=False)(output)
-        output = tf.keras.layers.LSTM(HIDDEN_UNITS,
-                               kernel_initializer=tf.keras.initializers.RandomNormal(seed=SEED),
-                               recurrent_initializer=tf.keras.initializers.RandomNormal(seed=SEED),
-                               return_sequences=True,
-                               dtype='float16',
-                               trainable=False)(output)
-        output = tf.keras.layers.LSTM(HIDDEN_UNITS,
-                               kernel_initializer=tf.keras.initializers.RandomNormal(seed=SEED),
-                               recurrent_initializer=tf.keras.initializers.RandomNormal(seed=SEED),
-                               return_sequences=True,
-                               dtype='float16',
-                               trainable=False)(output)
-        output = tf.keras.layers.LSTM(HIDDEN_UNITS,
-                               kernel_initializer=tf.keras.initializers.RandomNormal(seed=SEED),
-                               recurrent_initializer=tf.keras.initializers.RandomNormal(seed=SEED),
-                               return_sequences=True,
-                               dtype='float16',
-                               trainable=False)(output)
-        print('Time taken for Decoder {} sec\n'.format(time.time() - start))
-        eval_time.append(time.time() - it_start)
+        print('iteration : {}'.format(x))
+        print(tabulate(eval_time, headers=["Index", "Layer", "Time(ms)"], showindex="always", tablefmt='github'))
 
-    print('Time taken for iteration {} sec\n'.format(eval_time))
 
-tf_fim_ops.fim_init()
-profile_gnmt(BATCH_SIZE)
-tf_fim_ops.fim_deinit()
+    tf_fim_ops.fim_deinit()
+
+
+gnmt_model_run()
