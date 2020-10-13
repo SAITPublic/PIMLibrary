@@ -349,7 +349,7 @@ int fim_elt_add_batch(int batch)
     int iter;
     FIM_PROFILE_TICK_A(ELT_ADD_1);
     for (iter = 0; iter < 1000; iter++)
-        FimExecuteAdd(device_output, fim_input0, fim_input1, false);
+        FimExecuteAdd(device_output, fim_input0, fim_input1, nullptr, false);
 
     FimSynchronize();
     FIM_PROFILE_TOCK_A(ELT_ADD_1);
