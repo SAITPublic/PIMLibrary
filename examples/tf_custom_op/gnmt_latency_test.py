@@ -21,7 +21,9 @@ tf.keras.backend.set_floatx('float16')
 
 # Performance table for different layers
 eval_time = []
-eval_tim_avg = []
+profile = True
+
+
 
 # Encoder class GNMT model
 class Encoder(tf.keras.Model):
@@ -57,17 +59,25 @@ class Encoder(tf.keras.Model):
                            dtype='float16',
                            trainable=False)
 
-  def call(self, input_seq, hidden):
-    start = time.time()
-    x = self.embedding(input_seq)
-    eval_time.append(["Encoder Embedding", (time.time() - start) * 1000])
-    print('encoder embed output dimensions(batch, timestep, units): {}'.format(x.shape))
-
+  def lstm_encoder(self, x):
     output = self.lstm1(x)
     output = self.lstm2(output)
     output = self.lstm3(output)
     output, h_state, c_state = self.lstm4(output)
-    eval_time.append(["Encoder LSTM", (time.time() - start) * 1000])
+
+    return output, h_state, c_state
+
+  def call(self, input_seq, hidden):
+    x = self.embedding(input_seq)
+
+    if profile == True:
+        eval_time.append(["Encoder Embedding", (timeit.timeit(lambda : self.embedding(input_seq), number = NUM_ITERATIONS)) * 1000])
+        print('encoder embed output dimensions(batch, timestep, units): {}'.format(x.shape))
+
+    output, h_state, c_state = self.lstm_encoder(x)
+
+    if profile == True:
+        eval_time.append(["Encoder LSTM", (timeit.timeit(lambda : self.lstm_encoder(x), number = NUM_ITERATIONS)) * 1000])
 
     return output, h_state, c_state
 
@@ -141,24 +151,7 @@ class Decoder(tf.keras.Model):
     # used for attention
     self.attention = BahdanauAttention(self.dec_units)
 
-
-  def call(self, x, hidden, enc_output, perf_dict):
-    start = time.time()
-    # enc_output shape == (batch_size, max_length, hidden_size)
-    context_vector, attention_weights = self.attention(hidden, enc_output)
-    perf_dict["Attention"] += ((time.time() - start) * 1000)
-#    print('Context vector dimensions: {}'.format(context_vector.shape))
-#    print('Attention weights dimensions: {}'.format(attention_weights.shape))
-
-    start = time.time()
-    # x shape after passing through embedding == (batch_size, 1, embedding_dim)
-    x = self.embedding(x)
-    perf_dict["Decoder Embedding"] += ((time.time() - start) * 1000)
-#    print('Decoder embedding dimensions: {}'.format(x.shape))
-
-    start = time.time()
-    # x shape after concatenation == (batch_size, 1, embedding_dim + hidden_size)
-    # passing the concatenated vector to the LSTM
+  def lstm_decoder(self, context_vector, x):
     x = tf.concat([tf.expand_dims(context_vector, 1), x], axis=-1)
     output = self.lstm1(x)
     x = tf.concat([tf.expand_dims(context_vector, 1), output], axis=-1)
@@ -166,21 +159,47 @@ class Decoder(tf.keras.Model):
     x = tf.concat([tf.expand_dims(context_vector, 1), output], axis=-1)
     output = self.lstm3(x)
     x = tf.concat([tf.expand_dims(context_vector, 0), output], axis=-1)
-    output, h_state, c_state = self.lstm4(x)
-    perf_dict["Decoder LSTM"] += ((time.time() - start) * 1000)
-#    print('Decoder LSTM dimensions: (output),(hidden_state),(carry_state){}'.format(output.shape))
+    
+    return self.lstm4(x)
+
+  def call(self, x, hidden, enc_output, dec_dict):
+    # enc_output shape == (batch_size, max_length, hidden_size)
+    context_vector, attention_weights = self.attention(hidden, enc_output)
+
+    if profile == True:
+        dec_dict["Attention"] += (timeit.timeit(lambda: self.attention(hidden, enc_output), number = NUM_ITERATIONS) * 1000)
+    # print('Context vector dimensions: {}'.format(context_vector.shape))
+    # print('Attention weights dimensions: {}'.format(attention_weights.shape))
 
     start = time.time()
+    # x shape after passing through embedding == (batch_size, 1, embedding_dim)
+    x = self.embedding(x)
+    
+    if profile == True:
+        dec_dict["Decoder Embedding"] += (timeit.timeit(lambda: self.embedding(x), number = NUM_ITERATIONS) * 1000)
+    # print('Decoder embedding dimensions: {}'.format(x.shape))
+
+    output , h_state, c_state = self.lstm_decoder(context_vector, x)
+
+    if profile == True:
+        dec_dict["Decoder LSTM"] += (timeit.timeit(lambda: self.lstm_decoder(context_vector, x), number = NUM_ITERATIONS) * 1000)
+
+    # x shape after concatenation == (batch_size, 1, embedding_dim + hidden_size)
+    # passing the concatenated vector to the LSTM
+    # print('Decoder LSTM dimensions: (output),(hidden_state),(carry_state){}'.format(output.shape))
     # output shape == (batch_size * 1, hidden_size)
-    output = tf.reshape(output, (-1, output.shape[2]))
-    perf_dict["Reshape"] += ((time.time() - start) * 1000)
-#    print('Reshape dimensions: {}'.format(output.shape))
+    reshaped_output = tf.reshape(output, (-1, output.shape[2]))
 
-    start = time.time()
+    if profile == True:
+        dec_dict["Reshape"] += (timeit.timeit(lambda: tf.reshape(output, (-1, output.shape[2])), number=NUM_ITERATIONS) * 1000)
+    # print('Reshape dimensions: {}'.format(output.shape))
     # output shape == (batch_size, vocab)
-    x = self.fc(output)
-    perf_dict["Dense"] += ((time.time() - start) * 1000)
-#    print('Dense output dimensions: {}'.format(x.shape))
+
+    x = self.fc(reshaped_output)
+
+    if profile == True:
+        dec_dict["Dense"] += (timeit.timeit(lambda: self.fc(output),number=NUM_ITERATIONS) * 1000)
+    # print('Dense output dimensions: {}'.format(x.shape))
 
     return x, h_state, attention_weights
 
@@ -194,15 +213,16 @@ def evaluate(sentence, encoder, decoder, max_length_targ=MAX_SEQ_LENGTH):
 
     inputs = tf.convert_to_tensor(sentence)
 
-    print('Input dimensions: (batch_size, timestep){}'.format(inputs.shape))
     h_state = [tf.zeros((1, HIDDEN_SIZE))]
     c_state = [tf.zeros((1, HIDDEN_SIZE))]
 
     enc_out, enc_hidden, enc_carry = encoder(inputs, [h_state, c_state])
 
-    print('encoder output dimensions: {}'.format(enc_out.shape))
-    print('encoder final hidden state dimensions: {}'.format(enc_hidden.shape))
-    print('encoder final carry state dimensions: {}'.format(enc_carry.shape))
+    if profile == True :
+        print('Input dimensions: (batch_size, timestep){}'.format(inputs.shape))
+        print('encoder output dimensions: {}'.format(enc_out.shape))
+        print('encoder final hidden state dimensions: {}'.format(enc_hidden.shape))
+        print('encoder final carry state dimensions: {}'.format(enc_carry.shape))
 
     dec_hidden = enc_hidden
     dec_input = tf.expand_dims([0], 0)
@@ -235,31 +255,25 @@ def gnmt_model_run():
     encoder, decoder = create_gnmt_model(VOCAB_SIZE, EMBEDDING_DIM, HIDDEN_SIZE, MAX_SEQ_LENGTH, BATCH_SIZE, initializer)
 
     # model and gpu initialization
+    eval_time.clear()
     predictions = evaluate(input_seq, encoder, decoder)
 
     encoder.summary()
     decoder.summary()
 
-    for x in range(NUM_ITERATIONS):
-        eval_time.clear()
+    eval_time.clear()
+    predictions = evaluate(input_seq, encoder, decoder)
 
-        start = time.time()
-        evaluate(input_seq, encoder, decoder)
-        eval_time.append(["End to End", (time.time() - start) * 1000])
+    # for disabling internal profiling calls.
+    #global profile
+    #profile = False
+    #eval_time.append(["End to End", (timeit.timeit(lambda : evaluate(input_seq, encoder, decoder), number = NUM_ITERATIONS) * 1000)])
 
-        print('iteration : {}'.format(x))
-        print(tabulate(eval_time, headers=["Index", "Layer", "Time(ms)"], showindex="always", tablefmt='github'))
+    for i in range(len(eval_time)):
+        eval_time[i][1] /= NUM_ITERATIONS
 
-        if x == 0:
-            eval_time_avg = list(eval_time)
-        else:
-            for i in range(len(eval_time)):
-                eval_time_avg[i][1] += eval_time[i][1]
+    print(tabulate(eval_time, headers=["Index", "Layer", "Time(ms)"], showindex="always", tablefmt='github'))
 
-    for i in range(len(eval_time_avg)):
-        eval_time_avg[i][1] /= NUM_ITERATIONS
-
-    print(tabulate(eval_time_avg, headers=["Index", "Layer", "Time(ms)- avg"], showindex="always", tablefmt='github'))
     tf_fim_ops.fim_deinit()
 
 if __name__ == '__main__':
