@@ -1,0 +1,35 @@
+Address Mapping (logical) for this board:
+  A00 -- Always 0
+  A01 -- Always 0
+  A02 -- Always 0
+  A03 -- Always 0
+  A04 -- Always 0
+  A05 -- Col 0
+  A06 -- Sub Channel
+  A07 -- Col 1
+  A08 -- Channel Select 0
+  A09 -- Channel Select 1
+  A10 -- Channel Select 2
+  A11 -- Channel Select 3
+  A12 -- Channel Select 4
+  A13 -- Bank Select 0
+  A14 -- Bank Select 2
+  A15 -- Bank Select 3
+  A16 -- Bank Select 1
+  A17 -- Col 2
+  A18 -- Col 3
+  A19 -- Col 4
+  A20 -- Row 0
+  A21 -- Row 1
+  A22 -- Row 2
+  A23 -- Row 3
+  A24 -- Row 4
+  A25 -- Row 5
+  A26 -- Row 6
+  A27 -- Row 7
+  A28 -- Row 8
+  A29 -- Row 9
+  A30 -- Row 10
+  A31 -- Row 11
+  A32 -- Row 12
+  A33 -- Row 13
