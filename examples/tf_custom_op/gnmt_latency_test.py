@@ -4,31 +4,39 @@ from tabulate import tabulate
 import time
 import tf_fim_ops
 import timeit
+import argparse
+
+tf.keras.backend.set_floatx('float16')
 
 SEED = 1234
 
 # GNMT model configuration
 HIDDEN_SIZE = 1024
-MAX_SEQ_LENGTH = 100
 EMBEDDING_DIM = 1024
 VOCAB_SIZE = 32000
-BATCH_SIZE = 1
-
-# Number of evaluation iterations
-NUM_ITERATIONS = 10
-
-tf.keras.backend.set_floatx('float16')
-
 # Performance table for different layers
 eval_time = []
-profile = True
 
+parser = argparse.ArgumentParser(description='Process GNMT arguments')
+parser.add_argument('-b','--batch_size', default=1, help="Input batch size", type=int)
+parser.add_argument('-l','--max_seq_length', default=100, help="Maximum sequence length of GNMT input", type=int)
+parser.add_argument('-i','--iterations', default=100, help="Number of iterations for profiling", type=int)
+parser.add_argument('-p','--profile', action="store_true", help="Enabled/Disable profiling")
 
+args = parser.parse_args()
+
+def DummyExecute():
+
+    # Create some tensors
+    a = tf.constant([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
+    b = tf.constant([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]])
+    c = tf.matmul(a, b)
 
 # Encoder class GNMT model
 class Encoder(tf.keras.Model):
   def __init__(self, vocab_size, embedding_dim, enc_units, batch_sz, initializer):
     super(Encoder, self).__init__()
+
     self.batch_sz = batch_sz
     self.enc_units = enc_units
     self.embedding = tf.keras.layers.Embedding(vocab_size, embedding_dim)
@@ -70,14 +78,14 @@ class Encoder(tf.keras.Model):
   def call(self, input_seq, hidden):
     x = self.embedding(input_seq)
 
-    if profile == True:
-        eval_time.append(["Encoder Embedding", (timeit.timeit(lambda : self.embedding(input_seq), number = NUM_ITERATIONS)) * 1000])
+    if args.profile == True:
+        eval_time.append(["Encoder Embedding", (timeit.timeit(lambda : self.embedding(input_seq), number = args.iterations)) * 1000])
         print('encoder embed output dimensions(batch, timestep, units): {}'.format(x.shape))
 
     output, h_state, c_state = self.lstm_encoder(x)
 
-    if profile == True:
-        eval_time.append(["Encoder LSTM", (timeit.timeit(lambda : self.lstm_encoder(x), number = NUM_ITERATIONS)) * 1000])
+    if args.profile == True:
+        eval_time.append(["Encoder LSTM", (timeit.timeit(lambda : self.lstm_encoder(x), number = args.iterations)) * 1000])
 
     return output, h_state, c_state
 
@@ -166,8 +174,8 @@ class Decoder(tf.keras.Model):
     # enc_output shape == (batch_size, max_length, hidden_size)
     context_vector, attention_weights = self.attention(hidden, enc_output)
 
-    if profile == True:
-        dec_dict["Attention"] += (timeit.timeit(lambda: self.attention(hidden, enc_output), number = NUM_ITERATIONS) * 1000)
+    if args.profile == True:
+        dec_dict["Attention"] += (timeit.timeit(lambda: self.attention(hidden, enc_output), number = args.iterations) * 1000)
     # print('Context vector dimensions: {}'.format(context_vector.shape))
     # print('Attention weights dimensions: {}'.format(attention_weights.shape))
 
@@ -175,14 +183,14 @@ class Decoder(tf.keras.Model):
     # x shape after passing through embedding == (batch_size, 1, embedding_dim)
     x = self.embedding(x)
     
-    if profile == True:
-        dec_dict["Decoder Embedding"] += (timeit.timeit(lambda: self.embedding(x), number = NUM_ITERATIONS) * 1000)
+    if args.profile == True:
+        dec_dict["Decoder Embedding"] += (timeit.timeit(lambda: self.embedding(x), number = args.iterations) * 1000)
     # print('Decoder embedding dimensions: {}'.format(x.shape))
 
     output , h_state, c_state = self.lstm_decoder(context_vector, x)
 
-    if profile == True:
-        dec_dict["Decoder LSTM"] += (timeit.timeit(lambda: self.lstm_decoder(context_vector, x), number = NUM_ITERATIONS) * 1000)
+    if args.profile == True:
+        dec_dict["Decoder LSTM"] += (timeit.timeit(lambda: self.lstm_decoder(context_vector, x), number = args.iterations) * 1000)
 
     # x shape after concatenation == (batch_size, 1, embedding_dim + hidden_size)
     # passing the concatenated vector to the LSTM
@@ -190,15 +198,15 @@ class Decoder(tf.keras.Model):
     # output shape == (batch_size * 1, hidden_size)
     reshaped_output = tf.reshape(output, (-1, output.shape[2]))
 
-    if profile == True:
-        dec_dict["Reshape"] += (timeit.timeit(lambda: tf.reshape(output, (-1, output.shape[2])), number=NUM_ITERATIONS) * 1000)
+    if args.profile == True:
+        dec_dict["Reshape"] += (timeit.timeit(lambda: tf.reshape(output, (-1, output.shape[2])), number=args.iterations) * 1000)
     # print('Reshape dimensions: {}'.format(output.shape))
     # output shape == (batch_size, vocab)
 
     x = self.fc(reshaped_output)
 
-    if profile == True:
-        dec_dict["Dense"] += (timeit.timeit(lambda: self.fc(output),number=NUM_ITERATIONS) * 1000)
+    if args.profile == True:
+        dec_dict["Dense"] += (timeit.timeit(lambda: self.fc(output),number=args.iterations) * 1000)
     # print('Dense output dimensions: {}'.format(x.shape))
 
     return x, h_state, attention_weights
@@ -209,7 +217,7 @@ def create_gnmt_model(vocab_size, embed_dim, hidden, max_len, batch_size, initia
 
     return encoder, decoder
 
-def evaluate(sentence, encoder, decoder, max_length_targ=MAX_SEQ_LENGTH):
+def evaluate(sentence, encoder, decoder, max_length_targ=args.max_seq_length):
 
     inputs = tf.convert_to_tensor(sentence)
 
@@ -218,7 +226,7 @@ def evaluate(sentence, encoder, decoder, max_length_targ=MAX_SEQ_LENGTH):
 
     enc_out, enc_hidden, enc_carry = encoder(inputs, [h_state, c_state])
 
-    if profile == True :
+    if args.profile == True :
         print('Input dimensions: (batch_size, timestep){}'.format(inputs.shape))
         print('encoder output dimensions: {}'.format(enc_out.shape))
         print('encoder final hidden state dimensions: {}'.format(enc_hidden.shape))
@@ -227,8 +235,11 @@ def evaluate(sentence, encoder, decoder, max_length_targ=MAX_SEQ_LENGTH):
     dec_hidden = enc_hidden
     dec_input = tf.expand_dims([0], 0)
 
-    # for profiling of decoder
-    dec_dict = {"Attention": 0, "Decoder Embedding": 0, "Decoder LSTM": 0, "Reshape": 0, "Dense": 0}
+    if args.profile == True:
+        # for profiling of decoder
+        dec_dict = {"Attention": 0, "Decoder Embedding": 0, "Decoder LSTM": 0, "Reshape": 0, "Dense": 0}
+    else:
+        dec_dict = {}
 
     for t in range(max_length_targ):
         predictions, dec_hidden, attention_weights = decoder(dec_input,
@@ -241,8 +252,9 @@ def evaluate(sentence, encoder, decoder, max_length_targ=MAX_SEQ_LENGTH):
         # the predicted ID is fed back into the model
         dec_input = tf.expand_dims([predicted_id], 0)
 
-    for key, val in dec_dict.items():
-        eval_time.append([key,val])
+    if args.profile == True:
+        for key, val in dec_dict.items():
+            eval_time.append([key,val])
 
     return predictions
 
@@ -250,31 +262,35 @@ def gnmt_model_run():
     tf_fim_ops.fim_init()
 
     initializer = tf.keras.initializers.RandomNormal(seed=SEED)
-    input_seq   = tf.random.uniform(shape=(BATCH_SIZE, MAX_SEQ_LENGTH), dtype=tf.float16)
+    input_seq   = tf.random.uniform(shape=(args.batch_size, args.max_seq_length), dtype=tf.float16)
 
-    encoder, decoder = create_gnmt_model(VOCAB_SIZE, EMBEDDING_DIM, HIDDEN_SIZE, MAX_SEQ_LENGTH, BATCH_SIZE, initializer)
+    encoder, decoder = create_gnmt_model(VOCAB_SIZE, EMBEDDING_DIM, HIDDEN_SIZE, args.max_seq_length, args.batch_size, initializer)
 
-    # model and gpu initialization
+    if args.profile:
+        # model and gpu initialization
+        DummyExecute()
+
     eval_time.clear()
     predictions = evaluate(input_seq, encoder, decoder)
 
+    # Model Summary
     encoder.summary()
     decoder.summary()
 
-    eval_time.clear()
-    predictions = evaluate(input_seq, encoder, decoder)
-
-    # for disabling internal profiling calls.
-    #global profile
-    #profile = False
-    #eval_time.append(["End to End", (timeit.timeit(lambda : evaluate(input_seq, encoder, decoder), number = NUM_ITERATIONS) * 1000)])
+    if args.profile:
+        # for disabling internal profiling calls.
+        args.profile = False
+        eval_time.append(["End to End", (timeit.timeit(lambda : evaluate(input_seq, encoder, decoder), number = args.iterations) * 1000)])
+        args.profile = True
 
     for i in range(len(eval_time)):
-        eval_time[i][1] /= NUM_ITERATIONS
+        eval_time[i][1] /= args.iterations
 
-    print(tabulate(eval_time, headers=["Index", "Layer", "Time(ms)"], showindex="always", tablefmt='github'))
+    if args.profile:
+        print(tabulate(eval_time, headers=["Index", "Layer", "Time(ms)"], showindex="always", tablefmt='github'))
 
     tf_fim_ops.fim_deinit()
 
 if __name__ == '__main__':
+    print('User arguments {}'.format(args))
     gnmt_model_run()
