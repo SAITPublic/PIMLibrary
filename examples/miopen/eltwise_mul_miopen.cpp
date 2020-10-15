@@ -41,8 +41,6 @@ int miopen_elt_mul()
     hipMalloc(&ref_data, sizeof(miopenHalf) * LENGTH);
 
     std::string test_vector_data = TEST_VECTORS_DATA;
-    test_vector_data.append("/test_vectors/");
-
     std::string input0 = test_vector_data + "load/elt_mul/input0_256KB.dat";
     std::string input1 = test_vector_data + "load/elt_mul/input1_256KB.dat";
     std::string output = test_vector_data + "load/elt_mul/output_256KB.dat";
@@ -52,21 +50,26 @@ int miopen_elt_mul()
     load_data(output.c_str(), (char *)ref_data, sizeof(miopenHalf) * LENGTH);
 
     miopenHandle_t handle;
-    miopenCreate(&handle);
+    hipStream_t stream;
 
+    hipStreamCreate(&stream);
+    miopenCreateWithStream(&handle, stream);
+
+    // For profiling, add extra call for GPU initialization
     miopenOpTensor(handle, miopenTensorOpMul, &alpha_0, a_desc, a_data, &alpha_1, b_desc, b_data, &beta, c_desc,
                    c_data);
+
     FIM_PROFILE_TICK_A(MIOpenMul);
-    for(int iter=0; iter < 1000; iter++)
-    {
-    miopenOpTensor(handle, miopenTensorOpMul, &alpha_0, a_desc, a_data, &alpha_1, b_desc, b_data, &beta, c_desc, c_data);
+    for (int iter = 0; iter < 1000; iter++) {
+        miopenOpTensor(handle, miopenTensorOpMul, &alpha_0, a_desc, a_data, &alpha_1, b_desc, b_data, &beta, c_desc,
+                       c_data);
     }
-    std::cout<< " execution time " << std::endl;
+    hipStreamSynchronize(stream);
+
+    std::cout << " execution time " << std::endl;
     FIM_PROFILE_TOCK_A(MIOpenMul);
+
     miopenDestroy(handle);
-
-    if (compare_data((char *)c_data, (char *)ref_data, sizeof(miopenHalf) * LENGTH)) ret = -1;
-
     hipFree(ref_data);
     hipFree(c_data);
     hipFree(b_data);

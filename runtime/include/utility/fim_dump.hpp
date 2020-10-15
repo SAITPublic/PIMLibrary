@@ -25,6 +25,12 @@ inline const char* get_fim_op_string(FimOpType op_type)
         case OP_RELU:
             op_str = "relu";
             break;
+        case OP_DUMMY:
+            op_str = "dummy";
+            break;
+        default:
+            op_str = "None";
+            break;
     }
 
     return op_str;
