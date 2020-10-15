@@ -35,10 +35,10 @@ int miopen_elt_add()
     float alpha_1 = 1;
     float beta = 1;
 
-    hipMalloc(&a_data, sizeof(miopenHalf) * LENGTH);
-    hipMalloc(&b_data, sizeof(miopenHalf) * LENGTH);
-    hipMalloc(&c_data, sizeof(miopenHalf) * LENGTH);
-    hipMalloc(&ref_data, sizeof(miopenHalf) * LENGTH);
+    hipHostMalloc(&a_data, sizeof(miopenHalf) * LENGTH);
+    hipHostMalloc(&b_data, sizeof(miopenHalf) * LENGTH);
+    hipHostMalloc(&c_data, sizeof(miopenHalf) * LENGTH);
+    hipHostMalloc(&ref_data, sizeof(miopenHalf) * LENGTH);
 
     std::string test_vector_data = TEST_VECTORS_DATA;
     std::string input0 = test_vector_data + "load/elt_add/input0_256KB.dat";
@@ -58,21 +58,16 @@ int miopen_elt_add()
 
     miopenOpTensor(handle, miopenTensorOpAdd, &alpha_0, a_desc, a_data, &alpha_1, b_desc, b_data, &beta, c_desc,
                    c_data);
-    FIM_PROFILE_TICK_A(MIOpenAdd);
     for (int iter = 0; iter < 1000; iter++) {
         miopenOpTensor(handle, miopenTensorOpAdd, &alpha_0, a_desc, a_data, &alpha_1, b_desc, b_data, &beta, c_desc,
                        c_data);
     }
-    std::cout << " execution time " << std::endl;
     hipStreamSynchronize(stream);
-
-    FIM_PROFILE_TOCK_A(MIOpenAdd);
-
     miopenDestroy(handle);
-    hipFree(ref_data);
-    hipFree(c_data);
-    hipFree(b_data);
-    hipFree(a_data);
+    hipHostFree(ref_data);
+    hipHostFree(c_data);
+    hipHostFree(b_data);
+    hipHostFree(a_data);
 
     return ret;
 }
@@ -101,10 +96,10 @@ int miopen_elt_add_batch_profile(int batch)
     float alpha_1 = 1;
     float beta = 1;
 
-    hipMalloc(&a_data, sizeof(miopenHalf) * batch * LENGTH);
-    hipMalloc(&b_data, sizeof(miopenHalf) * batch * LENGTH);
-    hipMalloc(&c_data, sizeof(miopenHalf) * batch * LENGTH);
-    hipMalloc(&ref_data, sizeof(miopenHalf) * batch * LENGTH);
+    hipHostMalloc(&a_data, sizeof(miopenHalf) * batch * LENGTH);
+    hipHostMalloc(&b_data, sizeof(miopenHalf) * batch * LENGTH);
+    hipHostMalloc(&c_data, sizeof(miopenHalf) * batch * LENGTH);
+    hipHostMalloc(&ref_data, sizeof(miopenHalf) * batch * LENGTH);
 
     miopenHandle_t handle;
     hipStream_t stream;
@@ -114,23 +109,18 @@ int miopen_elt_add_batch_profile(int batch)
 
     miopenOpTensor(handle, miopenTensorOpAdd, &alpha_0, a_desc, a_data, &alpha_1, b_desc, b_data, &beta, c_desc,
                    c_data);
-    FIM_PROFILE_TICK_A(MIOpenAdd);
     for (int iter = 0; iter < 1000; iter++) {
         miopenOpTensor(handle, miopenTensorOpAdd, &alpha_0, a_desc, a_data, &alpha_1, b_desc, b_data, &beta, c_desc,
                        c_data);
     }
 
     hipStreamSynchronize(stream);
-
-    std::cout << " execution time " << std::endl;
-    FIM_PROFILE_TOCK_A(MIOpenAdd);
-
     miopenDestroy(handle);
 
-    hipFree(ref_data);
-    hipFree(c_data);
-    hipFree(b_data);
-    hipFree(a_data);
+    hipHostFree(ref_data);
+    hipHostFree(c_data);
+    hipHostFree(b_data);
+    hipHostFree(a_data);
 
     return ret;
 }
