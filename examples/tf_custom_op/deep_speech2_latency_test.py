@@ -17,36 +17,58 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import datetime
 import numpy as np
 from six.moves import xrange    # pylint: disable=redefined-builtin
 import tensorflow as tf
 from tensorflow.keras import Input
 from tensorflow.keras import Model
 import tf_fim_ops
+import timeit
+import argparse
+from tabulate import tabulate
+import os
 
 tf.keras.backend.set_floatx('float16')
-initializer = tf.constant_initializer(value=0.1)
-profile_layer = True
 SEED = 1234
 
-# Supported rnn cells.
-SUPPORTED_RNN_LAYERS = {
-    "lstm": tf.keras.layers.LSTM,
-}
-
-SUPPORTED_RNNS = {
-    "lstm": tf.keras.layers.LSTMCell,
-}
-
-
-# Parameters for batch normalization.
-_BATCH_NORM_EPSILON = 1e-5
-_BATCH_NORM_DECAY = 0.997
+# DeepSpeech2 Configuration parameter
+# Input Data layer
+INPUT_HEIGHT = 237
+INPUT_WIDTH = 171
+NUM_CHANNELS = 1
 
 # Filters of convolution layer
-_CONV_FILTERS = 32
+CONV_FILTERS = 32
+CONV1_KERNEL_H = 41
+CONV1_KERNEL_W = 11
+CONV2_KERNEL_H = 21
+CONV2_KERNEL_W = 11
 
+# Parameters for batch normalization.
+BATCH_NORM_EPSILON = 1e-5
+BATCH_NORM_DECAY = 0.997
+
+# RNN Layer
+NUM_RNN_LAYERS = 5
+RNN_HIDDEN_SIZE = 800
+
+# Dense Layer
+OUTPUT_SIZE = 29
+
+initializer = tf.keras.initializers.RandomNormal(seed=SEED)
+
+# Performance table for different layers
+eval_time = []
+
+# Parse arguments
+parser = argparse.ArgumentParser(description='Process GNMT arguments')
+parser.add_argument('-b','--batch_size', default=1, help="Input batch size", type=int)
+parser.add_argument('-l','--max_seq_length', default=50, help="Maximum sequence length of GNMT input", type=int)
+parser.add_argument('-i','--iterations', default=100, help="Number of iterations for profiling", type=int)
+parser.add_argument('-p','--profile', action="store_true", help="Enabled/Disable profiling")
+parser.add_argument('-f','--functional_verify', action="store_true", help="Enabled/Disable Functional verification")
+
+args = parser.parse_args()
 
 class batch_norm(tf.keras.layers.Layer):
     """Batch normalization layer.
@@ -69,12 +91,15 @@ class batch_norm(tf.keras.layers.Layer):
 
     def __init__(self, dtype=tf.float16):
         super(batch_norm, self).__init__()
-#        self._dynamic=training
-#        self.training = training
         self.bn = tf.keras.layers.BatchNormalization(
-            momentum=_BATCH_NORM_DECAY, epsilon=_BATCH_NORM_EPSILON, fused=False, dtype=dtype)
+            momentum=BATCH_NORM_DECAY, epsilon=BATCH_NORM_EPSILON, fused=False, dtype=dtype)
 
     def call(self, inputs, training):
+        if args.profile == True :
+            print("batch norm input shape {}".format(inputs.shape))
+            eval_time.append(["Batch Normalization",
+                (timeit.timeit(lambda: self.bn(inputs=inputs, training=training), number = args.iterations))])
+
         return self.bn(inputs=inputs, training=training)
 
 
@@ -97,22 +122,31 @@ class conv_bn_layer(tf.keras.layers.Layer):
 
     def __init__(self, padding, filters, kernel_size, strides, layer_id, dtype=tf.float16):
         super(conv_bn_layer, self).__init__()
-#        self._dynamic=training
-        self.paddings = [[0, 0], [padding[0], padding[0]],
-                         [padding[1], padding[1]], [0, 0]]
+
+        self.paddings = [[0, 0], [padding[0], padding[0]], [padding[1], padding[1]], [0, 0]]
         self.filters = filters
         self.kernel_size = kernel_size
         self.strides = strides
         self.layer_id = layer_id
-#        self.training = training
 
-        self.conv2d = tf.keras.layers.Conv2D(filters=filters, kernel_size=kernel_size, strides=strides, padding="valid", use_bias=False,
-                                             activation=tf.nn.relu6, name="cnn_{}".format(layer_id), dtype=dtype, kernel_initializer=initializer)
-        self.bn = batch_norm(dtype=dtype)  # training = self.training)
+        self.conv2d = tf.keras.layers.Conv2D(filters=filters, kernel_size=kernel_size,
+                                                strides=strides, padding="valid", use_bias=False,
+                                                activation=tf.nn.relu6, name="cnn_{}".format(layer_id),
+                                                dtype=dtype, kernel_initializer=initializer)
+        self.bn = batch_norm(dtype=dtype)
 
     def call(self, inputs, training):
         inputs = tf.pad(tensor=inputs, paddings=self.paddings)
+        if args.profile == True :
+            print(" padding input shape {}".format(inputs.shape))
+            eval_time.append(["Padding Conv" + str(self.layer_id),
+                (timeit.timeit(lambda: tf.pad(tensor=inputs, paddings=self.paddings), number = args.iterations))])
+
         retval = self.conv2d(inputs=inputs)
+        if args.profile == True :
+            print(" conv {} input shape {}".format(self.layer_id, inputs.shape))
+            eval_time.append(["Convolution " + str(self.layer_id),
+                (timeit.timeit(lambda: self.conv2d(inputs=inputs), number = args.iterations))])
 
         retval = self.bn(retval, training)
 
@@ -137,51 +171,36 @@ class rnn_layer(tf.keras.layers.Layer):
         tensor output for the current layer.
     """
 
-    def __init__(self, rnn_type, rnn_hidden_size, layer_id, is_batch_norm, is_bidirectional, dtype=tf.float16):
+    def __init__(self, rnn_hidden_size, layer_id, is_batch_norm, dtype=tf.float16):
         super(rnn_layer, self).__init__()
-#        self._dynamic=training
         self.is_batch_norm = is_batch_norm
-        self.rnn_type = rnn_type
-        self.is_bidirectional = is_bidirectional
         self.float_type = dtype
-#        self.training = training
-#        self.bn = batch_norm(training = self.training)
-        if is_bidirectional:
-            rnn_cell = SUPPORTED_RNN_LAYERS[self.rnn_type]
-            #initializer = tf.keras.initializers.RandomNormal(mean=0., stddev=1.)
-            self.fw_rnn = rnn_cell(units=rnn_hidden_size, name="rnn_fw_{}".format(
-                layer_id), return_sequences=True, dtype=dtype, kernel_initializer=initializer)
-            self.bw_rnn = rnn_cell(units=rnn_hidden_size, name="rnn_bw_{}".format(
-                layer_id), go_backwards=True, return_sequences=True, dtype=dtype, kernel_initializer=initializer)
-            self.dir_layer = tf.keras.layers.Bidirectional(
-                self.fw_rnn, backward_layer=self.bw_rnn, dtype=dtype)
-        else:
-            rnn_cell = SUPPORTED_RNNS[self.rnn_type]
-            self.fw_rnn = rnn_cell(units=rnn_hidden_size, name="rnn_fw_{}".format(
-                layer_id), kernel_initializer=initializer)
-            self.dir_layer = tf.keras.layers.RNN(self.fw_rnn)
+        self.layer_id = layer_id
+        self.lstm_layer = tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(units = rnn_hidden_size,
+                                kernel_initializer=initializer,
+                                recurrent_initializer=initializer,
+                                return_sequences=True,
+                                dtype=dtype,
+                                trainable=False))
 
     def call(self, inputs, training):
-        print('Rnn called')
         if self.is_batch_norm:
             inputs = batch_norm(self.float_type)(inputs, training)
 
-        if self.is_bidirectional:
-            outputs = self.dir_layer(inputs)
-            rnn_outputs = tf.concat(outputs, -1)
+        rnn_outputs = self.lstm_layer(inputs)
+        if args.profile == True :
+            print(" LSTM {} input shape {}".format(self.layer_id, inputs.shape))
+            eval_time.append(["LSTM " + str(self.layer_id),
+                (timeit.timeit(lambda: self.lstm_layer(inputs=inputs), number = args.iterations))])
 
-        else:
-            rnn_outputs = self.dir_layer(inputs)
         return rnn_outputs
 
 
 class DeepSpeech2(tf.keras.Model):
     """Define DeepSpeech2 model."""
 
-    def __init__(self, num_rnn_layers, rnn_type, is_bidirectional,
-                 rnn_hidden_size, num_classes, use_bias, dtype=tf.float16):
+    def __init__(self, num_rnn_layers, rnn_hidden_size, num_classes, use_bias, dtype=tf.float16):
         """Initialize DeepSpeech2 model.
-
         Args:
             num_rnn_layers: an integer, the number of rnn layers. By default, it's 5.
             rnn_type: a string, one of the supported rnn cells: gru, rnn and lstm.
@@ -191,161 +210,119 @@ class DeepSpeech2(tf.keras.Model):
             use_bias: a boolean specifying whether to use bias in the last fc layer.
         """
         super(DeepSpeech2, self).__init__()
-#        self._dynamic=training
+
+        # Parameters
         self.num_rnn_layers = num_rnn_layers
-        self.rnn_type = rnn_type
-        self.is_bidirectional = is_bidirectional
         self.rnn_hidden_size = rnn_hidden_size
         self.num_classes = num_classes
         self.use_bias = use_bias
         self.float_type = dtype
+        self.lstm = []
 
-        self.conv_layer_one = conv_bn_layer(padding=(20, 5), filters=_CONV_FILTERS, kernel_size=(
-            41, 11), strides=(2, 2), layer_id=1, dtype=self.float_type)
-        self.conv_layer_two = conv_bn_layer(padding=(10, 5), filters=_CONV_FILTERS, kernel_size=(
-            21, 11), strides=(2, 1), layer_id=2, dtype=self.float_type)
-        self.rshape = tf.keras.layers.Reshape((-1, 81*_CONV_FILTERS))
-        self.rnn_cell = SUPPORTED_RNNS[self.rnn_type]
-        self.lstm = tf.keras.Sequential()
+        # Layers
+        self.input_layer = tf.keras.layers.Input(shape=(INPUT_HEIGHT, INPUT_WIDTH, NUM_CHANNELS),
+                                                 batch_size=args.batch_size)
+        self.conv_layer_one = conv_bn_layer(padding=(0, 0), filters=CONV_FILTERS,
+                                            kernel_size=(CONV1_KERNEL_H, CONV1_KERNEL_W),
+                                            strides=(2, 2), layer_id=1, dtype=self.float_type)
+        self.conv_layer_two = conv_bn_layer(padding=(10, 5), filters=CONV_FILTERS,
+                                            kernel_size=(CONV2_KERNEL_H, CONV2_KERNEL_W),
+                                            strides=(2, 1), layer_id=2, dtype=self.float_type)
+        self.rshape = tf.keras.layers.Reshape((-1, 81*CONV_FILTERS))
+
         for layer_counter in xrange(self.num_rnn_layers):
             # No batch normalization on the first layer.
             is_batch_norm = (layer_counter != 0)
-            #is_batch_norm = False
-            rnn_lyr = rnn_layer(rnn_type=self.rnn_type, rnn_hidden_size=self.rnn_hidden_size,
-                                layer_id=layer_counter + 1, is_batch_norm=is_batch_norm, is_bidirectional=self.is_bidirectional, dtype=self.float_type)
-#            self.fw_rnn = tf.keras.layers.LSTM(units= rnn_hidden_size, name="rnn_fw_{}".format(layer_counter),return_sequences=True)
-#            self.bw_rnn = tf.keras.layers.LSTM(units= rnn_hidden_size, name="rnn_bw_{}".format(layer_counter),go_backwards=True, return_sequences=True)
-#            rnn_lyr = tf.keras.layers.Bidirectional(self.fw_rnn, backward_layer=self.bw_rnn)
-            self.lstm.add(rnn_lyr)
+            self.lstm.append(rnn_layer(rnn_hidden_size=self.rnn_hidden_size,
+                                       layer_id=layer_counter + 1, is_batch_norm=is_batch_norm,
+                                       dtype=self.float_type))
 
         self.bnorm = batch_norm(dtype=self.float_type)
-        self.dense = tf.keras.layers.Dense(
-            self.num_classes, use_bias=self.use_bias, dtype=self.float_type)
+        self.dense = tf.keras.layers.Dense(self.num_classes, use_bias=self.use_bias, dtype=self.float_type)
 
-    def __call__(self, inputs, training=False):
+    def call(self, inputs, training=False):
+        # Convolution Layer 1
+        conv1 = self.conv_layer_one(inputs, training)
 
-        start = datetime.datetime.now()
-
-        value = self.conv_layer_one(inputs, training)
-        value = self.conv_layer_two(value, training)
-
-        end = datetime.datetime.now()
-        duration = end - start
-        print('Conv Duration', duration)
-
-        # output of conv_layer2 with the shape of
-        # [batch_size (N), times (T), features (F), channels (C)].
-        # Convert the conv output to rnn input.
-        value = self.rshape(value)
-        # RNN layers.
-
-        start = datetime.datetime.now()
-        value = self.lstm(value,training)
-        end = datetime.datetime.now()
-        duration = end - start
-        print('Lstm layer Duration: ', duration)
+        # Convolution Layer 2
+        conv2 = self.conv_layer_two(conv1, training)
 
 
-        start = datetime.datetime.now()
-        # FC layer with batch norm.
-        value = self.bnorm(value, training)
-        logits = self.dense(value)
-        end = datetime.datetime.now()
-        duration = end - start
-        print('Fc+bnorm Duration', duration)
+        # Reshape
+        output = self.rshape(conv2)
+        if args.profile == True :
+            print(" Reshape input shape {}".format(conv2.shape))
+            eval_time.append(["Reshape",
+                (timeit.timeit(lambda: self.rshape(inputs=conv2), number = args.iterations))])
+
+        if args.functional_verify:
+            orig_env = os.environ['ENABLE_FIM']
+
+            reshape_out_gpu = np.copy(output)
+            reshape_out_fim = np.copy(output)
+            os.environ['ENABLE_FIM'] = '0'
+            for layer_counter in xrange(self.num_rnn_layers):
+                reshape_out_gpu = self.lstm[layer_counter](reshape_out_gpu, training)
+
+            os.environ['ENABLE_FIM'] = '1'
+            for layer_counter in xrange(self.num_rnn_layers):
+                reshape_out_fim = self.lstm[layer_counter](reshape_out_fim, training)
+
+            os.environ['ENABLE_FIM'] = orig_env
+
+            result = np.testing.assert_array_almost_equal(reshape_out_fim, reshape_out_gpu, decimal=5)
+            print("Functional Verification : {}".format(result))
+
+
+        # LSTM Layers
+        for layer_counter in xrange(self.num_rnn_layers):
+            output = self.lstm[layer_counter](output, training)
+
+        # Batch Normalization
+        bn_out = self.bnorm(output, training)
+
+        # Dense Layer
+        logits = self.dense(bn_out)
+        if args.profile == True :
+            print(" Dense input shape {}".format(bn_out.shape))
+            eval_time.append(["Dense",
+                (timeit.timeit(lambda: self.dense(inputs=bn_out), number = args.iterations))])
+
+            print(" Dense output shape {}".format(logits.shape))
         return logits
-
-def profile_ds2_eager(batch_size=1,training=False):
-
-     inputs = tf.random.uniform(shape=(batch_size, 237, 171, 1), dtype=tf.float16)
-
-     conv_layer_one = conv_bn_layer(padding=(0, 0), filters=_CONV_FILTERS, kernel_size=(
-            41, 11), strides=(2, 2), layer_id=1, dtype=tf.float16)
-     conv_layer_two = conv_bn_layer(padding=(10, 5), filters=_CONV_FILTERS, kernel_size=(
-            21, 11), strides=(2, 1), layer_id=2, dtype=tf.float16)
-
-     rshape = tf.keras.layers.Reshape((-1, 81*_CONV_FILTERS))
-     bn = tf.keras.layers.BatchNormalization(
-            momentum=_BATCH_NORM_DECAY, epsilon=_BATCH_NORM_EPSILON, fused=False, dtype=tf.float16)
-
-     lstm = tf.keras.Sequential()
-     lstm.add(tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(800,
-                            kernel_initializer=tf.keras.initializers.RandomNormal(seed=SEED),
-                            recurrent_initializer=tf.keras.initializers.RandomNormal(seed=SEED),
-                            return_sequences=True,
-                            dtype='float16',
-                            trainable=False)))
-     #lstm.add(tf.keras.layers.Concatenate(axis=-1))
-     for i in range(4):
-         lstm.add(bn)
-         lstm.add(tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(800,
-                            kernel_initializer=tf.keras.initializers.RandomNormal(seed=SEED),
-                            recurrent_initializer=tf.keras.initializers.RandomNormal(seed=SEED),
-                            return_sequences=True,
-                            dtype='float16',
-                            trainable=False)))
-
-         #Need to check issue with concat,ie non functional interface  
-         #lstm.add(tf.keras.layers.Concatenate(axis=-1))
-
-     bnorm = batch_norm(dtype=tf.float16)
-     dense = tf.keras.layers.Dense(
-            29, use_bias=False, dtype=tf.float16)
-
-     for i in range(5):
-       start = datetime.datetime.now()
-       print('input shape',inputs.shape)
-       value = conv_layer_one(inputs, training)
-       print('conv1 output shape',value.shape)
-       value = conv_layer_two(value, training)
-       print('conv2 output shape',value.shape)
-       end = datetime.datetime.now()
-       duration = end - start
-       print('Conv Duration:', duration)
-
-       value = rshape(value)
-       start = datetime.datetime.now()
-       value = lstm(value,training=False)
-       print('lstm output shape' , value.shape)
-       end = datetime.datetime.now()
-       duration = end - start
-       print('Lstm Duration:', duration)
-
-       start = datetime.datetime.now()
-       value = bnorm(value, training)
-       logits = dense(value)
-       print('Fc output shape' , logits.shape)
-       end = datetime.datetime.now()
-       duration = end - start
-       print('Fc+bnorm Duration:', duration)
 
 def profile_ds2():
     # if we change to float32 , make sure to changes keras_backend at top of file
     dtype = tf.float16
-    num_rnn_layers = 5
     is_bidirectional = True
     use_bias = False
-    model = DeepSpeech2(num_rnn_layers, 'lstm',
-                        is_bidirectional, 800, 29, use_bias, dtype)
+
+    model = DeepSpeech2(NUM_RNN_LAYERS, RNN_HIDDEN_SIZE, OUTPUT_SIZE, use_bias, dtype)
 
     # Input shape
-    x = tf.random.uniform(shape=(4, 282, 161, 1), dtype=dtype)
+    x = tf.random.uniform(shape=(args.batch_size, INPUT_HEIGHT, INPUT_WIDTH, 1), dtype=dtype)
 
-    print('Runing warmup')
-    res = model(x)
-
-    print('Profile Start')
-    for i in range(5):
-        start = datetime.datetime.now()
-        print('Round ', i)
+    if args.profile:
+        # For initialization of GPU and FIM preloading
+        args.profile = False
         res = model(x)
-        print('out shape',res.shape)
-        end = datetime.datetime.now()
-        duration = end - start
-        print('Duration', duration)
+        args.profile = True
 
+    res = model(x)
+    model.summary()
 
-tf_fim_ops.fim_init()
-#profile_ds2()
-profile_ds2_eager()
-tf_fim_ops.fim_deinit()
+    if args.profile:
+        args.profile = False
+        eval_time.append(["End to End", timeit.timeit(lambda: model(x), number = args.iterations)])
+        args.profile = True
+
+        for i in range(len(eval_time)):
+            eval_time[i][1] = ((eval_time[i][1] * 1000 ) / args.iterations)
+
+        print(tabulate(eval_time, headers=["Index", "Layer", "Time(ms)"], showindex="always", tablefmt='github'))
+
+if __name__ == '__main__':
+    tf_fim_ops.fim_init()
+    print('User arguments {}'.format(args))
+    profile_ds2()
+    tf_fim_ops.fim_deinit()
