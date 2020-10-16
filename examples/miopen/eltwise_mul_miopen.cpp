@@ -59,7 +59,7 @@ int miopen_elt_mul()
     miopenOpTensor(handle, miopenTensorOpMul, &alpha_0, a_desc, a_data, &alpha_1, b_desc, b_data, &beta, c_desc,
                    c_data);
 
-    for (int iter = 0; iter < 1000; iter++) {
+    for (int iter = 0; iter < 1; iter++) {
         miopenOpTensor(handle, miopenTensorOpMul, &alpha_0, a_desc, a_data, &alpha_1, b_desc, b_data, &beta, c_desc,
                        c_data);
     }
