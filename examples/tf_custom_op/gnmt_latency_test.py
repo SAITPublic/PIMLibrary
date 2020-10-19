@@ -79,13 +79,17 @@ class Encoder(tf.keras.Model):
     x = self.embedding(input_seq)
 
     if args.profile == True:
-        eval_time.append(["Encoder Embedding", (timeit.timeit(lambda : self.embedding(input_seq), number = args.iterations)) * 1000])
+        eval_time.append(["Encoder Embedding",
+                            (timeit.timeit(lambda : self.embedding(input_seq), number = args.iterations)),
+                            input_seq.shape, x.shape])
         print('encoder embed output dimensions(batch, timestep, units): {}'.format(x.shape))
 
     output, h_state, c_state = self.lstm_encoder(x)
 
     if args.profile == True:
-        eval_time.append(["Encoder LSTM", (timeit.timeit(lambda : self.lstm_encoder(x), number = args.iterations)) * 1000])
+        eval_time.append(["Encoder LSTM",
+                            (timeit.timeit(lambda : self.lstm_encoder(x), number = args.iterations)),
+                            x.shape, output.shape])
 
     return output, h_state, c_state
 
@@ -175,22 +179,26 @@ class Decoder(tf.keras.Model):
     context_vector, attention_weights = self.attention(hidden, enc_output)
 
     if args.profile == True:
-        dec_dict["Attention"] += (timeit.timeit(lambda: self.attention(hidden, enc_output), number = args.iterations) * 1000)
+        dec_dict["Attention"]["time"] += (timeit.timeit(lambda: self.attention(hidden, enc_output), number = args.iterations))
+        dec_dict["Attention"]["Input"]  = hidden.shape, enc_output.shape
+        dec_dict["Attention"]["Output"]  = context_vector.shape
     # print('Context vector dimensions: {}'.format(context_vector.shape))
     # print('Attention weights dimensions: {}'.format(attention_weights.shape))
-
-    start = time.time()
     # x shape after passing through embedding == (batch_size, 1, embedding_dim)
-    x = self.embedding(x)
+    embed_x = self.embedding(x)
     
     if args.profile == True:
-        dec_dict["Decoder Embedding"] += (timeit.timeit(lambda: self.embedding(x), number = args.iterations) * 1000)
+        dec_dict["Decoder Embedding"]["time"] += (timeit.timeit(lambda: self.embedding(x), number = args.iterations))
+        dec_dict["Decoder Embedding"]["Input"] = x.shape
+        dec_dict["Decoder Embedding"]["Output"] = embed_x.shape
     # print('Decoder embedding dimensions: {}'.format(x.shape))
 
-    output , h_state, c_state = self.lstm_decoder(context_vector, x)
+    output , h_state, c_state = self.lstm_decoder(context_vector, embed_x)
 
     if args.profile == True:
-        dec_dict["Decoder LSTM"] += (timeit.timeit(lambda: self.lstm_decoder(context_vector, x), number = args.iterations) * 1000)
+        dec_dict["Decoder LSTM"]["time"] += (timeit.timeit(lambda: self.lstm_decoder(context_vector, embed_x), number = args.iterations))
+        dec_dict["Decoder LSTM"]["Input"] = context_vector.shape, embed_x.shape
+        dec_dict["Decoder LSTM"]["Output"] = output.shape
 
     # x shape after concatenation == (batch_size, 1, embedding_dim + hidden_size)
     # passing the concatenated vector to the LSTM
@@ -199,14 +207,20 @@ class Decoder(tf.keras.Model):
     reshaped_output = tf.reshape(output, (-1, output.shape[2]))
 
     if args.profile == True:
-        dec_dict["Reshape"] += (timeit.timeit(lambda: tf.reshape(output, (-1, output.shape[2])), number=args.iterations) * 1000)
+        dec_dict["Reshape"]["time"] += (timeit.timeit(lambda: tf.reshape(output, (-1, output.shape[2])), number=args.iterations))
+        dec_dict["Reshape"]["Input"] = output.shape
+        dec_dict["Reshape"]["Output"] = reshaped_output.shape
+
     # print('Reshape dimensions: {}'.format(output.shape))
     # output shape == (batch_size, vocab)
 
     x = self.fc(reshaped_output)
 
     if args.profile == True:
-        dec_dict["Dense"] += (timeit.timeit(lambda: self.fc(output),number=args.iterations) * 1000)
+        dec_dict["Dense"]["time"] += (timeit.timeit(lambda: self.fc(output),number=args.iterations))
+        dec_dict["Dense"]["Input"] = reshaped_output.shape
+        dec_dict["Dense"]["Output"] = x.shape
+
     # print('Dense output dimensions: {}'.format(x.shape))
 
     return x, h_state, attention_weights
@@ -237,7 +251,12 @@ def evaluate(sentence, encoder, decoder, max_length_targ=args.max_seq_length):
 
     if args.profile == True:
         # for profiling of decoder
-        dec_dict = {"Attention": 0, "Decoder Embedding": 0, "Decoder LSTM": 0, "Reshape": 0, "Dense": 0}
+        dec_dict = {"Attention": { "time": 0, "Input": 0, "Output": 0},
+                    "Decoder Embedding": {"time": 0, "Input": 0, "Output": 0},
+                    "Decoder LSTM": {"time": 0, "Input": 0, "Output": 0},
+                    "Reshape": {"time": 0, "Input": 0, "Output": 0},
+                    "Dense": {"time": 0, "Input": 0, "Output": 0},
+                    }
     else:
         dec_dict = {}
 
@@ -253,8 +272,8 @@ def evaluate(sentence, encoder, decoder, max_length_targ=args.max_seq_length):
         dec_input = tf.expand_dims([predicted_id], 0)
 
     if args.profile == True:
-        for key, val in dec_dict.items():
-            eval_time.append([key,val])
+        for layer, data in dec_dict.items():
+            eval_time.append([layer, data["time"], data["Input"], data["Output"]])
 
     return predictions
 
@@ -280,14 +299,14 @@ def gnmt_model_run():
     if args.profile:
         # for disabling internal profiling calls.
         args.profile = False
-        eval_time.append(["End to End", (timeit.timeit(lambda : evaluate(input_seq, encoder, decoder), number = args.iterations) * 1000)])
+        eval_time.append(["End to End", (timeit.timeit(lambda : evaluate(input_seq, encoder, decoder),
+                            number = args.iterations)), input_seq.shape, predictions.shape])
+
+        for i in range(len(eval_time)):
+            eval_time[i][1] = (eval_time[i][1] * 1000 ) / args.iterations
+
+        print(tabulate(eval_time, headers=["Index", "Layer", "Time(ms)", "Input", "Output"], showindex="always", tablefmt='github'))
         args.profile = True
-
-    for i in range(len(eval_time)):
-        eval_time[i][1] /= args.iterations
-
-    if args.profile:
-        print(tabulate(eval_time, headers=["Index", "Layer", "Time(ms)"], showindex="always", tablefmt='github'))
 
     tf_fim_ops.fim_deinit()
 

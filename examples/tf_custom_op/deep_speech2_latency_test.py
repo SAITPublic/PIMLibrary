@@ -95,12 +95,14 @@ class batch_norm(tf.keras.layers.Layer):
             momentum=BATCH_NORM_DECAY, epsilon=BATCH_NORM_EPSILON, fused=False, dtype=dtype)
 
     def call(self, inputs, training):
+        bn_out = self.bn(inputs=inputs, training=training)
+
         if args.profile == True :
             print("batch norm input shape {}".format(inputs.shape))
             eval_time.append(["Batch Normalization",
-                (timeit.timeit(lambda: self.bn(inputs=inputs, training=training), number = args.iterations))])
+                (timeit.timeit(lambda: self.bn(inputs=inputs, training=training), number = args.iterations)), inputs.shape, bn_out.shape])
 
-        return self.bn(inputs=inputs, training=training)
+        return bn_out
 
 
 class conv_bn_layer(tf.keras.layers.Layer):
@@ -136,17 +138,17 @@ class conv_bn_layer(tf.keras.layers.Layer):
         self.bn = batch_norm(dtype=dtype)
 
     def call(self, inputs, training):
-        inputs = tf.pad(tensor=inputs, paddings=self.paddings)
+        inputs_pad = tf.pad(tensor=inputs, paddings=self.paddings)
         if args.profile == True :
             print(" padding input shape {}".format(inputs.shape))
             eval_time.append(["Padding Conv" + str(self.layer_id),
-                (timeit.timeit(lambda: tf.pad(tensor=inputs, paddings=self.paddings), number = args.iterations))])
+                (timeit.timeit(lambda: tf.pad(tensor=inputs, paddings=self.paddings), number = args.iterations)), inputs.shape, inputs_pad.shape])
 
-        retval = self.conv2d(inputs=inputs)
+        retval = self.conv2d(inputs=inputs_pad)
         if args.profile == True :
             print(" conv {} input shape {}".format(self.layer_id, inputs.shape))
             eval_time.append(["Convolution " + str(self.layer_id),
-                (timeit.timeit(lambda: self.conv2d(inputs=inputs), number = args.iterations))])
+                (timeit.timeit(lambda: self.conv2d(inputs=inputs), number = args.iterations)), inputs_pad.shape, retval.shape])
 
         retval = self.bn(retval, training)
 
@@ -191,7 +193,7 @@ class rnn_layer(tf.keras.layers.Layer):
         if args.profile == True :
             print(" LSTM {} input shape {}".format(self.layer_id, inputs.shape))
             eval_time.append(["LSTM " + str(self.layer_id),
-                (timeit.timeit(lambda: self.lstm_layer(inputs=inputs), number = args.iterations))])
+                (timeit.timeit(lambda: self.lstm_layer(inputs=inputs), number = args.iterations)), inputs.shape, rnn_outputs.shape])
 
         return rnn_outputs
 
@@ -253,7 +255,7 @@ class DeepSpeech2(tf.keras.Model):
         if args.profile == True :
             print(" Reshape input shape {}".format(conv2.shape))
             eval_time.append(["Reshape",
-                (timeit.timeit(lambda: self.rshape(inputs=conv2), number = args.iterations))])
+                (timeit.timeit(lambda: self.rshape(inputs=conv2), number = args.iterations)), conv2.shape, output.shape])
 
         if args.functional_verify:
             orig_env = os.environ['ENABLE_FIM']
@@ -286,7 +288,7 @@ class DeepSpeech2(tf.keras.Model):
         if args.profile == True :
             print(" Dense input shape {}".format(bn_out.shape))
             eval_time.append(["Dense",
-                (timeit.timeit(lambda: self.dense(inputs=bn_out), number = args.iterations))])
+                (timeit.timeit(lambda: self.dense(inputs=bn_out), number = args.iterations)), bn_out.shape, logits.shape])
 
             print(" Dense output shape {}".format(logits.shape))
         return logits
@@ -313,13 +315,13 @@ def profile_ds2():
 
     if args.profile:
         args.profile = False
-        eval_time.append(["End to End", timeit.timeit(lambda: model(x), number = args.iterations)])
+        eval_time.append(["End to End", timeit.timeit(lambda: model(x), number = args.iterations), x.shape, res.shape])
         args.profile = True
 
         for i in range(len(eval_time)):
-            eval_time[i][1] = ((eval_time[i][1] * 1000 ) / args.iterations)
+            eval_time[i][1] = (eval_time[i][1] * 1000 ) / args.iterations
 
-        print(tabulate(eval_time, headers=["Index", "Layer", "Time(ms)"], showindex="always", tablefmt='github'))
+        print(tabulate(eval_time, headers=["Index", "Layer", "Time(ms)", "Input Shape", "Output Shape"], showindex="always", tablefmt='github'))
 
 if __name__ == '__main__':
     tf_fim_ops.fim_init()
