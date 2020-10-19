@@ -247,10 +247,13 @@ __device__ void GEN_READ_CMD(volatile uint8_t* __restrict__ dst, volatile uint8_
 
 __device__ void GEN_BLOCK_CMD(int type)
 {
-    if (type == 0)
+    if (type == 0) {
         __syncthreads();
-    else
+        asm volatile("s_waitcnt vmcnt(0) lgkmcnt(0)");
+    } else {
         __threadfence();
+        asm volatile("s_waitcnt vmcnt(0) lgkmcnt(0)");
+    }
 }
 
 __device__ void BLOCK_SYNC(int cu_ch_idx, bool block_all_chan) { __syncthreads(); }
@@ -270,7 +273,16 @@ __device__ void W_CMD_R(volatile uint8_t* __restrict__ addr, volatile uint8_t* _
     ((int4*)addr)[0] = ((int4*)src)[0];
 }
 
-__device__ void B_CMD(int type) { (type == 0) ? __syncthreads() : __threadfence(); }
+__device__ void B_CMD(int type)
+{
+    if (type == 0) {
+        __syncthreads();
+        asm volatile("s_waitcnt vmcnt(0) lgkmcnt(0)");
+    } else {
+        __threadfence();
+        asm volatile("s_waitcnt vmcnt(0) lgkmcnt(0)");
+    }
+}
 
 #endif /* EMULATOR */
 
