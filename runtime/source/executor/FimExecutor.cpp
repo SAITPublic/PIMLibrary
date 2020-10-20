@@ -17,7 +17,7 @@ namespace runtime
 namespace executor
 {
 FimExecutor::FimExecutor(FimRuntimeType rt_type, FimPrecision precision)
-    : rt_type_(rt_type), precision_(precision), thread_cnt_(16)
+    : rt_type_(rt_type), precision_(precision)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called ";
     get_fim_block_info(&fbi_);
@@ -45,7 +45,6 @@ int FimExecutor::initialize(void)
 
     int ret = 0;
     int device_id = 0;
-    int device_cnt = 0;
     hipGetDeviceProperties(&dev_prop_, 0);
     DLOG(INFO) << " System minor " << dev_prop_.minor << std::endl;
     DLOG(INFO) << " System major " << dev_prop_.major << std::endl;
@@ -432,6 +431,7 @@ int FimExecutor::preprocess_srf(FimBo* beta, FimBo* gamma, FimBo* mean, FimBo* v
             std::cout << "error: this is not defined" << std::endl;
         }
     }
+    return 0;
 }
 
 int FimExecutor::execute_bn(FimBo* output, FimBo* fim_data, FimBo* beta, FimBo* gamma, FimBo* mean, FimBo* variance,
@@ -488,7 +488,7 @@ int FimExecutor::execute_bn(FimBo* output, FimBo* fim_data, FimBo* beta, FimBo* 
     return ret;
 }
 
-int FimExecutor::execute_sync(hipStream_t stream) { hipStreamSynchronize(stream); }
+int FimExecutor::execute_sync(hipStream_t stream) { return hipStreamSynchronize(stream); }
 int FimExecutor::execute_dummy(void)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";

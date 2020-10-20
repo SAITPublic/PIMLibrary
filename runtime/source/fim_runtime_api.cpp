@@ -532,8 +532,6 @@ FimGemvBundle* FimCreateGemvBundle(FimBo* input, FimBo* weight, FimBo* output)
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     FIM_PROFILE_TICK(CreateGemvBundle);
 
-    int ret = 0;
-
     if (fim_runtime == nullptr) {
         DLOG(ERROR) << "FimRuntime is not initialized";
         DLOG(INFO) << "[END] " << __FUNCTION__ << " called";

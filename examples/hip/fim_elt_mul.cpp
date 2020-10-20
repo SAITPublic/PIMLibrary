@@ -73,13 +73,13 @@ int fim_elt_mul_2(bool block)
 {
     int ret = 0;
 
-    FimBo host_input0 = {.size = LENGTH * sizeof(half), .mem_type = MEM_TYPE_HOST};
-    FimBo host_input1 = {.size = LENGTH * sizeof(half), .mem_type = MEM_TYPE_HOST};
-    FimBo host_output = {.size = LENGTH * sizeof(half), .mem_type = MEM_TYPE_HOST};
-    FimBo golden_output = {.size = LENGTH * sizeof(half), .mem_type = MEM_TYPE_HOST};
-    FimBo fim_input0 = {.size = LENGTH * sizeof(half), .mem_type = MEM_TYPE_FIM};
-    FimBo fim_input1 = {.size = LENGTH * sizeof(half), .mem_type = MEM_TYPE_FIM};
-    FimBo device_output = {.size = LENGTH * sizeof(half), .mem_type = MEM_TYPE_FIM};
+    FimBo host_input0 = {.mem_type = MEM_TYPE_HOST, .size = LENGTH * sizeof(half)};
+    FimBo host_input1 = {.mem_type = MEM_TYPE_HOST, .size = LENGTH * sizeof(half)};
+    FimBo host_output = {.mem_type = MEM_TYPE_HOST, .size = LENGTH * sizeof(half)};
+    FimBo golden_output = {.mem_type = MEM_TYPE_HOST, .size = LENGTH * sizeof(half)};
+    FimBo fim_input0 = {.mem_type = MEM_TYPE_FIM, .size = LENGTH * sizeof(half)};
+    FimBo fim_input1 = {.mem_type = MEM_TYPE_FIM, .size = LENGTH * sizeof(half)};
+    FimBo device_output = {.mem_type = MEM_TYPE_FIM, .size = LENGTH * sizeof(half)};
 
     /* __FIM_API__ call : Initialize FimRuntime */
     FimInitialize(RT_TYPE_HIP, FIM_FP16);

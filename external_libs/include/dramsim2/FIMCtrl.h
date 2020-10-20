@@ -70,8 +70,8 @@ class FIMController
           num_bank_(num_bank),
           num_bankgroup_(num_bankgroup),
           num_fim_chan_(num_fim_chan),
-          num_fim_rank_(num_fim_rank),
           num_transaction_(0),
+          num_fim_rank_(num_fim_rank),
           cycle_(0)
     {
         num_bankgroup_bit_ = dramsim_log2(num_bankgroup);

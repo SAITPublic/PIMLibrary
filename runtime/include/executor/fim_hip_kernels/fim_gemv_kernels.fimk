@@ -285,10 +285,8 @@ __global__ void gemv_fim_64cu_64th_fp16(volatile uint8_t* __restrict__ fim_ctr,
     int num_bg = 4;
     int num_ba = 4;
     int num_grf = 8;
-    int trans_size = 32;
     int loc, row, col;
 
-    int num_in_tile = n_compute_tile;
     int num_out_tile = n_out_tile;
 
     int gidx = hipThreadIdx_x >> 1;

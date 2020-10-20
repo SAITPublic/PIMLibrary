@@ -83,7 +83,6 @@ int FimEmulator::execute_gemv(FimBo* output, FimBo* fim_data, FimMemTraceData* f
                         "/opt/rocm/include/dramsim2/ini/system_hbm_vega20.ini", 256 * 64 * 2, 64, 1);
     uint64_t tmp_data_addr = reinterpret_cast<uint64_t>(temp_buf);
     uint64_t fim_data_addr = reinterpret_cast<uint64_t>(fim_data->data);
-    uint64_t output_addr = reinterpret_cast<uint64_t>(output->data);
 
     fim_sim_.preload_data_with_addr(fim_data_addr - fim_base_addr, fim_data->data, fim_data->size);
     fim_sim_.execute_kernel((void*)fmtd32, fmtd32_size);
@@ -146,7 +145,6 @@ int FimEmulator::execute_bn(FimBo* output, FimBo* fim_data, FimMemTraceData* fmt
     int ret = 0;
     int num_element = 0;
     uint16_t* sim_output = nullptr;
-    int sim_output_size = 0;
     int fp16_burst_size = 16;
 
     num_element = output->size / sizeof(uint16_t);
@@ -201,8 +199,6 @@ int FimEmulator::execute_relu(FimBo* output, FimBo* fim_data, FimMemTraceData* f
     int ret = 0;
     int num_element = 0;
     uint16_t* sim_output = nullptr;
-    int sim_output_size = 0;
-    int fp16_burst_size = 16;
 
     num_element = output->size / sizeof(uint16_t);
     sim_output = new uint16_t[num_element];

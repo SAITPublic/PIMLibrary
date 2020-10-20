@@ -48,7 +48,7 @@ bool fim_memcpy_test(void)
 
 bool simple_fim_alloc_free()
 {
-    FimBo fim_weight = {.size = LENGTH * sizeof(half), .mem_type = MEM_TYPE_FIM};
+    FimBo fim_weight = {.mem_type = MEM_TYPE_FIM, .size = LENGTH * sizeof(half)};
 
     FimInitialize(RT_TYPE_HIP, FIM_FP16);
 
@@ -65,7 +65,7 @@ bool simple_fim_alloc_free()
 
 bool fim_repeat_allocate_free(void)
 {
-    FimBo fim_weight = {.size = LENGTH * sizeof(half), .mem_type = MEM_TYPE_FIM};
+    FimBo fim_weight = {.mem_type = MEM_TYPE_FIM, .size = LENGTH * sizeof(half)};
 
     FimInitialize(RT_TYPE_HIP, FIM_FP16);
 
@@ -91,7 +91,7 @@ bool fim_allocate_exceed_blocksize(void)
 
     int ret;
     while (true) {
-        FimBo fim_weight = {.size = LENGTH * sizeof(half) * 1024 * 1024, .mem_type = MEM_TYPE_FIM};
+        FimBo fim_weight = {.mem_type = MEM_TYPE_FIM, .size = LENGTH * sizeof(half) * 1024 * 1024};
         ret = FimAllocMemory(&fim_weight);
         if (ret) break;
         fimObjPtr.push_back(fim_weight);

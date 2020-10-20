@@ -47,8 +47,6 @@ class FimExecutor
     FimRuntimeType rt_type_;
     FimPrecision precision_;
     hipDeviceProp_t dev_prop_;
-    size_t thread_cnt_;
-    uint64_t fim_base_addr_;
     uint8_t* fim_gemv_tmp_buffer_;
     FimBlockInfo fbi_;
     uint8_t* d_crf_bin_lut_;

@@ -35,7 +35,6 @@ class FimEmulator
 
    private:
     FimBlockInfo fbi_;
-    uint64_t fim_base_addr_;
     FimSimulator fim_sim_;
 };
 

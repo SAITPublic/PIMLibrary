@@ -24,7 +24,6 @@ class FimDevice
     int close_device(void);
 
     static constexpr char fim_drv_name_[] = "/dev/fim_drv";
-    int fim_fd_;
     size_t grf_size_;
     size_t grf_cnt_;
     size_t channel_cnt_;
