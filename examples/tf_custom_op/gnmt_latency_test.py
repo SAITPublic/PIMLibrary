@@ -161,25 +161,32 @@ class Decoder(tf.keras.Model):
     self.fc = tf.keras.layers.Dense(vocab_size)
 
     # used for attention
-    self.attention = BahdanauAttention(self.dec_units)
+    # self.attention = BahdanauAttention(self.dec_units)
+    self.attention = tf.keras.layers.AdditiveAttention(self.dec_units)
 
   def lstm_decoder(self, context_vector, x):
-    x = tf.concat([tf.expand_dims(context_vector, 1), x], axis=-1)
+    # LSTM decoder layer 1
+    x = tf.concat([context_vector, x], axis=-1)
     output = self.lstm1(x)
-    x = tf.concat([tf.expand_dims(context_vector, 1), output], axis=-1)
+
+    # LSTM decoder layer 2
+    x = tf.concat([context_vector, x], axis=-1)
     output = self.lstm2(x)
-    x = tf.concat([tf.expand_dims(context_vector, 1), output], axis=-1)
+
+    # LSTM decoder layer 3
+    x = tf.concat([context_vector, x], axis=-1)
     output = self.lstm3(x)
-    x = tf.concat([tf.expand_dims(context_vector, 0), output], axis=-1)
     
+    # LSTM decoder layer 4
+    x = tf.concat([context_vector, x], axis=-1)
     return self.lstm4(x)
 
   def call(self, x, hidden, enc_output, dec_dict):
     # enc_output shape == (batch_size, max_length, hidden_size)
-    context_vector, attention_weights = self.attention(hidden, enc_output)
+    context_vector = self.attention([hidden, enc_output])
 
     if args.profile == True:
-        dec_dict["Attention"]["time"] += (timeit.timeit(lambda: self.attention(hidden, enc_output), number = args.iterations))
+        dec_dict["Attention"]["time"] += (timeit.timeit(lambda: self.attention([hidden, enc_output]), number = args.iterations))
         dec_dict["Attention"]["Input"]  = hidden.shape, enc_output.shape
         dec_dict["Attention"]["Output"]  = context_vector.shape
     # print('Context vector dimensions: {}'.format(context_vector.shape))
@@ -223,7 +230,7 @@ class Decoder(tf.keras.Model):
 
     # print('Dense output dimensions: {}'.format(x.shape))
 
-    return x, h_state, attention_weights
+    return x, h_state
 
 def create_gnmt_model(vocab_size, embed_dim, hidden, max_len, batch_size, initializer):
     encoder = Encoder(vocab_size, embed_dim, hidden, batch_size, initializer)
@@ -261,10 +268,10 @@ def evaluate(sentence, encoder, decoder, max_length_targ=args.max_seq_length):
         dec_dict = {}
 
     for t in range(max_length_targ):
-        predictions, dec_hidden, attention_weights = decoder(dec_input,
-                                                         dec_hidden,
-                                                         enc_out,
-                                                         dec_dict)
+        predictions, dec_hidden = decoder(dec_input,
+                                          dec_hidden,
+                                          enc_out,
+                                          dec_dict)
 
         predicted_id = tf.argmax(predictions[0]).numpy()
 
@@ -286,8 +293,11 @@ def gnmt_model_run():
     encoder, decoder = create_gnmt_model(VOCAB_SIZE, EMBEDDING_DIM, HIDDEN_SIZE, args.max_seq_length, args.batch_size, initializer)
 
     if args.profile:
-        # model and gpu initialization
+        # model and gpu initialization and LUT load
         DummyExecute()
+        args.profile = False
+        predictions = evaluate(input_seq, encoder, decoder)
+        args.profile = True
 
     eval_time.clear()
     predictions = evaluate(input_seq, encoder, decoder)
