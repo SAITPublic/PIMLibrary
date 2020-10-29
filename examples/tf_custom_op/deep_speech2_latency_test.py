@@ -28,7 +28,6 @@ import argparse
 from tabulate import tabulate
 import os
 
-tf.keras.backend.set_floatx('float16')
 SEED = 1234
 
 # DeepSpeech2 Configuration parameter
@@ -67,6 +66,7 @@ parser.add_argument('-l','--max_seq_length', default=50, help="Maximum sequence 
 parser.add_argument('-i','--iterations', default=100, help="Number of iterations for profiling", type=int)
 parser.add_argument('-p','--profile', action="store_true", help="Enabled/Disable profiling")
 parser.add_argument('-f','--functional_verify', action="store_true", help="Enabled/Disable Functional verification")
+parser.add_argument('-d','--dtype', default='fp16' , help="fp16 or fp32 execution")
 
 args = parser.parse_args()
 
@@ -293,9 +293,10 @@ class DeepSpeech2(tf.keras.Model):
             print(" Dense output shape {}".format(logits.shape))
         return logits
 
-def profile_ds2():
+def profile_ds2(dtype):
     # if we change to float32 , make sure to changes keras_backend at top of file
-    dtype = tf.float16
+    if dtype == tf.float16:
+        tf.keras.backend.set_floatx('float16')
     is_bidirectional = True
     use_bias = False
 
@@ -326,5 +327,8 @@ def profile_ds2():
 if __name__ == '__main__':
     tf_fim_ops.fim_init()
     print('User arguments {}'.format(args))
-    profile_ds2()
+    dtype = tf.float16
+    if args.dtype == 'fp32':
+        dtype = tf.float32
+    profile_ds2(dtype)
     tf_fim_ops.fim_deinit()

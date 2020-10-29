@@ -6,7 +6,7 @@ import tf_fim_ops
 import timeit
 import argparse
 
-tf.keras.backend.set_floatx('float16')
+
 
 SEED = 1234
 
@@ -22,6 +22,7 @@ parser.add_argument('-b','--batch_size', default=1, help="Input batch size", typ
 parser.add_argument('-l','--max_seq_length', default=100, help="Maximum sequence length of GNMT input", type=int)
 parser.add_argument('-i','--iterations', default=100, help="Number of iterations for profiling", type=int)
 parser.add_argument('-p','--profile', action="store_true", help="Enabled/Disable profiling")
+parser.add_argument('-d','--dtype', default='fp16' , help="fp16 or fp32 execution")
 
 args = parser.parse_args()
 
@@ -34,7 +35,7 @@ def DummyExecute():
 
 # Encoder class GNMT model
 class Encoder(tf.keras.Model):
-  def __init__(self, vocab_size, embedding_dim, enc_units, batch_sz, initializer):
+  def __init__(self, vocab_size, embedding_dim, enc_units, batch_sz, initializer, dtype):
     super(Encoder, self).__init__()
 
     self.batch_sz = batch_sz
@@ -45,26 +46,26 @@ class Encoder(tf.keras.Model):
                            kernel_initializer=initializer,
                            recurrent_initializer=initializer,
                            return_sequences=True,
-                           dtype='float16',
+                           dtype=dtype,
                            trainable=False))
     self.lstm2 = tf.keras.layers.LSTM(enc_units,
                            kernel_initializer=initializer,
                            recurrent_initializer=initializer,
                            return_sequences=True,
-                           dtype='float16',
+                           dtype=dtype,
                            trainable=False)
     self.lstm3 = tf.keras.layers.LSTM(enc_units,
                            kernel_initializer=initializer,
                            recurrent_initializer=initializer,
                            return_sequences=True,
-                           dtype='float16',
+                           dtype=dtype,
                            trainable=False)
     self.lstm4 = tf.keras.layers.LSTM(enc_units,
                            kernel_initializer=initializer,
                            recurrent_initializer=initializer,
                            return_sequences=True,
                            return_state=True,
-                           dtype='float16',
+                           dtype=dtype,
                            trainable=False)
 
   def lstm_encoder(self, x):
@@ -128,7 +129,7 @@ class BahdanauAttention(tf.keras.layers.Layer):
 
 # Decoder implementation for GNMT model
 class Decoder(tf.keras.Model):
-  def __init__(self, vocab_size, embedding_dim, dec_units, batch_sz, initializer):
+  def __init__(self, vocab_size, embedding_dim, dec_units, batch_sz, initializer, dtype):
     super(Decoder, self).__init__()
     self.batch_sz = batch_sz
     self.dec_units = dec_units
@@ -137,26 +138,26 @@ class Decoder(tf.keras.Model):
                                kernel_initializer=initializer,
                                recurrent_initializer=initializer,
                                return_sequences=True,
-                               dtype='float16',
+                               dtype=dtype,
                                trainable=False)
     self.lstm2 = tf.keras.layers.LSTM(dec_units,
                                kernel_initializer=initializer,
                                recurrent_initializer=initializer,
                                return_sequences=True,
-                               dtype='float16',
+                               dtype=dtype,
                                trainable=False)
     self.lstm3 = tf.keras.layers.LSTM(dec_units,
                                kernel_initializer=initializer,
                                recurrent_initializer=initializer,
                                return_sequences=True,
-                               dtype='float16',
+                               dtype=dtype,
                                trainable=False)
     self.lstm4 = tf.keras.layers.LSTM(dec_units,
                                kernel_initializer=initializer,
                                recurrent_initializer=initializer,
                                return_sequences=True,
                                return_state=True,
-                               dtype='float16',
+                               dtype=dtype,
                                trainable=False)
     self.fc = tf.keras.layers.Dense(vocab_size)
 
@@ -232,9 +233,9 @@ class Decoder(tf.keras.Model):
 
     return x, h_state
 
-def create_gnmt_model(vocab_size, embed_dim, hidden, max_len, batch_size, initializer):
-    encoder = Encoder(vocab_size, embed_dim, hidden, batch_size, initializer)
-    decoder = Decoder(vocab_size, embed_dim, hidden, batch_size, initializer)
+def create_gnmt_model(vocab_size, embed_dim, hidden, max_len, batch_size, initializer, dtype):
+    encoder = Encoder(vocab_size, embed_dim, hidden, batch_size, initializer, dtype)
+    decoder = Decoder(vocab_size, embed_dim, hidden, batch_size, initializer, dtype)
 
     return encoder, decoder
 
@@ -284,13 +285,13 @@ def evaluate(sentence, encoder, decoder, max_length_targ=args.max_seq_length):
 
     return predictions
 
-def gnmt_model_run():
+def gnmt_model_run(dtype):
     tf_fim_ops.fim_init()
 
     initializer = tf.keras.initializers.RandomNormal(seed=SEED)
-    input_seq   = tf.random.uniform(shape=(args.batch_size, args.max_seq_length), dtype=tf.float16)
+    input_seq   = tf.random.uniform(shape=(args.batch_size, args.max_seq_length), dtype=dtype)
 
-    encoder, decoder = create_gnmt_model(VOCAB_SIZE, EMBEDDING_DIM, HIDDEN_SIZE, args.max_seq_length, args.batch_size, initializer)
+    encoder, decoder = create_gnmt_model(VOCAB_SIZE, EMBEDDING_DIM, HIDDEN_SIZE, args.max_seq_length, args.batch_size, initializer, dtype)
 
     if args.profile:
         # model and gpu initialization and LUT load
@@ -322,4 +323,9 @@ def gnmt_model_run():
 
 if __name__ == '__main__':
     print('User arguments {}'.format(args))
-    gnmt_model_run()
+    dtype = tf.float16
+    if args.dtype == 'fp32':
+        dtype = tf.float32
+    else:
+        tf.keras.backend.set_floatx('float16')
+    gnmt_model_run(dtype)
