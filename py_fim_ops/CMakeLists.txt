@@ -23,6 +23,8 @@ set(PY_FIM_ELT_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/cc/py_fim_eltwise.cpp)
 set(PY_FIM_BN_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/cc/py_fim_bn.cpp)
 set(PY_FIM_ACTIVATION_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/cc/py_fim_activation.cpp)
 set(PY_FIM_GEMV_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/cc/py_fim_gemv.cpp)
+set(PY_FIM_LSTM_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/cc/py_fim_lstm.cpp)
+
 
 include_directories(/opt/rocm/include)
 
@@ -50,6 +52,10 @@ add_library(py_fim_gemv SHARED ${PY_FIM_GEMV_SOURCES})
 target_link_libraries(py_fim_gemv FimRuntime "${TORCH_LIBRARIES}")
 set_property(TARGET py_fim_gemv PROPERTY CXX_STANDARD 14)
 
+add_library(py_fim_lstm SHARED ${PY_FIM_LSTM_SOURCES})
+target_link_libraries(py_fim_lstm MIOpen "${TORCH_LIBRARIES}")
+set_property(TARGET py_fim_lstm PROPERTY CXX_STANDARD 14)
+
 install ( TARGETS py_fim_init LIBRARY DESTINATION
            /opt/rocm/lib)
 install ( TARGETS py_fim_deinit LIBRARY DESTINATION
@@ -62,7 +68,8 @@ install ( TARGETS py_fim_activation LIBRARY DESTINATION
            /opt/rocm/lib)
 install ( TARGETS py_fim_gemv LIBRARY DESTINATION
            /opt/rocm/lib)
-
+install ( TARGETS py_fim_lstm LIBRARY DESTINATION
+           /opt/rocm/lib)
 install ( DIRECTORY python DESTINATION /opt/rocm/lib/py_fim_ops )
 install ( DIRECTORY modules DESTINATION /opt/rocm/lib/py_fim_ops )
 install ( FILES ${CMAKE_CURRENT_SOURCE_DIR}/__init__.py  DESTINATION /opt/rocm/lib/py_fim_ops)
