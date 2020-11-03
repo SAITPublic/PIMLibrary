@@ -5,7 +5,8 @@ import time
 import tf_fim_ops
 import timeit
 import argparse
-
+import os
+import numpy as np
 
 
 SEED = 1234
@@ -22,10 +23,11 @@ parser.add_argument('-b','--batch_size', default=1, help="Input batch size", typ
 parser.add_argument('-l','--max_seq_length', default=100, help="Maximum sequence length of GNMT input", type=int)
 parser.add_argument('-i','--iterations', default=100, help="Number of iterations for profiling", type=int)
 parser.add_argument('-p','--profile', action="store_true", help="Enabled/Disable profiling")
+parser.add_argument('-f','--functional_verify', action="store_true", help="Enabled/Disable Functional verification")
 parser.add_argument('-d','--dtype', default='fp16' , help="fp16 or fp32 execution")
 
 args = parser.parse_args()
-
+lstm_kernel_initializer = tf.keras.initializers.RandomNormal(seed=SEED,mean=0.2,stddev=0.8)
 def DummyExecute():
 
     # Create some tensors
@@ -43,26 +45,26 @@ class Encoder(tf.keras.Model):
     self.embedding = tf.keras.layers.Embedding(vocab_size, embedding_dim)
 
     self.lstm1 = tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(enc_units,
-                           kernel_initializer=initializer,
-                           recurrent_initializer=initializer,
+                           kernel_initializer=lstm_kernel_initializer,
+                           recurrent_initializer=lstm_kernel_initializer,
                            return_sequences=True,
                            dtype=dtype,
                            trainable=False))
     self.lstm2 = tf.keras.layers.LSTM(enc_units,
-                           kernel_initializer=initializer,
-                           recurrent_initializer=initializer,
+                           kernel_initializer=lstm_kernel_initializer,
+                           recurrent_initializer=lstm_kernel_initializer,
                            return_sequences=True,
                            dtype=dtype,
                            trainable=False)
     self.lstm3 = tf.keras.layers.LSTM(enc_units,
-                           kernel_initializer=initializer,
-                           recurrent_initializer=initializer,
+                           kernel_initializer=lstm_kernel_initializer,
+                           recurrent_initializer=lstm_kernel_initializer,
                            return_sequences=True,
                            dtype=dtype,
                            trainable=False)
     self.lstm4 = tf.keras.layers.LSTM(enc_units,
-                           kernel_initializer=initializer,
-                           recurrent_initializer=initializer,
+                           kernel_initializer=lstm_kernel_initializer,
+                           recurrent_initializer=lstm_kernel_initializer,
                            return_sequences=True,
                            return_state=True,
                            dtype=dtype,
@@ -85,7 +87,25 @@ class Encoder(tf.keras.Model):
                             input_seq.shape, x.shape])
         print('encoder embed output dimensions(batch, timestep, units): {}'.format(x.shape))
 
-    output, h_state, c_state = self.lstm_encoder(x)
+    if args.functional_verify:
+        orig_env = os.environ['ENABLE_FIM']
+
+        os.environ['ENABLE_FIM'] = '0'
+        output_gpu, h_state_gpu, c_state_gpu = self.lstm_encoder(x)
+
+        os.environ['ENABLE_FIM'] = '1'
+        output_fim, h_state_fim, c_state_fim = self.lstm_encoder(x)
+
+        os.environ['ENABLE_FIM'] = orig_env
+
+        result = np.testing.assert_array_almost_equal(output_fim, output_gpu, decimal=5)
+        print("Functional Verification : {}".format(result))
+        if os.environ['ENABLE_FIM']:
+            output, h_state, c_state = output_fim, h_state_fim, c_state_fim
+        else:
+            output, h_state, c_state = output_gpu, h_state_gpu, c_state_gpu
+    else:
+        output, h_state, c_state = self.lstm_encoder(x)
 
     if args.profile == True:
         eval_time.append(["Encoder LSTM",
