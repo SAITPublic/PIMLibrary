@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <iostream>
-#include "hip/hip_runtime.h"
-#include "hip/hip_fp16.h"
 #include "half.hpp"
+#include "hip/hip_fp16.h"
+#include "hip/hip_runtime.h"
 
 #define TARGET_MASK (0x1FFFFFFFF)
 //#define TARGET_MASK (0xFFFFFFFFF)
@@ -72,8 +72,8 @@ __host__ __device__ inline unsigned int mask_by_bit(unsigned int value, int star
     return value & ((1 << length) - 1);
 }
 
-__host__ __device__ uint64_t addr_gen(unsigned int ch, unsigned int rank, unsigned int bg, unsigned int ba, unsigned int row,
-                             unsigned int col)
+__host__ __device__ uint64_t addr_gen(unsigned int ch, unsigned int rank, unsigned int bg, unsigned int ba,
+                                      unsigned int row, unsigned int col)
 {
     int num_row_bit_ = 14;
     int num_col_high_bit_ = 3;
@@ -123,8 +123,8 @@ __host__ __device__ uint64_t addr_gen(unsigned int ch, unsigned int rank, unsign
     return addr;
 }
 
-__global__ void fill_test(uint8_t* fim_ctr, uint8_t* fim_data, uint8_t* output,
-                          uint8_t* crf_binary, uint8_t* hab_to_fim, uint8_t* fim_to_hab, uint8_t* test_input1)
+__global__ void fill_test(uint8_t* fim_ctr, uint8_t* fim_data, uint8_t* output, uint8_t* crf_binary,
+                          uint8_t* hab_to_fim, uint8_t* fim_to_hab, uint8_t* test_input1)
 {
     uint64_t offset = hipBlockIdx_x * 0x100 + hipThreadIdx_x * 0x10;
 
@@ -236,7 +236,7 @@ __global__ void fill_test(uint8_t* fim_ctr, uint8_t* fim_data, uint8_t* output,
     B_CMD(1);
 
     /* FILL */
-    R_CMD(&fim_data[(0x0 & TARGET_MASK) + offset]); // FILL even_bank to grf_A
+    R_CMD(&fim_data[(0x0 & TARGET_MASK) + offset]);  // FILL even_bank to grf_A
     R_CMD(&fim_data[(0x20 & TARGET_MASK) + offset]);
     R_CMD(&fim_data[(0x80 & TARGET_MASK) + offset]);
     R_CMD(&fim_data[(0xa0 & TARGET_MASK) + offset]);
@@ -245,7 +245,7 @@ __global__ void fill_test(uint8_t* fim_ctr, uint8_t* fim_data, uint8_t* output,
     R_CMD(&fim_data[(0x20080 & TARGET_MASK) + offset]);
     R_CMD(&fim_data[(0x200a0 & TARGET_MASK) + offset]);
     B_CMD(1);
-    W_CMD(&output[(0x0 & TARGET_MASK) + offset]); // NOP, 7
+    W_CMD(&output[(0x0 & TARGET_MASK) + offset]);  // NOP, 7
     W_CMD(&output[(0x20 & TARGET_MASK) + offset]);
     W_CMD(&output[(0x80 & TARGET_MASK) + offset]);
     W_CMD(&output[(0xa0 & TARGET_MASK) + offset]);
@@ -289,7 +289,7 @@ int main(int argc, char* argv[])
     uint64_t fim_base;
     uint64_t *mode1_d, *mode2_d, *crf_bin_d, *test1_d;
     uint64_t *mode1_h, *mode2_h, *crf_bin_h, *test1_h;
-    uint64_t *output_h;
+    uint64_t* output_h;
     size_t N = 4;
     size_t Nbytes = N * sizeof(uint64_t);
     static int device = 0;
@@ -297,7 +297,7 @@ int main(int argc, char* argv[])
     CHECK(hipSetDevice(device));
     hipDeviceProp_t props;
     CHECK(hipGetDeviceProperties(&props, device /*deviceID*/));
-    printf ("info: running on device %s global mem size: %zu\n", props.name, props.totalGlobalMem);
+    printf("info: running on device %s global mem size: %zu\n", props.name, props.totalGlobalMem);
 
     // Get GPU ID
     FILE* fd;
@@ -316,7 +316,7 @@ int main(int argc, char* argv[])
       ARG2 : gpu-id
       ARG3 : block size
     ********************************************/
-    uint64_t bsize = 8589934592; //8 * 1024 * 1024 * 1024;
+    uint64_t bsize = 8589934592;  // 8 * 1024 * 1024 * 1024;
     // uint64_t bsize = 17179869184;  // 16 * 1024 * 1024 * 1024;
     fim_base = fmm_map_fim(2, gpu_id, bsize);
     std::cout << std::hex << "fimBaseAddr = " << fim_base << std::endl;
@@ -363,64 +363,65 @@ int main(int argc, char* argv[])
     const unsigned threadsPerBlock = 2;
 
     hipLaunchKernelGGL(fill_test, dim3(blocks), dim3(threadsPerBlock), 0, 0, (uint8_t*)fim_base, (uint8_t*)fim_base,
-                       (uint8_t*)fim_base + 0x100000, (uint8_t*)crf_bin_d, (uint8_t*)mode1_d, (uint8_t*)mode2_d, (uint8_t*)test1_d);
+                       (uint8_t*)fim_base + 0x100000, (uint8_t*)crf_bin_d, (uint8_t*)mode1_d, (uint8_t*)mode2_d,
+                       (uint8_t*)test1_d);
 
     hipDeviceSynchronize();
 
     uint64_t addr_offset;
 
-    addr_offset = addr_gen(0, 0, 0, 0, 1, 0); 
+    addr_offset = addr_gen(0, 0, 0, 0, 1, 0);
     CHECK(hipMemcpy(output_h, (uint8_t*)fim_base + addr_offset, Nbytes, hipMemcpyDeviceToHost));
-//    PrintHalf(output_h);
+    //    PrintHalf(output_h);
     printf("%#018lx %#018lx %#018lx %#018lx\n", output_h[3], output_h[2], output_h[1], output_h[0]);
-    addr_offset = addr_gen(0, 0, 0, 0, 1, 1); 
+    addr_offset = addr_gen(0, 0, 0, 0, 1, 1);
     CHECK(hipMemcpy(output_h, (uint8_t*)fim_base + addr_offset, Nbytes, hipMemcpyDeviceToHost));
-//    PrintHalf(output_h);
+    //    PrintHalf(output_h);
     printf("%#018lx %#018lx %#018lx %#018lx\n", output_h[3], output_h[2], output_h[1], output_h[0]);
-    addr_offset = addr_gen(0, 0, 0, 0, 1, 2); 
+    addr_offset = addr_gen(0, 0, 0, 0, 1, 2);
     CHECK(hipMemcpy(output_h, (uint8_t*)fim_base + addr_offset, Nbytes, hipMemcpyDeviceToHost));
-//    PrintHalf(output_h);
+    //    PrintHalf(output_h);
     printf("%#018lx %#018lx %#018lx %#018lx\n", output_h[3], output_h[2], output_h[1], output_h[0]);
-    addr_offset = addr_gen(0, 0, 0, 0, 1, 3); 
+    addr_offset = addr_gen(0, 0, 0, 0, 1, 3);
     CHECK(hipMemcpy(output_h, (uint8_t*)fim_base + addr_offset, Nbytes, hipMemcpyDeviceToHost));
-//    PrintHalf(output_h);
+    //    PrintHalf(output_h);
     printf("%#018lx %#018lx %#018lx %#018lx\n", output_h[3], output_h[2], output_h[1], output_h[0]);
-    addr_offset = addr_gen(0, 0, 0, 0, 1, 4); 
+    addr_offset = addr_gen(0, 0, 0, 0, 1, 4);
     CHECK(hipMemcpy(output_h, (uint8_t*)fim_base + addr_offset, Nbytes, hipMemcpyDeviceToHost));
-//    PrintHalf(output_h);
+    //    PrintHalf(output_h);
     printf("%#018lx %#018lx %#018lx %#018lx\n", output_h[3], output_h[2], output_h[1], output_h[0]);
-    addr_offset = addr_gen(0, 0, 0, 0, 1, 5); 
+    addr_offset = addr_gen(0, 0, 0, 0, 1, 5);
     CHECK(hipMemcpy(output_h, (uint8_t*)fim_base + addr_offset, Nbytes, hipMemcpyDeviceToHost));
-//    PrintHalf(output_h);
+    //    PrintHalf(output_h);
     printf("%#018lx %#018lx %#018lx %#018lx\n", output_h[3], output_h[2], output_h[1], output_h[0]);
-    addr_offset = addr_gen(0, 0, 0, 0, 1, 6); 
+    addr_offset = addr_gen(0, 0, 0, 0, 1, 6);
     CHECK(hipMemcpy(output_h, (uint8_t*)fim_base + addr_offset, Nbytes, hipMemcpyDeviceToHost));
-//    PrintHalf(output_h);
+    //    PrintHalf(output_h);
     printf("%#018lx %#018lx %#018lx %#018lx\n", output_h[3], output_h[2], output_h[1], output_h[0]);
     addr_offset = addr_gen(0, 0, 0, 0, 1, 7);
     CHECK(hipMemcpy(output_h, (uint8_t*)fim_base + addr_offset, Nbytes, hipMemcpyDeviceToHost));
-//    PrintHalf(output_h);
+    //    PrintHalf(output_h);
     printf("%#018lx %#018lx %#018lx %#018lx\n", output_h[3], output_h[2], output_h[1], output_h[0]);
     CHECK(hipMemcpy(output_h, (uint8_t*)fim_base + 0x110000, Nbytes, hipMemcpyDeviceToHost));
-//    PrintHalf(output_h);
+    //    PrintHalf(output_h);
     printf("%#018lx %#018lx %#018lx %#018lx\n", output_h[3], output_h[2], output_h[1], output_h[0]);
     CHECK(hipMemcpy(output_h, (uint8_t*)fim_base + 0x104000, Nbytes, hipMemcpyDeviceToHost));
-//    PrintHalf(output_h);
+    //    PrintHalf(output_h);
     printf("%#018lx %#018lx %#018lx %#018lx\n", output_h[3], output_h[2], output_h[1], output_h[0]);
     CHECK(hipMemcpy(output_h, (uint8_t*)fim_base + 0x114000, Nbytes, hipMemcpyDeviceToHost));
-//    PrintHalf(output_h);
+    //    PrintHalf(output_h);
     printf("%#018lx %#018lx %#018lx %#018lx\n", output_h[3], output_h[2], output_h[1], output_h[0]);
     CHECK(hipMemcpy(output_h, (uint8_t*)fim_base + 0x108000, Nbytes, hipMemcpyDeviceToHost));
-//    PrintHalf(output_h);
+    //    PrintHalf(output_h);
     printf("%#018lx %#018lx %#018lx %#018lx\n", output_h[3], output_h[2], output_h[1], output_h[0]);
     CHECK(hipMemcpy(output_h, (uint8_t*)fim_base + 0x118000, Nbytes, hipMemcpyDeviceToHost));
-//    PrintHalf(output_h);
+    //    PrintHalf(output_h);
     printf("%#018lx %#018lx %#018lx %#018lx\n", output_h[3], output_h[2], output_h[1], output_h[0]);
     CHECK(hipMemcpy(output_h, (uint8_t*)fim_base + 0x10C000, Nbytes, hipMemcpyDeviceToHost));
-//    PrintHalf(output_h);
+    //    PrintHalf(output_h);
     printf("%#018lx %#018lx %#018lx %#018lx\n", output_h[3], output_h[2], output_h[1], output_h[0]);
     CHECK(hipMemcpy(output_h, (uint8_t*)fim_base + 0x11C000, Nbytes, hipMemcpyDeviceToHost));
-//    PrintHalf(output_h);
+    //    PrintHalf(output_h);
     printf("%#018lx %#018lx %#018lx %#018lx\n", output_h[3], output_h[2], output_h[1], output_h[0]);
 
     free(mode1_h);

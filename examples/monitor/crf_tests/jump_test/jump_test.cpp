@@ -68,8 +68,8 @@ __host__ __device__ inline unsigned int mask_by_bit(unsigned int value, int star
     return value & ((1 << length) - 1);
 }
 
-__host__ __device__ uint64_t addr_gen(unsigned int ch, unsigned int rank, unsigned int bg, unsigned int ba, unsigned int row,
-                             unsigned int col)
+__host__ __device__ uint64_t addr_gen(unsigned int ch, unsigned int rank, unsigned int bg, unsigned int ba,
+                                      unsigned int row, unsigned int col)
 {
     int num_row_bit_ = 14;
     int num_col_high_bit_ = 3;
@@ -206,7 +206,7 @@ __global__ void jump_test(uint8_t* fim_ctr, uint8_t* fim_data, uint8_t* fim_out0
 
     /* jump */
     addr = addr_gen(ch, 0, 0, 0, 0, 0);
-    R_CMD(&fim_data[addr + offset]); // MOV
+    R_CMD(&fim_data[addr + offset]);  // MOV
     B_CMD(1);
     addr = addr_gen(ch, 0, 0, 0, 0, 0);
     W_CMD(&fim_out0[addr + offset]);  // NOP
@@ -272,7 +272,7 @@ int main(int argc, char* argv[])
     uint64_t fim_base, fim_data, fim_out0, fim_out1;
     uint64_t *mode1_d, *mode2_d, *crf_bin_d, *test1_d;
     uint64_t *mode1_h, *mode2_h, *crf_bin_h, *test1_h;
-    uint64_t *output_h;
+    uint64_t* output_h;
     size_t N = 4;
     size_t Nbytes = N * sizeof(uint64_t);
     static int device = 0;
@@ -280,7 +280,7 @@ int main(int argc, char* argv[])
     CHECK(hipSetDevice(device));
     hipDeviceProp_t props;
     CHECK(hipGetDeviceProperties(&props, device /*deviceID*/));
-    printf ("info: running on device %s global mem size: %zu\n", props.name, props.totalGlobalMem);
+    printf("info: running on device %s global mem size: %zu\n", props.name, props.totalGlobalMem);
 
     // Get GPU ID
     FILE* fd;
@@ -302,7 +302,7 @@ int main(int argc, char* argv[])
 #if SLT_TEST
     uint64_t bsize = 17179869184;  // 16 * 1024 * 1024 * 1024;
 #else
-    uint64_t bsize = 8589934592; //8 * 1024 * 1024 * 1024;
+    uint64_t bsize = 8589934592;  // 8 * 1024 * 1024 * 1024;
 #endif
     fim_base = fmm_map_fim(2, gpu_id, bsize);
     std::cout << std::hex << "fimBaseAddr = " << fim_base << std::endl;

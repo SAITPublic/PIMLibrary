@@ -44,19 +44,19 @@ void gemv_and_reduce_sum_level1(void* in_data, void* wei_data, void* out_data, i
     for (int i = 0; i < out_size; i++) {
         out_ptr[i] = 0.0_h;
 
-        for (int j = 0; j < in_size; j+=stride) {
+        for (int j = 0; j < in_size; j += stride) {
             temp_out = 0.0_h;
             for (int k = 0; k < stride; k++) {
-                fp16_in = in_ptr[j+k];
-                fp16_wei = wei_ptr[j+k];
+                fp16_in = in_ptr[j + k];
+                fp16_wei = wei_ptr[j + k];
                 temp_out += fp16_in * fp16_wei;
             }
             out_ptr[i] += temp_out;
         }
 
         wei_ptr += in_size;
-//        std::cout << "[ " << i << " ]"  << " " << fp16_out << std::endl;
-     }
+        //        std::cout << "[ " << i << " ]"  << " " << fp16_out << std::endl;
+    }
 }
 
 void gemv_and_reduce_sum_level2(void* in_data, void* wei_data, void* out_data, int in_size, int out_size, int stride)
@@ -71,29 +71,29 @@ void gemv_and_reduce_sum_level2(void* in_data, void* wei_data, void* out_data, i
     for (int i = 0; i < out_size; i++) {
         out_ptr[i] = 0.0_h;
 
-        for (int j = 0; j < in_size; j+=stride) {
-            temp_64_out[j/stride] = 0.0_h;
+        for (int j = 0; j < in_size; j += stride) {
+            temp_64_out[j / stride] = 0.0_h;
             for (int k = 0; k < stride; k++) {
-                fp16_in = in_ptr[j+k];
-                fp16_wei = wei_ptr[j+k];
-                temp_64_out[j/stride] += fp16_in * fp16_wei;
+                fp16_in = in_ptr[j + k];
+                fp16_wei = wei_ptr[j + k];
+                temp_64_out[j / stride] += fp16_in * fp16_wei;
             }
         }
 
-        for (int j = 0; j < in_size/stride; j+=stride) {
-            temp_4_out[j/stride] = 0.0_h;
+        for (int j = 0; j < in_size / stride; j += stride) {
+            temp_4_out[j / stride] = 0.0_h;
             for (int k = 0; k < stride; k++) {
-                temp_4_out[j/stride] += temp_64_out[j+k];
+                temp_4_out[j / stride] += temp_64_out[j + k];
             }
         }
 
-        for (int j = 0; j < in_size/stride/stride; j++) {
+        for (int j = 0; j < in_size / stride / stride; j++) {
             out_ptr[i] += temp_4_out[j];
         }
 
         wei_ptr += in_size;
-//        std::cout << "[ " << i << " ]"  << " " << fp16_out << std::endl;
-     }
+        //        std::cout << "[ " << i << " ]"  << " " << fp16_out << std::endl;
+    }
 }
 
 int fim_gemv_value(bool block)
@@ -109,7 +109,10 @@ int fim_gemv_value(bool block)
     FimExecuteDummy();
 
     int n, c, h, w;
-    n = 1; c = 1; h = out_size; w = in_size;
+    n = 1;
+    c = 1;
+    h = out_size;
+    w = in_size;
     FimDesc* fim_desc = FimCreateDesc(n, c, h, w, FIM_FP16, OP_GEMV);
     /* __FIM_API__ call : Create FIM Buffer Object */
     FimBo* host_input = FimCreateBo(fim_desc, MEM_TYPE_HOST, GEMV_INPUT);

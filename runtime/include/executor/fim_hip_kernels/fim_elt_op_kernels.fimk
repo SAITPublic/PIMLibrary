@@ -6,7 +6,6 @@
 #define CHANGE_SB_HAB 1
 #define PROGRAM_CRF 1
 #define CHANGE_HAB_HABFIM 1
-#define PROGRAM_CRF 1
 #define COMPUTE_ELT_OP 1
 #define CHANGE_HABFIM_HAB 1
 #define CHANGE_HAB_SB 1
@@ -216,6 +215,154 @@ __global__ void elt_add_fim(volatile uint8_t* __restrict__ operand0, volatile ui
         W_CMD(&fim_ctr[addr + offset]);
     }
     B_CMD(0);
+#endif
+
+#if PARK_OUT
+    addr = addr_gen(hipBlockIdx_x, 0, gidx / num_ba, gidx % num_ba, 0, 0);
+    R_CMD(&operand0[addr + offset]);
+    R_CMD(&operand0[addr + 0x8000 + offset]);
+    B_CMD(0);
+#endif
+
+#ifdef EMULATOR
+    if (hipBlockIdx_x == 0 && hipThreadIdx_x == 0) {
+        frd_size[0] = g_ridx[0];
+    }
+#endif
+}
+
+__global__ void elt_op_fim_sip(volatile uint8_t* __restrict__ operand0, volatile uint8_t* __restrict__ operand1,
+                               volatile uint8_t* __restrict__ fim_ctr, volatile uint8_t* __restrict__ output, int size,
+#ifdef EMULATOR
+                               FimMemTraceData* fmtd16, int* frd_size, int mt_width,
+#endif
+                               uint8_t* crf_binary, int crf_size)
+{
+#ifdef EMULATOR
+    g_fba = (uint64_t)fim_ctr;
+    g_fmtd16 = fmtd16;
+    g_ridx[hipBlockIdx_x] = 0;
+    m_width = mt_width;
+    __syncthreads();
+#endif
+    int trans_size = 32;
+    int num_col = 32;
+    int num_fim_blocks = 8;
+    int num_fim_chan = 64;
+    int num_grf = 8;
+    int num_ba = 4;
+    int out_dim = size / trans_size;
+    int num_tile = out_dim / (num_fim_blocks * num_fim_chan * num_grf) / 2;
+
+#ifdef EMULATOR
+    /* RA13 and RA12 is swapped in Aquabolt-XL core-die, we need to emulate this behavior in emulator mode */
+    /* 0x17ff : RA12<->RA13 swapped address in vega20 memory map */
+    uint32_t hab_row_addr = 0x17ff;
+    uint32_t sb_row_addr = 0x1fff;
+#else  /* TARGET */
+    uint32_t hab_row_addr = 0x27ff;
+    uint32_t sb_row_addr = 0x2fff;
+#endif /* EMULATOR */
+
+    int gidx = hipThreadIdx_x / 2;
+    uint64_t offset = (hipThreadIdx_x % 2) * 0x10;
+    uint64_t addr, addr_even, addr_odd;
+
+    /* Radeon7(VEGA20) memory is 16GB but our target is 32GB system */
+    /* so program_crf and chagne_fim_mode functions can not access to over 8GB in our system */
+
+#if PARK_IN
+    addr = addr_gen(hipBlockIdx_x, 0, gidx / num_ba, gidx % num_ba, 0, 0);
+    R_CMD(&operand0[addr + offset]);
+    R_CMD(&operand0[addr + 0x8000 + offset]);
+    B_CMD(1);
+#endif
+
+#if CHANGE_SB_HAB
+    if (hipThreadIdx_x < 2) {
+        addr = addr_gen(hipBlockIdx_x, 0, 2, 0, hab_row_addr, 0x1f);
+        W_CMD(&fim_ctr[addr + offset]);
+        B_CMD(1);
+        addr = addr_gen(hipBlockIdx_x, 0, 2, 1, hab_row_addr, 0x1f);
+        W_CMD(&fim_ctr[addr + offset]);
+        B_CMD(1);
+        addr = addr_gen(hipBlockIdx_x, 0, 0, 0, hab_row_addr, 0x1f);
+        W_CMD(&fim_ctr[addr + offset]);
+        B_CMD(1);
+        addr = addr_gen(hipBlockIdx_x, 0, 0, 1, hab_row_addr, 0x1f);
+        W_CMD(&fim_ctr[addr + offset]);
+        B_CMD(1);
+    }
+    B_CMD(0);
+#endif
+
+#if PROGRAM_CRF
+    if (hipThreadIdx_x < (crf_size >> 4)) {
+        addr = addr_gen(hipBlockIdx_x, 0, 0, 1, 0x3fff, 0x4 + gidx);
+        W_CMD_R(&fim_ctr[addr + offset], crf_binary + (hipThreadIdx_x << 4));
+    }
+    B_CMD(0);
+#endif
+
+#if CHANGE_HAB_HABFIM
+    addr = addr_gen(hipBlockIdx_x, 0, 0, 0, 0x3fff, 0x0);
+    W_CMD_R(&fim_ctr[addr + offset], elt_add_hab_to_hab_fim + (hipThreadIdx_x << 4));
+    B_CMD(1);
+    B_CMD(1);
+#endif
+
+#if COMPUTE_ELT_OP
+    for (int tile_idx = 0; tile_idx < num_tile; tile_idx++) {
+        unsigned int loc = tile_idx * num_grf + gidx;
+        unsigned int row = loc / num_col;
+        unsigned int col = loc % num_col;
+
+        addr = addr_gen(hipBlockIdx_x, 0, 0, 0, row, col);
+        addr_even = addr + offset;
+        addr_odd = addr_even + 0x2000;
+
+        R_CMD(&operand0[addr_even]);
+        B_CMD(1);
+
+        R_CMD(&operand1[addr_even]);
+        B_CMD(1);
+
+        W_CMD(&output[addr_even]);
+        B_CMD(1);
+        W_CMD(&output[addr_even]);
+        B_CMD(1);
+
+        R_CMD(&operand0[addr_odd]);
+        B_CMD(1);
+
+        R_CMD(&operand1[addr_odd]);
+        B_CMD(1);
+
+        W_CMD(&output[addr_odd]);
+        B_CMD(1);
+        W_CMD(&output[addr_odd]);
+        B_CMD(1);
+
+        B_CMD(0);
+    }
+#endif
+
+#if CHANGE_HABFIM_HAB
+    if (hipThreadIdx_x < 2) {
+        addr = addr_gen(hipBlockIdx_x, 0, 0, 0, 0x3fff, 0x0);
+        W_CMD_R(&fim_ctr[addr + offset], elt_add_hab_fim_to_hab + (hipThreadIdx_x << 4));
+    }
+    B_CMD(0);
+#endif
+
+#if CHANGE_HAB_SB
+    if (hipThreadIdx_x < 4) {
+        addr = addr_gen(hipBlockIdx_x, 0, 0, gidx, sb_row_addr, 0x1f);
+        W_CMD(&fim_ctr[addr + offset]);
+    }
+    B_CMD(0);
+    B_CMD(1);
+    B_CMD(1);
 #endif
 
 #if PARK_OUT

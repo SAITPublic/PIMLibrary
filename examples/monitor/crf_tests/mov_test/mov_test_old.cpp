@@ -47,10 +47,10 @@ __device__ inline void B_CMD(int type)
 {
     if (type == 0) {
         __syncthreads();
-//        asm volatile("s_waitcnt vmcnt(0) lgkmcnt(0)");
+        //        asm volatile("s_waitcnt vmcnt(0) lgkmcnt(0)");
     } else {
         __threadfence();
-//        asm volatile("s_waitcnt vmcnt(0) lgkmcnt(0)");
+        //        asm volatile("s_waitcnt vmcnt(0) lgkmcnt(0)");
     }
 }
 
@@ -112,8 +112,8 @@ __device__ uint64_t addr_gen(unsigned int ch, unsigned int rank, unsigned int bg
     return addr;
 }
 
-__global__ void mov_test(uint8_t* fim_ctr, uint8_t* fim_data, uint8_t* output,
-                         uint8_t* crf_binary, uint8_t* hab_to_fim, uint8_t* fim_to_hab, uint8_t* test_input1)
+__global__ void mov_test(uint8_t* fim_ctr, uint8_t* fim_data, uint8_t* output, uint8_t* crf_binary, uint8_t* hab_to_fim,
+                         uint8_t* fim_to_hab, uint8_t* test_input1)
 {
     uint64_t offset = hipBlockIdx_x * 0x100 + hipThreadIdx_x * 0x10;
 
@@ -211,9 +211,9 @@ __global__ void mov_test(uint8_t* fim_ctr, uint8_t* fim_data, uint8_t* output,
     B_CMD(1);
 
     /* MOV */
-    R_CMD(&fim_data[0x0 + offset]); // MOV even_bank to grf_A
+    R_CMD(&fim_data[0x0 + offset]);  // MOV even_bank to grf_A
     B_CMD(1);
-    W_CMD(&output[0x0 + offset]); // NOP
+    W_CMD(&output[0x0 + offset]);  // NOP
     B_CMD(1);
 
     /* change HAB_FIM mode to HAB mode */
@@ -250,7 +250,7 @@ int main(int argc, char* argv[])
     uint64_t fim_base;
     uint64_t *mode1_d, *mode2_d, *crf_bin_d, *test1_d;
     uint64_t *mode1_h, *mode2_h, *crf_bin_h, *test1_h;
-    uint64_t *output_h;
+    uint64_t* output_h;
     size_t N = 4;
     size_t Nbytes = N * sizeof(uint64_t);
     static int device = 0;
@@ -258,7 +258,7 @@ int main(int argc, char* argv[])
     CHECK(hipSetDevice(device));
     hipDeviceProp_t props;
     CHECK(hipGetDeviceProperties(&props, device /*deviceID*/));
-    printf ("info: running on device %s global mem size: %zu\n", props.name, props.totalGlobalMem);
+    printf("info: running on device %s global mem size: %zu\n", props.name, props.totalGlobalMem);
 
     // Get GPU ID
     FILE* fd;
@@ -277,7 +277,7 @@ int main(int argc, char* argv[])
       ARG2 : gpu-id
       ARG3 : block size
     ********************************************/
-    uint64_t bsize = 8589934592; //8 * 1024 * 1024 * 1024;
+    uint64_t bsize = 8589934592;  // 8 * 1024 * 1024 * 1024;
     // uint64_t bsize = 17179869184;  // 16 * 1024 * 1024 * 1024;
     fim_base = fmm_map_fim(2, gpu_id, bsize);
     std::cout << std::hex << "fimBaseAddr = " << fim_base << std::endl;
@@ -324,7 +324,8 @@ int main(int argc, char* argv[])
     const unsigned threadsPerBlock = 2;
 
     hipLaunchKernelGGL(mov_test, dim3(blocks), dim3(threadsPerBlock), 0, 0, (uint8_t*)fim_base, (uint8_t*)fim_base,
-                       (uint8_t*)fim_base + 0x100000, (uint8_t*)crf_bin_d, (uint8_t*)mode1_d, (uint8_t*)mode2_d, (uint8_t*)test1_d);
+                       (uint8_t*)fim_base + 0x100000, (uint8_t*)crf_bin_d, (uint8_t*)mode1_d, (uint8_t*)mode2_d,
+                       (uint8_t*)test1_d);
 
     hipDeviceSynchronize();
 

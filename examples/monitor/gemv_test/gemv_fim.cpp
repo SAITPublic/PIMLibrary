@@ -104,10 +104,11 @@ __device__ uint64_t addr_gen(unsigned int ch, unsigned int rank, unsigned int bg
     return addr;
 }
 
-__global__ void gemv_fim_64cu_64th_fp16(volatile uint8_t* fim_ctr, volatile uint8_t* fim_weight, volatile uint8_t* fim_gemv_tmp_buffer,
-                                        volatile uint8_t* fim_input, volatile uint8_t* output, 
-                                        int batch_dim, int n_in_tile, int n_out_tile, int output_dim,
-                                        volatile uint8_t* gemv_crf, volatile uint8_t* hab_to_fim, volatile uint8_t* fim_to_hab)
+__global__ void gemv_fim_64cu_64th_fp16(volatile uint8_t* fim_ctr, volatile uint8_t* fim_weight,
+                                        volatile uint8_t* fim_gemv_tmp_buffer, volatile uint8_t* fim_input,
+                                        volatile uint8_t* output, int batch_dim, int n_in_tile, int n_out_tile,
+                                        int output_dim, volatile uint8_t* gemv_crf, volatile uint8_t* hab_to_fim,
+                                        volatile uint8_t* fim_to_hab)
 {
     int num_col = 32;
     int num_bg = 4;
@@ -384,7 +385,6 @@ int main(int argc, char* argv[])
     CHECK(hipMemcpy(mode1_d, mode1_h, Nbytes, hipMemcpyHostToDevice));
     CHECK(hipMemcpy(mode2_d, mode2_h, Nbytes, hipMemcpyHostToDevice));
 
-
     int n_in_tile = in_size * sizeof(uint16_t) / trans_size / num_grf;
     int n_out_tile = out_size / (num_fim_chan * num_fim_blocks * num_grf);
 
@@ -394,8 +394,8 @@ int main(int argc, char* argv[])
     hipLaunchKernelGGL(gemv_fim_64cu_64th_fp16, dim3(blocks), dim3(threadsPerBlock), 0, 0,
                        (uint8_t*)fim_base /* ctr base */, (uint8_t*)fim_base /* weight */,
                        (uint8_t*)fim_base + 0x200000, /* fim hw output */
-                       (uint8_t*)input, (uint8_t*)output, 1, n_in_tile, n_out_tile, out_size,
-                       (uint8_t*)crf_bin_d, (uint8_t*)mode1_d, (uint8_t*)mode2_d);
+                       (uint8_t*)input, (uint8_t*)output, 1, n_in_tile, n_out_tile, out_size, (uint8_t*)crf_bin_d,
+                       (uint8_t*)mode1_d, (uint8_t*)mode2_d);
     hipStreamSynchronize(NULL);
 
     free(mode1_h);
