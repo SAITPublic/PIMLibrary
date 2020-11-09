@@ -348,7 +348,8 @@ __global__ void gemv_fim_64cu_64th_fp16(volatile uint8_t* __restrict__ fim_ctr,
                     uint64_t i_addr = (i_offset + (i_idx * num_grf + gidx)) * trans_size;
                     addr = addr_gen(ch, 0, 0, 0, 0x3fff, 0x8 + gidx);
                     W_CMD_R(&fim_ctr[addr + offset], &fim_input[i_addr + offset]);
-                    R_CMD(&fim_ctr[addr + offset]);
+                    //                    R_CMD(&fim_ctr[addr + offset]);
+                    B_CMD(1);
                     B_CMD(1);
 
                     even_row = ((i_idx / 2) + r_offset) * 2;
@@ -384,7 +385,8 @@ __global__ void gemv_fim_64cu_64th_fp16(volatile uint8_t* __restrict__ fim_ctr,
                     uint64_t i_addr = (i_offset + (i_idx * num_grf + gidx)) * trans_size;
                     addr = addr_gen(ch, 0, 0, 1, 0x3fff, 0x8 + gidx);
                     W_CMD_R(&fim_ctr[addr + offset], &fim_input[i_addr + offset]);
-                    R_CMD(&fim_ctr[addr + offset]);
+                    //                    R_CMD(&fim_ctr[addr + offset]);
+                    B_CMD(1);
                     B_CMD(1);
 
                     even_row = ((i_idx / 2) + r_offset) * 2;
@@ -440,7 +442,8 @@ __global__ void gemv_fim_64cu_64th_fp16(volatile uint8_t* __restrict__ fim_ctr,
         /* change HAB mode to SB mode */
         addr = addr_gen(ch, 0, 0, gidx, SB_ROW_ADDR, 0x1f);
         W_CMD(&fim_ctr[addr + offset]);
-        R_CMD(&fim_ctr[addr + offset]);
+        //        R_CMD(&fim_ctr[addr + offset]);
+        B_CMD(1);
         B_CMD(1);
     }
     B_CMD(0);
