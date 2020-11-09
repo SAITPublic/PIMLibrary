@@ -47,9 +47,9 @@ install : installs to rocm path
 
 <options>
 -o <relative path> : Relative path from current directory where build folder is created
--d [optional] : if mentioned, Debug mode will be enabled
--m [optional] : if mentioned, MIOpen Apps will be compiled
--t [optional] : if mentioned, Target mode build will be enabled
+-d --debug  [optional] : if mentioned, Debug mode will be enabled
+-m --miopen [optional] : if mentioned, MIOpen Apps will be compiled
+-t --target TARGET [optional] : if mentioned, Target mode build will be enabled. Targets: emulator(default), mi50, radeon7
 ```
 
 ## Using Commands
