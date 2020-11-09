@@ -80,8 +80,8 @@ __host__ __device__ uint64_t addr_gen(uint32_t chan, uint32_t rank, uint32_t ban
     /* we assume fim kernel run on vega20(32GB) system */
     /* but SAIT server is vega20(16GB) system */
     /* so upper 2bit should be set as 0 for normal work */
-//    uint64_t mask = 0x1FFFFFFFF;
-//    addr &= mask;
+    uint64_t mask = 0x1FFFFFFFF;
+    addr &= mask;
 #endif
 
     return addr;
