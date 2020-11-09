@@ -33,6 +33,33 @@ int compare_data(half* data_a, half* data_b, size_t size)
     return ret;
 }
 
+inline int compare_data_round_off(half* data_a, half* data_b, int size)
+{
+    int pass_cnt = 0;
+    int fail_cnt = 0;
+    int ret = 0;
+
+    for (int i = 0; i < size; i++) {
+        if (abs(float(data_a[i]) - float(data_b[i])) < 0.1) {
+            pass_cnt++;
+            //            printf("pass %f: %f\n", float(data_a[i]), float(data_b[i]));
+            //            std::cout << float(data_a[i]) << " : " << float(data_b[i]) << std::endl;
+        } else {
+            fail_cnt++;
+            printf("fail %f: %f\n", float(data_a[i]), float(data_b[i]));
+            //            std::cout << float(data_a[i]) << " : " << float(data_b[i]) << std::endl;
+            ret = 1;
+        }
+    }
+
+    if (ret) {
+        printf("pass_cnt : %d, fail_cnt : %d, pass ratio : %f\n", pass_cnt, fail_cnt,
+               ((float)pass_cnt / ((float)fail_cnt + (float)pass_cnt) * 100.));
+    }
+
+    return ret;
+}
+
 void gemv_and_reduce_sum_level1(void* in_data, void* wei_data, void* out_data, int in_size, int out_size, int stride)
 {
     half fp16_in, fp16_out, fp16_wei;
@@ -206,17 +233,19 @@ int fim_gemv_batch(bool block)
     FimConvertDataLayout(host_reordered_weight, host_weight, OP_GEMV);
 
     FimCopyMemory(preloaded_weight, host_reordered_weight, HOST_TO_DEVICE);
+    for (int i = 0; i < 100; i++) {
+        /* __FIM_API__ call : Execute FIM kernel (GEMV) */
+        FimExecuteGemv(device_output, device_input, preloaded_weight, nullptr, block);
 
-    /* __FIM_API__ call : Execute FIM kernel (GEMV) */
-    FimExecuteGemv(device_output, device_input, preloaded_weight, nullptr, block);
+        if (!block) FimSynchronize();
 
-    if (!block) FimSynchronize();
+        FimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
+        //    dump_data(preload_weight.c_str(), (char*)preloaded_weight->data, preloaded_weight->size);
+        //    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
 
-    FimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
-    dump_data(preload_weight.c_str(), (char*)preloaded_weight->data, preloaded_weight->size);
-    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
-
-    ret = compare_data((char*)golden_output->data, (char*)host_output->data, host_output->size);
+        //    ret = compare_data((char*)golden_output->data, (char*)host_output->data, host_output->size);
+        ret = compare_data_round_off((half*)golden_output->data, (half*)host_output->data, OUT_LENGTH * BATCH_DIM);
+    }
 
     /* __FIM_API__ call : Destroy FIM Buffer Object */
     FimDestroyBo(host_input);
@@ -269,17 +298,17 @@ int fim_gemv_256(bool block)
     /* __FIM_API__ call : Preload weight data on FIM memory */
     FimConvertDataLayout(host_reordered_weight, host_weight, OP_GEMV);
     FimCopyMemory(preloaded_weight, host_reordered_weight, HOST_TO_DEVICE);
+    for (int i = 0; i < 100; i++) {
+        /* __FIM_API__ call : Execute FIM kernel (GEMV) */
+        FimExecuteGemv(device_output, device_input, preloaded_weight, nullptr, block);
+        if (!block) FimSynchronize();
 
-    /* __FIM_API__ call : Execute FIM kernel (GEMV) */
-    FimExecuteGemv(device_output, device_input, preloaded_weight, nullptr, block);
-    if (!block) FimSynchronize();
+        FimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
+        //    dump_data(preload_weight.c_str(), (char*)preloaded_weight->data, preloaded_weight->size);
+        //    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
 
-    FimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
-    dump_data(preload_weight.c_str(), (char*)preloaded_weight->data, preloaded_weight->size);
-    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
-
-    ret = compare_data((char*)golden_output->data, (char*)host_output->data, host_output->size);
-
+        ret = compare_data_round_off((half*)golden_output->data, (half*)host_output->data, OUT_LENGTH);
+    }
     /* __FIM_API__ call : Destroy FIM Buffer Object */
     FimDestroyBo(host_input);
     FimDestroyBo(host_weight);
@@ -331,16 +360,17 @@ int fim_gemv_512(bool block)
     /* __FIM_API__ call : Preload weight data on FIM memory */
     FimConvertDataLayout(host_reordered_weight, host_weight, OP_GEMV);
     FimCopyMemory(preloaded_weight, host_reordered_weight, HOST_TO_DEVICE);
+    for (int i = 0; i < 100; i++) {
+        /* __FIM_API__ call : Execute FIM kernel (GEMV) */
+        FimExecuteGemv(device_output, device_input, preloaded_weight, nullptr, block);
+        if (!block) FimSynchronize();
 
-    /* __FIM_API__ call : Execute FIM kernel (GEMV) */
-    FimExecuteGemv(device_output, device_input, preloaded_weight, nullptr, block);
-    if (!block) FimSynchronize();
+        FimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
 
-    FimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
-
-    dump_data(preload_weight.c_str(), (char*)preloaded_weight->data, preloaded_weight->size);
-    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
-    ret = compare_data((char*)golden_output->data, (char*)host_output->data, host_output->size);
+        //    dump_data(preload_weight.c_str(), (char*)preloaded_weight->data, preloaded_weight->size);
+        //    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
+        ret = compare_data_round_off((half*)golden_output->data, (half*)host_output->data, OUT_LENGTH);
+    }
 
     /* __FIM_API__ call : Destroy FIM Buffer Object */
     FimDestroyBo(host_input);
@@ -403,16 +433,17 @@ int fim_gemv_desc(bool block)
     /* __FIM_API__ call : Preload weight data on FIM memory */
     FimConvertDataLayout(host_reordered_weight, host_weight, OP_GEMV);
     FimCopyMemory(preloaded_weight, host_reordered_weight, HOST_TO_FIM);
+    for (int i = 0; i < 100; i++) {
+        /* __FIM_API__ call : Execute FIM kernel (GEMV) */
+        FimExecuteGemv(device_output, device_input, preloaded_weight, nullptr, block);
+        if (!block) FimSynchronize();
 
-    /* __FIM_API__ call : Execute FIM kernel (GEMV) */
-    FimExecuteGemv(device_output, device_input, preloaded_weight, nullptr, block);
-    if (!block) FimSynchronize();
+        FimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
 
-    FimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
-
-    dump_data(preload_weight.c_str(), (char*)preloaded_weight->data, preloaded_weight->size);
-    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
-    ret = compare_data((char*)golden_output->data, (char*)host_output->data, out_size * sizeof(half));
+        //    dump_data(preload_weight.c_str(), (char*)preloaded_weight->data, preloaded_weight->size);
+        //    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
+        ret = compare_data_round_off((half*)golden_output->data, (half*)host_output->data, out_size);
+    }
 
     /* __FIM_API__ call : Destroy FIM Buffer Object */
     FimDestroyBo(host_input);
@@ -483,17 +514,19 @@ int fim_gemv_desc_batch(bool block)
     /* __FIM_API__ call : Preload weight data on FIM memory */
     FimConvertDataLayout(host_reordered_weight, host_weight, OP_GEMV);
     FimCopyMemory(preloaded_weight, host_reordered_weight, HOST_TO_FIM);
+    for (int i = 0; i < 100; i++) {
+        /* __FIM_API__ call : Execute FIM kernel (GEMV) */
+        FimExecuteGemv(device_output, device_input, preloaded_weight, nullptr, block);
+        if (!block) FimSynchronize();
 
-    /* __FIM_API__ call : Execute FIM kernel (GEMV) */
-    FimExecuteGemv(device_output, device_input, preloaded_weight, nullptr, block);
-    if (!block) FimSynchronize();
+        FimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
 
-    FimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
-
-    dump_data(preload_weight.c_str(), (char*)preloaded_weight->data, preloaded_weight->size);
-    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
-    ret = compare_data((char*)golden_output->data, (char*)host_output->data, batch_n * out_size * sizeof(half));
-
+        //    dump_data(preload_weight.c_str(), (char*)preloaded_weight->data, preloaded_weight->size);
+        //    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
+        //    ret = compare_data((char*)golden_output->data, (char*)host_output->data, batch_n * out_size *
+        //    sizeof(half));
+        ret = compare_data_round_off((half*)golden_output->data, (half*)host_output->data, OUT_LENGTH * BATCH_DIM);
+    }
     /* __FIM_API__ call : Destroy FIM Buffer Object */
     FimDestroyBo(host_input);
     FimDestroyBo(host_weight);
@@ -577,9 +610,9 @@ int fim_gemv_lut(bool block)
     if (!block) FimSynchronize();
     FimCopyMemory(host_output, dev_out, DEVICE_TO_HOST);
 
-    dump_data(preload_weight.c_str(), (char*)preloaded_weight->data, preloaded_weight->size);
-    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
-    ret = compare_data((char*)golden_output->data, (char*)host_output->data, out_size * sizeof(half));
+    //    dump_data(preload_weight.c_str(), (char*)preloaded_weight->data, preloaded_weight->size);
+    //    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
+    ret = compare_data_round_off((half*)golden_output->data, (half*)host_output->data, out_size);
 
     /* __FIM_API__ call : Destroy FIM Buffer Object */
     FimDestroyBo(host_input);
@@ -672,7 +705,7 @@ int fim_gemv_lut_profile(bool block)
     FimCopyMemory(host_output, dev_out, DEVICE_TO_HOST);
     dump_data(preload_weight.c_str(), (char*)preloaded_weight->data, preloaded_weight->size);
     dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
-    ret = compare_data((char*)golden_output->data, (char*)host_output->data, out_size * sizeof(half));
+    ret = compare_data_round_off((half*)golden_output->data, (half*)host_output->data, out_size);
 
     /* __FIM_API__ call : Destroy FIM Buffer Object */
     FimDestroyBo(host_input);

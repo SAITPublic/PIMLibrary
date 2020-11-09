@@ -11,7 +11,6 @@
 #ifdef TARGET
 #define INTEGRAL_SUM 1
 #endif
-
 __global__ void gemv_fim_fp16(volatile uint8_t* __restrict__ fim_ctr, volatile uint8_t* __restrict__ fim_weight,
                               volatile uint8_t* __restrict__ fim_gemv_tmp_buffer,
                               volatile uint8_t* __restrict__ fim_input, volatile uint8_t* __restrict__ output,
@@ -280,42 +279,43 @@ __global__ void gemv_fim_64cu_64th_fp16(volatile uint8_t* __restrict__ fim_ctr,
     __syncthreads();
 #endif
 
-#if PREPARE_KERNEL
-    int num_col = 32;
+#ifdef PREPARE_KERNEL
+    int num_grf = 8;
     int num_bg = 4;
     int num_ba = 4;
-    int num_grf = 8;
-    int loc, row, col;
-
-    int num_out_tile = n_out_tile;
-
-    int gidx = hipThreadIdx_x >> 1;
-    uint64_t offset = (hipThreadIdx_x % 2) << 4;
+    int num_col = 32;
+    int trans_size = 32;
+    int even_row, odd_row, row, col, loc;
+    int ch = hipBlockIdx_x;
+    int w_idx = hipThreadIdx_x % 2;
+    int gidx = hipThreadIdx_x / 2;
+    uint64_t offset = w_idx * 0x10;
     uint64_t addr;
 #endif
-    /* Radeon7(VEGA20) memory is 16GB but our target is 32GB system */
-    /* so program_crf and chagne_fim_mode functions can not access to over 8GB in our system */
+
 #if PARK_IN
-    /* num_bg * num_ba * 2 */
+    /* park */
     if (hipThreadIdx_x < 32) {
-        addr = addr_gen(hipBlockIdx_x, 0, gidx >> 2, gidx % num_ba, 0, 0);
-        R_CMD(&fim_ctr[addr + offset]);
+        addr = addr_gen(ch, 0, gidx / num_ba, gidx % num_ba, 0, 0);
+        R_CMD(&fim_weight[addr + offset]);
+        B_CMD(1);
     }
     B_CMD(0);
 #endif
 
 #if CHANGE_SB_HAB
     if (hipThreadIdx_x < 2) {
-        addr = addr_gen(hipBlockIdx_x, 0, 2, gidx, HAB_ROW_ADDR, 0x1f);
+        /* change SB mode to HAB mode */
+        addr = addr_gen(ch, 0, 2, 0, HAB_ROW_ADDR, 0x1f);
         W_CMD(&fim_ctr[addr + offset]);
         B_CMD(1);
-        addr = addr_gen(hipBlockIdx_x, 0, 2, gidx + 1, HAB_ROW_ADDR, 0x1f);
+        addr = addr_gen(ch, 0, 2, 1, HAB_ROW_ADDR, 0x1f);
         W_CMD(&fim_ctr[addr + offset]);
         B_CMD(1);
-        addr = addr_gen(hipBlockIdx_x, 0, 0, gidx, HAB_ROW_ADDR, 0x1f);
+        addr = addr_gen(ch, 0, 0, 0, HAB_ROW_ADDR, 0x1f);
         W_CMD(&fim_ctr[addr + offset]);
         B_CMD(1);
-        addr = addr_gen(hipBlockIdx_x, 0, 0, gidx + 1, HAB_ROW_ADDR, 0x1f);
+        addr = addr_gen(ch, 0, 0, 1, HAB_ROW_ADDR, 0x1f);
         W_CMD(&fim_ctr[addr + offset]);
         B_CMD(1);
     }
@@ -326,100 +326,108 @@ __global__ void gemv_fim_64cu_64th_fp16(volatile uint8_t* __restrict__ fim_ctr,
     if (hipThreadIdx_x < (crf_size >> 4)) {
         addr = addr_gen(hipBlockIdx_x, 0, 0, 1, 0x3fff, 0x4 + gidx);
         W_CMD_R(&fim_ctr[addr + offset], crf_binary + (hipThreadIdx_x << 4));
+        B_CMD(1);
     }
     B_CMD(0);
 #endif
 
 #if COMPUTE_GEMV
-    if (hipThreadIdx_x < 16 /* 2 * num_grf */) {
+    if (hipThreadIdx_x < 16) {
+        /* change HAB mode to HAB_FIM mode */
         for (int b_idx = 0; b_idx < batch_dim; b_idx++) {
-            for (int o_idx = 0; o_idx < num_out_tile; o_idx++) {
-                addr = addr_gen(hipBlockIdx_x, 0, 0, 0, 0x3fff, 0x0);
-                W_CMD_R(&fim_ctr[addr + offset], gemv_hab_to_hab_fim + ((hipThreadIdx_x % 2) << 4));
+            for (int o_idx = 0; o_idx < n_out_tile; o_idx++) {
+                addr = addr_gen(ch, 0, 0, 0, 0x3fff, 0x0);
+                W_CMD_R(&fim_ctr[addr + offset], gemv_hab_to_hab_fim + w_idx * 16);
                 B_CMD(1);
 
-                uint64_t i_offset = (b_idx * n_memory_tile << 3) + gidx;
-                int r_offset = (o_idx * n_memory_tile) >> 1;
+                uint64_t i_offset = b_idx * n_memory_tile * num_grf;
+                int r_offset = (o_idx * n_memory_tile) / 2;
 
                 for (int i_idx = 0; i_idx < n_compute_tile; i_idx += 2) {
-                    uint64_t i_addr = (i_offset + (i_idx << 3)) << 5;
-                    addr = addr_gen(hipBlockIdx_x, 0, 0, 1, 0x3fff, 0x8 + gidx);
+                    /* write grf_A from WRIO */
+                    uint64_t i_addr = (i_offset + (i_idx * num_grf + gidx)) * trans_size;
+                    addr = addr_gen(ch, 0, 0, 0, 0x3fff, 0x8 + gidx);
                     W_CMD_R(&fim_ctr[addr + offset], &fim_input[i_addr + offset]);
+                    R_CMD(&fim_ctr[addr + offset]);
                     B_CMD(1);
 
-                    row = ((i_idx >> 1) + r_offset) << 1;
-                    col = gidx;
+                    even_row = ((i_idx / 2) + r_offset) * 2;
+                    odd_row = even_row + 1;
 
-                    addr = addr_gen(hipBlockIdx_x, 0, 0, 0, row, col);
+                    addr = addr_gen(ch, 0, 0, 0, even_row, gidx);
                     R_CMD(&fim_weight[addr + offset]);
 
-                    addr = addr_gen(hipBlockIdx_x, 0, 0, 0, row, col + 8);
+                    addr = addr_gen(ch, 0, 0, 0, even_row, gidx + 8);
                     R_CMD(&fim_weight[addr + offset]);
 
-                    addr = addr_gen(hipBlockIdx_x, 0, 0, 0, row, col + 16);
+                    addr = addr_gen(ch, 0, 0, 0, even_row, gidx + 16);
                     R_CMD(&fim_weight[addr + offset]);
 
-                    addr = addr_gen(hipBlockIdx_x, 0, 0, 0, row, col + 24);
+                    addr = addr_gen(ch, 0, 0, 0, even_row, gidx + 24);
                     R_CMD(&fim_weight[addr + offset]);
 
-                    addr = addr_gen(hipBlockIdx_x, 0, 0, 0, row + 1, col);
+                    addr = addr_gen(ch, 0, 0, 0, odd_row, gidx);
                     R_CMD(&fim_weight[addr + offset]);
 
-                    addr = addr_gen(hipBlockIdx_x, 0, 0, 0, row + 1, col + 8);
+                    addr = addr_gen(ch, 0, 0, 0, odd_row, gidx + 8);
                     R_CMD(&fim_weight[addr + offset]);
 
-                    addr = addr_gen(hipBlockIdx_x, 0, 0, 0, row + 1, col + 16);
+                    addr = addr_gen(ch, 0, 0, 0, odd_row, gidx + 16);
                     R_CMD(&fim_weight[addr + offset]);
 
-                    addr = addr_gen(hipBlockIdx_x, 0, 0, 0, row + 1, col + 24);
+                    addr = addr_gen(ch, 0, 0, 0, odd_row, gidx + 24);
                     R_CMD(&fim_weight[addr + offset]);
                     B_CMD(1);
                 }
 
                 for (int i_idx = 1; i_idx < n_compute_tile; i_idx += 2) {
-                    uint64_t i_addr = (i_offset + (i_idx << 3)) << 5;
-                    addr = addr_gen(hipBlockIdx_x, 0, 0, 1, 0x3fff, 0x8 + gidx);
+                    uint64_t i_addr = (i_offset + (i_idx * num_grf + gidx)) * trans_size;
+                    addr = addr_gen(ch, 0, 0, 1, 0x3fff, 0x8 + gidx);
                     W_CMD_R(&fim_ctr[addr + offset], &fim_input[i_addr + offset]);
+                    R_CMD(&fim_ctr[addr + offset]);
                     B_CMD(1);
 
-                    row = ((i_idx >> 1) + r_offset) << 1;
-                    col = gidx;
+                    even_row = ((i_idx / 2) + r_offset) * 2;
+                    odd_row = even_row + 1;
 
-                    addr = addr_gen(hipBlockIdx_x, 0, 0, 1, row, col);
+                    addr = addr_gen(ch, 0, 0, 1, even_row, gidx);
                     R_CMD(&fim_weight[addr + offset]);
 
-                    addr = addr_gen(hipBlockIdx_x, 0, 0, 1, row, col + 8);
+                    addr = addr_gen(ch, 0, 0, 1, even_row, gidx + 8);
                     R_CMD(&fim_weight[addr + offset]);
 
-                    addr = addr_gen(hipBlockIdx_x, 0, 0, 1, row, col + 16);
+                    addr = addr_gen(ch, 0, 0, 1, even_row, gidx + 16);
                     R_CMD(&fim_weight[addr + offset]);
 
-                    addr = addr_gen(hipBlockIdx_x, 0, 0, 1, row, col + 24);
+                    addr = addr_gen(ch, 0, 0, 1, even_row, gidx + 24);
                     R_CMD(&fim_weight[addr + offset]);
 
-                    addr = addr_gen(hipBlockIdx_x, 0, 0, 1, row + 1, col);
+                    addr = addr_gen(ch, 0, 0, 1, odd_row, gidx);
                     R_CMD(&fim_weight[addr + offset]);
 
-                    addr = addr_gen(hipBlockIdx_x, 0, 0, 1, row + 1, col + 8);
+                    addr = addr_gen(ch, 0, 0, 1, odd_row, gidx + 8);
                     R_CMD(&fim_weight[addr + offset]);
 
-                    addr = addr_gen(hipBlockIdx_x, 0, 0, 1, row + 1, col + 16);
+                    addr = addr_gen(ch, 0, 0, 1, odd_row, gidx + 16);
                     R_CMD(&fim_weight[addr + offset]);
 
-                    addr = addr_gen(hipBlockIdx_x, 0, 0, 1, row + 1, col + 24);
+                    addr = addr_gen(ch, 0, 0, 1, odd_row, gidx + 24);
                     R_CMD(&fim_weight[addr + offset]);
                     B_CMD(1);
                 }
-                loc = b_idx * num_out_tile * num_grf + o_idx * num_grf + gidx;
-                row = loc >> 5;  // loc / num_col
+                loc = b_idx * n_out_tile * num_grf + o_idx * num_grf + gidx;
+                row = loc / num_col;
                 col = loc % num_col;
 
-                addr = addr_gen(hipBlockIdx_x, 0, 0, 1, row, col);
+                // pipeline delay
+                // FIX : If alu is in operation, NOP should be added.
+                addr = addr_gen(ch, 0, 0, 1, row, col);
+                W_CMD(&fim_gemv_tmp_buffer[addr + offset]);
                 W_CMD(&fim_gemv_tmp_buffer[addr + offset]);
                 B_CMD(1);
 
-                addr = addr_gen(hipBlockIdx_x, 0, 0, 0, 0x3fff, 0x0);
-                W_CMD_R(&fim_ctr[addr + offset], gemv_hab_fim_to_hab + ((hipThreadIdx_x % 2) << 4));
+                addr = addr_gen(ch, 0, 0, 0, 0x3fff, 0x0);
+                W_CMD_R(&fim_ctr[addr + offset], gemv_hab_fim_to_hab + w_idx * 16);
                 B_CMD(1);
             }
         }
@@ -429,16 +437,21 @@ __global__ void gemv_fim_64cu_64th_fp16(volatile uint8_t* __restrict__ fim_ctr,
 
 #if CHANGE_HAB_SB
     if (hipThreadIdx_x < 4) {
-        addr = addr_gen(hipBlockIdx_x, 0, 0, gidx, SB_ROW_ADDR, 0x1f);
+        /* change HAB mode to SB mode */
+        addr = addr_gen(ch, 0, 0, gidx, SB_ROW_ADDR, 0x1f);
         W_CMD(&fim_ctr[addr + offset]);
+        R_CMD(&fim_ctr[addr + offset]);
+        B_CMD(1);
     }
     B_CMD(0);
 #endif
 
 #if PARK_OUT
-    if (hipThreadIdx_x < num_bg * num_ba * 2) {
-        addr = addr_gen(hipBlockIdx_x, 0, gidx / num_ba, gidx % num_ba, 0, 0);
+    /* park */
+    if (hipThreadIdx_x < 32) {
+        addr = addr_gen(ch, 0, gidx / num_ba, gidx % num_ba, 0, 0);
         R_CMD(&fim_weight[addr + offset]);
+        B_CMD(1);
     }
     B_CMD(0);
 #endif
@@ -450,24 +463,210 @@ __global__ void gemv_fim_64cu_64th_fp16(volatile uint8_t* __restrict__ fim_ctr,
 #endif
 
 #if INTEGRAL_SUM
-    /* TODO: verify reduce sum in Target Mode */
-    int bg = hipThreadIdx_x >> 4;
-    int ba = (((hipThreadIdx_x >> 3) % 2) << 1) + 1;
-    int out_idx = (hipBlockIdx_x << 6) + hipThreadIdx_x;
+    int bg = hipThreadIdx_x / 16;
+    int ba = (((hipThreadIdx_x / 8) % 2) * 2) + 1;
+    int out_idx = (hipBlockIdx_x * 64) + hipThreadIdx_x;
+    int out_offset;
     half t_output;
-    for (int i = 0; i < batch_dim * num_out_tile; i++) {
+
+    for (int i = 0; i < batch_dim * n_out_tile; i++) {
         if (out_idx < output_dim) {
             t_output = 0;
-            row = i >> 2;
-            col = hipThreadIdx_x % 8 + ((i % 4) << 3);
-            addr = addr_gen(hipBlockIdx_x, 0, bg, ba, row, col);
+            row = i / 4;
+            col = hipThreadIdx_x % 8 + ((i % 4) * 8);
+            addr = addr_gen(ch, 0, bg, ba, row, col);
             for (int j = 0; j < 16; j++) {
-                t_output += fim_gemv_tmp_buffer[addr + j];
+                t_output += ((half*)fim_gemv_tmp_buffer)[(addr >> 1) + j];
             }
-            ((half*)output)[out_idx] = (half)is_gemv_add * ((half*)output)[out_idx] + t_output;
+            out_offset = i * output_dim + out_idx;
+            ((half*)output)[out_offset] = (half)is_gemv_add * ((half*)output)[out_offset] + t_output;
         }
     }
 #endif
 }
 
+__device__ __global__ void mac_test_64th_fp16(volatile uint8_t* __restrict__ fim_ctr,
+                                              volatile uint8_t* __restrict__ fim_weight,
+                                              volatile uint8_t* __restrict__ fim_gemv_tmp_buffer,
+                                              volatile uint8_t* __restrict__ fim_input,
+                                              volatile uint8_t* __restrict__ output, int batch_dim, int n_memory_tile,
+                                              int n_compute_tile, int n_out_tile, int output_dim,
+#ifdef EMULATOR
+                                              FimMemTraceData* fmtd16, int* frd_size, int mt_width,
+#endif
+                                              uint8_t* crf_binary, int crf_size, int is_gemv_add)
+{
+    int num_bg = 4;
+    int num_ba = 4;
+    int w_idx = hipThreadIdx_x % 2;
+    int gidx = hipThreadIdx_x / 2;
+    uint64_t offset = w_idx * 0x10;
+    uint64_t addr;
+    int ch = hipBlockIdx_x;
+
+    /* park */
+    if (hipThreadIdx_x < 32) {
+        addr = addr_gen(ch, 0, gidx / num_ba, gidx % num_ba, 0, 0);
+        R_CMD(&fim_ctr[addr + offset]);
+        B_CMD(1);
+    }
+    B_CMD(0);
+
+    if (hipThreadIdx_x < 2) {
+        /* change SB mode to HAB mode */
+        addr = addr_gen(ch, 0, 2, 0, 0x27ff, 0x1f);
+        W_CMD(&fim_ctr[addr + offset]);
+        B_CMD(1);
+        addr = addr_gen(ch, 0, 2, 1, 0x27ff, 0x1f);
+        W_CMD(&fim_ctr[addr + offset]);
+        B_CMD(1);
+        addr = addr_gen(ch, 0, 0, 0, 0x27ff, 0x1f);
+        W_CMD(&fim_ctr[addr + offset]);
+        B_CMD(1);
+        addr = addr_gen(ch, 0, 0, 1, 0x27ff, 0x1f);
+        W_CMD(&fim_ctr[addr + offset]);
+        B_CMD(1);
+
+        /* set crf binary */
+        addr = addr_gen(ch, 0, 0, 1, 0x3fff, 0x4);
+        W_CMD_R(&fim_ctr[addr + offset], crf_binary + hipThreadIdx_x * 16);
+        B_CMD(1);
+    }
+    B_CMD(0);
+
+    int even_row, odd_row;
+    if (hipThreadIdx_x < 16) {
+        /* change HAB mode to HAB_FIM mode */
+        for (int b = 0; b < batch_dim; b++) {
+            for (int j = 0; j < n_out_tile; j++) {
+                addr = addr_gen(ch, 0, 0, 0, 0x3fff, 0x0);
+                W_CMD_R(&fim_ctr[addr + offset], gemv_hab_to_hab_fim + w_idx * 16);
+                B_CMD(1);
+
+                for (int i_idx = 0; i_idx < n_compute_tile; i_idx += 2) {
+                    /* write grf_A from WRIO */
+                    addr = addr_gen(ch, 0, 0, 0, 0x3fff, 0x8 + gidx);
+                    W_CMD_R(&fim_ctr[addr + offset], fim_input + ((i_idx * 8 + gidx) * 32 + (w_idx * 16)));
+                    B_CMD(1);
+                    B_CMD(1);
+
+                    even_row = (i_idx >> 1) << 1;
+                    odd_row = even_row + 1;
+
+                    addr = addr_gen(ch, 0, 0, 0, even_row, gidx);
+                    R_CMD(&fim_weight[addr + offset]);
+
+                    addr = addr_gen(ch, 0, 0, 0, even_row, gidx + 8);
+                    R_CMD(&fim_weight[addr + offset]);
+
+                    addr = addr_gen(ch, 0, 0, 0, even_row, gidx + 16);
+                    R_CMD(&fim_weight[addr + offset]);
+
+                    addr = addr_gen(ch, 0, 0, 0, even_row, gidx + 24);
+                    R_CMD(&fim_weight[addr + offset]);
+
+                    addr = addr_gen(ch, 0, 0, 0, odd_row, gidx);
+                    R_CMD(&fim_weight[addr + offset]);
+
+                    addr = addr_gen(ch, 0, 0, 0, odd_row, gidx + 8);
+                    R_CMD(&fim_weight[addr + offset]);
+
+                    addr = addr_gen(ch, 0, 0, 0, odd_row, gidx + 16);
+                    R_CMD(&fim_weight[addr + offset]);
+
+                    addr = addr_gen(ch, 0, 0, 0, odd_row, gidx + 24);
+                    R_CMD(&fim_weight[addr + offset]);
+                    B_CMD(1);
+                }
+
+                for (int i_idx = 1; i_idx < n_compute_tile; i_idx += 2) {
+                    addr = addr_gen(ch, 0, 0, 1, 0x3fff, 0x8 + gidx);
+                    W_CMD_R(&fim_ctr[addr + offset], fim_input + (i_idx * 8 + gidx) * 32 + (w_idx * 16));
+                    B_CMD(1);
+                    B_CMD(1);
+
+                    even_row = (i_idx >> 1) << 1;
+                    odd_row = even_row + 1;
+
+                    addr = addr_gen(ch, 0, 0, 1, even_row, gidx);
+                    R_CMD(&fim_weight[addr + offset]);
+
+                    addr = addr_gen(ch, 0, 0, 1, even_row, gidx + 8);
+                    R_CMD(&fim_weight[addr + offset]);
+
+                    addr = addr_gen(ch, 0, 0, 1, even_row, gidx + 16);
+                    R_CMD(&fim_weight[addr + offset]);
+
+                    addr = addr_gen(ch, 0, 0, 1, even_row, gidx + 24);
+                    R_CMD(&fim_weight[addr + offset]);
+
+                    addr = addr_gen(ch, 0, 0, 1, odd_row, gidx);
+                    R_CMD(&fim_weight[addr + offset]);
+
+                    addr = addr_gen(ch, 0, 0, 1, odd_row, gidx + 8);
+                    R_CMD(&fim_weight[addr + offset]);
+
+                    addr = addr_gen(ch, 0, 0, 1, odd_row, gidx + 16);
+                    R_CMD(&fim_weight[addr + offset]);
+
+                    addr = addr_gen(ch, 0, 0, 1, odd_row, gidx + 24);
+                    R_CMD(&fim_weight[addr + offset]);
+                    B_CMD(1);
+                }
+
+                // pipeline delay
+                // FIX : If alu is in operation, NOP should be added.
+                addr = addr_gen(ch, 0, 0, 1, 0, gidx);
+                W_CMD(&fim_gemv_tmp_buffer[addr + offset]);
+                B_CMD(1);
+
+                addr = addr_gen(ch, 0, 0, 0, 0x3fff, 0x0);
+                W_CMD_R(&fim_ctr[addr + offset], gemv_hab_fim_to_hab + w_idx * 16);
+                B_CMD(1);
+            }
+        }
+    }
+    B_CMD(0);
+
+    if (hipThreadIdx_x < 2) {
+        /* change HAB mode to SB mode */
+        addr = addr_gen(ch, 0, 0, 0, 0x2fff, 0x1f);
+        W_CMD(&fim_ctr[addr + offset]);
+        B_CMD(1);
+        addr = addr_gen(ch, 0, 0, 1, 0x2fff, 0x1f);
+        W_CMD(&fim_ctr[addr + offset]);
+        B_CMD(1);
+    }
+    B_CMD(0);
+
+    /* park */
+    if (hipThreadIdx_x < 32) {
+        addr = addr_gen(ch, 0, gidx / num_ba, gidx % num_ba, 0, 0);
+        R_CMD(&fim_ctr[addr + offset]);
+        B_CMD(1);
+    }
+    B_CMD(0);
+
+    int bg = hipThreadIdx_x >> 4;
+    int ba = (((hipThreadIdx_x >> 3) % 2) << 1) + 1;
+    int out_idx = (hipBlockIdx_x << 6) + hipThreadIdx_x;
+    int row;
+    int col;
+
+    half t_output;
+
+    for (int i = 0; i < batch_dim * n_out_tile; i++) {
+        if (out_idx < output_dim) {
+            t_output = 0;
+            row = i % 4;
+            col = hipThreadIdx_x % 8 + ((i % 4) << 3);
+            addr = addr_gen(ch, 0, bg, ba, row, col);
+            for (int j = 0; j < 16; j++) {
+                t_output += ((half*)fim_gemv_tmp_buffer)[(addr >> 1) + j];
+            }
+            ((half*)output)[out_idx] = (half)is_gemv_add * ((half*)output)[out_idx] + t_output;
+        }
+    }
+    B_CMD(0);
+}
 #endif /* _FIM_GEMV_KERNELS_FIMK_ */

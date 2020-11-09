@@ -12,6 +12,33 @@
 
 using namespace std;
 
+inline int compare_data_round_off(half* data_a, half* data_b, int size)
+{
+    int pass_cnt = 0;
+    int fail_cnt = 0;
+    int ret = 0;
+
+    for (int i = 0; i < size; i++) {
+        if (abs(float(data_a[i]) - float(data_b[i])) < 0.1) {
+            pass_cnt++;
+            //            printf("pass %f: %f\n", float(data_a[i]), float(data_b[i]));
+            //            std::cout << float(data_a[i]) << " : " << float(data_b[i]) << std::endl;
+        } else {
+            fail_cnt++;
+            printf("fail %f: %f\n", float(data_a[i]), float(data_b[i]));
+            //            std::cout << float(data_a[i]) << " : " << float(data_b[i]) << std::endl;
+            ret = 1;
+        }
+    }
+
+    if (ret) {
+        printf("pass_cnt : %d, fail_cnt : %d, pass ratio : %f\n", pass_cnt, fail_cnt,
+               ((float)pass_cnt / ((float)fail_cnt + (float)pass_cnt) * 100.));
+    }
+
+    return ret;
+}
+
 int fim_sv_add_1(void)
 {
     int ret = 0;
@@ -40,15 +67,15 @@ int fim_sv_add_1(void)
 
     /* __FIM_API__ call : Preload weight data on FIM memory */
     FimCopyMemory(fim_vector, host_vector, HOST_TO_FIM);
-
     /* __FIM_API__ call : Execute FIM kernel (ELT_ADD) */
     FimExecuteAdd(device_output, host_scalar->data, fim_vector);
 
     FimCopyMemory(host_output, device_output, FIM_TO_HOST);
 
-    ret = compare_data((char*)golden_output->data, (char*)host_output->data, host_output->size);
-
-    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
+    //    ret = compare_data((char*)golden_output->data, (char*)host_output->data, host_output->size);
+    ret =
+        compare_data_round_off((half*)golden_output->data, (half*)host_output->data, host_output->size / sizeof(half));
+    //    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
 
     /* __FIM_API__ call : Free memory */
     FimDestroyBo(host_scalar);
@@ -98,9 +125,11 @@ int fim_sv_mul_1(void)
 
     FimCopyMemory(host_output, device_output, FIM_TO_HOST);
 
-    ret = compare_data((char*)golden_output->data, (char*)host_output->data, host_output->size);
-
-    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
+    //    ret = compare_data((char*)golden_output->data, (char*)host_output->data, host_output->size);
+    ret =
+        compare_data_round_off((half*)golden_output->data, (half*)host_output->data, host_output->size / sizeof(half));
+    //    ret = compare_data((char*)golden_output->data, (char*)host_output->data, host_output->size);
+    //    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
 
     /* __FIM_API__ call : Free memory */
     FimDestroyBo(host_scalar);

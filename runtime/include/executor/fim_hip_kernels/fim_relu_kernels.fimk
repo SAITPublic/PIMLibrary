@@ -44,12 +44,12 @@ __global__ void relu_fim_1cu_2th_fp16(volatile uint8_t* __restrict__ fim_data, v
 #endif
 }
 
-__global__ void relu_fim_sip(volatile uint8_t* __restrict__ fim_data, volatile uint8_t* __restrict__ fim_ctr,
-                             volatile uint8_t* __restrict__ output, int size,
+__global__ void relu_fim(volatile uint8_t* __restrict__ fim_data, volatile uint8_t* __restrict__ fim_ctr,
+                         volatile uint8_t* __restrict__ output, int size,
 #ifdef EMULATOR
-                             FimMemTraceData* fmtd16, int* frd_size, int mt_width,
+                         FimMemTraceData* fmtd16, int* frd_size, int mt_width,
 #endif
-                             uint8_t* crf_binary, int crf_size)
+                         uint8_t* crf_binary, int crf_size)
 {
 #ifdef EMULATOR
     g_fba = (uint64_t)fim_ctr;
@@ -138,6 +138,7 @@ __global__ void relu_fim_sip(volatile uint8_t* __restrict__ fim_data, volatile u
         B_CMD(1);
 
         W_CMD(&output[addr_even]);
+        R_CMD(&output[addr_even]);
         B_CMD(1);
         //    W_CMD(&output[addr_even]);
         //    B_CMD(1);
@@ -166,10 +167,10 @@ __global__ void relu_fim_sip(volatile uint8_t* __restrict__ fim_data, volatile u
     if (hipThreadIdx_x < 4) {
         addr = addr_gen(hipBlockIdx_x, 0, 0, gidx, sb_row_addr, 0x1f);
         W_CMD(&fim_ctr[addr + offset]);
+        R_CMD(&fim_ctr[addr + offset]);
+        B_CMD(1);
     }
     B_CMD(0);
-    B_CMD(1);
-    B_CMD(1);
 #endif
 
 #if PARK_OUT

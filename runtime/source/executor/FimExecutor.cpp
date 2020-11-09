@@ -158,7 +158,7 @@ int FimExecutor::execute_add(FimBo* output, FimBo* operand0, FimBo* operand1, hi
     int crf_lut_offset = (int)OP_ELT_ADD * max_crf_lut_size_ * max_crf_size_ + lc * max_crf_size_;
     int crf_size = h_crf_size_lut_[(int)OP_ELT_ADD * max_crf_lut_size_ + lc];
 
-    hipLaunchKernelGGL(elt_op_fim_sip, dim3(blocks), dim3(threads_per_block), 0, stream, (uint8_t*)operand0->data,
+    hipLaunchKernelGGL(elt_op_fim, dim3(blocks), dim3(threads_per_block), 0, stream, (uint8_t*)operand0->data,
                        (uint8_t*)operand1->data, (uint8_t*)g_fim_base_addr, (uint8_t*)output->data, output->size,
 #ifdef EMULATOR
                        (FimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_,
@@ -196,7 +196,7 @@ int FimExecutor::execute_mul(FimBo* output, FimBo* operand0, FimBo* operand1, hi
     int crf_lut_offset = (int)OP_ELT_MUL * max_crf_lut_size_ * max_crf_size_ + lc * max_crf_size_;
     int crf_size = h_crf_size_lut_[(int)OP_ELT_MUL * max_crf_lut_size_ + lc];
 
-    hipLaunchKernelGGL(elt_op_fim_sip, dim3(blocks), dim3(threads_per_block), 0, stream, (uint8_t*)operand0->data,
+    hipLaunchKernelGGL(elt_op_fim, dim3(blocks), dim3(threads_per_block), 0, stream, (uint8_t*)operand0->data,
                        (uint8_t*)operand1->data, (uint8_t*)g_fim_base_addr, (uint8_t*)output->data, output->size,
 #ifdef EMULATOR
                        (FimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_,
@@ -361,7 +361,7 @@ int FimExecutor::execute_relu(FimBo* output, FimBo* fim_data, hipStream_t stream
     int crf_lut_offset = (int)OP_RELU * max_crf_lut_size_ * max_crf_size_ + lc * max_crf_size_;
     int crf_size = h_crf_size_lut_[(int)OP_RELU * max_crf_lut_size_ + lc];
 
-    hipLaunchKernelGGL(relu_fim_sip, dim3(blocks), dim3(threads_per_block), 0, stream, (uint8_t*)fim_data->data,
+    hipLaunchKernelGGL(relu_fim, dim3(blocks), dim3(threads_per_block), 0, stream, (uint8_t*)fim_data->data,
                        (uint8_t*)g_fim_base_addr, (uint8_t*)output->data, (int)output->size,
 #ifdef EMULATOR
                        (FimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_,
