@@ -96,5 +96,5 @@ int fim_bn_1(bool block)
 
     return ret;
 }
-TEST(HIPIntegrationTest, FimBN1Sync) { EXPECT_TRUE(fim_bn_1(true) == 0); }
-TEST(HIPIntegrationTest, FimBN1Async) { EXPECT_TRUE(fim_bn_1(false) == 0); }
+// TEST(HIPIntegrationTest, FimBN1Sync) { EXPECT_TRUE(fim_bn_1(true) == 0); }
+// TEST(HIPIntegrationTest, FimBN1Async) { EXPECT_TRUE(fim_bn_1(false) == 0); }

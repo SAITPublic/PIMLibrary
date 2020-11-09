@@ -628,7 +628,7 @@ uint64_t FimMemoryManager::FimBlockAllocator::allocate_fim_block(size_t bsize) c
     if (!fim_alloc_done) {
         uint64_t size = 17179869184;  // 16 * 1024 * 1024 * 1024;
         ret = fmm_map_fim(2, gpu_id, size);
-        std::cout << std::hex << "fimBaseAddr = " << fim_base << std::endl;
+        // std::cout << std::hex << "fimBaseAddr = " << fim_base << std::endl;
         fim_alloc_done = true;
         g_fim_base_addr = ret;
     }

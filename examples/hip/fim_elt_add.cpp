@@ -324,7 +324,7 @@ int fim_elt_add_profile(bool block)
 /* __FIM_API__ call : Execute FIM kernel (ELT_ADD) */
 #ifdef TARGET
     int iter;
-    FIM_PROFILE_TICK_A(ELT_ADD_1);
+    FIM_PROFILE_TICK(ELT_ADD_1);
     for (iter = 0; iter < 1000; iter++) {
 #endif
         FimExecuteAdd(device_output, fim_input0, fim_input1, nullptr, block);
@@ -332,8 +332,8 @@ int fim_elt_add_profile(bool block)
         if (!block) FimSynchronize();
 #ifdef TARGET
     }
-    FIM_PROFILE_TOCK_A(ELT_ADD_1);
-    std::cout << "[ " << iter << " execution time ]" << std::endl;
+    FIM_PROFILE_TOCK(ELT_ADD_1);
+    // printf("[ %d execution time ]\n", iter);
 #endif
 
     FimCopyMemory(host_output, device_output, FIM_TO_HOST);
@@ -384,12 +384,10 @@ int fim_elt_add_batch(int batch)
 /* __FIM_API__ call : Execute FIM kernel (ELT_ADD) */
 #ifdef TARGET
     int iter;
-    FIM_PROFILE_TICK_A(ELT_ADD_1);
-    for (iter = 0; iter < 1000; iter++) FimExecuteAdd(device_output, fim_input0, fim_input1, nullptr, false);
-
+    FIM_PROFILE_TICK(ELT_ADD_1);
+    FimExecuteAdd(device_output, fim_input0, fim_input1, nullptr, false);
     FimSynchronize();
-    FIM_PROFILE_TOCK_A(ELT_ADD_1);
-    std::cout << "[ " << iter << " execution time batch ]" << std::endl;
+    FIM_PROFILE_TOCK(ELT_ADD_1);
 #endif
 
     FimCopyMemory(host_output, device_output, FIM_TO_HOST);

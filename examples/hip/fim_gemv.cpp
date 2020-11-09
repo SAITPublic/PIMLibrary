@@ -18,21 +18,6 @@ using namespace half_float;
 using namespace half_float::detail;
 using namespace half_float::literal;
 
-int compare_data(half* data_a, half* data_b, size_t size)
-{
-    int ret = 0;
-    bool print = true;
-
-    for (int i = 0; i < size; i++) {
-        if (print) std::cout << "[" << i << "] " << data_a[i] << " : " << data_b[i] << std::endl;
-        if (data_a[i] != data_b[i]) {
-            ret = -1;
-            if (!print) break;
-        }
-    }
-    return ret;
-}
-
 inline int compare_data_round_off(half* data_a, half* data_b, int size)
 {
     int pass_cnt = 0;
@@ -56,143 +41,6 @@ inline int compare_data_round_off(half* data_a, half* data_b, int size)
         printf("pass_cnt : %d, fail_cnt : %d, pass ratio : %f\n", pass_cnt, fail_cnt,
                ((float)pass_cnt / ((float)fail_cnt + (float)pass_cnt) * 100.));
     }
-
-    return ret;
-}
-
-void gemv_and_reduce_sum_level1(void* in_data, void* wei_data, void* out_data, int in_size, int out_size, int stride)
-{
-    half fp16_in, fp16_out, fp16_wei;
-    half* in_ptr = (half*)in_data;
-    half* wei_ptr = (half*)wei_data;
-    half* out_ptr = (half*)out_data;
-    half temp_out;
-
-    for (int i = 0; i < out_size; i++) {
-        out_ptr[i] = 0.0_h;
-
-        for (int j = 0; j < in_size; j += stride) {
-            temp_out = 0.0_h;
-            for (int k = 0; k < stride; k++) {
-                fp16_in = in_ptr[j + k];
-                fp16_wei = wei_ptr[j + k];
-                temp_out += fp16_in * fp16_wei;
-            }
-            out_ptr[i] += temp_out;
-        }
-
-        wei_ptr += in_size;
-        //        std::cout << "[ " << i << " ]"  << " " << fp16_out << std::endl;
-    }
-}
-
-void gemv_and_reduce_sum_level2(void* in_data, void* wei_data, void* out_data, int in_size, int out_size, int stride)
-{
-    half fp16_in, fp16_out, fp16_wei;
-    half* in_ptr = (half*)in_data;
-    half* wei_ptr = (half*)wei_data;
-    half* out_ptr = (half*)out_data;
-    half temp_64_out[64];
-    half temp_4_out[4];
-
-    for (int i = 0; i < out_size; i++) {
-        out_ptr[i] = 0.0_h;
-
-        for (int j = 0; j < in_size; j += stride) {
-            temp_64_out[j / stride] = 0.0_h;
-            for (int k = 0; k < stride; k++) {
-                fp16_in = in_ptr[j + k];
-                fp16_wei = wei_ptr[j + k];
-                temp_64_out[j / stride] += fp16_in * fp16_wei;
-            }
-        }
-
-        for (int j = 0; j < in_size / stride; j += stride) {
-            temp_4_out[j / stride] = 0.0_h;
-            for (int k = 0; k < stride; k++) {
-                temp_4_out[j / stride] += temp_64_out[j + k];
-            }
-        }
-
-        for (int j = 0; j < in_size / stride / stride; j++) {
-            out_ptr[i] += temp_4_out[j];
-        }
-
-        wei_ptr += in_size;
-        //        std::cout << "[ " << i << " ]"  << " " << fp16_out << std::endl;
-    }
-}
-
-int fim_gemv_value(bool block)
-{
-    int ret = 0;
-    int in_size = 1024;
-    int out_size = 4096;
-    int wei_size = in_size * out_size;
-
-    /* __FIM_API__ call : Initialize FimRuntime */
-    FimInitialize(RT_TYPE_HIP, FIM_FP16);
-
-    FimExecuteDummy();
-
-    int n, c, h, w;
-    n = 1;
-    c = 1;
-    h = out_size;
-    w = in_size;
-    FimDesc* fim_desc = FimCreateDesc(n, c, h, w, FIM_FP16, OP_GEMV);
-    /* __FIM_API__ call : Create FIM Buffer Object */
-    FimBo* host_input = FimCreateBo(fim_desc, MEM_TYPE_HOST, GEMV_INPUT);
-    FimBo* host_weight = FimCreateBo(fim_desc, MEM_TYPE_HOST, GEMV_WEIGHT);
-    FimBo* host_reordered_weight = FimCreateBo(fim_desc, MEM_TYPE_HOST, GEMV_WEIGHT);
-    FimBo* device_input = FimCreateBo(fim_desc, MEM_TYPE_DEVICE, GEMV_INPUT);
-    FimBo* device_output = FimCreateBo(fim_desc, MEM_TYPE_DEVICE, GEMV_OUTPUT);
-    FimBo* preloaded_weight = FimCreateBo(fim_desc, MEM_TYPE_FIM, GEMV_WEIGHT);
-    FimBo* host_output = FimCreateBo(fim_desc, MEM_TYPE_HOST, GEMV_OUTPUT);
-    FimBo* golden_output = FimCreateBo(fim_desc, MEM_TYPE_HOST, GEMV_OUTPUT);
-
-    /* Initialize the input, weight, output data */
-    for (int i = 0; i < in_size; i++) {
-        ((half*)host_input->data)[i] = 0.134_h;
-    }
-
-    for (int i = 0; i < wei_size; i++) {
-        ((half*)host_weight->data)[i] = 1.3_h;
-    }
-
-    int stride = 16;
-    gemv_and_reduce_sum_level2(host_input->data, host_weight->data, golden_output->data, in_size, out_size, stride);
-
-    FimCopyMemory(device_input, host_input, HOST_TO_DEVICE);
-
-    /* __FIM_API__ call : Preload weight data on FIM memory */
-    FimConvertDataLayout(host_reordered_weight, host_weight, OP_GEMV);
-    FimCopyMemory(preloaded_weight, host_reordered_weight, HOST_TO_FIM);
-
-    /* __FIM_API__ call : Execute FIM kernel (GEMV) */
-    FimExecuteGemv(device_output, device_input, preloaded_weight, nullptr, block);
-    if (!block) FimSynchronize();
-    FimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
-
-#if 0
-    dump_data(preload_weight.c_str(), (char*)preloaded_weight->data, preloaded_weight->size);
-    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
-#endif
-    ret = compare_data((half*)golden_output->data, (half*)host_output->data, out_size);
-
-    /* __FIM_API__ call : Destroy FIM Buffer Object */
-    FimDestroyBo(host_input);
-    FimDestroyBo(host_weight);
-    FimDestroyBo(host_output);
-    FimDestroyBo(host_reordered_weight);
-    FimDestroyBo(device_input);
-    FimDestroyBo(device_output);
-    FimDestroyBo(preloaded_weight);
-    FimDestroyBo(golden_output);
-    FimDestroyDesc(fim_desc);
-
-    /* __FIM_API__ call : Deinitialize FimRuntime */
-    FimDeinitialize();
 
     return ret;
 }
@@ -240,10 +88,6 @@ int fim_gemv_batch(bool block)
         if (!block) FimSynchronize();
 
         FimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
-        //    dump_data(preload_weight.c_str(), (char*)preloaded_weight->data, preloaded_weight->size);
-        //    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
-
-        //    ret = compare_data((char*)golden_output->data, (char*)host_output->data, host_output->size);
         ret = compare_data_round_off((half*)golden_output->data, (half*)host_output->data, OUT_LENGTH * BATCH_DIM);
     }
 
@@ -521,10 +365,6 @@ int fim_gemv_desc_batch(bool block)
 
         FimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
 
-        //    dump_data(preload_weight.c_str(), (char*)preloaded_weight->data, preloaded_weight->size);
-        //    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
-        //    ret = compare_data((char*)golden_output->data, (char*)host_output->data, batch_n * out_size *
-        //    sizeof(half));
         ret = compare_data_round_off((half*)golden_output->data, (half*)host_output->data, OUT_LENGTH * BATCH_DIM);
     }
     /* __FIM_API__ call : Destroy FIM Buffer Object */
@@ -699,7 +539,7 @@ int fim_gemv_lut_profile(bool block)
     FimSynchronize();
 #ifdef TARGET
     FIM_PROFILE_TOCK_A(GEMV_E2E);
-    std::cout << "[ " << iter << " execution time ]" << std::endl;
+    printf("[ %d execution time ]\n", iter);
 #endif
 
     FimCopyMemory(host_output, dev_out, DEVICE_TO_HOST);
@@ -722,7 +562,6 @@ int fim_gemv_lut_profile(bool block)
     return ret;
 }
 
-TEST(HIPIntegrationTest, FimGemvValueSync) { EXPECT_TRUE(fim_gemv_value(true) == 0); }
 TEST(HIPIntegrationTest, FimGemvBatchSync) { EXPECT_TRUE(fim_gemv_batch(true) == 0); }
 TEST(HIPIntegrationTest, FimGemvBatchAsync) { EXPECT_TRUE(fim_gemv_batch(false) == 0); }
 TEST(HIPIntegrationTest, FimGemv256Sync) { EXPECT_TRUE(fim_gemv_256(true) == 0); }

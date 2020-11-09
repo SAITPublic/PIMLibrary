@@ -323,7 +323,7 @@ int fim_elt_mul_profile(bool block)
 /* __FIM_API__ call : Execute FIM kernel (ELT_MUL) */
 #ifdef TARGET
     int iter;
-    FIM_PROFILE_TICK_A(ELT_MUL_1);
+    FIM_PROFILE_TICK(ELT_MUL_1);
     for (iter = 0; iter < 1000; iter++) {
 #endif
         FimExecuteMul(device_output, fim_input0, fim_input1, nullptr, block);
@@ -331,8 +331,8 @@ int fim_elt_mul_profile(bool block)
 
 #ifdef TARGET
     }
-    FIM_PROFILE_TOCK_A(ELT_MUL_1);
-    std::cout << "[ " << iter << " execution time ]" << std::endl;
+    FIM_PROFILE_TOCK(ELT_MUL_1);
+    // printf("[ %d execution time ]\n", iter);
 #endif
     FimCopyMemory(host_output, device_output, FIM_TO_HOST);
 
