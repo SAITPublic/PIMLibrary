@@ -76,7 +76,7 @@ __host__ __device__ uint64_t addr_gen(uint32_t chan, uint32_t rank, uint32_t ban
 
     addr <<= num_offset_bit;
 
-#ifdef TARGET
+#ifdef RADEON7
     /* we assume fim kernel run on vega20(32GB) system */
     /* but SAIT server is vega20(16GB) system */
     /* so upper 2bit should be set as 0 for normal work */

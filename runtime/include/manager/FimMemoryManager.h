@@ -54,7 +54,11 @@ class FimMemoryManager
     class FimBlockAllocator
     {
        private:
-        static const size_t block_size_ = 8589934592;  // 8GB Fim area
+#ifdef MI50
+        static const size_t block_size_ = 17179869184;  // 8GB Fim area
+#else        
+        static const size_t block_size_ = 8589934592;  // 8GB Fim area 
+#endif
        public:
         explicit FimBlockAllocator() {}
         void* alloc(size_t request_size, size_t& allocated_size) const;
