@@ -87,28 +87,36 @@ else
 fi
 
 if [ $target_device = "emulator" ]; then
-    cmake_build_options="${cmake_build_options} -DTARGET=OFF"
+    cmake_build_options="${cmake_build_options} -DTARGET=OFF -DMI50=OFF -DRADEON7=OFF"
 elif [ $target_device = "mi50" ]; then
-    cmake_build_options="${cmake_build_options} -DTARGET=ON -DMI50=1"
+    cmake_build_options="${cmake_build_options} -DTARGET=ON -DMI50=ON"
 elif [ $target_device = "radeon7" ]; then
-    cmake_build_options="${cmake_build_options} -DTARGET=ON -DRADEON7=1"
+    cmake_build_options="${cmake_build_options} -DTARGET=ON -DRADEON7=ON"
 fi
 
 echo "${cmake_build_options}"
 
 build="${proj_cmake_dir}/build"
 
-if [ -d "$build" ]; then
-    echo "build directory path ${build}"
-else
-    mkdir $build
-    echo "build directory doesn't exists created ${build} directory"
-fi
-
 cmake_fn()
 {
+    if [ -d "$build" ]; then
+	echo "build directory path ${build}"
+    else
+	mkdir $build
+	echo "build directory doesn't exists created ${build} directory"
+    fi
+
+
     cd ${build}
     cmake ${cmake_build_options} ${proj_cmake_dir}
+}
+
+make_clean()
+{
+    if [ -d "$build" ]; then
+        rm -rf ${build}
+    fi
 }
 
 make_fn()
@@ -136,6 +144,7 @@ uninstall_fn()
 
 if [ $1 = "all" ]; then
     uninstall_fn
+    make_clean
     cmake_fn
     make_fn
     make_install_fn

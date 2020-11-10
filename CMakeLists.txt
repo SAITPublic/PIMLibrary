@@ -16,6 +16,8 @@ set(ROCM_PATH $ENV{ROCM_PATH})
 
 option(MIOPEN_APPS "Enable MIOpens apps build" OFF)
 option(TARGET "Enable TARGET apps build" OFF)
+option(RADEON7 "Enable TARGET:RADEON7 apps build" OFF)
+option(MI50 "Enable TARGET:MI50 apps build" OFF)
 
 # Set Default build type to "Debug"
 if((NOT CMAKE_BUILD_TYPE) OR (CMAKE_BUILD_TYPE) STREQUAL None)
@@ -53,6 +55,12 @@ if(TARGET)
     add_definitions(-DTARGET=1)
 else()
     add_definitions(-DEMULATOR=1)
+endif()
+if(RADEON7)
+    add_definitions(-DRADEON7=1)
+endif()
+if(MI50)
+    add_definitions(-DMI50=1)
 endif()
 
 add_subdirectory(runtime)
