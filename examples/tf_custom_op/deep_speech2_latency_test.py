@@ -27,6 +27,7 @@ import timeit
 import argparse
 from tabulate import tabulate
 import os
+import tf_fim_ops as fim_ops
 
 SEED = 1234
 
@@ -67,6 +68,7 @@ parser.add_argument('-i','--iterations', default=100, help="Number of iterations
 parser.add_argument('-p','--profile', action="store_true", help="Enabled/Disable profiling")
 parser.add_argument('-f','--functional_verify', action="store_true", help="Enabled/Disable Functional verification")
 parser.add_argument('-d','--dtype', default='fp16' , help="fp16 or fp32 execution")
+parser.add_argument('-m','--module', default='keras' , help="keras or fim_custom execution")
 
 args = parser.parse_args()
 
@@ -154,6 +156,74 @@ class conv_bn_layer(tf.keras.layers.Layer):
 
         return retval
 
+class rnn_fim_layer(tf.keras.layers.Layer):
+    """Defines a batch normalization + rnn layer.
+    Args:
+        inputs: input tensors for the current layer.
+        rnn_cell: RNN cell instance to use.
+        rnn_hidden_size: an integer for the dimensionality of the rnn output space.
+        layer_id: an integer for the index of current layer.
+        is_batch_norm: a boolean specifying whether to perform batch normalization
+            on input states.
+        is_bidirectional: a boolean specifying whether the rnn layer is
+            bi-directional.
+        training: a boolean to indicate which stage we are in (training/eval).
+
+    Returns:
+        tensor output for the current layer.
+    """
+
+    def __init__(self, rnn_hidden_size, num_layers, is_batch_norm, is_bidirectional, dtype=tf.float16):
+        super(rnn_fim_layer, self).__init__()
+        self.is_batch_norm = is_batch_norm
+        self.float_type = dtype
+        self.is_bi_directiona = is_bidirectional
+        self.ws_len = 9600000 * 2 #hack to avoid malloc everytime in custom_op
+
+        if is_bidirectional :
+            self.num_layers = num_layers * 2
+            self.bi = 2
+        else:
+            self.num_layers = num_layers
+            self.bi = 1
+
+        cell_val = 0.0
+        hid_val = 0.0
+        weight_val = 0.001
+
+        self.hidden_states = tf.constant(hid_val, shape=(1, self.num_layers, args.batch_size, rnn_hidden_size), dtype=tf.float16)
+        self.cell_states = tf.constant(cell_val, shape=(1, self.num_layers, args.batch_size, rnn_hidden_size), dtype=tf.float16)
+
+        weight_x = 2592 + ((num_layers - 1) * (self.bi + 1) + 1) * rnn_hidden_size
+        weight_y = self.bi * rnn_hidden_size * 4  # nHiddenTensorsPerLayer;
+        self.weights_ext = tf.constant(weight_val, shape=(1, weight_x, weight_y), dtype=tf.float16)
+
+    def call(self, inputs):
+        inputs = np.expand_dims(inputs, 0)
+        result, hidden_out, cell_out, ws = tf_fim_ops.fim_lstm(
+                                                            inputs,
+                                                            self.weights_ext,
+                                                            self.hidden_states,
+                                                            self.cell_states,
+                                                            tf.constant([self.bi]),
+                                                            tf.constant([self.ws_len]))
+
+        rnn_output = np.expand_dims(result[0],0)
+
+        if args.profile == True :
+            eval_time.append(["LSTM ",(timeit.timeit(lambda: tf_fim_ops.fim_lstm(
+                                            inputs,
+                                            self.weights_ext,
+                                            self.hidden_states,
+                                            self.cell_states,
+                                            tf.constant([self.bi]),
+                                            tf.constant([self.ws_len]),
+                                       ),
+                                       number = args.iterations)),
+                                       inputs.shape,
+                                       rnn_output.shape])
+
+        return rnn_output
 
 class rnn_layer(tf.keras.layers.Layer):
     """Defines a batch normalization + rnn layer.
@@ -232,12 +302,28 @@ class DeepSpeech2(tf.keras.Model):
                                             strides=(2, 1), layer_id=2, dtype=self.float_type)
         self.rshape = tf.keras.layers.Reshape((-1, 81*CONV_FILTERS))
 
-        for layer_counter in xrange(self.num_rnn_layers):
-            # No batch normalization on the first layer.
-            is_batch_norm = (layer_counter != 0)
-            self.lstm.append(rnn_layer(rnn_hidden_size=self.rnn_hidden_size,
-                                       layer_id=layer_counter + 1, is_batch_norm=is_batch_norm,
-                                       dtype=self.float_type))
+        if args.module == 'keras':
+            for layer_counter in xrange(self.num_rnn_layers):
+                # No batch normalization on the first layer.
+                is_batch_norm = (layer_counter != 0)
+                self.lstm.append(rnn_layer(rnn_hidden_size=self.rnn_hidden_size,
+                                           layer_id=layer_counter + 1, is_batch_norm=is_batch_norm,
+                                           dtype=self.float_type))
+        else:
+            if args.functional_verify:
+                for layer_counter in xrange(self.num_rnn_layers):
+                    # No batch normalization on the first layer.
+                    is_batch_norm = (layer_counter != 0)
+                    self.lstm.append(rnn_layer(rnn_hidden_size=self.rnn_hidden_size,
+                                               layer_id=layer_counter + 1, is_batch_norm=is_batch_norm,
+                                               dtype=self.float_type))
+
+            self.lstm_fim = rnn_fim_layer(rnn_hidden_size=self.rnn_hidden_size,
+                                      num_layers = self.num_rnn_layers,
+                                      is_batch_norm = True,
+                                      is_bidirectional = True,
+                                      dtype = dtype
+                                      )
 
         self.bnorm = batch_norm(dtype=self.float_type)
         self.dense = tf.keras.layers.Dense(self.num_classes, use_bias=self.use_bias, dtype=self.float_type)
@@ -248,7 +334,6 @@ class DeepSpeech2(tf.keras.Model):
 
         # Convolution Layer 2
         conv2 = self.conv_layer_two(conv1, training)
-
 
         # Reshape
         output = self.rshape(conv2)
@@ -263,22 +348,33 @@ class DeepSpeech2(tf.keras.Model):
             reshape_out_gpu = np.copy(output)
             reshape_out_fim = np.copy(output)
             os.environ['ENABLE_FIM'] = '0'
+
             for layer_counter in xrange(self.num_rnn_layers):
                 reshape_out_gpu = self.lstm[layer_counter](reshape_out_gpu, training)
 
             os.environ['ENABLE_FIM'] = '1'
-            for layer_counter in xrange(self.num_rnn_layers):
-                reshape_out_fim = self.lstm[layer_counter](reshape_out_fim, training)
+            if args.module == 'keras':
+                for layer_counter in xrange(self.num_rnn_layers):
+                    reshape_out_fim = self.lstm[layer_counter](reshape_out_fim, training)
+            else:
+                reshape_out_fim = self.lstm_fim(reshape_out_fim)
 
             os.environ['ENABLE_FIM'] = orig_env
 
             result = np.testing.assert_array_almost_equal(reshape_out_fim, reshape_out_gpu, decimal=5)
             print("Functional Verification : {}".format(result))
 
-
-        # LSTM Layers
-        for layer_counter in xrange(self.num_rnn_layers):
-            output = self.lstm[layer_counter](output, training)
+            if orig_env == 1:
+                output = reshape_out_fim
+            else:
+                output = reshape_out_gpu
+        else:
+            # LSTM Layers
+            if args.module == 'keras':
+                for layer_counter in xrange(self.num_rnn_layers):
+                    output = self.lstm[layer_counter](output, training)
+            else:
+                output = self.lstm_fim(output)
 
         # Batch Normalization
         bn_out = self.bnorm(output, training)
