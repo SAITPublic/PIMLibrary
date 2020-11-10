@@ -13,37 +13,13 @@
 #define OUT_LENGTH (4096)
 #define BATCH_DIM (2)
 
-using namespace std;
-using namespace half_float;
-using namespace half_float::detail;
-using namespace half_float::literal;
+#if MI50
+#define NUM_ITER (100)
+#else
+#define NUM_ITER (1)
+#endif
 
-inline int compare_data_round_off(half* data_a, half* data_b, int size)
-{
-    int pass_cnt = 0;
-    int fail_cnt = 0;
-    int ret = 0;
-
-    for (int i = 0; i < size; i++) {
-        if (abs(float(data_a[i]) - float(data_b[i])) < 0.1) {
-            pass_cnt++;
-            //            printf("pass %f: %f\n", float(data_a[i]), float(data_b[i]));
-            //            std::cout << float(data_a[i]) << " : " << float(data_b[i]) << std::endl;
-        } else {
-            fail_cnt++;
-            printf("fail %f: %f\n", float(data_a[i]), float(data_b[i]));
-            //            std::cout << float(data_a[i]) << " : " << float(data_b[i]) << std::endl;
-            ret = 1;
-        }
-    }
-
-    if (ret) {
-        printf("pass_cnt : %d, fail_cnt : %d, pass ratio : %f\n", pass_cnt, fail_cnt,
-               ((float)pass_cnt / ((float)fail_cnt + (float)pass_cnt) * 100.));
-    }
-
-    return ret;
-}
+using half_float::half;
 
 int fim_gemv_batch(bool block)
 {
@@ -81,7 +57,7 @@ int fim_gemv_batch(bool block)
     FimConvertDataLayout(host_reordered_weight, host_weight, OP_GEMV);
 
     FimCopyMemory(preloaded_weight, host_reordered_weight, HOST_TO_DEVICE);
-    for (int i = 0; i < 100; i++) {
+    for (int i = 0; i < NUM_ITER; i++) {
         /* __FIM_API__ call : Execute FIM kernel (GEMV) */
         FimExecuteGemv(device_output, device_input, preloaded_weight, nullptr, block);
 
@@ -142,7 +118,7 @@ int fim_gemv_256(bool block)
     /* __FIM_API__ call : Preload weight data on FIM memory */
     FimConvertDataLayout(host_reordered_weight, host_weight, OP_GEMV);
     FimCopyMemory(preloaded_weight, host_reordered_weight, HOST_TO_DEVICE);
-    for (int i = 0; i < 100; i++) {
+    for (int i = 0; i < NUM_ITER; i++) {
         /* __FIM_API__ call : Execute FIM kernel (GEMV) */
         FimExecuteGemv(device_output, device_input, preloaded_weight, nullptr, block);
         if (!block) FimSynchronize();
@@ -204,7 +180,7 @@ int fim_gemv_512(bool block)
     /* __FIM_API__ call : Preload weight data on FIM memory */
     FimConvertDataLayout(host_reordered_weight, host_weight, OP_GEMV);
     FimCopyMemory(preloaded_weight, host_reordered_weight, HOST_TO_DEVICE);
-    for (int i = 0; i < 100; i++) {
+    for (int i = 0; i < NUM_ITER; i++) {
         /* __FIM_API__ call : Execute FIM kernel (GEMV) */
         FimExecuteGemv(device_output, device_input, preloaded_weight, nullptr, block);
         if (!block) FimSynchronize();
@@ -277,7 +253,7 @@ int fim_gemv_desc(bool block)
     /* __FIM_API__ call : Preload weight data on FIM memory */
     FimConvertDataLayout(host_reordered_weight, host_weight, OP_GEMV);
     FimCopyMemory(preloaded_weight, host_reordered_weight, HOST_TO_FIM);
-    for (int i = 0; i < 100; i++) {
+    for (int i = 0; i < NUM_ITER; i++) {
         /* __FIM_API__ call : Execute FIM kernel (GEMV) */
         FimExecuteGemv(device_output, device_input, preloaded_weight, nullptr, block);
         if (!block) FimSynchronize();
@@ -358,7 +334,7 @@ int fim_gemv_desc_batch(bool block)
     /* __FIM_API__ call : Preload weight data on FIM memory */
     FimConvertDataLayout(host_reordered_weight, host_weight, OP_GEMV);
     FimCopyMemory(preloaded_weight, host_reordered_weight, HOST_TO_FIM);
-    for (int i = 0; i < 100; i++) {
+    for (int i = 0; i < NUM_ITER; i++) {
         /* __FIM_API__ call : Execute FIM kernel (GEMV) */
         FimExecuteGemv(device_output, device_input, preloaded_weight, nullptr, block);
         if (!block) FimSynchronize();

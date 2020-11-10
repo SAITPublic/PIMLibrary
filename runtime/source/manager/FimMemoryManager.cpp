@@ -606,34 +606,6 @@ uint64_t FimMemoryManager::FimBlockAllocator::allocate_fim_block(size_t bsize) c
 {
     if (fim_alloc_done == true) return 0;
 
-#if 1
-    // Get GPU ID
-    FILE* fd;
-    char path[256];
-    uint32_t gpu_id;
-    uint64_t fim_base;
-
-    snprintf(path, 256, "/sys/devices/virtual/kfd/kfd/topology/nodes/2/gpu_id");
-    fd = fopen(path, "r");
-    if (!fd) return -1;
-    if (fscanf(fd, "%ul", &gpu_id) != 1) return -1;
-    fclose(fd);
-
-    uint64_t ret = 0;
-    /********************************************
-      ARG1 : node-id
-      ARG2 : gpu-id
-      ARG3 : block size
-    ********************************************/
-    if (!fim_alloc_done) {
-        uint64_t size = 17179869184;  // 16 * 1024 * 1024 * 1024;
-        ret = fmm_map_fim(2, gpu_id, size);
-        // std::cout << std::hex << "fimBaseAddr = " << fim_base << std::endl;
-        fim_alloc_done = true;
-        g_fim_base_addr = ret;
-    }
-
-#else
     // Get GPU ID
     FILE* fd;
     char path[256];
@@ -664,7 +636,6 @@ uint64_t FimMemoryManager::FimBlockAllocator::allocate_fim_block(size_t bsize) c
         fim_alloc_done = true;
         g_fim_base_addr = ret;
     }
-#endif
 
     return ret;
 }

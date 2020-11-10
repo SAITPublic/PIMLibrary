@@ -10,35 +10,14 @@
 
 #define LENGTH (128 * 1024)
 
+#if MI50
+#define NUM_ITER (100)
+#else
+#define NUM_ITER (1)
+#endif
+
 using namespace std;
 using half_float::half;
-
-inline int compare_data_round_off(half* data_a, half* data_b, int size)
-{
-    int pass_cnt = 0;
-    int fail_cnt = 0;
-    int ret = 0;
-
-    for (int i = 0; i < size; i++) {
-        if (abs(float(data_a[i]) - float(data_b[i])) < 0.1) {
-            pass_cnt++;
-            //            printf("pass %f: %f\n", float(data_a[i]), float(data_b[i]));
-            //            std::cout << float(data_a[i]) << " : " << float(data_b[i]) << std::endl;
-        } else {
-            fail_cnt++;
-            printf("fail %f: %f\n", float(data_a[i]), float(data_b[i]));
-            //            std::cout << float(data_a[i]) << " : " << float(data_b[i]) << std::endl;
-            ret = 1;
-        }
-    }
-
-    if (ret) {
-        printf("pass_cnt : %d, fail_cnt : %d, pass ratio : %f\n", pass_cnt, fail_cnt,
-               ((float)pass_cnt / ((float)fail_cnt + (float)pass_cnt) * 100.));
-    }
-
-    return ret;
-}
 
 int fim_relu_1(bool block)
 {
@@ -66,7 +45,7 @@ int fim_relu_1(bool block)
 
     /* __FIM_API__ call : Preload weight data on FIM memory */
     FimCopyMemory(fim_input, host_input, HOST_TO_FIM);
-    for (int i = 0; i < 100; i++) {
+    for (int i = 0; i < NUM_ITER; i++) {
         /* __FIM_API__ call : Execute FIM kernel */
         FimExecuteRelu(device_output, fim_input, nullptr, block);
         if (!block) FimSynchronize();
@@ -124,7 +103,7 @@ int fim_relu_2(bool block)
 
     /* __FIM_API__ call : Preload weight data on FIM memory */
     FimCopyMemory(&fim_input, &host_input, HOST_TO_FIM);
-    for (int i = 0; i < 100; i++) {
+    for (int i = 0; i < NUM_ITER; i++) {
         /* __FIM_API__ call : Execute FIM kernel */
         FimExecuteRelu(&device_output, &fim_input, nullptr, block);
         if (!block) FimSynchronize();
@@ -177,7 +156,7 @@ int fim_relu_3(bool block)
 
     /* __FIM_API__ call : Preload weight data on FIM memory */
     FimCopyMemory(fim_input, host_input, HOST_TO_FIM);
-    for (int i = 0; i < 100; i++) {
+    for (int i = 0; i < NUM_ITER; i++) {
         /* __FIM_API__ call : Execute FIM kernel */
         FimExecuteRelu(device_output, fim_input, nullptr, block);
         if (!block) FimSynchronize();
