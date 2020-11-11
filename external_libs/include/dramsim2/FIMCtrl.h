@@ -70,8 +70,8 @@ class FIMController
           num_bank_(num_bank),
           num_bankgroup_(num_bankgroup),
           num_fim_chan_(num_fim_chan),
-          num_transaction_(0),
           num_fim_rank_(num_fim_rank),
+          num_transaction_(0),
           cycle_(0)
     {
         num_bankgroup_bit_ = dramsim_log2(num_bankgroup);
@@ -182,8 +182,8 @@ class FIMController
     void preload_bn(NumpyBurstType* operand, unsigned starting_row = 0, unsigned starting_col = 0);
     void preprocess_srf(NumpyBurstType* input_npbst, fp16** params, int burst_offset, int num_srf_usage);
     void program_srf();
-    void read_result_bn(BurstType* result_bst, int num_ba, int num_ch, int num_w, unsigned starting_row = 0,
-                        unsigned starting_col = 0);
+    void read_result_bn(BurstType* result_bst, uint64_t base_addr, int num_ba, int num_ch, int num_w,
+                        unsigned starting_row = 0, unsigned starting_col = 0);
 
     void preload_no_replacement(NumpyBurstType* operand, unsigned starting_row, unsigned starting_col);
 

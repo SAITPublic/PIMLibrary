@@ -159,8 +159,8 @@ void FimCrfBinGen::create_fim_cmd(FimOpType op_type, int lc)
                                                     FimOpdType::SRF_M, FimOpdType::SRF_A, 1, 0, 0, 0),
                                          FimCommand(FimCmdType::MAD, FimOpdType::GRF_B, FimOpdType::GRF_B,
                                                     FimOpdType::SRF_M, FimOpdType::SRF_A, 1, 0, 0, 1),
-                                         FimCommand(FimCmdType::NOP, 7),
-                                         FimCommand(FimCmdType::NOP, 0)};
+                                         FimCommand(FimCmdType::NOP, 7)
+                                         /*FimCommand(FimCmdType::NOP, 0)*/};
         cmds_.assign(tmp_cmds.begin(), tmp_cmds.end());
     }
 

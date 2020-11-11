@@ -625,6 +625,62 @@ __device__ void read_result_bn_1cu_2th(volatile uint8_t* __restrict__ output, vo
     }
 }
 
+__device__ void read_result_bn_64cu_2th(volatile uint8_t* __restrict__ output, volatile uint8_t* __restrict__ fim_data,
+                                        int num_batch, int num_ch, int num_width, uint32_t s_row, uint32_t s_col,
+                                        uint64_t offset)
+{
+    FimBlockInfo* fbi = &vega20_fbi;
+    int cidx = 0;
+    int rank = 0;
+    int bg = 0;
+    int bank = 0;
+    uint64_t t_fim_addr;
+    uint64_t t_out_addr;
+    unsigned row;
+    unsigned col;
+    unsigned s_row_ch = s_row;
+    unsigned s_col_ch = s_col;
+
+    // for (int ch = 0; ch < num_ch; ch++) {
+    //    s_row = s_row_ch;
+    //    s_col = s_col_ch;
+    for (int b = 0; b < num_batch; b++) {
+        for (int w = 0; w < num_width; w += fbi->num_grf) {
+            row = s_row;
+            col = s_col;
+            for (int grf_idx = 0; grf_idx < fbi->num_grf; grf_idx++) {
+                t_fim_addr = addr_gen_safe(hipBlockIdx_x, 0, bg, bank, row, col);
+                t_out_addr = (b * num_ch * num_width + hipBlockIdx_x * num_width + w + grf_idx) * fbi->trans_size;
+                GEN_READ_CMD(output + t_out_addr + offset, &fim_data[t_fim_addr + offset], true);
+                col++;
+            }
+            bank++;
+
+            if (bank >= (fbi->num_banks / fbi->num_bank_groups)) {
+                bg++;
+                bank = 0;
+            }
+            if (bg >= fbi->num_bank_groups) {
+                bg = 0;
+                s_row = row;
+                s_col = col;
+            }
+        }
+    }
+
+    // rank++;
+    // if (rank >= fbi->num_fim_rank) {
+    //     rank = 0;
+    //     cidx++;
+    // }
+    // if (cidx >= fbi->num_fim_chan) {
+    //     cidx = 0;
+    //     s_row_ch = row;
+    //     s_col_ch = col;
+    // }
+    // }
+}
+
 __device__ void compute_gemv_2bank_1cu_2th(volatile uint8_t* __restrict__ fim_ctr,
                                            volatile uint8_t* __restrict__ fim_weight,
                                            volatile uint8_t* __restrict__ fim_input, int num_in_tile, int num_out_tile,

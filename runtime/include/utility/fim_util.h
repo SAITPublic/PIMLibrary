@@ -91,10 +91,13 @@ __device__ int gemv_get_result_col(int input_dim, int output_dim, int num_in_til
 __device__ void read_result_bn_1cu_2th(volatile uint8_t* __restrict__ output, volatile uint8_t* __restrict__ fim_data,
                                        int num_batch, int num_ch, int num_width, uint32_t s_row, uint32_t s_col,
                                        uint64_t offset);
-
+__device__ void read_result_bn_64cu_2th(volatile uint8_t* __restrict__ output, volatile uint8_t* __restrict__ fim_data,
+                                        int num_batch, int num_ch, int num_width, uint32_t s_row, uint32_t s_col,
+                                        uint64_t offset);
 __device__ void read_result_1cu_2th(volatile uint8_t* __restrict__ output, volatile uint8_t* __restrict__ fim_data,
                                     FimBankType bank_type, int out_dim, uint32_t s_row, uint32_t s_col,
                                     uint64_t offset);
+
 __device__ void read_result_2bank_1cu_2th(volatile uint8_t* __restrict__ output,
                                           volatile uint8_t* __restrict__ fim_data, int out_dim, uint32_t s_row,
                                           uint32_t s_col, uint64_t offset);

@@ -37,6 +37,8 @@ class FimSimulator
     void read_result(uint16_t* output_data, uint64_t addr, size_t data_size);
     // Read data from address. it uses only odd bank.
     void read_result_gemv(uint16_t* output_data, uint64_t addr, size_t data_dim);
+    void read_result_bn(uint16_t* output_data, uint64_t addr, int num_batch, int num_ch, int num_w,
+                        unsigned starting_row, unsigned starting_col, size_t data_size);
     void eltwise_add(void* output_data, uint16_t* reduced_output, int real_dim, int padded_dim, int num_batch);
 
     // Todo : This should be integrated with the above functions.

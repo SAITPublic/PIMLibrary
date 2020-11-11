@@ -139,23 +139,27 @@ int FimEmulator::execute_gemv_add(FimBo* output, FimBo* fim_data, FimMemTraceDat
     return ret;
 }
 
-int FimEmulator::execute_bn(FimBo* output, FimBo* fim_data, FimMemTraceData* fmtd32, int fmtd32_size)
+int FimEmulator::execute_bn(FimBo* output, FimBo* fim_data, FimMemTraceData* fmtd32, int fmtd32_size,
+                            uint64_t fim_base_addr, uint8_t* temp_buf)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
     int num_element = 0;
     uint16_t* sim_output = nullptr;
-    int fp16_burst_size = 16;
 
     num_element = output->size / sizeof(uint16_t);
     sim_output = new uint16_t[num_element];
     fim_sim_.initialize("/opt/rocm/include/dramsim2/ini/HBM2_samsung_2M_16B_x64.ini",
                         "/opt/rocm/include/dramsim2/ini/system_hbm_vega20.ini", 256 * 64 * 2, 64, 1);
-    fim_sim_.alloc_burst(fim_data->size, fim_data->size);
-    fim_sim_.preload_data(fim_data->data, fim_data->size);
-    fim_sim_.execute_kernel_bn((void*)fmtd32, (size_t)fmtd32_size, output->bshape.n, output->bshape.c,
-                               output->bshape.w / fp16_burst_size);
-    fim_sim_.get_uint16_result(sim_output, num_element);
+    uint64_t tmp_data_addr = reinterpret_cast<uint64_t>(temp_buf);
+    uint64_t fim_data_addr = reinterpret_cast<uint64_t>(fim_data->data);
+    uint64_t output_addr = reinterpret_cast<uint64_t>(output->data);
+
+    fim_sim_.preload_data_with_addr(fim_data_addr - fim_base_addr, fim_data->data, fim_data->size);
+    fim_sim_.execute_kernel((void*)fmtd32, fmtd32_size);
+    fim_sim_.read_result_bn(sim_output, tmp_data_addr - fim_base_addr, output->bshape.n, output->bshape.c,
+                            output->bshape.w, 0, 0, output->size);
+
     if (output->mem_type != MEM_TYPE_HOST)
         hipMemcpy((void*)output->data, (void*)sim_output, output->size, hipMemcpyHostToDevice);
 
