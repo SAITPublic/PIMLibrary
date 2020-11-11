@@ -55,7 +55,9 @@ RNN_HIDDEN_SIZE = 800
 # Dense Layer
 OUTPUT_SIZE = 29
 
+weight_val = 0.001
 initializer = tf.keras.initializers.RandomNormal(seed=SEED)
+kernel_initializer = tf.keras.initializers.Constant(weight_val)
 
 # Performance table for different layers
 eval_time = []
@@ -243,7 +245,7 @@ class rnn_layer(tf.keras.layers.Layer):
         tensor output for the current layer.
     """
 
-    def __init__(self, rnn_hidden_size, layer_id, is_batch_norm, dtype=tf.float16):
+    def __init__(self, rnn_hidden_size, layer_id, is_batch_norm, dtype=tf.float16, initializer = initializer):
         super(rnn_layer, self).__init__()
         self.is_batch_norm = is_batch_norm
         self.float_type = dtype
@@ -316,7 +318,7 @@ class DeepSpeech2(tf.keras.Model):
                     is_batch_norm = (layer_counter != 0)
                     self.lstm.append(rnn_layer(rnn_hidden_size=self.rnn_hidden_size,
                                                layer_id=layer_counter + 1, is_batch_norm=is_batch_norm,
-                                               dtype=self.float_type))
+                                               dtype=self.float_type, initializer=kernel_initializer))
 
             self.lstm_fim = rnn_fim_layer(rnn_hidden_size=self.rnn_hidden_size,
                                       num_layers = self.num_rnn_layers,
