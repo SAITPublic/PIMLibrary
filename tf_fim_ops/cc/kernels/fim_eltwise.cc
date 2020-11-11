@@ -1,6 +1,7 @@
 #include <miopen/miopen.h>
 #include <iostream>
 #include "fim_runtime_api.h"
+#include "utility/fim_log.h"
 #include "hip/hip_fp16.h"
 #include "tensorflow/core/framework/op.h"
 #include "tensorflow/core/framework/op_kernel.h"
@@ -9,7 +10,7 @@ using namespace tensorflow;  // NOLINT(build/namespaces)
 
 void KernelLauncher(const void* inp0_data, const void* inp1_data, int N, int is_scalar, void* out_data, int32 op)
 {
-    std::cout << "Launcher for FIM_Eltwise" << std::endl;
+    DLOG(INFO) << "Launcher for FIM_Eltwise" ;
 
     FimDesc* fim_desc = FimCreateDesc(1, 1, 1, N, FIM_FP16);
 
@@ -25,10 +26,10 @@ void KernelLauncher(const void* inp0_data, const void* inp1_data, int N, int is_
         FimCopyMemory((void*)&fim_input0, (void*)inp0_data, sizeof(uint16_t), DEVICE_TO_HOST);
 
         if (op == 0) {
-            std::cout << "Calling FIMExecuteAdd" << std::endl;
+            DLOG(INFO) << "Calling FIMExecuteAdd" ;
             FimExecuteAdd(device_output, (void*)&fim_input0, fim_input1);
         } else {
-            std::cout << "Calling FIMExecuteMul" << std::endl;
+            DLOG(INFO) << "Calling FIMExecuteMul" ;
             FimExecuteMul(device_output, (void*)&fim_input0, fim_input1);
         }
     } else {
@@ -37,10 +38,10 @@ void KernelLauncher(const void* inp0_data, const void* inp1_data, int N, int is_
         FimCopyMemory((void*)fim_input0->data, (void*)inp0_data, sizeof(uint16_t) * N, HOST_TO_FIM);
 
         if (op == 0) {
-            std::cout << "Calling FIMExecuteAdd" << std::endl;
+            DLOG(INFO) << "Calling FIMExecuteAdd";
             FimExecuteAdd(device_output, fim_input0, fim_input1);
         } else {
-            std::cout << "Calling FIMExecuteMul" << std::endl;
+            DLOG(INFO) << "Calling FIMExecuteMul" ;
             FimExecuteMul(device_output, fim_input0, fim_input1);
         }
 
@@ -84,7 +85,7 @@ class FimEltwiseOp : public OpKernel
         if (N0 != N1) {
             // if num elems are not equal then check if one of them is a scalar.
             if (N0 != 1 && N1 != 1) {
-                std::cout << "num elems in both tensors are not same and neither of them is a scalar \n";
+                DLOG(INFO) << "num elems in both tensors are not same and neither of them is a scalar \n";
                 // TODO
                 // throw error
             } else if (N0 == 1)
@@ -94,7 +95,7 @@ class FimEltwiseOp : public OpKernel
         } else {
             // TODO
             // if num elements are equal check if shapes are equal.
-            std::cout << "check for shapes \n";
+            DLOG(INFO) << "check for shapes \n";
         }
         if (wi != -1) is_scalar = 1;  // this means one of the inp tensors is a scalar
 

@@ -1,5 +1,6 @@
 #include <iostream>
 #include "fim_runtime_api.h"
+#include "utility/fim_log.h"
 #include "tensorflow/core/framework/op.h"
 #include "tensorflow/core/framework/op_kernel.h"
 
@@ -7,7 +8,7 @@ using namespace tensorflow;  // NOLINT(build/namespaces)
 
 void KernelLauncher()
 {
-    std::cout << "Launcher for FIM_Init" << std::endl;
+    DLOG(INFO) << "Launcher for FIM_Init" ;
 
     /* __FIM_API__ call : Initialize FimRuntime */
     FimInitialize(RT_TYPE_HIP, FIM_FP16);

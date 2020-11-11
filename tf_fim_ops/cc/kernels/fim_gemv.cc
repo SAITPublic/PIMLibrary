@@ -1,5 +1,6 @@
 #include <iostream>
 #include "fim_runtime_api.h"
+#include "utility/fim_log.h"
 #include "hip/hip_fp16.h"
 #include "tensorflow/core/framework/op.h"
 #include "tensorflow/core/framework/op_kernel.h"
@@ -9,7 +10,7 @@ using namespace tensorflow;  // NOLINT(build/namespaces)
 void KernelLauncher(const void* i_data, const void* w_data, const int num_batch, const int IN_LENGTH,
                     const int OUT_LENGTH, void* o_data, int reorder)
 {
-    std::cout << "Launcher for FIM_Gemv" << std::endl;
+    DLOG(INFO) << "Launcher for FIM_Gemv" ;
 
     //    /* __FIM_API__ call : Initialize FimRuntime */
     //    FimInitialize(RT_TYPE_HIP, FIM_FP16);
@@ -54,7 +55,7 @@ void KernelLauncher(const void* i_data, const void* w_data, const int num_batch,
         FimCopyMemory(preloaded_weight, host_weight, HOST_TO_DEVICE);
     }
 
-    std::cout << "Calling FIMExecuteGEMV" << std::endl;
+    DLOG(INFO) << "Calling FIMExecuteGEMV" ;
     /* __FIM_API__ call : Execute FIM kernel (GEMV) */
     FimExecuteGemv(device_output, device_input, preloaded_weight);
 

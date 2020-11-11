@@ -1,6 +1,7 @@
 #include <miopen/miopen.h>
 #include <iostream>
 #include "fim_runtime_api.h"
+#include "utility/fim_log.h"
 #include "hip/hip_fp16.h"
 #include "tensorflow/core/framework/op.h"
 #include "tensorflow/core/framework/op_kernel.h"
@@ -89,7 +90,7 @@ class FimBnOp : public OpKernel
         std::vector<int> in_dims;
 
         for (int i = 0; i < DIMS; i++) {
-            std::cout << "Dim " << input_tensor.dim_size(i);
+            DLOG(INFO) << "Dim " << input_tensor.dim_size(i);
             in_dims.push_back(input_tensor.dim_size(i));
         }
         // Call kernel
