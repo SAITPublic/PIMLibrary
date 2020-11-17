@@ -1,10 +1,10 @@
 #include <miopen/miopen.h>
 #include <iostream>
 #include "fim_runtime_api.h"
-#include "utility/fim_log.h"
 #include "hip/hip_fp16.h"
 #include "tensorflow/core/framework/op.h"
 #include "tensorflow/core/framework/op_kernel.h"
+#include "utility/fim_log.h"
 
 using namespace tensorflow;  // NOLINT(build/namespaces)
 

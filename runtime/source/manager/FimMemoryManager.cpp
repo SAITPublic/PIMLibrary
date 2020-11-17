@@ -137,7 +137,7 @@ int FimMemoryManager::copy_memory(void* dst, void* src, size_t size, FimMemCpyTy
             DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
             return -1;
         }
-    } else if (cpy_type == DEVICE_TO_FIM || cpy_type == FIM_TO_DEVICE) {
+    } else if (cpy_type == DEVICE_TO_FIM || cpy_type == FIM_TO_DEVICE || cpy_type == DEVICE_TO_DEVICE) {
         if (hipMemcpy(dst, src, size, hipMemcpyDeviceToDevice) != hipSuccess) {
             DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
             return -1;

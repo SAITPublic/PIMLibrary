@@ -277,7 +277,7 @@ __device__ void B_CMD(int type)
 {
     if (type == 0) {
         __syncthreads();
-//        asm volatile("s_waitcnt vmcnt(0) lgkmcnt(0)");
+        //        asm volatile("s_waitcnt vmcnt(0) lgkmcnt(0)");
     } else {
         __threadfence();
         asm volatile("s_waitcnt vmcnt(0) lgkmcnt(0)");

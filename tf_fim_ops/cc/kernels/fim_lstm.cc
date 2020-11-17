@@ -1,10 +1,10 @@
 #include <miopen/miopen.h>
 #include <iostream>
 #include "fim_runtime_api.h"
-#include "utility/fim_log.h"
 #include "hip/hip_fp16.h"
 #include "tensorflow/core/framework/op.h"
 #include "tensorflow/core/framework/op_kernel.h"
+#include "utility/fim_log.h"
 
 using namespace tensorflow;  // NOLINT(build/namespaces)
 
@@ -32,14 +32,14 @@ class Timer
 void PrintHalf(const char* str, const void* data, int idx)
 {
     half x = ((half*)data)[idx];
-    DLOG(INFO) << str << float(x) ;
+    DLOG(INFO) << str << float(x);
 }
 
 void KernelLauncher(const void* i_data, const void* w_data, const void* h_data, const void* c_data,
                     std::vector<int> in_len, std::vector<int> hid_len, int bi_dir, int ws_len, void* ws_data,
                     void* ho_data, void* co_data, void* o_data)
 {
-    DLOG(INFO) << "Launcher for FIM_Lstm" ;
+    DLOG(INFO) << "Launcher for FIM_Lstm";
 
     Timer t;
     miopenTensorDescriptor_t input_tensor, hidden_tensor, weight_tensor, output_tensor;
@@ -101,13 +101,13 @@ void KernelLauncher(const void* i_data, const void* w_data, const void* h_data, 
         miopenGetRNNHiddenTensorSize(handle, rnnDesc, nseq, input_tensors.data(), &hy_sz);
         miopenGetRNNWorkspaceSize(handle, rnnDesc, nseq, input_tensors.data(), &workSpace_sz);
         miopenGetRNNParamsSize(handle, rnnDesc, input_tensors[0], &wei_sz, miopenHalf);
-        DLOG(INFO) << "In size " << in_sz ;
-        DLOG(INFO) << "Out size " << out_sz ;
-        DLOG(INFO) << "Param size " << wei_sz ;
-        DLOG(INFO) << "Workspace size " << workSpace_sz ;
+        DLOG(INFO) << "In size " << in_sz;
+        DLOG(INFO) << "Out size " << out_sz;
+        DLOG(INFO) << "Param size " << wei_sz;
+        DLOG(INFO) << "Workspace size " << workSpace_sz;
         miopenGetRNNParamsSize(handle, rnnDesc, input_tensors[0], &wei_sz, miopenHalf);
         t.stop();
-        DLOG(INFO) << "Duration debug: " << t.gettime_ms() ;
+        DLOG(INFO) << "Duration debug: " << t.gettime_ms();
     }
 
     // PrintHalf("Inputb ",i_data,0);
@@ -127,7 +127,7 @@ void KernelLauncher(const void* i_data, const void* w_data, const void* h_data, 
                               hidden_tensor, co_data, ws_data, ws_len);
     FimSynchronize();
     t.stop();
-    DLOG(INFO) << "RNNfwd Duration: " << t.gettime_ms() ;
+    DLOG(INFO) << "RNNfwd Duration: " << t.gettime_ms();
 
     // PrintHalf("Input ",i_data,0);
     // PrintHalf("Input ",i_data,7);
@@ -213,7 +213,7 @@ class FimLstmOp : public OpKernel
         KernelLauncher(input.data(), weights.data(), hidden_states.data(), cell_states.data(), input_dims, hidden_dims,
                        bi_dir, ws_len, ws.data(), ho.data(), co.data(), output.data());
         t.stop();
-        DLOG(INFO) << "Kernel Duration: " << t.gettime_ms() ;
+        DLOG(INFO) << "Kernel Duration: " << t.gettime_ms();
     }
 };
 

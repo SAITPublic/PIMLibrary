@@ -2,9 +2,9 @@
 #define _FIM_DUMP_HPP_
 
 #include "fim_data_types.h"
+#include "half.hpp"
 #include "manager/FimInfo.h"
 #include "stdio.h"
-#include "half.hpp"
 
 inline const char* get_fim_op_string(FimOpType op_type)
 {

@@ -1,16 +1,16 @@
 #include <miopen/miopen.h>
 #include <iostream>
 #include "fim_runtime_api.h"
-#include "utility/fim_log.h"
 #include "hip/hip_fp16.h"
 #include "tensorflow/core/framework/op.h"
 #include "tensorflow/core/framework/op_kernel.h"
+#include "utility/fim_log.h"
 
 using namespace tensorflow;  // NOLINT(build/namespaces)
 
 void KernelLauncher(const void* inp0_data, const void* inp1_data, int N, int is_scalar, void* out_data, int32 op)
 {
-    DLOG(INFO) << "Launcher for FIM_Eltwise" ;
+    DLOG(INFO) << "Launcher for FIM_Eltwise";
 
     FimDesc* fim_desc = FimCreateDesc(1, 1, 1, N, FIM_FP16);
 
@@ -26,10 +26,10 @@ void KernelLauncher(const void* inp0_data, const void* inp1_data, int N, int is_
         FimCopyMemory((void*)&fim_input0, (void*)inp0_data, sizeof(uint16_t), DEVICE_TO_HOST);
 
         if (op == 0) {
-            DLOG(INFO) << "Calling FIMExecuteAdd" ;
+            DLOG(INFO) << "Calling FIMExecuteAdd";
             FimExecuteAdd(device_output, (void*)&fim_input0, fim_input1);
         } else {
-            DLOG(INFO) << "Calling FIMExecuteMul" ;
+            DLOG(INFO) << "Calling FIMExecuteMul";
             FimExecuteMul(device_output, (void*)&fim_input0, fim_input1);
         }
     } else {
@@ -41,7 +41,7 @@ void KernelLauncher(const void* inp0_data, const void* inp1_data, int N, int is_
             DLOG(INFO) << "Calling FIMExecuteAdd";
             FimExecuteAdd(device_output, fim_input0, fim_input1);
         } else {
-            DLOG(INFO) << "Calling FIMExecuteMul" ;
+            DLOG(INFO) << "Calling FIMExecuteMul";
             FimExecuteMul(device_output, fim_input0, fim_input1);
         }
 

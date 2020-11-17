@@ -30,6 +30,9 @@ set(FIM_BN_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/cc/kernels/fim_bn.cc
 set(FIM_LSTM_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/cc/kernels/fim_lstm.cc
             ${CMAKE_CURRENT_SOURCE_DIR}/cc/ops/fim_lstm_ops.cc)
 
+set(FIM_DENSE_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/cc/kernels/fim_dense.cc
+            ${CMAKE_CURRENT_SOURCE_DIR}/cc/ops/fim_dense_ops.cc)
+
 set(FIM_INIT_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/cc/kernels/fim_init.cc
             ${CMAKE_CURRENT_SOURCE_DIR}/cc/ops/fim_init_ops.cc)
 
@@ -53,6 +56,9 @@ target_link_libraries(fim_bn FimRuntime ${TF_LFLAGS})
 add_library(fim_lstm SHARED ${FIM_LSTM_SOURCES})
 target_link_libraries(fim_lstm MIOpen ${TF_LFLAGS})
 
+add_library(fim_dense SHARED ${FIM_DENSE_SOURCES})
+target_link_libraries(fim_dense FimRuntime ${TF_LFLAGS})
+
 add_library(fim_init SHARED ${FIM_INIT_SOURCES})
 target_link_libraries(fim_init FimRuntime ${TF_LFLAGS})
 
@@ -68,6 +74,8 @@ install ( TARGETS fim_activation LIBRARY DESTINATION
 install ( TARGETS fim_bn LIBRARY DESTINATION
            /opt/rocm/lib)
 install ( TARGETS fim_lstm LIBRARY DESTINATION
+           /opt/rocm/lib)
+install ( TARGETS fim_dense LIBRARY DESTINATION
            /opt/rocm/lib)
 install ( TARGETS fim_init LIBRARY DESTINATION
            /opt/rocm/lib)

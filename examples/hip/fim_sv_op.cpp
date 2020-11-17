@@ -5,8 +5,8 @@
 #include <algorithm>
 #include <iostream>
 #include "fim_runtime_api.h"
-#include "utility/fim_dump.hpp"
 #include "half.hpp"
+#include "utility/fim_dump.hpp"
 
 #define LENGTH (128 * 1024)
 

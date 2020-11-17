@@ -1,15 +1,15 @@
 #include <iostream>
 #include "fim_runtime_api.h"
-#include "utility/fim_log.h"
 #include "hip/hip_fp16.h"
 #include "tensorflow/core/framework/op.h"
 #include "tensorflow/core/framework/op_kernel.h"
+#include "utility/fim_log.h"
 
 using namespace tensorflow;  // NOLINT(build/namespaces)
 
 void KernelLauncher(const void* inp_data, const int N, void* out_data)
 {
-    DLOG(INFO) << "Launcher for FIM_Activation" ;
+    DLOG(INFO) << "Launcher for FIM_Activation";
 
     FimDesc* fim_desc = FimCreateDesc(1, 1, 1, N, FIM_FP16);
 
@@ -20,7 +20,7 @@ void KernelLauncher(const void* inp_data, const int N, void* out_data)
     /* __FIM_API__ call : Copy input data on FIM memory */
     FimCopyMemory(fim_input->data, (void*)inp_data, sizeof(half) * N, HOST_TO_FIM);
 
-    DLOG(INFO)  << "Calling FIMExecuteRelu" ;
+    DLOG(INFO) << "Calling FIMExecuteRelu";
     /* __FIM_API__ call : Execute FIM kernel (Relu) */
     FimExecuteRelu(device_output, fim_input);
 

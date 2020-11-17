@@ -1,8 +1,8 @@
 #include <iostream>
 #include "fim_runtime_api.h"
-#include "utility/fim_log.h"
 #include "tensorflow/core/framework/op.h"
 #include "tensorflow/core/framework/op_kernel.h"
+#include "utility/fim_log.h"
 
 using namespace tensorflow;  // NOLINT(build/namespaces)
 
