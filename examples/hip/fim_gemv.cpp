@@ -13,7 +13,7 @@
 #define OUT_LENGTH (4096)
 #define BATCH_DIM (2)
 
-#if MI50
+#ifdef DEBUG_FIM
 #define NUM_ITER (100)
 #else
 #define NUM_ITER (1)
@@ -519,8 +519,8 @@ int fim_gemv_lut_profile(bool block)
 #endif
 
     FimCopyMemory(host_output, dev_out, DEVICE_TO_HOST);
-    dump_data(preload_weight.c_str(), (char*)preloaded_weight->data, preloaded_weight->size);
-    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
+    //    dump_data(preload_weight.c_str(), (char*)preloaded_weight->data, preloaded_weight->size);
+    //    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
     ret = compare_data_round_off((half*)golden_output->data, (half*)host_output->data, out_size);
 
     /* __FIM_API__ call : Destroy FIM Buffer Object */

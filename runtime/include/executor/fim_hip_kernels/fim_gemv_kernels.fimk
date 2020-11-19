@@ -337,7 +337,7 @@ __global__ void gemv_fim_64cu_64th_fp16(volatile uint8_t* __restrict__ fim_ctr,
         for (int b_idx = 0; b_idx < batch_dim; b_idx++) {
             for (int o_idx = 0; o_idx < n_out_tile; o_idx++) {
                 addr = addr_gen(ch, 0, 0, 0, 0x3fff, 0x0);
-                W_CMD_R(&fim_ctr[addr + offset], gemv_hab_to_hab_fim + w_idx * 16);
+                W_CMD_R(&fim_ctr[addr + offset], gemv_hab_to_hab_fim + offset);
                 B_CMD(1);
 
                 uint64_t i_offset = b_idx * n_memory_tile * num_grf;
@@ -429,7 +429,7 @@ __global__ void gemv_fim_64cu_64th_fp16(volatile uint8_t* __restrict__ fim_ctr,
                 B_CMD(1);
 
                 addr = addr_gen(ch, 0, 0, 0, 0x3fff, 0x0);
-                W_CMD_R(&fim_ctr[addr + offset], gemv_hab_fim_to_hab + w_idx * 16);
+                W_CMD_R(&fim_ctr[addr + offset], gemv_hab_fim_to_hab + offset);
                 B_CMD(1);
             }
         }
@@ -482,7 +482,10 @@ __global__ void gemv_fim_64cu_64th_fp16(volatile uint8_t* __restrict__ fim_ctr,
                 t_output += ((half*)fim_gemv_tmp_buffer)[(addr >> 1) + j];
             }
             out_offset = i * output_dim + out_idx;
-            ((half*)output)[out_offset] = (half)is_gemv_add * ((half*)output)[out_offset] + t_output;
+            if (is_gemv_add)
+                ((half*)output)[out_offset] = ((half*)output)[out_offset] + t_output;
+            else
+                ((half*)output)[out_offset] = t_output;
         }
     }
 #endif

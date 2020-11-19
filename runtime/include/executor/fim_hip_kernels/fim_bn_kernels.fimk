@@ -113,17 +113,18 @@ __global__ void bn_fim_sip(volatile uint8_t* __restrict__ fim_data, volatile uin
     if (hipThreadIdx_x < (crf_size >> 4)) {
         addr = addr_gen(hipBlockIdx_x, 0, 0, 1, 0x3fff, 0x4 + gidx);
         W_CMD_R(&fim_ctr[addr + offset], crf_binary + (hipThreadIdx_x << 4));
+        B_CMD(1);
     }
     B_CMD(0);
 
-    addr = addr_gen(hipBlockIdx_x, 0, 0, 0, 0x3fff, 0x0);
-    W_CMD_R(&fim_ctr[addr + offset], bn_hab_to_hab_fim + offset);
-    B_CMD(0);
-    B_CMD(1);
-
     if (hipThreadIdx_x < 2) {
+        addr = addr_gen(hipBlockIdx_x, 0, 0, 0, 0x3fff, 0x0);
+        W_CMD_R(&fim_ctr[addr + offset], bn_hab_to_hab_fim + offset);
+        B_CMD(1);
+
         addr = addr_gen(hipBlockIdx_x, 0, 0, 0, 0x3fff, 0x1);
         W_CMD_R(&fim_ctr[addr + offset], srf_binary + hipBlockIdx_x * trans_size + offset);
+        B_CMD(1);
     }
     B_CMD(0);
 
@@ -138,34 +139,46 @@ __global__ void bn_fim_sip(volatile uint8_t* __restrict__ fim_data, volatile uin
 
         R_CMD(&fim_data[addr_even]);
         B_CMD(1);
+     
+        R_CMD(&fim_data[addr_even]);
+        B_CMD(1);
 
         R_CMD(&fim_data[addr_even]);
         B_CMD(1);
 
         W_CMD(&fim_bn_tmp_buffer[addr_even]);
+        W_CMD(&fim_bn_tmp_buffer[addr_even]);
+        R_CMD(&fim_bn_tmp_buffer[addr_even]);
         B_CMD(1);
-
+        
+        R_CMD(&fim_data[addr_odd]);
+        B_CMD(1);
+           
         R_CMD(&fim_data[addr_odd]);
         B_CMD(1);
 
         R_CMD(&fim_data[addr_odd]);
         B_CMD(1);
+
 
         W_CMD(&fim_bn_tmp_buffer[addr_odd]);
-        B_CMD(1);
-
+        W_CMD(&fim_bn_tmp_buffer[addr_odd]);
         B_CMD(0);
     }
 
     if (hipThreadIdx_x < 2) {
         addr = addr_gen(hipBlockIdx_x, 0, 0, 0, 0x3fff, 0x0);
-        W_CMD_R(&fim_ctr[addr + offset], bn_hab_fim_to_hab + (hipThreadIdx_x << 4));
+        W_CMD_R(&fim_ctr[addr + offset], bn_hab_fim_to_hab + offset);
+        B_CMD(1);
     }
     B_CMD(0);
 
     if (hipThreadIdx_x < 4) {
         addr = addr_gen(hipBlockIdx_x, 0, 0, gidx, sb_row_addr, 0x1f);
         W_CMD(&fim_ctr[addr + offset]);
+        B_CMD(1);
+        B_CMD(1);
+        B_CMD(1);
     }
     B_CMD(0);
 
@@ -173,6 +186,14 @@ __global__ void bn_fim_sip(volatile uint8_t* __restrict__ fim_data, volatile uin
     R_CMD(&fim_data[addr + offset]);
     R_CMD(&fim_data[addr + 0x8000 + offset]);
     B_CMD(0);
+
+#ifdef TARGET
+    if (hipThreadIdx_x < 2) {
+        read_result_bn_64cu_2th(output, fim_bn_tmp_buffer, num_ba, num_ch, num_w / 16, 0, 0, offset);
+        B_CMD(1);
+    }
+    B_CMD(0);
+#endif
 
 #ifdef EMULATOR
     if (hipBlockIdx_x == 0 && hipThreadIdx_x == 0) {

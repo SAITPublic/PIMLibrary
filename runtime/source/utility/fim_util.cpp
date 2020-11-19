@@ -641,17 +641,15 @@ __device__ void read_result_bn_64cu_2th(volatile uint8_t* __restrict__ output, v
     unsigned s_row_ch = s_row;
     unsigned s_col_ch = s_col;
 
-    // for (int ch = 0; ch < num_ch; ch++) {
-    //    s_row = s_row_ch;
-    //    s_col = s_col_ch;
     for (int b = 0; b < num_batch; b++) {
         for (int w = 0; w < num_width; w += fbi->num_grf) {
             row = s_row;
             col = s_col;
             for (int grf_idx = 0; grf_idx < fbi->num_grf; grf_idx++) {
-                t_fim_addr = addr_gen_safe(hipBlockIdx_x, 0, bg, bank, row, col);
+                t_fim_addr = addr_gen(hipBlockIdx_x, 0, bg, bank, row, col);
                 t_out_addr = (b * num_ch * num_width + hipBlockIdx_x * num_width + w + grf_idx) * fbi->trans_size;
-                GEN_READ_CMD(output + t_out_addr + offset, &fim_data[t_fim_addr + offset], true);
+                W_CMD_R(output + t_out_addr + offset, fim_data + t_fim_addr + offset);
+
                 col++;
             }
             bank++;
@@ -668,17 +666,6 @@ __device__ void read_result_bn_64cu_2th(volatile uint8_t* __restrict__ output, v
         }
     }
 
-    // rank++;
-    // if (rank >= fbi->num_fim_rank) {
-    //     rank = 0;
-    //     cidx++;
-    // }
-    // if (cidx >= fbi->num_fim_chan) {
-    //     cidx = 0;
-    //     s_row_ch = row;
-    //     s_col_ch = col;
-    // }
-    // }
 }
 
 __device__ void compute_gemv_2bank_1cu_2th(volatile uint8_t* __restrict__ fim_ctr,

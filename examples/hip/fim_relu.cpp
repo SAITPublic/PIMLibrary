@@ -10,7 +10,7 @@
 
 #define LENGTH (128 * 1024)
 
-#if MI50
+#ifdef DEBUG_FIM
 #define NUM_ITER (100)
 #else
 #define NUM_ITER (1)

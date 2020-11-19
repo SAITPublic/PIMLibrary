@@ -152,14 +152,17 @@ void FimCrfBinGen::create_fim_cmd(FimOpType op_type, int lc)
     } else if (op_type == OP_BN) {
         std::vector<FimCommand> tmp_cmds{FimCommand(FimCmdType::MAD, FimOpdType::GRF_A, FimOpdType::EVEN_BANK,
                                                     FimOpdType::SRF_M, FimOpdType::SRF_A, 1, 0, 0, 0),
+                                         FimCommand(FimCmdType::NOP, 7),
+                                         
                                          FimCommand(FimCmdType::MAD, FimOpdType::GRF_A, FimOpdType::GRF_A,
                                                     FimOpdType::SRF_M, FimOpdType::SRF_A, 1, 0, 0, 1),
-                                         FimCommand(FimCmdType::NOP, 7),
+                                         FimCommand(FimCmdType::NOP, 23),
                                          FimCommand(FimCmdType::MAD, FimOpdType::GRF_B, FimOpdType::ODD_BANK,
                                                     FimOpdType::SRF_M, FimOpdType::SRF_A, 1, 0, 0, 0),
+                                         FimCommand(FimCmdType::NOP, 7),
                                          FimCommand(FimCmdType::MAD, FimOpdType::GRF_B, FimOpdType::GRF_B,
                                                     FimOpdType::SRF_M, FimOpdType::SRF_A, 1, 0, 0, 1),
-                                         FimCommand(FimCmdType::NOP, 7)
+                                         FimCommand(FimCmdType::NOP, 15)
                                          /*FimCommand(FimCmdType::NOP, 0)*/};
         cmds_.assign(tmp_cmds.begin(), tmp_cmds.end());
     }

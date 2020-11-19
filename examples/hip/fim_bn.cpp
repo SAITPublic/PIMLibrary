@@ -8,19 +8,16 @@
 #include "half.hpp"
 #include "utility/fim_dump.hpp"
 
+#ifdef DEBUG_FIM
+#define NUM_ITER (100)
+#else
+#define NUM_ITER (1)
+#endif
+
 using namespace std;
 using half_float::half;
 
 inline float convertH2F(half h_val) { return half_float::detail::half2float<float>(h_val); }
-inline int compare_data_round_off(half* data_a, half* data_b, size_t size, double epsilon = 0.001)
-{
-    for (int i = 0; i < size; i++) {
-        if (!((abs(data_a[i]) - abs(data_b[i])) < (half)epsilon)) {
-            return -1;
-        }
-    }
-    return 0;
-}
 
 int fim_bn_1(bool block)
 {
@@ -68,15 +65,17 @@ int fim_bn_1(bool block)
     /* __FIM_API__ call : Preload weight data on FIM memory */
     FimConvertDataLayout(preloaded_fim_input, host_input, OP_BN);
 
-    // /* __FIM_API__ call : Execute FIM kernel */
-    FimExecuteBN(device_output, preloaded_fim_input, host_beta, host_gamma, host_mean, host_variance, 1e-5, nullptr,
-                 block);
-    if (!block) FimSynchronize();
+    for (int i = 0; i < NUM_ITER; i++) {
+        // /* __FIM_API__ call : Execute FIM kernel */
+        FimExecuteBN(device_output, preloaded_fim_input, host_beta, host_gamma, host_mean, host_variance, 1e-5, nullptr,
+                     block);
+        if (!block) FimSynchronize();
 
-    FimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
+        FimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
 
-    ret = compare_data_round_off((half*)golden_output->data, (half*)host_output->data, host_output->size / 2, 0.01);
-
+        ret = compare_data_round_off((half*)golden_output->data, (half*)host_output->data, host_output->size / 2);
+        //cout <<" ITER : " << i <<endl;
+    }
     dump_data(preload_input.c_str(), (char*)preloaded_fim_input->data, preloaded_fim_input->size);
     dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
 

@@ -119,7 +119,7 @@ __global__ void relu_fim(volatile uint8_t* __restrict__ fim_data, volatile uint8
 
 #if CHANGE_HAB_HABFIM
     addr = addr_gen(hipBlockIdx_x, 0, 0, 0, 0x3fff, 0x0);
-    W_CMD_R(&fim_ctr[addr + offset], elt_add_hab_to_hab_fim + (hipThreadIdx_x << 4));
+    W_CMD_R(&fim_ctr[addr + offset], elt_add_hab_to_hab_fim + offset);
     B_CMD(1);
     B_CMD(1);
 #endif
@@ -140,25 +140,19 @@ __global__ void relu_fim(volatile uint8_t* __restrict__ fim_data, volatile uint8
         W_CMD(&output[addr_even]);
         R_CMD(&output[addr_even]);
         B_CMD(1);
-        //    W_CMD(&output[addr_even]);
-        //    B_CMD(1);
 
         R_CMD(&fim_data[addr_odd]);
         B_CMD(1);
 
         W_CMD(&output[addr_odd]);
         B_CMD(1);
-        //    W_CMD(&output[addr_odd]);
-        //    B_CMD(1);
-
-        B_CMD(0);
     }
 #endif
 
 #if CHANGE_HABFIM_HAB
     if (hipThreadIdx_x < 2) {
         addr = addr_gen(hipBlockIdx_x, 0, 0, 0, 0x3fff, 0x0);
-        W_CMD_R(&fim_ctr[addr + offset], elt_add_hab_fim_to_hab + (hipThreadIdx_x << 4));
+        W_CMD_R(&fim_ctr[addr + offset], elt_add_hab_fim_to_hab + offset);
     }
     B_CMD(0);
 #endif
