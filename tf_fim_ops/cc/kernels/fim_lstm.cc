@@ -51,7 +51,7 @@ void KernelLauncher(const void* i_data, const void* w_data, const void* h_data, 
     miopenCreate(&handle);
 
     int nseq = in_len[1];               // Number of iterations to unroll over
-    int out_h = 2 * hid_len[2];         // for bidirection
+    int out_h = bi_dir * hid_len[2];         // for bidirection
     std::vector<int> out_len({out_h});  // output tensor length
 
     int batch_size = in_len[0];
@@ -81,7 +81,7 @@ void KernelLauncher(const void* i_data, const void* w_data, const void* h_data, 
     miopenRNNMode_t mode = miopenLSTM;
     miopenRNNBiasMode_t biasMode = miopenRNNNoBias;
     miopenRNNDirectionMode_t directionMode;
-    directionMode = miopenRNNbidirection;
+    directionMode = (bi_dir == 2) ? miopenRNNbidirection : miopenRNNunidirection;
     miopenRNNInputMode_t inMode = miopenRNNlinear;
     miopenRNNAlgo_t algo = miopenRNNdefault;
 
@@ -193,7 +193,7 @@ class FimLstmOp : public OpKernel
         Tensor* ws_out_tensor = NULL;
 
         // Todo , figure out correct output siz , why does doc state 2d when there is output for each timestep
-        TensorShape tshape = TensorShape({2 * input_dims[0], input_dims[1], 2 * hidden_dims[2]});
+        TensorShape tshape = TensorShape({2 * input_dims[0], input_dims[1], bi_dir * hidden_dims[2]});
 
         OP_REQUIRES_OK(context, context->allocate_output(0, tshape, &output_tensor));
         auto output = output_tensor->flat<Eigen::half>();
