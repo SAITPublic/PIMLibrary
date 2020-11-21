@@ -179,15 +179,17 @@ class rnn_fim_layer(tf.keras.layers.Layer):
         super(rnn_fim_layer, self).__init__()
         self.is_batch_norm = is_batch_norm
         self.float_type = dtype
-        self.is_bi_directiona = is_bidirectional
-        self.ws_len = 9600000 * 2 #hack to avoid malloc everytime in custom_op
-
+        self.is_bi_direction = is_bidirectional
         if is_bidirectional :
             self.num_layers = num_layers * 2
             self.bi = 2
         else:
             self.num_layers = num_layers
             self.bi = 1
+
+        #refer ,size_t RNNDescriptor::GetWorkspaceSize()
+        self.ws_len = 6 * num_layers * args.batch_size * INPUT_HEIGHT * rnn_hidden_size * 4;
+        self.ws_len = self.ws_len *self.bi
 
         cell_val = 0.0
         hid_val = 0.0
@@ -329,6 +331,12 @@ class DeepSpeech2(tf.keras.Model):
 
         self.bnorm = batch_norm(dtype=self.float_type)
         self.dense = tf.keras.layers.Dense(self.num_classes, use_bias=self.use_bias, dtype=self.float_type)
+        self.fim_dense_weights =  tf.random.uniform(shape=(rnn_hidden_size*2 , num_classes), dtype=tf.float16)
+        self.fim_dense_bias = tf.random.uniform(shape=[num_classes], dtype=tf.float16)
+        self.reorder = tf.constant([1])
+        self.use_bias_int  = tf.constant([1])
+        if self.use_bias == False:
+            self.use_bias_int = tf.constant([0])
 
     def call(self, inputs, training=False):
         # Convolution Layer 1
@@ -383,10 +391,26 @@ class DeepSpeech2(tf.keras.Model):
 
         # Dense Layer
         logits = self.dense(bn_out)
+
+        if args.functional_verify:
+            #No need to track ENABLE_FIM , since miopen not used for dense.
+            weights = self.dense.get_weights()
+            bias = fim_dense_bias
+            if self.use_bias == True:
+                    bias = weights[1]
+            fim_logits = tf_fim_ops.fim_dense(bn_out, weights[0], bias, self.use_bias_int, self.reorder)
+            self.assertAllClose(logits, fim_logits, atol=1e-3)
+
         if args.profile == True :
             print(" Dense input shape {}".format(bn_out.shape))
-            eval_time.append(["Dense",
-                (timeit.timeit(lambda: self.dense(inputs=bn_out), number = args.iterations)), bn_out.shape, logits.shape])
+            if args.module == 'keras':
+                logits = self.dense(bn_out)
+                eval_time.append(["Dense",
+                    (timeit.timeit(lambda: self.dense(inputs=bn_out), number = args.iterations)), bn_out.shape, logits.shape])
+            else:
+                logits = tf_fim_ops.fim_dense(bn_out, self.fim_dense_weights, self.fim_dense_bias, self.use_bias_int, self.reorder)
+                eval_time.append(["Dense",
+                    (timeit.timeit(lambda: tf_fim_ops.fim_dense(bn_out, self.fim_dense_weights, self.fim_dense_bias, self.use_bias_int, self.reorder), number = args.iterations)), bn_out.shape, logits.shape])
 
             print(" Dense output shape {}".format(logits.shape))
         return logits
