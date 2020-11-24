@@ -8,7 +8,7 @@
 using namespace tensorflow;  // NOLINT(build/namespaces)
 
 void KernelLauncher(const void* i_data, const void* w_data, const int num_batch, const int IN_LENGTH,
-                    const int OUT_LENGTH, void* o_data, int reorder)
+                    const int OUT_LENGTH, void* o_data)
 {
     DLOG(INFO) << "Launcher for FIM_Dense ";
 
@@ -50,16 +50,25 @@ void KernelLauncher(const void* i_data, const void* w_data, const int num_batch,
         dev_out = bundle->out;
     }
 
-    for (int i = 0; i < num_batch; i++) {
-        FimCopyMemory((void*)(static_cast<half*>(dev_in->data) + i * dev_in->bshape.w),
+    void *dev_data_ptr = dev_in->data;
+    if(num_batch > 1){
+        for (int i = 0; i < num_batch; i++) {
+            FimCopyMemory((void*)(static_cast<half*>(dev_in->data) + i * dev_in->bshape.w),
                       (void*)(static_cast<const half*>(i_data) + i * IN_LENGTH), sizeof(half) * IN_LENGTH,
                       DEVICE_TO_DEVICE);
+        }
+    }
+    else{
+        dev_in->data = (void *)i_data;
     }
 
     t_dev_out = *dev_out;
     t_dev_out.data = o_data;
 
     FimExecuteGemv(&t_dev_out, dev_in, pre_wei);
+
+    //Not setting this causes a crash in fim_deinit()
+    dev_in->data = dev_data_ptr;
 }
 
 class FimDenseOp : public OpKernel
@@ -69,6 +78,7 @@ class FimDenseOp : public OpKernel
 
     void Compute(OpKernelContext* context) override
     {
+
         // Grab the input tensor
         const Tensor& input_tensor = context->input(0);
         auto input = input_tensor.flat<Eigen::half>();
@@ -86,7 +96,7 @@ class FimDenseOp : public OpKernel
         int num_cols = input_tensor1.dim_size(1);
 
         if (num_dims > 3) {
-            std::cout << "Currently only upto 3 dim inputs are supported " << std::endl;
+            DLOG(ERROR) << "Currently only upto 3 dim inputs are supported " << std::endl;
             return;
         }
 
@@ -94,11 +104,6 @@ class FimDenseOp : public OpKernel
         const Tensor& input_tensor3 = context->input(3);
         has_bias = input_tensor3.flat<int32>().data()[0];
 
-        int reorder;
-        const Tensor& input_tensor4 = context->input(4);
-        FimCopyMemory((void*)&reorder, (void*)input_tensor4.flat<int32>().data(), sizeof(int), DEVICE_TO_HOST);
-
-        // std::cout << "Input Num Iters : " << num_iters << std::endl;
         DLOG(INFO) << "Input Dims :" << num_dims;
         DLOG(INFO) << "Input Num batches : " << num_batch;
         DLOG(INFO) << "Weight Num inputs : " << num_rows;
@@ -120,7 +125,7 @@ class FimDenseOp : public OpKernel
         int offset_cols = 0;
         for (int i = 0; i < num_iters; i++) {
             KernelLauncher(input.data() + offset_row, input1.data(), num_batch, num_rows, num_cols,
-                           output.data() + offset_cols, reorder);
+                           output.data() + offset_cols);
             offset_row += num_rows * num_batch;
             offset_cols += num_cols * num_batch;
         }
