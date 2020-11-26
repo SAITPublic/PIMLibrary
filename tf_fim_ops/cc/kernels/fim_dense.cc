@@ -50,16 +50,15 @@ void KernelLauncher(const void* i_data, const void* w_data, const int num_batch,
         dev_out = bundle->out;
     }
 
-    void *dev_data_ptr = dev_in->data;
-    if(num_batch > 1){
+    void* dev_data_ptr = dev_in->data;
+    if (num_batch > 1) {
         for (int i = 0; i < num_batch; i++) {
             FimCopyMemory((void*)(static_cast<half*>(dev_in->data) + i * dev_in->bshape.w),
-                      (void*)(static_cast<const half*>(i_data) + i * IN_LENGTH), sizeof(half) * IN_LENGTH,
-                      DEVICE_TO_DEVICE);
+                          (void*)(static_cast<const half*>(i_data) + i * IN_LENGTH), sizeof(half) * IN_LENGTH,
+                          DEVICE_TO_DEVICE);
         }
-    }
-    else{
-        dev_in->data = (void *)i_data;
+    } else {
+        dev_in->data = (void*)i_data;
     }
 
     t_dev_out = *dev_out;
@@ -67,7 +66,7 @@ void KernelLauncher(const void* i_data, const void* w_data, const int num_batch,
 
     FimExecuteGemv(&t_dev_out, dev_in, pre_wei);
 
-    //Not setting this causes a crash in fim_deinit()
+    // Not setting this causes a crash in fim_deinit()
     dev_in->data = dev_data_ptr;
 }
 
@@ -78,7 +77,6 @@ class FimDenseOp : public OpKernel
 
     void Compute(OpKernelContext* context) override
     {
-
         // Grab the input tensor
         const Tensor& input_tensor = context->input(0);
         auto input = input_tensor.flat<Eigen::half>();

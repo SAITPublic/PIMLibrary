@@ -54,12 +54,7 @@ int FimExecutor::initialize(void)
     fim_manager_ = fim::runtime::manager::FimManager::get_instance(rt_type_, precision_);
 
     max_crf_size_ = 128;
-    max_crf_lut_size_ = 300;
     int max_srf_size = 2048;
-
-    hipMalloc((void**)&d_crf_bin_lut_, (int)OP_DUMMY * max_crf_lut_size_ * max_crf_size_);
-    h_crf_size_lut_ = (int*)malloc(sizeof(int) * max_crf_lut_size_ * (int)OP_DUMMY);
-    create_crf_lut();
 
     hipMalloc((void**)&d_srf_bin_buffer_, max_srf_size);
 #ifdef EMULATOR
@@ -84,9 +79,13 @@ int FimExecutor::deinitialize(void)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
-    hipFree((void*)d_crf_bin_lut_);
     hipFree((void*)d_srf_bin_buffer_);
-    free(h_crf_size_lut_);
+
+    for (auto it = crf_lut_.begin(); it != crf_lut_.end(); it++) {
+        hipFree((void*)it->second);
+    }
+    crf_lut_.clear();
+
 #ifdef EMULATOR
     hipFree((void*)d_fmtd16_);
     hipFree((void*)d_fmtd16_size_);
@@ -101,33 +100,6 @@ int FimExecutor::deinitialize(void)
     return ret;
 }
 
-void FimExecutor::create_crf_lut()
-{
-    uint8_t* temp_crf = new uint8_t[max_crf_size_];
-    uint8_t* temp_dst = nullptr;
-    int crf_size = 0;
-
-    int num_op_type = (int)OP_DUMMY;
-
-    for (int j = 0; j < max_crf_lut_size_; j++) {
-        fim_manager_->fim_crf_generator_->gen_binary_with_loop(OP_GEMV, j, temp_crf, &crf_size);
-        temp_dst = d_crf_bin_lut_ + (int)OP_GEMV * max_crf_lut_size_ * max_crf_size_ + j * max_crf_size_;
-        fim_manager_->copy_memory((void*)temp_dst, (void*)temp_crf, crf_size, HOST_TO_DEVICE);
-        h_crf_size_lut_[(int)OP_GEMV * max_crf_lut_size_ + j] = crf_size;
-    }
-
-    for (int i = 1; i < num_op_type; i++) {
-        for (int j = 0; j < max_crf_lut_size_; j++) {
-            fim_manager_->fim_crf_generator_->gen_binary_with_loop((FimOpType)i, j, temp_crf, &crf_size);
-            temp_dst = d_crf_bin_lut_ + i * max_crf_lut_size_ * max_crf_size_ + j * max_crf_size_;
-            fim_manager_->copy_memory((void*)temp_dst, (void*)temp_crf, crf_size, HOST_TO_DEVICE);
-            h_crf_size_lut_[i * max_crf_lut_size_ + j] = crf_size;
-        }
-    }
-
-    delete[] temp_crf;
-}
-
 int FimExecutor::get_loop_counter(FimOpType op_type, int input_size)
 {
     int lc = 0;
@@ -137,8 +109,7 @@ int FimExecutor::get_loop_counter(FimOpType op_type, int input_size)
     int num_tile = num_transaction / num_parallelism;
 
     if (op_type == OP_GEMV) {
-        num_tile = ceil((double)num_transaction / (double)fbi_.num_grf);
-        lc = fbi_.num_grf * ceil((double)num_tile / 2) - 1;
+        lc = input_size / fbi_.trans_size / fbi_.num_grf_A;
     } else {
         lc = num_tile / 2 - 1;
     }
@@ -152,16 +123,19 @@ int FimExecutor::execute_add(FimBo* output, FimBo* operand0, FimBo* operand1, hi
     int ret = 0;
     unsigned blocks = 64;
     unsigned threads_per_block = 16;
-    int lc = get_loop_counter(OP_ELT_ADD, output->size);
-    int crf_lut_offset = (int)OP_ELT_ADD * max_crf_lut_size_ * max_crf_size_ + lc * max_crf_size_;
-    int crf_size = h_crf_size_lut_[(int)OP_ELT_ADD * max_crf_lut_size_ + lc];
+
+    uint8_t* crf_bin = find_crf(OP_ELT_ADD, output->size);
+    int crf_size = 32;
+    if (crf_bin == nullptr) {
+        crf_bin = make_crf_bin(OP_ELT_ADD, output->size);
+    }
 
     hipLaunchKernelGGL(elt_op_fim, dim3(blocks), dim3(threads_per_block), 0, stream, (uint8_t*)operand0->data,
                        (uint8_t*)operand1->data, (uint8_t*)g_fim_base_addr, (uint8_t*)output->data, output->size,
 #ifdef EMULATOR
                        (FimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_,
 #endif
-                       (uint8_t*)d_crf_bin_lut_ + crf_lut_offset, crf_size);
+                       (uint8_t*)crf_bin, crf_size);
 
 #ifdef EMULATOR
     hipStreamSynchronize(stream);
@@ -190,16 +164,18 @@ int FimExecutor::execute_mul(FimBo* output, FimBo* operand0, FimBo* operand1, hi
     unsigned blocks = 64;
     unsigned threads_per_block = 16;
 
-    int lc = get_loop_counter(OP_ELT_MUL, output->size);
-    int crf_lut_offset = (int)OP_ELT_MUL * max_crf_lut_size_ * max_crf_size_ + lc * max_crf_size_;
-    int crf_size = h_crf_size_lut_[(int)OP_ELT_MUL * max_crf_lut_size_ + lc];
+    uint8_t* crf_bin = find_crf(OP_ELT_MUL, output->size);
+    int crf_size = 32;
+    if (crf_bin == nullptr) {
+        crf_bin = make_crf_bin(OP_ELT_MUL, output->size);
+    }
 
     hipLaunchKernelGGL(elt_op_fim, dim3(blocks), dim3(threads_per_block), 0, stream, (uint8_t*)operand0->data,
                        (uint8_t*)operand1->data, (uint8_t*)g_fim_base_addr, (uint8_t*)output->data, output->size,
 #ifdef EMULATOR
                        (FimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_,
 #endif
-                       (uint8_t*)d_crf_bin_lut_ + crf_lut_offset, crf_size);
+                       (uint8_t*)crf_bin, crf_size);
 
 #ifdef EMULATOR
     hipStreamSynchronize(stream);
@@ -242,8 +218,12 @@ int FimExecutor::execute_gemv(FimBo* output, FimBo* operand0, FimBo* operand1, h
     int n_out_tile = out_size / (fbi_.num_fim_chan * fbi_.num_fim_blocks * fbi_.num_grf_B);
 
     FIM_PROFILE_TICK(CreateCRFBin);
-    int crf_lut_offset = (int)OP_GEMV * max_crf_lut_size_ * max_crf_size_ + n_compute_tile * max_crf_size_;
-    int crf_size = h_crf_size_lut_[(int)OP_GEMV * max_crf_lut_size_ + n_compute_tile];
+
+    uint8_t* crf_bin = find_crf(OP_GEMV, compute_size * sizeof(uint16_t));
+    int crf_size = 32;
+    if (crf_bin == nullptr) {
+        crf_bin = make_crf_bin(OP_GEMV, compute_size * sizeof(uint16_t));
+    }
     FIM_PROFILE_TOCK(CreateCRFBin);
 
     FIM_PROFILE_TICK(RunGemvKernel);
@@ -255,7 +235,7 @@ int FimExecutor::execute_gemv(FimBo* output, FimBo* operand0, FimBo* operand1, h
 #ifdef EMULATOR
                        (FimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_,
 #endif
-                       (uint8_t*)d_crf_bin_lut_ + crf_lut_offset, crf_size, is_gemv_add);
+                       (uint8_t*)crf_bin, crf_size, is_gemv_add);
 #ifndef EMULATOR
     if (block) hipStreamSynchronize(stream);
     FIM_PROFILE_TOCK(RunGemvKernel);
@@ -306,8 +286,12 @@ int FimExecutor::execute_gemv_add(FimBo* output, FimBo* operand0, FimBo* operand
     int n_out_tile = out_size / (blocks * fbi_.num_fim_blocks * fbi_.num_grf_B);
 
     FIM_PROFILE_TICK(CreateCRFBin);
-    int crf_lut_offset = (int)OP_GEMV * max_crf_lut_size_ * max_crf_size_ + n_compute_tile * max_crf_size_;
-    int crf_size = h_crf_size_lut_[(int)OP_GEMV * max_crf_lut_size_ + n_compute_tile];
+    uint8_t* crf_bin = find_crf(OP_GEMV, compute_size);
+    int crf_size = 32;
+    if (crf_bin == nullptr) {
+        crf_bin = make_crf_bin(OP_GEMV, compute_size);
+    }
+
     FIM_PROFILE_TOCK(CreateCRFBin);
 
     FIM_PROFILE_TICK(RunGemvKernel);
@@ -319,7 +303,7 @@ int FimExecutor::execute_gemv_add(FimBo* output, FimBo* operand0, FimBo* operand
 #ifdef EMULATOR
                        (FimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_,
 #endif
-                       (uint8_t*)d_crf_bin_lut_ + crf_lut_offset, crf_size, is_gemv_add);
+                       (uint8_t*)crf_bin, crf_size, is_gemv_add);
 #ifndef EMULATOR
     if (block) hipStreamSynchronize(stream);
     FIM_PROFILE_TOCK(RunGemvKernel);
@@ -355,16 +339,17 @@ int FimExecutor::execute_relu(FimBo* output, FimBo* fim_data, hipStream_t stream
     unsigned blocks = fbi_.num_fim_chan;
     unsigned threads_per_block = 16;
 
-    int lc = get_loop_counter(OP_RELU, output->size);
-    int crf_lut_offset = (int)OP_RELU * max_crf_lut_size_ * max_crf_size_ + lc * max_crf_size_;
-    int crf_size = h_crf_size_lut_[(int)OP_RELU * max_crf_lut_size_ + lc];
-
+    uint8_t* crf_bin = find_crf(OP_RELU, output->size);
+    int crf_size = 32;
+    if (crf_bin == nullptr) {
+        crf_bin = make_crf_bin(OP_RELU, output->size);
+    }
     hipLaunchKernelGGL(relu_fim, dim3(blocks), dim3(threads_per_block), 0, stream, (uint8_t*)fim_data->data,
                        (uint8_t*)g_fim_base_addr, (uint8_t*)output->data, (int)output->size,
 #ifdef EMULATOR
                        (FimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_,
 #endif
-                       (uint8_t*)d_crf_bin_lut_ + crf_lut_offset, crf_size);
+                       (uint8_t*)crf_bin, crf_size);
 
 #ifdef EMULATOR
     hipStreamSynchronize(stream);
@@ -438,17 +423,17 @@ int FimExecutor::execute_bn(FimBo* output, FimBo* fim_data, FimBo* beta, FimBo* 
     unsigned blocks = 64;
     unsigned threads_per_block = 16;
 
-    /* TODO: modify 128 to crf size */
+    uint8_t* crf_bin = find_crf(OP_BN, output->size);
+    int crf_size = 64;
+    if (crf_bin == nullptr) {
+        crf_bin = make_crf_bin(OP_BN, output->size);
+    }
 
-    int lc = get_loop_counter(OP_BN, output->size);
-    int crf_lut_offset = (int)OP_BN * max_crf_lut_size_ * max_crf_size_ + lc * max_crf_size_;
-    int crf_size = h_crf_size_lut_[(int)OP_BN * max_crf_lut_size_ + lc];
     uint8_t* srf_binary = new uint8_t[fbi_.num_fim_chan * fbi_.num_fim_rank * fbi_.trans_size];
     int srf_size = fbi_.num_fim_chan * fbi_.num_fim_rank * fbi_.trans_size;
     preprocess_srf(beta, gamma, mean, variance, epsilon, srf_binary);
 
     hipMemcpy((void*)d_srf_bin_buffer_, (void*)srf_binary, srf_size, hipMemcpyHostToDevice);
-    hipMemcpy((void*)g_fim_base_addr, fim_data->data, fim_data->size, hipMemcpyHostToDevice);
 
     // printf("crf_size:%d, srf_size:%d, output->size:%d\n", crf_size, srf_size, output->size);
     // printf("bshaped(%d,%d,%d,%d)\n", output->bshape.w, output->bshape.h, output->bshape.c, output->bshape.n);
@@ -459,7 +444,7 @@ int FimExecutor::execute_bn(FimBo* output, FimBo* fim_data, FimBo* beta, FimBo* 
 #ifdef EMULATOR
                        (FimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_,
 #endif
-                       (uint8_t*)d_crf_bin_lut_ + crf_lut_offset, crf_size, (uint8_t*)d_srf_bin_buffer_, srf_size);
+                       (uint8_t*)crf_bin, crf_size, (uint8_t*)d_srf_bin_buffer_, srf_size);
 
 #ifdef EMULATOR
     hipStreamSynchronize(stream);
@@ -493,6 +478,40 @@ int FimExecutor::execute_dummy(void)
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
+}
+
+uint8_t* FimExecutor::find_crf(FimOpType op_type, int data_size)
+{
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
+    uint8_t* addr = nullptr;
+
+    std::map<std::pair<FimOpType, int>, uint8_t*>::const_iterator found =
+        crf_lut_.find(std::make_pair(op_type, data_size));
+    if (found != crf_lut_.end()) {
+        addr = found->second;
+    }
+
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+    return addr;
+}
+
+uint8_t* FimExecutor::make_crf_bin(FimOpType op_type, int data_size)
+{
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
+    int ret = 0;
+    uint8_t* h_crf = new uint8_t[max_crf_size_];
+    uint8_t* d_crf;
+    int crf_size;
+    hipMalloc((void**)&d_crf, max_crf_size_);
+
+    int lc = get_loop_counter(op_type, data_size);
+    fim_manager_->fim_crf_generator_->gen_binary_with_loop(op_type, lc, h_crf, &crf_size);
+
+    fim_manager_->copy_memory((void*)d_crf, (void*)h_crf, max_crf_size_, HOST_TO_DEVICE);
+    crf_lut_.insert(std::make_pair(std::make_pair(op_type, data_size), d_crf));
+
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+    return d_crf;
 }
 
 } /* namespace executor */

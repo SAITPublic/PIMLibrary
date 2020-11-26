@@ -1,6 +1,7 @@
 #ifndef _FIM_EXECUTOR_H_
 #define _FIM_EXECUTOR_H_
 
+#include <unordered_map>
 #include "emulator/FimEmulator.h"
 #include "fim_data_types.h"
 #include "hip/hip_fp16.h"
@@ -24,7 +25,8 @@ class FimExecutor
     int initialize(void);
     int deinitialize(void);
     int get_loop_counter(FimOpType op_type, int input_size);
-    void create_crf_lut();
+    uint8_t* make_crf_bin(FimOpType op_type, int data_size);
+    uint8_t* find_crf(FimOpType op_type, int data_size);
 
     int execute_add(FimBo* output, FimBo* operand0, FimBo* operand1, hipStream_t stream, bool block);
     int execute_mul(FimBo* output, FimBo* operand0, FimBo* operand1, hipStream_t stream, bool block);
@@ -40,8 +42,8 @@ class FimExecutor
 
    private:
     int max_crf_size_;
-    int max_crf_lut_size_;
     fim::runtime::manager::FimManager* fim_manager_;
+    std::map<std::pair<FimOpType, int>, uint8_t*> crf_lut_;
     uint8_t* d_srf_bin_buffer_;
 
     FimRuntimeType rt_type_;
@@ -49,8 +51,6 @@ class FimExecutor
     hipDeviceProp_t dev_prop_;
     uint8_t* fim_gemv_tmp_buffer_;
     FimBlockInfo fbi_;
-    uint8_t* d_crf_bin_lut_;
-    int* h_crf_size_lut_;
 #ifdef EMULATOR
     FimMemTraceData* d_fmtd16_;
     int* d_fmtd16_size_;
