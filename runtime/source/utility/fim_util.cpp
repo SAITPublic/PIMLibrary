@@ -392,27 +392,17 @@ __device__ void add_transaction_all_1cu_2th(volatile uint8_t* __restrict__ fim_a
 __device__ void change_fim_mode_1cu_2th(volatile uint8_t* __restrict__ fim_ctr, FimMode mode1, FimMode mode2,
                                         uint8_t* change_mode_bin, uint64_t offset)
 {
-#ifdef EMULATOR
-    /* RA13 and RA12 is swapped in Aquabolt-XL core-die, we need to emulate this behavior in emulator mode */
-    /* 0x17ff : RA12<->RA13 swapped address in vega20 memory map */
-    uint32_t hab_row_addr = 0x17ff;
-    uint32_t sb_row_addr = 0x1fff;
-#else  /* TARGET */
-    uint32_t hab_row_addr = 0x27ff;
-    uint32_t sb_row_addr = 0x2fff;
-#endif /* EMULATOR */
-
     if (mode1 == SB_MODE) {
         if (mode2 == HAB_MODE) {
-            add_transaction_all_1cu_2th(fim_ctr, true, 2, 0, hab_row_addr, 0x1f, change_mode_bin, offset);
-            add_transaction_all_1cu_2th(fim_ctr, true, 2, 1, hab_row_addr, 0x1f, change_mode_bin, offset);
-            add_transaction_all_1cu_2th(fim_ctr, true, 0, 0, hab_row_addr, 0x1f, change_mode_bin, offset);
-            add_transaction_all_1cu_2th(fim_ctr, true, 0, 1, hab_row_addr, 0x1f, change_mode_bin, offset);
+            add_transaction_all_1cu_2th(fim_ctr, true, 2, 0, 0x27ff, 0x1f, change_mode_bin, offset);
+            add_transaction_all_1cu_2th(fim_ctr, true, 2, 1, 0x27ff, 0x1f, change_mode_bin, offset);
+            add_transaction_all_1cu_2th(fim_ctr, true, 0, 0, 0x27ff, 0x1f, change_mode_bin, offset);
+            add_transaction_all_1cu_2th(fim_ctr, true, 0, 1, 0x27ff, 0x1f, change_mode_bin, offset);
         }
     } else if (mode1 == HAB_MODE) {
         if (mode2 == SB_MODE) {
-            add_transaction_all_1cu_2th(fim_ctr, true, 0, 0, sb_row_addr, 0x1f, change_mode_bin, offset);
-            add_transaction_all_1cu_2th(fim_ctr, true, 0, 1, sb_row_addr, 0x1f, change_mode_bin, offset);
+            add_transaction_all_1cu_2th(fim_ctr, true, 0, 0, 0x2fff, 0x1f, change_mode_bin, offset);
+            add_transaction_all_1cu_2th(fim_ctr, true, 0, 1, 0x2fff, 0x1f, change_mode_bin, offset);
         } else if (mode2 == HAB_FIM_MODE) {
             add_transaction_all_1cu_2th(fim_ctr, true, 0, 0, 0x3fff, 0x0, change_mode_bin, offset);
         }
@@ -665,7 +655,6 @@ __device__ void read_result_bn_64cu_2th(volatile uint8_t* __restrict__ output, v
             }
         }
     }
-
 }
 
 __device__ void compute_gemv_2bank_1cu_2th(volatile uint8_t* __restrict__ fim_ctr,
@@ -757,27 +746,17 @@ __device__ void add_transaction_all_64cu_2th(volatile uint8_t* __restrict__ fim_
 __device__ void change_fim_mode_64cu_2th(volatile uint8_t* __restrict__ fim_ctr, FimMode mode1, FimMode mode2,
                                          uint8_t* change_mode_bin, uint64_t offset)
 {
-#ifdef EMULATOR
-    /* RA13 and RA12 is swapped in Aquabolt-XL core-die, we need to emulate this behavior in emulator mode */
-    /* 0x17ff : RA12<->RA13 swapped address in vega20 memory map */
-    uint32_t hab_row_addr = 0x17ff;
-    uint32_t sb_row_addr = 0x1fff;
-#else  /* TARGET */
-    uint32_t hab_row_addr = 0x27ff;
-    uint32_t sb_row_addr = 0x2fff;
-#endif /* EMULATOR */
-
     if (mode1 == SB_MODE) {
         if (mode2 == HAB_MODE) {
-            add_transaction_all_64cu_2th(fim_ctr, true, 2, 0, hab_row_addr, 0x1f, change_mode_bin, offset);
-            add_transaction_all_64cu_2th(fim_ctr, true, 2, 1, hab_row_addr, 0x1f, change_mode_bin, offset);
-            add_transaction_all_64cu_2th(fim_ctr, true, 0, 0, hab_row_addr, 0x1f, change_mode_bin, offset);
-            add_transaction_all_64cu_2th(fim_ctr, true, 0, 1, hab_row_addr, 0x1f, change_mode_bin, offset);
+            add_transaction_all_64cu_2th(fim_ctr, true, 2, 0, 0x27ff, 0x1f, change_mode_bin, offset);
+            add_transaction_all_64cu_2th(fim_ctr, true, 2, 1, 0x27ff, 0x1f, change_mode_bin, offset);
+            add_transaction_all_64cu_2th(fim_ctr, true, 0, 0, 0x27ff, 0x1f, change_mode_bin, offset);
+            add_transaction_all_64cu_2th(fim_ctr, true, 0, 1, 0x27ff, 0x1f, change_mode_bin, offset);
         }
     } else if (mode1 == HAB_MODE) {
         if (mode2 == SB_MODE) {
-            add_transaction_all_64cu_2th(fim_ctr, true, 0, 0, sb_row_addr, 0x1f, change_mode_bin, offset);
-            add_transaction_all_64cu_2th(fim_ctr, true, 0, 1, sb_row_addr, 0x1f, change_mode_bin, offset);
+            add_transaction_all_64cu_2th(fim_ctr, true, 0, 0, 0x2fff, 0x1f, change_mode_bin, offset);
+            add_transaction_all_64cu_2th(fim_ctr, true, 0, 1, 0x2fff, 0x1f, change_mode_bin, offset);
         } else if (mode2 == HAB_FIM_MODE) {
             add_transaction_all_64cu_2th(fim_ctr, true, 0, 0, 0x3fff, 0x0, change_mode_bin, offset);
         }
@@ -879,27 +858,17 @@ __device__ void add_transaction_all(volatile uint8_t* __restrict__ fim_addr, boo
 __device__ void change_fim_mode(volatile uint8_t* __restrict__ fim_ctr, FimMode mode1, FimMode mode2,
                                 uint8_t* change_mode_bin, uint64_t offset)
 {
-#ifdef EMULATOR
-    /* RA13 and RA12 is swapped in Aquabolt-XL core-die, we need to emulate this behavior in emulator mode */
-    /* 0x17ff : RA12<->RA13 swapped address in vega20 memory map */
-    uint32_t hab_row_addr = 0x17ff;
-    uint32_t sb_row_addr = 0x1fff;
-#else  /* TARGET */
-    uint32_t hab_row_addr = 0x27ff;
-    uint32_t sb_row_addr = 0x2fff;
-#endif /* EMULATOR */
-
     if (mode1 == SB_MODE) {
         if (mode2 == HAB_MODE) {
-            add_transaction_all(fim_ctr, true, 2, 0, hab_row_addr, 0x1f, change_mode_bin, offset);
-            add_transaction_all(fim_ctr, true, 2, 1, hab_row_addr, 0x1f, change_mode_bin, offset);
-            add_transaction_all(fim_ctr, true, 0, 0, hab_row_addr, 0x1f, change_mode_bin, offset);
-            add_transaction_all(fim_ctr, true, 0, 1, hab_row_addr, 0x1f, change_mode_bin, offset);
+            add_transaction_all(fim_ctr, true, 2, 0, 0x27ff, 0x1f, change_mode_bin, offset);
+            add_transaction_all(fim_ctr, true, 2, 1, 0x27ff, 0x1f, change_mode_bin, offset);
+            add_transaction_all(fim_ctr, true, 0, 0, 0x27ff, 0x1f, change_mode_bin, offset);
+            add_transaction_all(fim_ctr, true, 0, 1, 0x27ff, 0x1f, change_mode_bin, offset);
         }
     } else if (mode1 == HAB_MODE) {
         if (mode2 == SB_MODE) {
-            add_transaction_all(fim_ctr, true, 0, 0, sb_row_addr, 0x1f, change_mode_bin, offset);
-            add_transaction_all(fim_ctr, true, 0, 1, sb_row_addr, 0x1f, change_mode_bin, offset);
+            add_transaction_all(fim_ctr, true, 0, 0, 0x2fff, 0x1f, change_mode_bin, offset);
+            add_transaction_all(fim_ctr, true, 0, 1, 0x2fff, 0x1f, change_mode_bin, offset);
         } else if (mode2 == HAB_FIM_MODE) {
             add_transaction_all(fim_ctr, true, 0, 0, 0x3fff, 0x0, change_mode_bin, offset);
         }

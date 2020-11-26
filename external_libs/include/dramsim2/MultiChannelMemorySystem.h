@@ -91,6 +91,7 @@ class MultiChannelMemorySystem : public MemoryObject
 
    private:
     unsigned findChannelNumber(uint64_t addr);
+    uint64_t changeRA12RA13(uint64_t addr);
     void actual_update();
 
     unsigned megsOfMemory;

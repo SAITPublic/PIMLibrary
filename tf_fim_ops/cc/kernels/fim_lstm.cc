@@ -51,7 +51,7 @@ void KernelLauncher(const void* i_data, const void* w_data, const void* h_data, 
     miopenCreate(&handle);
 
     int nseq = in_len[1];               // Number of iterations to unroll over
-    int out_h = bi_dir * hid_len[2];         // for bidirection
+    int out_h = bi_dir * hid_len[2];    // for bidirection
     std::vector<int> out_len({out_h});  // output tensor length
 
     int batch_size = in_len[0];

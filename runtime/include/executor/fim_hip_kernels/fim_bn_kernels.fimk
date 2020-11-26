@@ -72,16 +72,6 @@ __global__ void bn_fim_sip(volatile uint8_t* __restrict__ fim_data, volatile uin
     int out_dim = size / trans_size;
     int num_tile = out_dim / (num_fim_blocks * num_fim_chan * num_grf) / 2;
 
-#ifdef EMULATOR
-    /* RA13 and RA12 is swapped in Aquabolt-XL core-die, we need to emulate this behavior in emulator mode */
-    /* 0x17ff : RA12<->RA13 swapped address in vega20 memory map */
-    uint32_t hab_row_addr = 0x17ff;
-    uint32_t sb_row_addr = 0x1fff;
-#else  /* TARGET */
-    uint32_t hab_row_addr = 0x27ff;
-    uint32_t sb_row_addr = 0x2fff;
-#endif /* EMULATOR */
-
     int gidx = hipThreadIdx_x / 2;
     uint64_t offset = (hipThreadIdx_x % 2) * 0x10;
     uint64_t addr, addr_even, addr_odd;
@@ -95,16 +85,16 @@ __global__ void bn_fim_sip(volatile uint8_t* __restrict__ fim_data, volatile uin
     B_CMD(1);
 
     if (hipThreadIdx_x < 2) {
-        addr = addr_gen(hipBlockIdx_x, 0, 2, 0, hab_row_addr, 0x1f);
+        addr = addr_gen(hipBlockIdx_x, 0, 2, 0, 0x27ff, 0x1f);
         W_CMD(&fim_ctr[addr + offset]);
         B_CMD(1);
-        addr = addr_gen(hipBlockIdx_x, 0, 2, 1, hab_row_addr, 0x1f);
+        addr = addr_gen(hipBlockIdx_x, 0, 2, 1, 0x27ff, 0x1f);
         W_CMD(&fim_ctr[addr + offset]);
         B_CMD(1);
-        addr = addr_gen(hipBlockIdx_x, 0, 0, 0, hab_row_addr, 0x1f);
+        addr = addr_gen(hipBlockIdx_x, 0, 0, 0, 0x27ff, 0x1f);
         W_CMD(&fim_ctr[addr + offset]);
         B_CMD(1);
-        addr = addr_gen(hipBlockIdx_x, 0, 0, 1, hab_row_addr, 0x1f);
+        addr = addr_gen(hipBlockIdx_x, 0, 0, 1, 0x27ff, 0x1f);
         W_CMD(&fim_ctr[addr + offset]);
         B_CMD(1);
     }
@@ -139,7 +129,7 @@ __global__ void bn_fim_sip(volatile uint8_t* __restrict__ fim_data, volatile uin
 
         R_CMD(&fim_data[addr_even]);
         B_CMD(1);
-     
+
         R_CMD(&fim_data[addr_even]);
         B_CMD(1);
 
@@ -150,16 +140,15 @@ __global__ void bn_fim_sip(volatile uint8_t* __restrict__ fim_data, volatile uin
         W_CMD(&fim_bn_tmp_buffer[addr_even]);
         R_CMD(&fim_bn_tmp_buffer[addr_even]);
         B_CMD(1);
-        
+
         R_CMD(&fim_data[addr_odd]);
         B_CMD(1);
-           
+
         R_CMD(&fim_data[addr_odd]);
         B_CMD(1);
 
         R_CMD(&fim_data[addr_odd]);
         B_CMD(1);
-
 
         W_CMD(&fim_bn_tmp_buffer[addr_odd]);
         W_CMD(&fim_bn_tmp_buffer[addr_odd]);
@@ -174,7 +163,7 @@ __global__ void bn_fim_sip(volatile uint8_t* __restrict__ fim_data, volatile uin
     B_CMD(0);
 
     if (hipThreadIdx_x < 4) {
-        addr = addr_gen(hipBlockIdx_x, 0, 0, gidx, sb_row_addr, 0x1f);
+        addr = addr_gen(hipBlockIdx_x, 0, 0, gidx, 0x2fff, 0x1f);
         W_CMD(&fim_ctr[addr + offset]);
         B_CMD(1);
         B_CMD(1);

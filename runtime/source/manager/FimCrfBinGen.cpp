@@ -153,7 +153,7 @@ void FimCrfBinGen::create_fim_cmd(FimOpType op_type, int lc)
         std::vector<FimCommand> tmp_cmds{FimCommand(FimCmdType::MAD, FimOpdType::GRF_A, FimOpdType::EVEN_BANK,
                                                     FimOpdType::SRF_M, FimOpdType::SRF_A, 1, 0, 0, 0),
                                          FimCommand(FimCmdType::NOP, 7),
-                                         
+
                                          FimCommand(FimCmdType::MAD, FimOpdType::GRF_A, FimOpdType::GRF_A,
                                                     FimOpdType::SRF_M, FimOpdType::SRF_A, 1, 0, 0, 1),
                                          FimCommand(FimCmdType::NOP, 23),

@@ -145,6 +145,8 @@ class FIMController
     int set_toggle_condition(fim_bank_type bank_type);
     void preprocess_bn(NumpyBurstType* scale_npbst, NumpyBurstType* shift_npbst, NumpyBurstType* gamma_npbst,
                        NumpyBurstType* beta_npbst, NumpyBurstType* input_npbst, fp16** params);
+    void preprocess_bn_new(NumpyBurstType* mean_npbst, NumpyBurstType* var_npbst, NumpyBurstType* gamma_npbst,
+                           NumpyBurstType* beta_npbst, NumpyBurstType* input_npbst, fp16** params, float eps);
 
     void execute_gemv(NumpyBurstType* w_data, NumpyBurstType* i_data);
     void execute_eltwise(int dim, fim_bank_type bank_type, KernelType ktype, int input0_row, int result_row,
@@ -159,6 +161,7 @@ class FIMController
     void compute_add_or_mul(int num_tile, int input0_row, int result_row, int input1_row);
     void compute_relu(int num_tile, int input0_row, int result_row);
     void compute_bn(int num_tile);
+    void compute_bn(int num_tile, int input0_row, int result_row);
 
     void read_result(BurstType* result_bst, fim_bank_type bank_type, int output_dim, unsigned starting_row = 0,
                      unsigned starting_col = 0);

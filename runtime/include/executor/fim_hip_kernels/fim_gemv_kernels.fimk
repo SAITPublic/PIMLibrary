@@ -247,19 +247,6 @@ __global__ void gemv_fim_1cu_2th_fp16(volatile uint8_t* __restrict__ fim_ctr, vo
 #endif
 }
 
-#ifdef EMULATOR
-/* RA13 and RA12 is swapped in Aquabolt-XL core-die, we need to emulate this behavior in emulator mode */
-/* 0x17ff : RA12<->RA13 swapped address in vega20 memory map */
-#define HAB_ROW_ADDR 0x17ff
-#define SB_ROW_ADDR 0x1fff
-
-#else /* TARGET */
-
-#define HAB_ROW_ADDR 0x27ff
-#define SB_ROW_ADDR 0x2fff
-
-#endif /* EMULATOR */
-
 __global__ void gemv_fim_64cu_64th_fp16(volatile uint8_t* __restrict__ fim_ctr,
                                         volatile uint8_t* __restrict__ fim_weight,
                                         volatile uint8_t* __restrict__ fim_gemv_tmp_buffer,
@@ -306,16 +293,16 @@ __global__ void gemv_fim_64cu_64th_fp16(volatile uint8_t* __restrict__ fim_ctr,
 #if CHANGE_SB_HAB
     if (hipThreadIdx_x < 2) {
         /* change SB mode to HAB mode */
-        addr = addr_gen(ch, 0, 2, 0, HAB_ROW_ADDR, 0x1f);
+        addr = addr_gen(ch, 0, 2, 0, 0x27ff, 0x1f);
         W_CMD(&fim_ctr[addr + offset]);
         B_CMD(1);
-        addr = addr_gen(ch, 0, 2, 1, HAB_ROW_ADDR, 0x1f);
+        addr = addr_gen(ch, 0, 2, 1, 0x27ff, 0x1f);
         W_CMD(&fim_ctr[addr + offset]);
         B_CMD(1);
-        addr = addr_gen(ch, 0, 0, 0, HAB_ROW_ADDR, 0x1f);
+        addr = addr_gen(ch, 0, 0, 0, 0x27ff, 0x1f);
         W_CMD(&fim_ctr[addr + offset]);
         B_CMD(1);
-        addr = addr_gen(ch, 0, 0, 1, HAB_ROW_ADDR, 0x1f);
+        addr = addr_gen(ch, 0, 0, 1, 0x27ff, 0x1f);
         W_CMD(&fim_ctr[addr + offset]);
         B_CMD(1);
     }
@@ -440,7 +427,7 @@ __global__ void gemv_fim_64cu_64th_fp16(volatile uint8_t* __restrict__ fim_ctr,
 #if CHANGE_HAB_SB
     if (hipThreadIdx_x < 4) {
         /* change HAB mode to SB mode */
-        addr = addr_gen(ch, 0, 0, gidx, SB_ROW_ADDR, 0x1f);
+        addr = addr_gen(ch, 0, 0, gidx, 0x2fff, 0x1f);
         W_CMD(&fim_ctr[addr + offset]);
         //        R_CMD(&fim_ctr[addr + offset]);
         B_CMD(1);

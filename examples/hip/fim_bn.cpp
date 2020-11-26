@@ -74,7 +74,7 @@ int fim_bn_1(bool block)
         FimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
 
         ret = compare_data_round_off((half*)golden_output->data, (half*)host_output->data, host_output->size / 2);
-        //cout <<" ITER : " << i <<endl;
+        // cout <<" ITER : " << i <<endl;
     }
     dump_data(preload_input.c_str(), (char*)preloaded_fim_input->data, preloaded_fim_input->size);
     dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
