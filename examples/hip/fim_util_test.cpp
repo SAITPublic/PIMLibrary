@@ -2,7 +2,7 @@
 #include "hip/hip_fp16.h"
 #include "hip/hip_runtime.h"
 
-__device__ void integral_sum_for_gemv_gpu(void* out, void* in, int out_size, int reduce_size)
+__device__ void reduce_sum_for_gemv_gpu(void* out, void* in, int out_size, int reduce_size)
 {
     int bcnt = hipGridDim_x;
     int tcnt = hipBlockDim_x;
@@ -24,12 +24,12 @@ __device__ void integral_sum_for_gemv_gpu(void* out, void* in, int out_size, int
     }
 }
 
-__global__ void integral_sum(void* out, void* in, int out_size, int reduce_size)
+__global__ void reduce_sum(void* out, void* in, int out_size, int reduce_size)
 {
-    integral_sum_for_gemv_gpu(out, in, out_size, reduce_size);
+    reduce_sum_for_gemv_gpu(out, in, out_size, reduce_size);
 }
 
-int gpu_integral_sum(void)
+int gpu_reduce_sum(void)
 {
     int ret = -1;
     int in_size = 16 * 4096;
@@ -48,7 +48,7 @@ int gpu_integral_sum(void)
         for (int i = 0; i < in_size; i++) in[i] = 1;
         for (int i = 0; i < out_size; i++) out[i] = 0;
 
-        hipLaunchKernelGGL(integral_sum, dim3(blocks), dim3(threads), 0, 0, out, in, out_size, reduce_size);
+        hipLaunchKernelGGL(reduce_sum, dim3(blocks), dim3(threads), 0, 0, out, in, out_size, reduce_size);
         hipStreamSynchronize(NULL);
 
         for (int i = 0; i < out_size; i++) {
@@ -69,4 +69,4 @@ int gpu_integral_sum(void)
     return 0;
 }
 
-TEST(UnitTest, GpuIntegralSum) { EXPECT_TRUE(gpu_integral_sum() == 0); }
+TEST(UnitTest, GpuIntegralSum) { EXPECT_TRUE(gpu_reduce_sum() == 0); }

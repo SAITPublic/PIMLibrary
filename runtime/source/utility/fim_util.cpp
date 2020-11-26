@@ -2,7 +2,7 @@
 
 __host__ void get_fim_block_info(FimBlockInfo* fbi) { memcpy(fbi, &vega20_fbi, sizeof(FimBlockInfo)); }
 
-__device__ void integral_sum_for_gemv_gpu(void* out, void* in, int out_size, int reduce_size)
+__device__ void reduce_sum_for_gemv_gpu(void* out, void* in, int out_size, int reduce_size)
 {
     int bcnt = hipGridDim_x;
     int tcnt = hipBlockDim_x;
