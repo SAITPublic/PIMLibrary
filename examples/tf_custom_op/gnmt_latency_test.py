@@ -264,12 +264,17 @@ def create_gnmt_model(vocab_size, embed_dim, hidden, max_len, batch_size, initia
 
     return encoder, decoder
 
-def evaluate(sentence, encoder, decoder, dtype, max_length_targ=args.max_seq_length):
-
-    inputs = tf.convert_to_tensor(sentence)
+def initialize_data():
+    input_seq   = tf.random.uniform(shape=(args.batch_size, args.max_seq_length), dtype=dtype)
+    inputs = tf.convert_to_tensor(input_seq)
+    dec_input  = tf.random.uniform(shape=(args.batch_size, 1), dtype=dtype)
 
     h_state = [tf.zeros((1, HIDDEN_SIZE))]
     c_state = [tf.zeros((1, HIDDEN_SIZE))]
+
+    return inputs, dec_input, h_state, c_state
+
+def evaluate(inputs, encoder, decoder, dtype, h_state, c_state, dec_input, max_length_targ=args.max_seq_length):
 
     enc_out, enc_hidden, enc_carry = encoder(inputs, [h_state, c_state])
 
@@ -280,7 +285,6 @@ def evaluate(sentence, encoder, decoder, dtype, max_length_targ=args.max_seq_len
         print('encoder final carry state dimensions: {}'.format(enc_carry.shape))
 
     dec_hidden = enc_hidden
-    dec_input  = tf.random.uniform(shape=(args.batch_size, 1), dtype=dtype)
 
     if args.profile == True:
         # for profiling of decoder
@@ -312,30 +316,34 @@ def evaluate(sentence, encoder, decoder, dtype, max_length_targ=args.max_seq_len
 
 def gnmt_model_run(dtype):
     tf_fim_ops.fim_init()
-
     initializer = tf.keras.initializers.RandomNormal(seed=SEED)
-    input_seq   = tf.random.uniform(shape=(args.batch_size, args.max_seq_length), dtype=dtype)
-
     encoder, decoder = create_gnmt_model(VOCAB_SIZE, EMBEDDING_DIM, HIDDEN_SIZE, args.max_seq_length, args.batch_size, initializer, dtype)
 
     if args.profile:
         # model and gpu initialization and LUT load
         DummyExecute()
         args.profile = False
-        predictions = evaluate(input_seq, encoder, decoder, dtype)
+        input_seq, dec_input, h_state, c_state = initialize_data()
+        predictions = evaluate(input_seq, encoder, decoder, dtype, h_state, c_state, dec_input)
         args.profile = True
 
     eval_time.clear()
-    predictions = evaluate(input_seq, encoder, decoder, dtype)
+    input_seq, dec_input, h_state, c_state = initialize_data()
+    predictions = evaluate(input_seq, encoder, decoder, dtype, h_state, c_state, dec_input)
 
     # Model Summary
     encoder.summary()
     decoder.summary()
 
+    # Summation of all layers time
+    evaltime_sum = sum(row[1] for row in eval_time)
+    eval_time.append(["Sum of layers time", evaltime_sum, input_seq.shape, predictions.shape])
+
     if args.profile:
         # for disabling internal profiling calls.
         args.profile = False
-        eval_time.append(["End to End", (timeit.timeit(lambda : evaluate(input_seq, encoder, decoder, dtype),
+        input_seq, dec_input, h_state, c_state = initialize_data()
+        eval_time.append(["End to End", (timeit.timeit(lambda : evaluate(input_seq, encoder, decoder, dtype, h_state, c_state, dec_input),
                             number = args.iterations)), input_seq.shape, predictions.shape])
 
         for i in range(len(eval_time)):
