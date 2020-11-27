@@ -87,7 +87,7 @@ __global__ void elt_op_fim_64cu_16th_fp16(volatile uint8_t* __restrict__ operand
 }
 
 __global__ void elt_op_fim(volatile uint8_t* __restrict__ operand0, volatile uint8_t* __restrict__ operand1,
-                           volatile uint8_t* __restrict__ fim_ctr, volatile uint8_t* __restrict__ output, int size,
+                           volatile uint8_t* __restrict__ fim_ctr, volatile uint8_t* __restrict__ output, int num_tile,
 #ifdef EMULATOR
                            FimMemTraceData* fmtd16, int* frd_size, int mt_width,
 #endif
@@ -100,14 +100,9 @@ __global__ void elt_op_fim(volatile uint8_t* __restrict__ operand0, volatile uin
     m_width = mt_width;
     __syncthreads();
 #endif
-    int trans_size = 32;
     int num_col = 32;
-    int num_fim_blocks = 8;
-    int num_fim_chan = 64;
     int num_grf = 8;
     int num_ba = 4;
-    int out_dim = size / trans_size;
-    int num_tile = out_dim / (num_fim_blocks * num_fim_chan * num_grf) / 2;
 
     int gidx = hipThreadIdx_x / 2;
     uint64_t offset = (hipThreadIdx_x % 2) * 0x10;
@@ -117,14 +112,13 @@ __global__ void elt_op_fim(volatile uint8_t* __restrict__ operand0, volatile uin
     /* so program_crf and chagne_fim_mode functions can not access to over 8GB in our system */
 
 #if PARK_IN
-    addr = addr_gen(hipBlockIdx_x, 0, gidx / num_ba, gidx % num_ba, 0, 0);
-    R_CMD(&operand0[addr + offset]);
-    R_CMD(&operand0[addr + 0x8000 + offset]);
-    B_CMD(1);
+    addr = addr_gen(hipBlockIdx_x, 0, gidx / num_ba, gidx % num_ba, (1 << 13), 0);
+    W_CMD(&fim_ctr[addr + offset]);
+    B_CMD(2);
 #endif
 
-#if CHANGE_SB_HAB
     if (hipThreadIdx_x < 2) {
+#if CHANGE_SB_HAB
         addr = addr_gen(hipBlockIdx_x, 0, 2, 0, 0x27ff, 0x1f);
         W_CMD(&fim_ctr[addr + offset]);
         B_CMD(1);
@@ -137,85 +131,76 @@ __global__ void elt_op_fim(volatile uint8_t* __restrict__ operand0, volatile uin
         addr = addr_gen(hipBlockIdx_x, 0, 0, 1, 0x27ff, 0x1f);
         W_CMD(&fim_ctr[addr + offset]);
         B_CMD(1);
-    }
-    B_CMD(0);
 #endif
-
 #if PROGRAM_CRF
-    if (hipThreadIdx_x < (crf_size >> 4)) {
         addr = addr_gen(hipBlockIdx_x, 0, 0, 1, 0x3fff, 0x4 + gidx);
-        W_CMD_R(&fim_ctr[addr + offset], crf_binary + (hipThreadIdx_x << 4));
-        B_CMD(1);
+        W_CMD_R(&fim_ctr[addr + offset], crf_binary + offset);
+#endif
+#if CHANGE_HAB_HABFIM
+        addr = addr_gen(hipBlockIdx_x, 0, 0, 0, 0x3fff, 0x0);
+        W_CMD_R(&fim_ctr[addr + offset], elt_add_hab_to_hab_fim + offset);
+        R_CMD(&fim_ctr[addr + offset]);
+#endif
+        B_CMD(2);
     }
     B_CMD(0);
-#endif
 
-#if CHANGE_HAB_HABFIM
-    addr = addr_gen(hipBlockIdx_x, 0, 0, 0, 0x3fff, 0x0);
-    W_CMD_R(&fim_ctr[addr + offset], elt_add_hab_to_hab_fim + offset);
-    B_CMD(1);
-    B_CMD(1);
-#endif
-
+    if (hipThreadIdx_x < 16) {
 #if COMPUTE_ELT_OP
-    for (int tile_idx = 0; tile_idx < num_tile; tile_idx++) {
-        unsigned int loc = tile_idx * num_grf + gidx;
-        unsigned int row = loc / num_col;
-        unsigned int col = loc % num_col;
+        for (int tile_idx = 0; tile_idx < num_tile; tile_idx++) {
+            unsigned int loc = tile_idx * num_grf + gidx;
+            unsigned int row = loc / num_col;
+            unsigned int col = loc % num_col;
 
-        addr = addr_gen(hipBlockIdx_x, 0, 0, 0, row, col);
-        addr_even = addr + offset;
-        addr_odd = addr_even + 0x2000;
+            addr = addr_gen(hipBlockIdx_x, 0, 0, 0, row, col);
+            addr_even = addr + offset;
+            addr_odd = addr_even + 0x2000;
 
-        R_CMD(&operand0[addr_even]);
-        B_CMD(1);
+            R_CMD(&operand0[addr_even]);
+            B_CMD(1);
 
-        R_CMD(&operand1[addr_even]);
-        B_CMD(1);
+            R_CMD(&operand1[addr_even]);
+            B_CMD(1);
 
-        W_CMD(&output[addr_even]);
-        W_CMD(&output[addr_even]);
-        R_CMD(&output[addr_even]);
-        B_CMD(1);
+            W_CMD(&output[addr_even]);
+            W_CMD(&output[addr_even]);
+            R_CMD(&output[addr_even]);
+            B_CMD(2);
 
-        R_CMD(&operand0[addr_odd]);
-        B_CMD(1);
+            R_CMD(&operand0[addr_odd]);
+            B_CMD(1);
 
-        R_CMD(&operand1[addr_odd]);
-        B_CMD(1);
+            R_CMD(&operand1[addr_odd]);
+            B_CMD(1);
 
-        W_CMD(&output[addr_odd]);
-        W_CMD(&output[addr_odd]);
-        B_CMD(1);
-
-        B_CMD(0);
-    }
+            W_CMD(&output[addr_odd]);
+            W_CMD(&output[addr_odd]);
+            B_CMD(1);
+        }
 #endif
+    }
+    B_CMD(0);
 
+    if (hipThreadIdx_x < 4) {
 #if CHANGE_HABFIM_HAB
-    if (hipThreadIdx_x < 2) {
         addr = addr_gen(hipBlockIdx_x, 0, 0, 0, 0x3fff, 0x0);
         W_CMD_R(&fim_ctr[addr + offset], elt_add_hab_fim_to_hab + offset);
-        B_CMD(1);
-    }
-    B_CMD(0);
+        R_CMD(&fim_ctr[addr + offset]);
+        B_CMD(2);
 #endif
 
 #if CHANGE_HAB_SB
-    if (hipThreadIdx_x < 4) {
         addr = addr_gen(hipBlockIdx_x, 0, 0, gidx, 0x2fff, 0x1f);
         W_CMD(&fim_ctr[addr + offset]);
         R_CMD(&fim_ctr[addr + offset]);
-        B_CMD(1);
+        B_CMD(2);
+#endif
     }
     B_CMD(0);
-#endif
 
 #if PARK_OUT
-    addr = addr_gen(hipBlockIdx_x, 0, gidx / num_ba, gidx % num_ba, 0, 0);
-    R_CMD(&operand0[addr + offset]);
-    R_CMD(&operand0[addr + 0x8000 + offset]);
-    B_CMD(1);
+    addr = addr_gen(hipBlockIdx_x, 0, gidx / num_ba, gidx % num_ba, (1 << 13), 0);
+    W_CMD(&fim_ctr[addr + offset]);
 #endif
 
 #ifdef EMULATOR

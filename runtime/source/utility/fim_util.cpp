@@ -275,15 +275,21 @@ __device__ void W_CMD_R(volatile uint8_t* __restrict__ addr, volatile uint8_t* _
 
 __device__ void B_CMD(int type)
 {
-    if (type == 0) {
-        __syncthreads();
-        //        asm volatile("s_waitcnt vmcnt(0) lgkmcnt(0)");
-    } else {
-        __threadfence();
-        asm volatile("s_waitcnt vmcnt(0) lgkmcnt(0)");
+    switch (type) {
+        case 0:
+            __syncthreads();
+            break;
+        case 1:
+            __threadfence();
+            asm volatile("s_waitcnt vmcnt(0) lgkmcnt(0)");
+            break;
+        case 2:
+            __threadfence();
+            break;
+        default:
+            break;
     }
 }
-
 #endif /* EMULATOR */
 
 size_t get_aligned_size(FimDesc* fim_desc, FimMemFlag mem_flag, FimBo* fim_bo)

@@ -6,6 +6,7 @@
 #include <iostream>
 #include "fim_runtime_api.h"
 #include "half.hpp"
+#include "hip/hip_runtime.h"
 #include "utility/fim_dump.hpp"
 #include "utility/fim_profile.h"
 
@@ -59,9 +60,8 @@ int fim_elt_add_1(bool block)
 
         FimCopyMemory(host_output, device_output, FIM_TO_HOST);
 
-        //    ret = compare_data((char*)golden_output->data, (char*)host_output->data, host_output->size);
         ret = compare_data_round_off((half*)golden_output->data, (half*)host_output->data,
-                                     host_output->size / sizeof(half));
+                                     host_output->size / sizeof(half), 0.05);
     }
     //    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
 
@@ -126,9 +126,8 @@ int fim_elt_add_2(bool block)
 
         FimCopyMemory(&host_output, &device_output, FIM_TO_HOST);
 
-        //    ret = compare_data((char*)golden_output.data, (char*)host_output.data, host_output.size);
-        ret =
-            compare_data_round_off((half*)golden_output.data, (half*)host_output.data, host_output.size / sizeof(half));
+        ret = compare_data_round_off((half*)golden_output.data, (half*)host_output.data,
+                                     host_output.size / sizeof(half), 0.05);
     }
     //    dump_data(output_dump.c_str(), (char*)host_output.data, host_output.size);
 
@@ -184,9 +183,8 @@ int fim_elt_add_3(bool block)
 
         FimCopyMemory(host_output, device_output, FIM_TO_HOST);
 
-        //    ret = compare_data((char*)golden_output->data, (char*)host_output->data, host_output->size);
         ret = compare_data_round_off((half*)golden_output->data, (half*)host_output->data,
-                                     host_output->size / sizeof(half));
+                                     host_output->size / sizeof(half), 0.05);
     }
     //    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
 
@@ -246,8 +244,7 @@ int fim_elt_add_4(bool block)
         if (!block) FimSynchronize();
 
         FimCopyMemory(host_output, device_output, FIM_TO_HOST);
-        //    ret = compare_data((char*)golden_output->data, (char*)host_output->data, in_size * sizeof(half));
-        ret = compare_data_round_off((half*)golden_output->data, (half*)host_output->data, in_size);
+        ret = compare_data_round_off((half*)golden_output->data, (half*)host_output->data, in_size, 0.05);
     }
     //    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
 
@@ -267,29 +264,30 @@ int fim_elt_add_4(bool block)
     return ret;
 }
 
-int fim_elt_add_profile(bool block)
+int fim_elt_add_profile(bool block, int len)
 {
     int ret = 0;
+    int length = len;
 
     /* __FIM_API__ call : Initialize FimRuntime */
     FimInitialize(RT_TYPE_HIP, FIM_FP16);
 
     /* __FIM_API__ call : Create FIM Buffer Object */
-    FimBo* host_input0 = FimCreateBo(LENGTH, 1, 1, 1, FIM_FP16, MEM_TYPE_HOST);
-    FimBo* host_input1 = FimCreateBo(LENGTH, 1, 1, 1, FIM_FP16, MEM_TYPE_HOST);
-    FimBo* host_output = FimCreateBo(LENGTH, 1, 1, 1, FIM_FP16, MEM_TYPE_HOST);
-    FimBo* golden_output = FimCreateBo(LENGTH, 1, 1, 1, FIM_FP16, MEM_TYPE_HOST);
+    FimBo* host_input0 = FimCreateBo(length, 1, 1, 1, FIM_FP16, MEM_TYPE_HOST);
+    FimBo* host_input1 = FimCreateBo(length, 1, 1, 1, FIM_FP16, MEM_TYPE_HOST);
+    FimBo* host_output = FimCreateBo(length, 1, 1, 1, FIM_FP16, MEM_TYPE_HOST);
+    FimBo* golden_output = FimCreateBo(length, 1, 1, 1, FIM_FP16, MEM_TYPE_HOST);
 
-    FimBo* fim_input1 = FimCreateBo(LENGTH, 1, 1, 1, FIM_FP16, MEM_TYPE_FIM);
-    FimBo* device_output = FimCreateBo(LENGTH, 1, 1, 1, FIM_FP16, MEM_TYPE_FIM);
-    FimBo* fim_input0 = FimCreateBo(LENGTH, 1, 1, 1, FIM_FP16, MEM_TYPE_FIM);
+    FimBo* fim_input1 = FimCreateBo(length, 1, 1, 1, FIM_FP16, MEM_TYPE_FIM);
+    FimBo* device_output = FimCreateBo(length, 1, 1, 1, FIM_FP16, MEM_TYPE_FIM);
+    FimBo* fim_input0 = FimCreateBo(length, 1, 1, 1, FIM_FP16, MEM_TYPE_FIM);
 
     std::string test_vector_data = TEST_VECTORS_DATA;
 
-    std::string input0 = test_vector_data + "load/elt_add/input0_256KB.dat";
-    std::string input1 = test_vector_data + "load/elt_add/input1_256KB.dat";
-    std::string output = test_vector_data + "load/elt_add/output_256KB.dat";
-    std::string output_dump = test_vector_data + "dump/elt_add/output_256KB.dat";
+    std::string input0 = test_vector_data + "load/elt_add/input0_32768KB.dat";
+    std::string input1 = test_vector_data + "load/elt_add/input1_32768KB.dat";
+    std::string output = test_vector_data + "load/elt_add/output_32768KB.dat";
+    //    std::string output_dump = test_vector_data + "dump/elt_add/output_32768KB.dat";
 
     load_data(input0.c_str(), (char*)host_input0->data, host_input0->size);
     load_data(input1.c_str(), (char*)host_input1->data, host_input1->size);
@@ -299,27 +297,39 @@ int fim_elt_add_profile(bool block)
     FimCopyMemory(fim_input0, host_input0, HOST_TO_FIM);
     FimCopyMemory(fim_input1, host_input1, HOST_TO_FIM);
 
-    FimExecuteDummy();
+    //    FimExecuteDummy();
+    FimExecuteAdd(device_output, fim_input0, fim_input1, nullptr, block);
+    hipEvent_t start, stop;
+    hipEventCreate(&start);
+    hipEventCreate(&stop);
+    float eventMs = 0.0f;
+    hipDeviceSynchronize();
+
+    hipEventRecord(start, nullptr);
 /* __FIM_API__ call : Execute FIM kernel (ELT_ADD) */
 #ifdef TARGET
     int iter;
-    FIM_PROFILE_TICK(ELT_ADD_1);
-    for (iter = 0; iter < 1000; iter++) {
+    //    FIM_PROFILE_TICK(ELT_ADD_1);
+    for (iter = 0; iter < 100; iter++) {
 #endif
         FimExecuteAdd(device_output, fim_input0, fim_input1, nullptr, block);
-
-        if (!block) FimSynchronize();
 #ifdef TARGET
     }
-    FIM_PROFILE_TOCK(ELT_ADD_1);
-    // printf("[ %d execution time ]\n", iter);
-#endif
+//    if (!block) FimSynchronize();
+//    FIM_PROFILE_TOCK(ELT_ADD_1);
+//    printf("[ %d execution time ]\n", iter);
 
+    hipEventRecord(stop, nullptr);
+    hipEventSynchronize(stop);
+
+    hipEventElapsedTime(&eventMs, start, stop);
+
+    printf("kernel Execution time             = %6.3fms\n", eventMs / 100);
+#endif
     FimCopyMemory(host_output, device_output, FIM_TO_HOST);
 
-    //    ret = compare_data((char*)golden_output->data, (char*)host_output->data, host_output->size);
-    ret =
-        compare_data_round_off((half*)golden_output->data, (half*)host_output->data, host_output->size / sizeof(half));
+    ret = compare_data_round_off((half*)golden_output->data, (half*)host_output->data, host_output->size / sizeof(half),
+                                 0.05);
 
     //    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
 
@@ -394,7 +404,15 @@ TEST(HIPIntegrationTest, FimEltAdd3Sync) { EXPECT_TRUE(fim_elt_add_3(true) == 0)
 TEST(HIPIntegrationTest, FimEltAdd3Async) { EXPECT_TRUE(fim_elt_add_3(false) == 0); }
 TEST(HIPIntegrationTest, FimEltAdd4Sync) { EXPECT_TRUE(fim_elt_add_4(true) == 0); }
 TEST(HIPIntegrationTest, FimEltAdd4ASync) { EXPECT_TRUE(fim_elt_add_4(false) == 0); }
-TEST(HIPIntegrationTest, FimEltAddProfileSync) { EXPECT_TRUE(fim_elt_add_profile(true) == 0); }
+TEST(HIPIntegrationTest, FimEltAddProfile1Sync) { EXPECT_TRUE(fim_elt_add_profile(true, (128 * 1024)) == 0); }
+TEST(HIPIntegrationTest, FimEltAddProfile1Async) { EXPECT_TRUE(fim_elt_add_profile(false, (128 * 1024)) == 0); }
+// TEST(HIPIntegrationTest, FimEltAddProfile2Async) { EXPECT_TRUE(fim_elt_add_profile(false, (256 * 1024)) == 0); }
+// TEST(HIPIntegrationTest, FimEltAddProfile3Async) { EXPECT_TRUE(fim_elt_add_profile(false, (512 * 1024)) == 0); }
+// TEST(HIPIntegrationTest, FimEltAddProfile4Async) { EXPECT_TRUE(fim_elt_add_profile(false, (1024 * 1024)) == 0); }
+// TEST(HIPIntegrationTest, FimEltAddProfile5Async) { EXPECT_TRUE(fim_elt_add_profile(false, (2048 * 1024)) == 0); }
+// TEST(HIPIntegrationTest, FimEltAddProfile6Async) { EXPECT_TRUE(fim_elt_add_profile(false, (4096 * 1024)) == 0); }
+// TEST(HIPIntegrationTest, FimEltAddProfile7Async) { EXPECT_TRUE(fim_elt_add_profile(false, (8192 * 1024)) == 0); }
+// TEST(HIPIntegrationTest, FimEltAddProfile8Async) { EXPECT_TRUE(fim_elt_add_profile(false, (16384 * 1024)) == 0); }
 TEST(HIPIntegrationTest, FimEltAddBatch1) { EXPECT_TRUE(fim_elt_add_batch(1) == 0); }
 TEST(HIPIntegrationTest, FimEltAddBatch2) { EXPECT_TRUE(fim_elt_add_batch(2) == 0); }
 TEST(HIPIntegrationTest, FimEltAddBatch4) { EXPECT_TRUE(fim_elt_add_batch(4) == 0); }

@@ -157,8 +157,7 @@ int FimEmulator::execute_bn(FimBo* output, FimBo* fim_data, FimMemTraceData* fmt
 
     fim_sim_.preload_data_with_addr(fim_data_addr - fim_base_addr, fim_data->data, fim_data->size);
     fim_sim_.execute_kernel((void*)fmtd32, fmtd32_size);
-    fim_sim_.read_result_bn(sim_output, tmp_data_addr - fim_base_addr, output->bshape.n, output->bshape.c,
-                            output->bshape.w, 0, 0, output->size);
+    fim_sim_.read_result(sim_output, output_addr - fim_base_addr, output->size);
 
     if (output->mem_type != MEM_TYPE_HOST)
         hipMemcpy((void*)output->data, (void*)sim_output, output->size, hipMemcpyHostToDevice);

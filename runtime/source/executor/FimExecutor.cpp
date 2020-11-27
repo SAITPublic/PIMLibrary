@@ -22,7 +22,7 @@ FimExecutor::FimExecutor(FimRuntimeType rt_type, FimPrecision precision) : rt_ty
     get_fim_block_info(&fbi_);
 #ifdef EMULATOR
     fim_emulator_ = fim::runtime::emulator::FimEmulator::get_instance();
-    fmtd_size_per_ch_ = 50000;
+    fmtd_size_per_ch_ = 100000;
     max_block_size_ = fbi_.num_fim_chan;
     max_fmtd_size_ = fmtd_size_per_ch_ * max_block_size_;
 #endif
@@ -121,17 +121,20 @@ int FimExecutor::execute_add(FimBo* output, FimBo* operand0, FimBo* operand1, hi
 {
     DLOG(INFO) << "called";
     int ret = 0;
-    unsigned blocks = 64;
-    unsigned threads_per_block = 16;
+    int output_size = output->size;
 
-    uint8_t* crf_bin = find_crf(OP_ELT_ADD, output->size);
+    uint8_t* crf_bin = find_crf(OP_ELT_ADD, output_size);
     int crf_size = 32;
     if (crf_bin == nullptr) {
-        crf_bin = make_crf_bin(OP_ELT_ADD, output->size);
+        crf_bin = make_crf_bin(OP_ELT_ADD, output_size);
     }
 
+    int num_tile = output_size / (131072 << 1);
+
+    unsigned blocks = 64;
+    unsigned threads_per_block = 32;
     hipLaunchKernelGGL(elt_op_fim, dim3(blocks), dim3(threads_per_block), 0, stream, (uint8_t*)operand0->data,
-                       (uint8_t*)operand1->data, (uint8_t*)g_fim_base_addr, (uint8_t*)output->data, output->size,
+                       (uint8_t*)operand1->data, (uint8_t*)g_fim_base_addr, (uint8_t*)output->data, num_tile,
 #ifdef EMULATOR
                        (FimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_,
 #endif
@@ -161,8 +164,7 @@ int FimExecutor::execute_mul(FimBo* output, FimBo* operand0, FimBo* operand1, hi
 {
     DLOG(INFO) << "called";
     int ret = 0;
-    unsigned blocks = 64;
-    unsigned threads_per_block = 16;
+    int output_size = output->size;
 
     uint8_t* crf_bin = find_crf(OP_ELT_MUL, output->size);
     int crf_size = 32;
@@ -170,8 +172,12 @@ int FimExecutor::execute_mul(FimBo* output, FimBo* operand0, FimBo* operand1, hi
         crf_bin = make_crf_bin(OP_ELT_MUL, output->size);
     }
 
+    int num_tile = output_size / (131072 << 1);
+
+    unsigned blocks = 64;
+    unsigned threads_per_block = 32;
     hipLaunchKernelGGL(elt_op_fim, dim3(blocks), dim3(threads_per_block), 0, stream, (uint8_t*)operand0->data,
-                       (uint8_t*)operand1->data, (uint8_t*)g_fim_base_addr, (uint8_t*)output->data, output->size,
+                       (uint8_t*)operand1->data, (uint8_t*)g_fim_base_addr, (uint8_t*)output->data, num_tile,
 #ifdef EMULATOR
                        (FimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_,
 #endif
@@ -419,14 +425,12 @@ int FimExecutor::execute_bn(FimBo* output, FimBo* fim_data, FimBo* beta, FimBo* 
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
+    int output_size = output->size;
 
-    unsigned blocks = 64;
-    unsigned threads_per_block = 16;
-
-    uint8_t* crf_bin = find_crf(OP_BN, output->size);
+    uint8_t* crf_bin = find_crf(OP_BN, output_size);
     int crf_size = 64;
     if (crf_bin == nullptr) {
-        crf_bin = make_crf_bin(OP_BN, output->size);
+        crf_bin = make_crf_bin(OP_BN, output_size);
     }
 
     uint8_t* srf_binary = new uint8_t[fbi_.num_fim_chan * fbi_.num_fim_rank * fbi_.trans_size];
@@ -435,12 +439,14 @@ int FimExecutor::execute_bn(FimBo* output, FimBo* fim_data, FimBo* beta, FimBo* 
 
     hipMemcpy((void*)d_srf_bin_buffer_, (void*)srf_binary, srf_size, hipMemcpyHostToDevice);
 
+    int num_tile = output_size / (131072 << 1);
     // printf("crf_size:%d, srf_size:%d, output->size:%d\n", crf_size, srf_size, output->size);
     // printf("bshaped(%d,%d,%d,%d)\n", output->bshape.w, output->bshape.h, output->bshape.c, output->bshape.n);
-
-    hipLaunchKernelGGL(bn_fim_sip, dim3(blocks), dim3(threads_per_block), 0, stream, (uint8_t*)fim_data->data,
-                       (uint8_t*)g_fim_base_addr, (uint8_t*)fim_gemv_tmp_buffer_, (uint8_t*)output->data,
-                       (int)output->size, output->bshape.n, output->bshape.c, output->bshape.w,
+    unsigned blocks = 64;
+    unsigned threads_per_block = 32;
+    hipLaunchKernelGGL(bn_fim_nr_sip, dim3(blocks), dim3(threads_per_block), 0, stream, (uint8_t*)fim_data->data,
+                       (uint8_t*)g_fim_base_addr, (uint8_t*)fim_gemv_tmp_buffer_, (uint8_t*)output->data, (int)num_tile,
+                       output->bshape.n, output->bshape.c, output->bshape.w,
 #ifdef EMULATOR
                        (FimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_,
 #endif

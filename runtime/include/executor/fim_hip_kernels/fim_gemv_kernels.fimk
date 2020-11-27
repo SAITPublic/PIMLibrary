@@ -283,10 +283,10 @@ __global__ void gemv_fim_64cu_64th_fp16(volatile uint8_t* __restrict__ fim_ctr,
 #if PARK_IN
     /* park */
     if (hipThreadIdx_x < 32) {
-        addr = addr_gen(ch, 0, gidx / num_ba, gidx % num_ba, 0, 0);
-        R_CMD(&fim_weight[addr + offset]);
-        B_CMD(1);
+        addr = addr_gen(ch, 0, gidx / num_ba, gidx % num_ba, (1 << 13), 0);
+        W_CMD(&fim_ctr[addr + offset]);
     }
+    B_CMD(1);
     B_CMD(0);
 #endif
 
@@ -429,8 +429,6 @@ __global__ void gemv_fim_64cu_64th_fp16(volatile uint8_t* __restrict__ fim_ctr,
         /* change HAB mode to SB mode */
         addr = addr_gen(ch, 0, 0, gidx, 0x2fff, 0x1f);
         W_CMD(&fim_ctr[addr + offset]);
-        //        R_CMD(&fim_ctr[addr + offset]);
-        B_CMD(1);
         B_CMD(1);
     }
     B_CMD(0);
@@ -439,10 +437,10 @@ __global__ void gemv_fim_64cu_64th_fp16(volatile uint8_t* __restrict__ fim_ctr,
 #if PARK_OUT
     /* park */
     if (hipThreadIdx_x < 32) {
-        addr = addr_gen(ch, 0, gidx / num_ba, gidx % num_ba, 0, 0);
-        R_CMD(&fim_weight[addr + offset]);
-        B_CMD(1);
+        addr = addr_gen(ch, 0, gidx / num_ba, gidx % num_ba, (1 << 13), 0);
+        W_CMD(&fim_ctr[addr + offset]);
     }
+    B_CMD(1);
     B_CMD(0);
 #endif
 

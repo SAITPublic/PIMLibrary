@@ -48,13 +48,13 @@ __global__ void bn_fim_1cu_2th_fp16(volatile uint8_t* __restrict__ fim_data, vol
 #endif
 }
 
-__global__ void bn_fim_sip(volatile uint8_t* __restrict__ fim_data, volatile uint8_t* __restrict__ fim_ctr,
-                           volatile uint8_t* __restrict__ fim_bn_tmp_buffer, volatile uint8_t* __restrict__ output,
-                           int size, int num_ba, int num_ch, int num_w,
+__global__ void bn_fim_nr_sip(volatile uint8_t* __restrict__ fim_data, volatile uint8_t* __restrict__ fim_ctr,
+                              volatile uint8_t* __restrict__ fim_bn_tmp_buffer, volatile uint8_t* __restrict__ output,
+                              int num_tile, int num_ba, int num_ch, int num_w,
 #ifdef EMULATOR
-                           FimMemTraceData* fmtd16, int* frd_size, int mt_width,
+                              FimMemTraceData* fmtd16, int* frd_size, int mt_width,
 #endif
-                           uint8_t* crf_binary, int crf_size, uint8_t* srf_binary, int srf_size)
+                              uint8_t* crf_binary, int crf_size, uint8_t* srf_binary, int srf_size)
 {
 #ifdef EMULATOR
     g_fba = (uint64_t)fim_ctr;
@@ -63,14 +63,9 @@ __global__ void bn_fim_sip(volatile uint8_t* __restrict__ fim_data, volatile uin
     m_width = mt_width;
     __syncthreads();
 #endif
-    int trans_size = 32;
     int num_col = 32;
-    int num_fim_blocks = 8;
-    int num_fim_chan = 64;
     int num_grf = 8;
     int num_bank = 4;
-    int out_dim = size / trans_size;
-    int num_tile = out_dim / (num_fim_blocks * num_fim_chan * num_grf) / 2;
 
     int gidx = hipThreadIdx_x / 2;
     uint64_t offset = (hipThreadIdx_x % 2) * 0x10;
@@ -79,9 +74,8 @@ __global__ void bn_fim_sip(volatile uint8_t* __restrict__ fim_data, volatile uin
     /* Radeon7(VEGA20) memory is 16GB but our target is 32GB system */
     /* so program_crf and chagne_fim_mode functions can not access to over 8GB in our system */
 
-    addr = addr_gen(hipBlockIdx_x, 0, gidx / num_bank, gidx % num_bank, 0, 0);
-    R_CMD(&fim_data[addr + offset]);
-    R_CMD(&fim_data[addr + 0x8000 + offset]);
+    addr = addr_gen(hipBlockIdx_x, 0, gidx / num_bank, gidx % num_bank, 1 << 13, 0);
+    W_CMD(&fim_data[addr + offset]);
     B_CMD(1);
 
     if (hipThreadIdx_x < 2) {
@@ -97,6 +91,12 @@ __global__ void bn_fim_sip(volatile uint8_t* __restrict__ fim_data, volatile uin
         addr = addr_gen(hipBlockIdx_x, 0, 0, 1, 0x27ff, 0x1f);
         W_CMD(&fim_ctr[addr + offset]);
         B_CMD(1);
+
+        addr = addr_gen(hipBlockIdx_x, 0, 0, 0, 0x3fff, 0x0);
+        W_CMD_R(&fim_ctr[addr + 32 + offset], srf_binary + offset);
+        W_CMD_R(&fim_ctr[addr + offset], bn_hab_to_hab_fim + offset);
+        R_CMD(&fim_ctr[addr + offset]);
+        B_CMD(2);
     }
     B_CMD(0);
 
@@ -107,82 +107,60 @@ __global__ void bn_fim_sip(volatile uint8_t* __restrict__ fim_data, volatile uin
     }
     B_CMD(0);
 
-    if (hipThreadIdx_x < 2) {
-        addr = addr_gen(hipBlockIdx_x, 0, 0, 0, 0x3fff, 0x0);
-        W_CMD_R(&fim_ctr[addr + offset], bn_hab_to_hab_fim + offset);
-        B_CMD(1);
+    if (hipThreadIdx_x < 16) {
+        for (int tile_idx = 0; tile_idx < num_tile; tile_idx++) {
+            unsigned int loc = tile_idx * num_grf + gidx;
+            unsigned int row = loc / num_col;
+            unsigned int col = loc % num_col;
 
-        addr = addr_gen(hipBlockIdx_x, 0, 0, 0, 0x3fff, 0x1);
-        W_CMD_R(&fim_ctr[addr + offset], srf_binary + hipBlockIdx_x * trans_size + offset);
-        B_CMD(1);
-    }
-    B_CMD(0);
+            addr = addr_gen(hipBlockIdx_x, 0, 0, 0, row, col);
+            addr_even = addr + offset;
+            addr_odd = addr_even + 0x2000;
 
-    for (int tile_idx = 0; tile_idx < num_tile; tile_idx++) {
-        unsigned int loc = tile_idx * num_grf + gidx;
-        unsigned int row = loc / num_col;
-        unsigned int col = loc % num_col;
+            R_CMD(&fim_data[addr_even]);
+            B_CMD(1);
 
-        addr = addr_gen(hipBlockIdx_x, 0, 0, 0, row, col);
-        addr_even = addr + offset;
-        addr_odd = addr_even + 0x2000;
+            R_CMD(&fim_data[addr_even]);
+            B_CMD(1);
 
-        R_CMD(&fim_data[addr_even]);
-        B_CMD(1);
+            R_CMD(&fim_data[addr_even]);
+            B_CMD(1);
 
-        R_CMD(&fim_data[addr_even]);
-        B_CMD(1);
+            R_CMD(&fim_data[addr_even]);
+            B_CMD(1);
 
-        R_CMD(&fim_data[addr_even]);
-        B_CMD(1);
+            R_CMD(&fim_data[addr_odd]);
+            B_CMD(1);
 
-        W_CMD(&fim_bn_tmp_buffer[addr_even]);
-        W_CMD(&fim_bn_tmp_buffer[addr_even]);
-        R_CMD(&fim_bn_tmp_buffer[addr_even]);
-        B_CMD(1);
+            R_CMD(&fim_data[addr_odd]);
+            B_CMD(1);
 
-        R_CMD(&fim_data[addr_odd]);
-        B_CMD(1);
+            R_CMD(&fim_data[addr_odd]);
+            B_CMD(1);
 
-        R_CMD(&fim_data[addr_odd]);
-        B_CMD(1);
+            W_CMD(&output[addr_even]);
+            B_CMD(1);
 
-        R_CMD(&fim_data[addr_odd]);
-        B_CMD(1);
-
-        W_CMD(&fim_bn_tmp_buffer[addr_odd]);
-        W_CMD(&fim_bn_tmp_buffer[addr_odd]);
-        B_CMD(0);
-    }
-
-    if (hipThreadIdx_x < 2) {
-        addr = addr_gen(hipBlockIdx_x, 0, 0, 0, 0x3fff, 0x0);
-        W_CMD_R(&fim_ctr[addr + offset], bn_hab_fim_to_hab + offset);
-        B_CMD(1);
+            W_CMD(&output[addr_odd]);
+            B_CMD(1);
+            B_CMD(1);
+        }
     }
     B_CMD(0);
 
     if (hipThreadIdx_x < 4) {
+        addr = addr_gen(hipBlockIdx_x, 0, 0, 0, 0x3fff, 0x0);
+        W_CMD_R(&fim_ctr[addr + offset], bn_hab_fim_to_hab + offset);
+        B_CMD(2);
+
         addr = addr_gen(hipBlockIdx_x, 0, 0, gidx, 0x2fff, 0x1f);
         W_CMD(&fim_ctr[addr + offset]);
-        B_CMD(1);
-        B_CMD(1);
-        B_CMD(1);
+        B_CMD(2);
     }
     B_CMD(0);
 
-    addr = addr_gen(hipBlockIdx_x, 0, gidx / num_bank, gidx % num_bank, 0, 0);
-    R_CMD(&fim_data[addr + offset]);
-    R_CMD(&fim_data[addr + 0x8000 + offset]);
-    B_CMD(0);
-
-#ifdef TARGET
-    if (hipThreadIdx_x < 2) {
-        read_result_bn_64cu_2th(output, fim_bn_tmp_buffer, num_ba, num_ch, num_w / 16, 0, 0, offset);
-        B_CMD(1);
-    }
-    B_CMD(0);
-#endif
+    addr = addr_gen(hipBlockIdx_x, 0, gidx / num_bank, gidx % num_bank, 1 << 13, 0);
+    W_CMD(&fim_ctr[addr + offset]);
 
 #ifdef EMULATOR
     if (hipBlockIdx_x == 0 && hipThreadIdx_x == 0) {
