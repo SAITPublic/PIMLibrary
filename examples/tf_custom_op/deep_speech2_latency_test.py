@@ -55,9 +55,8 @@ RNN_HIDDEN_SIZE = 800
 # Dense Layer
 OUTPUT_SIZE = 29
 
-weight_val = 0.001
 initializer = tf.keras.initializers.RandomNormal(seed=SEED)
-kernel_initializer = tf.keras.initializers.Constant(weight_val)
+kernel_initializer = tf.keras.initializers.RandomNormal(seed=SEED)
 
 # Performance table for different layers
 eval_time = []
@@ -271,6 +270,65 @@ class rnn_layer(tf.keras.layers.Layer):
 
         return rnn_outputs
 
+#refer tensorflow/python/keras/layers/recurrent_v2.py
+def _canonical_to_params(weights, biases, shape, transpose_weights=False):
+    """Utility function convert variable to CuDNN compatible parameter.
+    Note that Keras weights for kernels are different from the CuDNN format. Eg.:
+    ```
+      Keras                 CuDNN
+      [[0, 1, 2],  <--->  [[0, 2, 4],
+       [3, 4, 5]]          [1, 3, 5]]
+    ```
+    If the input weights need to be in a unified format, then set
+    `transpose_weights=True` to convert the weights.
+    Args:
+      weights: list of weights for the individual kernels and recurrent kernels.
+      biases: list of biases for individual gate.
+      shape: the shape for the converted variables that will be feed to CuDNN.
+      transpose_weights: boolean, whether to transpose the weights.
+    Returns:
+      The converted weights that can be feed to CuDNN ops as param.
+    """
+    def convert(w):
+      return tf.transpose(w) if transpose_weights else w
+
+    weights = [tf.reshape(convert(x), shape) for x in weights]
+    #biases = [array_ops.reshape(x, shape) for x in biases]
+    return tf.concat(weights , axis=0)
+    #return tf.concat(weights + biases, axis=0)
+
+def get_params(kernel , recurrent_kernel , bias = None):
+    weights = tf.split(kernel, 4, axis=1)
+    weights += tf.split(recurrent_kernel, 4, axis=1)
+    # CuDNN has an extra set of bias for inputs, we disable them (setting to 0),
+    # so that mathematically it is same as the canonical LSTM implementation.
+    #full_bias = tf.concat((tf.zeros_like(bias), bias), 0)
+    weights = [weights[x] for x in (0, 1, 3, 2, 4, 5, 7, 6)]
+    params = _canonical_to_params(
+                    weights=weights,
+                    biases=None,
+                    shape=tf.constant([-1]),
+                    transpose_weights=True)
+    return params
+
+#Todo: fim.lstm , bias is disabled for now
+def get_keras_lstm_weight(model , count , bi_dir=False, add_bias=True):
+
+    for i in range(count):
+        layer = model[i]
+        lw = layer.get_weights()
+        if i==0:
+            w = get_params(lw[0] , lw[1] ,  None)
+            if bi_dir:
+                w_back = get_params(lw[2+add_bias] , lw[3+add_bias] ,  None)
+                w = tf.concat([w,w_back] , axis=0)
+            else:
+                w_f = get_params(lw[0] , lw[1] ,  None)
+                w = tf.concat([w,w_f] , axis=0)
+                if bi_dir:
+                  w_back = get_params(lw[2+add_bias] , lw[3+add_bias] ,  None)
+                  w = tf.concat([w,w_back] , axis=0)
+    return w
 
 class DeepSpeech2(tf.keras.Model):
     """Define DeepSpeech2 model."""
@@ -399,7 +457,7 @@ class DeepSpeech2(tf.keras.Model):
             if self.use_bias == True:
                     bias = weights[1]
             fim_logits = tf_fim_ops.fim_dense(bn_out, weights[0], bias, self.use_bias_int, self.reorder)
-            self.assertAllClose(logits, fim_logits, atol=1e-3)
+            tf.test.TestCase.assertAllClose(logits, fim_logits, atol=1e-3)
 
         if args.profile == True :
             print(" Dense input shape {}".format(bn_out.shape))
