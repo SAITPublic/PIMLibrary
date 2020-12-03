@@ -136,9 +136,9 @@ void FimCrfBinGen::create_fim_cmd(FimOpType op_type, int lc)
     } else if (op_type == OP_RELU) {
         std::vector<FimCommand> tmp_cmds{
             FimCommand(FimCmdType::FILL, FimOpdType::GRF_A, FimOpdType::EVEN_BANK, 1, 0, 0, 0, 1),
-            FimCommand(FimCmdType::NOP, 7),
+            FimCommand(FimCmdType::NOP, 15),
             FimCommand(FimCmdType::FILL, FimOpdType::GRF_B, FimOpdType::ODD_BANK, 1, 0, 0, 0, 1),
-            FimCommand(FimCmdType::NOP, 15) /*, FimCommand(FimCmdType::NOP, 0)*/};
+            FimCommand(FimCmdType::NOP, 7) /*, FimCommand(FimCmdType::NOP, 0)*/};
         cmds_.assign(tmp_cmds.begin(), tmp_cmds.end());
     } else if (op_type == OP_GEMV) {
         int even_lc = 8 * ceil((float)lc / 2) - 1;
