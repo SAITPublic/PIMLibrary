@@ -8,3 +8,4 @@ from tf_fim_ops.python.ops.fim_lstm_ops import fim_lstm
 from tf_fim_ops.python.ops.fim_dense_ops import fim_dense
 from tf_fim_ops.python.ops.fim_init_ops import fim_init
 from tf_fim_ops.python.ops.fim_deinit_ops import fim_deinit
+from tf_fim_ops.python.layers.fim_layers import *

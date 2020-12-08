@@ -13,18 +13,6 @@ tf.debugging.set_log_device_placement(True)
 tf.keras.backend.set_floatx('float16')
 
 eval_time = []
-class FimDenseLayer(tf.keras.layers.Layer):
-    def __init__(self, weight, bias, dtype=tf.float16):
-        super(FimDenseLayer, self).__init__()
-        self.kernel = weight
-        self.bias = bias
-
-    def build(self, input_shape):
-        pass
-
-    def call(self, input):
-      return tf_fim_ops.fim_dense(input, self.kernel, self.bias, tf.constant([1]), tf.constant([1]))
-
 
 class DenseTest(tf.test.TestCase):
     def testDense_1DRandom(self):
@@ -70,6 +58,7 @@ class DenseTest(tf.test.TestCase):
             #print('Result',result,golden)
             self.assertAllClose(result, golden, atol=0.01)
 
+
     def testDense_2DRandom_layer(self):
         eval_time.clear()
         in_batch = 1
@@ -78,20 +67,20 @@ class DenseTest(tf.test.TestCase):
 
         a = tf.random.uniform(shape=(in_batch, in_size*2 , in_size), dtype=tf.float16)
         dense = tf.keras.layers.Dense(out_size, use_bias=True,  bias_initializer='glorot_uniform', dtype=tf.float16)
+        fim_dense = FimDense(out_size, use_bias=True,  bias_initializer='zeros', dtype=tf.float16)
 
         #dummy run to init weights
         golden = dense(a)
         weights = dense.get_weights()
-        fim_dense_layer = FimDenseLayer(weights[0],weights[1],dtype=tf.float16)
+        fim_dense.set_weights(weights)
 
         with self.test_session():
             golden = dense(a)
-            weights = dense.get_weights()
             print('Input shape',a.shape)
             print('Weight shape',weights[0].shape)
             print('Golden shape',golden.shape)
-            result = fim_dense_layer(a)
-            eval_time.append(timeit.timeit(lambda : fim_dense_layer(a), number = 10))
+            result = fim_dense(a)
+            eval_time.append(timeit.timeit(lambda : fim_dense(a), number = 10))
             print(eval_time)
             #print('Result',result,golden)
             self.assertAllClose(result, golden, atol=0.01)
