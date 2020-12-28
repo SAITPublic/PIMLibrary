@@ -292,10 +292,10 @@ int FimExecutor::execute_gemv_add(FimBo* output, FimBo* operand0, FimBo* operand
     int n_out_tile = out_size / (blocks * fbi_.num_fim_blocks * fbi_.num_grf_B);
 
     FIM_PROFILE_TICK(CreateCRFBin);
-    uint8_t* crf_bin = find_crf(OP_GEMV, compute_size);
+    uint8_t* crf_bin = find_crf(OP_GEMV, compute_size * sizeof(uint16_t));
     int crf_size = 32;
     if (crf_bin == nullptr) {
-        crf_bin = make_crf_bin(OP_GEMV, compute_size);
+        crf_bin = make_crf_bin(OP_GEMV, compute_size * sizeof(uint16_t));
     }
 
     FIM_PROFILE_TOCK(CreateCRFBin);
@@ -515,6 +515,7 @@ uint8_t* FimExecutor::make_crf_bin(FimOpType op_type, int data_size)
 
     fim_manager_->copy_memory((void*)d_crf, (void*)h_crf, max_crf_size_, HOST_TO_DEVICE);
     crf_lut_.insert(std::make_pair(std::make_pair(op_type, data_size), d_crf));
+    free(h_crf);
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return d_crf;

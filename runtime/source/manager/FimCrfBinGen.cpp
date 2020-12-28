@@ -120,7 +120,7 @@ void FimCrfBinGen::create_fim_cmd(FimOpType op_type, int lc)
             FimCommand(FimCmdType::NOP, 23),
             FimCommand(FimCmdType::FILL, FimOpdType::GRF_B, FimOpdType::ODD_BANK),
             FimCommand(FimCmdType::ADD, FimOpdType::GRF_B, FimOpdType::GRF_B, FimOpdType::ODD_BANK, 1),
-            FimCommand(FimCmdType::NOP, 15)/*,
+            FimCommand(FimCmdType::NOP, 23)/*,
             FimCommand(FimCmdType::NOP, 0)*/};
         cmds_.assign(tmp_cmds.begin(), tmp_cmds.end());
     } else if (op_type == OP_ELT_MUL) {
@@ -130,7 +130,7 @@ void FimCrfBinGen::create_fim_cmd(FimOpType op_type, int lc)
             FimCommand(FimCmdType::NOP, 23),
             FimCommand(FimCmdType::FILL, FimOpdType::GRF_B, FimOpdType::ODD_BANK),
             FimCommand(FimCmdType::MUL, FimOpdType::GRF_B, FimOpdType::GRF_B, FimOpdType::ODD_BANK, 1),
-            FimCommand(FimCmdType::NOP, 15)/*,
+            FimCommand(FimCmdType::NOP, 23)/*,
             FimCommand(FimCmdType::NOP, 0)*/};
         cmds_.assign(tmp_cmds.begin(), tmp_cmds.end());
     } else if (op_type == OP_RELU) {
@@ -161,7 +161,7 @@ void FimCrfBinGen::create_fim_cmd(FimOpType op_type, int lc)
                                          FimCommand(FimCmdType::NOP, 7),
                                          FimCommand(FimCmdType::MAD, FimOpdType::GRF_B, FimOpdType::GRF_B,
                                                     FimOpdType::SRF_M, FimOpdType::SRF_A, 1, 0, 0, 1),
-                                         FimCommand(FimCmdType::NOP, 15)
+                                         FimCommand(FimCmdType::NOP, 23)
                                          /*FimCommand(FimCmdType::NOP, 0)*/};
         cmds_.assign(tmp_cmds.begin(), tmp_cmds.end());
     }

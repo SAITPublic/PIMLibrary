@@ -285,8 +285,8 @@ __global__ void gemv_fim_64cu_64th_fp16(volatile uint8_t* __restrict__ fim_ctr,
     if (hipThreadIdx_x < 32) {
         addr = addr_gen(ch, 0, gidx / num_ba, gidx % num_ba, (1 << 13), 0);
         W_CMD(&fim_ctr[addr + offset]);
+        B_CMD(1);
     }
-    B_CMD(1);
     B_CMD(0);
 #endif
 
@@ -325,6 +325,7 @@ __global__ void gemv_fim_64cu_64th_fp16(volatile uint8_t* __restrict__ fim_ctr,
             for (int o_idx = 0; o_idx < n_out_tile; o_idx++) {
                 addr = addr_gen(ch, 0, 0, 0, 0x3fff, 0x0);
                 W_CMD_R(&fim_ctr[addr + offset], gemv_hab_to_hab_fim + offset);
+                R_CMD(&fim_ctr[addr + offset]);
                 B_CMD(1);
 
                 uint64_t i_offset = b_idx * n_memory_tile * num_grf;
@@ -335,8 +336,7 @@ __global__ void gemv_fim_64cu_64th_fp16(volatile uint8_t* __restrict__ fim_ctr,
                     uint64_t i_addr = (i_offset + (i_idx * num_grf + gidx)) * trans_size;
                     addr = addr_gen(ch, 0, 0, 0, 0x3fff, 0x8 + gidx);
                     W_CMD_R(&fim_ctr[addr + offset], &fim_input[i_addr + offset]);
-                    //                    R_CMD(&fim_ctr[addr + offset]);
-                    B_CMD(1);
+                    R_CMD(&fim_ctr[addr + offset]);
                     B_CMD(1);
 
                     even_row = ((i_idx / 2) + r_offset) * 2;
@@ -372,8 +372,7 @@ __global__ void gemv_fim_64cu_64th_fp16(volatile uint8_t* __restrict__ fim_ctr,
                     uint64_t i_addr = (i_offset + (i_idx * num_grf + gidx)) * trans_size;
                     addr = addr_gen(ch, 0, 0, 1, 0x3fff, 0x8 + gidx);
                     W_CMD_R(&fim_ctr[addr + offset], &fim_input[i_addr + offset]);
-                    //                    R_CMD(&fim_ctr[addr + offset]);
-                    B_CMD(1);
+                    R_CMD(&fim_ctr[addr + offset]);
                     B_CMD(1);
 
                     even_row = ((i_idx / 2) + r_offset) * 2;
@@ -417,6 +416,7 @@ __global__ void gemv_fim_64cu_64th_fp16(volatile uint8_t* __restrict__ fim_ctr,
 
                 addr = addr_gen(ch, 0, 0, 0, 0x3fff, 0x0);
                 W_CMD_R(&fim_ctr[addr + offset], gemv_hab_fim_to_hab + offset);
+                R_CMD(&fim_ctr[addr + offset]);
                 B_CMD(1);
             }
         }
@@ -429,6 +429,7 @@ __global__ void gemv_fim_64cu_64th_fp16(volatile uint8_t* __restrict__ fim_ctr,
         /* change HAB mode to SB mode */
         addr = addr_gen(ch, 0, 0, gidx, 0x2fff, 0x1f);
         W_CMD(&fim_ctr[addr + offset]);
+        R_CMD(&fim_ctr[addr + offset]);
         B_CMD(1);
     }
     B_CMD(0);
@@ -439,8 +440,8 @@ __global__ void gemv_fim_64cu_64th_fp16(volatile uint8_t* __restrict__ fim_ctr,
     if (hipThreadIdx_x < 32) {
         addr = addr_gen(ch, 0, gidx / num_ba, gidx % num_ba, (1 << 13), 0);
         W_CMD(&fim_ctr[addr + offset]);
+        B_CMD(1);
     }
-    B_CMD(1);
     B_CMD(0);
 #endif
 

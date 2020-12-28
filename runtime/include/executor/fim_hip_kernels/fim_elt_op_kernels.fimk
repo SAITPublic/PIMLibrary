@@ -114,7 +114,7 @@ __global__ void elt_op_fim(volatile uint8_t* __restrict__ operand0, volatile uin
 #if PARK_IN
     addr = addr_gen(hipBlockIdx_x, 0, gidx / num_ba, gidx % num_ba, (1 << 13), 0);
     W_CMD(&fim_ctr[addr + offset]);
-    B_CMD(2);
+    B_CMD(1);
 #endif
 
     if (hipThreadIdx_x < 2) {
@@ -141,9 +141,8 @@ __global__ void elt_op_fim(volatile uint8_t* __restrict__ operand0, volatile uin
         W_CMD_R(&fim_ctr[addr + offset], elt_add_hab_to_hab_fim + offset);
         R_CMD(&fim_ctr[addr + offset]);
 #endif
-        B_CMD(2);
+        B_CMD(1);
     }
-    B_CMD(0);
 
     if (hipThreadIdx_x < 16) {
 #if COMPUTE_ELT_OP
@@ -165,7 +164,7 @@ __global__ void elt_op_fim(volatile uint8_t* __restrict__ operand0, volatile uin
             W_CMD(&output[addr_even]);
             W_CMD(&output[addr_even]);
             R_CMD(&output[addr_even]);
-            B_CMD(2);
+            B_CMD(1);
 
             R_CMD(&operand0[addr_odd]);
             B_CMD(1);
@@ -175,28 +174,27 @@ __global__ void elt_op_fim(volatile uint8_t* __restrict__ operand0, volatile uin
 
             W_CMD(&output[addr_odd]);
             W_CMD(&output[addr_odd]);
+            R_CMD(&output[addr_odd]);
             B_CMD(1);
         }
 #endif
     }
-    B_CMD(0);
 
     if (hipThreadIdx_x < 4) {
 #if CHANGE_HABFIM_HAB
         addr = addr_gen(hipBlockIdx_x, 0, 0, 0, 0x3fff, 0x0);
         W_CMD_R(&fim_ctr[addr + offset], elt_add_hab_fim_to_hab + offset);
         R_CMD(&fim_ctr[addr + offset]);
-        B_CMD(2);
+        B_CMD(1);
 #endif
 
 #if CHANGE_HAB_SB
         addr = addr_gen(hipBlockIdx_x, 0, 0, gidx, 0x2fff, 0x1f);
         W_CMD(&fim_ctr[addr + offset]);
         R_CMD(&fim_ctr[addr + offset]);
-        B_CMD(2);
+        B_CMD(1);
 #endif
     }
-    B_CMD(0);
 
 #if PARK_OUT
     addr = addr_gen(hipBlockIdx_x, 0, gidx / num_ba, gidx % num_ba, (1 << 13), 0);
