@@ -287,7 +287,6 @@ __global__ void gemv_fim_64cu_64th_fp16(volatile uint8_t* __restrict__ fim_ctr,
         W_CMD(&fim_ctr[addr + offset]);
         B_CMD(1);
     }
-    B_CMD(0);
 #endif
 
 #if CHANGE_SB_HAB
@@ -306,16 +305,15 @@ __global__ void gemv_fim_64cu_64th_fp16(volatile uint8_t* __restrict__ fim_ctr,
         W_CMD(&fim_ctr[addr + offset]);
         B_CMD(1);
     }
-    B_CMD(0);
 #endif
 
 #if PROGRAM_CRF
     if (hipThreadIdx_x < (crf_size >> 4)) {
         addr = addr_gen(hipBlockIdx_x, 0, 0, 1, 0x3fff, 0x4 + gidx);
         W_CMD_R(&fim_ctr[addr + offset], crf_binary + (hipThreadIdx_x << 4));
+        R_CMD(&fim_ctr[addr + offset]);
         B_CMD(1);
     }
-    B_CMD(0);
 #endif
 
 #if COMPUTE_GEMV
@@ -412,6 +410,7 @@ __global__ void gemv_fim_64cu_64th_fp16(volatile uint8_t* __restrict__ fim_ctr,
                 addr = addr_gen(ch, 0, 0, 1, row, col);
                 W_CMD(&fim_gemv_tmp_buffer[addr + offset]);
                 W_CMD(&fim_gemv_tmp_buffer[addr + offset]);
+                R_CMD(&fim_gemv_tmp_buffer[addr + offset]);
                 B_CMD(1);
 
                 addr = addr_gen(ch, 0, 0, 0, 0x3fff, 0x0);
@@ -421,7 +420,6 @@ __global__ void gemv_fim_64cu_64th_fp16(volatile uint8_t* __restrict__ fim_ctr,
             }
         }
     }
-    B_CMD(0);
 #endif
 
 #if CHANGE_HAB_SB
@@ -432,7 +430,6 @@ __global__ void gemv_fim_64cu_64th_fp16(volatile uint8_t* __restrict__ fim_ctr,
         R_CMD(&fim_ctr[addr + offset]);
         B_CMD(1);
     }
-    B_CMD(0);
 #endif
 
 #if PARK_OUT
@@ -442,7 +439,6 @@ __global__ void gemv_fim_64cu_64th_fp16(volatile uint8_t* __restrict__ fim_ctr,
         W_CMD(&fim_ctr[addr + offset]);
         B_CMD(1);
     }
-    B_CMD(0);
 #endif
 
 #ifdef EMULATOR

@@ -342,14 +342,15 @@ int FimExecutor::execute_relu(FimBo* output, FimBo* fim_data, hipStream_t stream
 {
     DLOG(INFO) << "called";
     int ret = 0;
-    unsigned blocks = fbi_.num_fim_chan;
-    unsigned threads_per_block = 16;
 
     uint8_t* crf_bin = find_crf(OP_RELU, output->size);
     int crf_size = 32;
     if (crf_bin == nullptr) {
         crf_bin = make_crf_bin(OP_RELU, output->size);
     }
+
+    unsigned blocks = fbi_.num_fim_chan;
+    unsigned threads_per_block = 32;
     hipLaunchKernelGGL(relu_fim, dim3(blocks), dim3(threads_per_block), 0, stream, (uint8_t*)fim_data->data,
                        (uint8_t*)g_fim_base_addr, (uint8_t*)output->data, (int)output->size,
 #ifdef EMULATOR
