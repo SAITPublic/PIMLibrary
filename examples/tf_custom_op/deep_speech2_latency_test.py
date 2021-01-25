@@ -494,6 +494,10 @@ def profile_ds2(dtype):
     res = model(x)
     model.summary()
 
+    # Summation of all layers time
+    evaltime_sum = sum(row[1] for row in eval_time)
+    eval_time.append(["Sum of layers time", evaltime_sum, x.shape, res.shape])
+
     if args.profile:
         args.profile = False
         eval_time.append(["End to End", timeit.timeit(lambda: model(x), number = args.iterations), x.shape, res.shape])
