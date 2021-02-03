@@ -5,10 +5,13 @@ aux_source_directory(emulator runtime_source)
 aux_source_directory(utility  runtime_source)
 
 set(CMAKE_CXX_COMPILER "${ROCM_PATH}/bin/hipcc")
-set(HIPCC_FLAGS "--amdgpu-target=gfx906")
+set(HIPCC_FLAGS "--amdgpu-target=gfx906 -fgpu-rdc -Wno-deprecated-register -dc")
+set(HIPCC_LINK_FLAGS "-fgpu-rdc --hip-link")
 set(CXX_FLAGS "-std=c++11")
+set(FITS_FLAGS "-lm -lcfitsio -lwcs")
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HIPCC_FLAGS}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HIPCC_FLAGS} ${HIPCC_LINK_FLAGS} ${FIT_FLAGS}")
+set(CMAKE_EXE_LINKER_FLAGS "${HIPCC_LINK_FLAGS} ${FIT_FLAGS}")
 
 if(DEFINED ENV{FIM_LOG_LEVEL})
     add_definitions(-DFIM_LOG_LEVEL=$ENV{FIM_LOG_LEVEL})

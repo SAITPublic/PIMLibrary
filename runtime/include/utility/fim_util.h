@@ -18,7 +18,7 @@
 #include "utility/fim_log.h"
 
 /* TODO: get VEGA20 scheme from device driver */
-static FimBlockInfo vega20_fbi = {
+static __constant__ FimBlockInfo vega20_fbi = {
     .fim_addr_map = AMDGPU_VEGA20,
     .num_banks = 16,
     .num_bank_groups = 4,
