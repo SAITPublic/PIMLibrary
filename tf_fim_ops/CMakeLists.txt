@@ -10,10 +10,7 @@ execute_process(COMMAND python3 -c
                 "import tensorflow as tf; print(' '.join(tf.sysconfig.get_compile_flags()), end='')"
                 OUTPUT_VARIABLE TF_CFLAGS)
 
-set(CMAKE_CXX_COMPILER "${ROCM_PATH}/bin/hcc")
-set(HCC_CXX_FLAGS
-    "-hc --amdgpu-target=gfx900  --amdgpu-target=gfx906 --amdgpu-target=gfx908  ${TF_CFLAGS}")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HCC_CXX_FLAGS}")
+set(CMAKE_CXX_COMPILER "${ROCM_PATH}/bin/hipcc")
 
 set(FIM_GEMV_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/cc/kernels/fim_gemv.cc
             ${CMAKE_CURRENT_SOURCE_DIR}/cc/ops/fim_gemv_ops.cc)
@@ -39,7 +36,8 @@ set(FIM_INIT_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/cc/kernels/fim_init.cc
 set(FIM_DEINIT_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/cc/kernels/fim_deinit.cc
             ${CMAKE_CURRENT_SOURCE_DIR}/cc/ops/fim_deinit_ops.cc)
 
-include_directories(/opt/rocm/include)
+include_directories("${ROCM_PATH}/include")
+include_directories(/usr/local/lib/python3.6/dist-packages/tensorflow/include)
 
 add_library(fim_gemv SHARED ${FIM_GEMV_SOURCES})
 target_link_libraries(fim_gemv FimRuntime ${TF_LFLAGS})

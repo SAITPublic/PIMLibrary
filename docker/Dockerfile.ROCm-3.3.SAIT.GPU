@@ -1,4 +1,4 @@
-FROM rocm/tensorflow:rocm3.3-tf2.2-rc2-dev
+FROM rocm/tensorflow:rocm4.0-tf2.4-dev
 MAINTAINER Shashidhar G <shashidhar.g@samsung.com>
 
 # Default env setup to pass through damn proxy..
@@ -43,8 +43,8 @@ RUN apt-get --yes --allow-unauthenticated install wget
 RUN apt-get --yes --allow-unauthenticated install kmod
 
 # Add rocm apt repository
-RUN wget -qO - http://repo.radeon.com/rocm/apt/3.3/rocm.gpg.key | sudo apt-key add -
-RUN echo 'deb [arch=amd64] http://repo.radeon.com/rocm/apt/3.3/ xenial main' | sudo tee /etc/apt/sources.list.d/rocm.list
+RUN wget -qO - http://repo.radeon.com/rocm/apt/4.0/rocm.gpg.key | sudo apt-key add -
+RUN echo 'deb [arch=amd64] http://repo.radeon.com/rocm/apt/4.0/ xenial main' | sudo tee /etc/apt/sources.list.d/rocm.list
 
 RUN apt-get update
 # Instal hipcc 
@@ -69,7 +69,7 @@ RUN apt-get --yes --allow-unauthenticated install half
 RUN apt-get update
 
 ENV QWORKSPACE=/home/user/fim-workspace
-ENV ROCM_PATH=/opt/rocm
+ENV ROCM_PATH=/opt/rocm-4.0.0
 ENV HIP_PATH=${ROCM_PATH}/hip
 ENV HCC_HOME=${ROCM_PATH}/hcc
 ENV HIP_PLATFORM=hcc

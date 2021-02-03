@@ -9,6 +9,7 @@
  */
 
 #include "utility/fim_util.h"
+#include "executor/fim_hip_kernels/fim_crf_bins.h"
 
 __host__ void get_fim_block_info(FimBlockInfo* fbi) { memcpy(fbi, &vega20_fbi, sizeof(FimBlockInfo)); }
 

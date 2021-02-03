@@ -12,7 +12,6 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <iostream>
-#include "executor/fim_hip_kernels/fim_crf_bins.h"
 #include "utility/fim_log.h"
 #include "utility/fim_util.h"
 

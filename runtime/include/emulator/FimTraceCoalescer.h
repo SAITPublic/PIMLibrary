@@ -27,7 +27,7 @@ namespace emulator
 {
 // TODO: Define Stride for each FIM configuration
 #define TRANS_SIZE 0x10
-uint64_t MASK = (~((TRANS_SIZE << 1) - 1));
+#define MASK (~((TRANS_SIZE << 1) - 1))
 
 class TraceParser
 {
