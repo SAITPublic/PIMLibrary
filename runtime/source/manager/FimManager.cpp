@@ -166,18 +166,6 @@ int FimManager::convert_data_layout(FimBo* dst, FimBo* src0, FimBo* src1, FimOpT
     return ret;
 }
 
-int FimManager::create_crf_binary(FimOpType op_type, int input_size, int output_size)
-{
-    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
-    int ret = 0;
-
-    get_fim_block_info(&fbi_);
-    fim_crf_generator_->gen_binary(op_type, input_size, output_size, &fbi_, h_binary_buffer_, &crf_size_);
-
-    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
-    return ret;
-}
-
 uint8_t* FimManager::get_crf_binary() { return h_binary_buffer_; }
 int FimManager::get_crf_size() { return crf_size_; }
 } /* namespace manager */

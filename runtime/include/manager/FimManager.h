@@ -37,7 +37,6 @@ class FimManager
     int convert_data_layout(FimBo* dst, FimBo* src, FimOpType);
     int convert_data_layout(FimBo* dst, FimBo* src0, FimBo* src1, FimOpType op_type);
 
-    int create_crf_binary(FimOpType op_type, int input_size, int output_size);
     uint8_t* get_crf_binary();
     int get_crf_size();
     FimCrfBinGen* fim_crf_generator_;

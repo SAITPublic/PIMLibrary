@@ -17,11 +17,6 @@ class FimCrfBinGen
    public:
     FimCrfBinGen();
 
-    void gen_binary(FimOpType op_type, int input_size, FimBlockInfo* fbi);
-
-    void gen_binary(FimOpType op_type, int input_size, int output_size, FimBlockInfo* fbi, uint8_t* binary_buffer,
-                    int* crf_size);
-    void create_fim_cmd(FimOpType op_type, int input_size, int output_size, FimBlockInfo* fbi);
     void create_fim_cmd(FimOpType op_type, int lc);
     void change_to_binary(uint8_t* crf_binary, int* crf_size);
     void gen_binary_with_loop(FimOpType op_type, int lc, uint8_t* bin_buf, int* crf_sz);
