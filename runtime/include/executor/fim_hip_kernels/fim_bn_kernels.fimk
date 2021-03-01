@@ -25,15 +25,15 @@ __global__ void bn_fim_nr_sip(volatile uint8_t* __restrict__ fim_data, volatile 
                               volatile uint8_t* __restrict__ fim_bn_tmp_buffer, volatile uint8_t* __restrict__ output,
                               int num_tile, int num_ba, int num_ch, int num_w,
 #ifdef EMULATOR
-                              FimMemTraceData* fmtd16, int* frd_size, int mt_width,
+                              FimMemTraceData* fmtd16, int* frd_size, int mt_width, FimMemTracer *emulator_trace,
 #endif
                               uint8_t* crf_binary, int crf_size, uint8_t* srf_binary, int srf_size)
 {
 #ifdef EMULATOR
-    g_fba = (uint64_t)fim_ctr;
-    g_fmtd16 = fmtd16;
-    g_ridx[hipBlockIdx_x] = 0;
-    m_width = mt_width;
+    emulator_trace->g_fba = (uint64_t)fim_ctr;
+    emulator_trace->g_fmtd16 = fmtd16;
+    emulator_trace->g_ridx[hipBlockIdx_x] = 0;
+    emulator_trace->m_width = mt_width;
     __syncthreads();
 #endif
     int num_col = 32;
@@ -137,7 +137,7 @@ __global__ void bn_fim_nr_sip(volatile uint8_t* __restrict__ fim_data, volatile 
 
 #ifdef EMULATOR
     if (hipBlockIdx_x == 0 && hipThreadIdx_x == 0) {
-        frd_size[0] = g_ridx[0];
+        frd_size[0] = emulator_trace->g_ridx[0];
     }
 #endif
 }

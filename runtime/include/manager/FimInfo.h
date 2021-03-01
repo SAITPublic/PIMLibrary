@@ -62,4 +62,14 @@ typedef enum __FimMode {
     HAB_FIM_MODE,
 } FimMode;
 
+#ifdef EMULATOR
+typedef struct __FimMemTracer {
+    uint64_t g_fba;
+    FimMemTraceData* g_fmtd16;
+    int g_ridx[64];
+    int g_idx[64];
+    int m_width;
+} FimMemTracer;
+#endif
+
 #endif /* _FIM_INFO_H_ */

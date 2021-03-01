@@ -29,15 +29,15 @@ __global__ void gemv_fim_64cu_64th_fp16(volatile uint8_t* __restrict__ fim_ctr,
                                         int batch_dim, int n_memory_tile, int n_compute_tile, int n_out_tile,
                                         int output_dim,
 #ifdef EMULATOR
-                                        FimMemTraceData* fmtd16, int* frd_size, int mt_width,
+                                        FimMemTraceData* fmtd16, int* frd_size, int mt_width, FimMemTracer *emulator_trace,
 #endif
                                         uint8_t* crf_binary, int crf_size, int is_gemv_add)
 {
 #ifdef EMULATOR
-    g_fba = (uint64_t)fim_ctr;
-    g_fmtd16 = fmtd16;
-    g_ridx[hipBlockIdx_x] = 0;
-    m_width = mt_width;
+    emulator_trace->g_fba = (uint64_t)fim_ctr;
+    emulator_trace->g_fmtd16 = fmtd16;
+    emulator_trace->g_ridx[hipBlockIdx_x] = 0;
+    emulator_trace->m_width = mt_width;
     __syncthreads();
 #endif
 
@@ -218,7 +218,7 @@ __global__ void gemv_fim_64cu_64th_fp16(volatile uint8_t* __restrict__ fim_ctr,
 
 #ifdef EMULATOR
     if (hipBlockIdx_x == 0 && hipThreadIdx_x == 0) {
-        frd_size[0] = g_ridx[0];
+        frd_size[0] = emulator_trace->g_ridx[0];
     }
 #endif
 

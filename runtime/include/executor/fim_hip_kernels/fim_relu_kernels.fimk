@@ -23,15 +23,15 @@
 __global__ void relu_fim(volatile uint8_t* __restrict__ fim_data, volatile uint8_t* __restrict__ fim_ctr,
                          volatile uint8_t* __restrict__ output, int size,
 #ifdef EMULATOR
-                         FimMemTraceData* fmtd16, int* frd_size, int mt_width,
+                         FimMemTraceData* fmtd16, int* frd_size, int mt_width, FimMemTracer *emulator_trace,
 #endif
                          uint8_t* crf_binary, int crf_size)
 {
 #ifdef EMULATOR
-    g_fba = (uint64_t)fim_ctr;
-    g_fmtd16 = fmtd16;
-    g_ridx[hipBlockIdx_x] = 0;
-    m_width = mt_width;
+    emulator_trace->g_fba = (uint64_t)fim_ctr;
+    emulator_trace->g_fmtd16 = fmtd16;
+    emulator_trace->g_ridx[hipBlockIdx_x] = 0;
+    emulator_trace->m_width = mt_width;
     __syncthreads();
 #endif
     int trans_size = 32;
@@ -133,7 +133,7 @@ __global__ void relu_fim(volatile uint8_t* __restrict__ fim_data, volatile uint8
 
 #ifdef EMULATOR
     if (hipBlockIdx_x == 0 && hipThreadIdx_x == 0) {
-        frd_size[0] = g_ridx[0];
+        frd_size[0] = emulator_trace->g_ridx[0];
     }
 #endif
 }
