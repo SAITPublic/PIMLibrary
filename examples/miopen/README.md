@@ -2,5 +2,5 @@
 
 $ mkdir build
 $ cd build
-$ CXX=/opt/rocm/bin/hipcc cmake ..
+$ CXX=$ROCM_PATH/bin/hipcc cmake ..
 $ make -j8

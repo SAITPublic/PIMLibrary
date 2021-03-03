@@ -50,6 +50,7 @@ link_directories("${ROCM_PATH}/hsa/lib" "${ROCM_PATH}/libhsakmt/lib" "${ROCM_PAT
 
 #for test vectors default data path
 add_definitions(-DTEST_VECTORS_DATA="${PROJECT_SOURCE_DIR}/test_vectors/")
+add_definitions(-DROCM_PATH="${ROCM_PATH}")
 
 if(TARGET)
     add_definitions(-DTARGET=1)

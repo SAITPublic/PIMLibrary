@@ -142,12 +142,12 @@ make_install_fn()
 
 uninstall_fn()
 {
-    sudo rm -f /opt/rocm/lib/libFimRuntime.so
-    sudo rm -f /opt/rocm/include/fim_runtime_api.h
-    sudo rm -f /opt/rocm/include/fim_data_types.h
-    sudo rm -f /opt/rocm/lib/libdramsim2.so
-    sudo rm -rf /opt/rocm/include/dramsim2
-    sudo rm -rf /opt/rocm/lib/tf_fim_ops
+    sudo rm -f ${ROCM_PATH}/lib/libFimRuntime.so
+    sudo rm -f ${ROCM_PATH}/include/fim_runtime_api.h
+    sudo rm -f ${ROCM_PATH}/include/fim_data_types.h
+    sudo rm -f ${ROCM_PATH}/lib/libdramsim2.so
+    sudo rm -rf ${ROCM_PATH}/include/dramsim2
+    sudo rm -rf ${ROCM_PATH}/lib/tf_fim_ops
 }
 
 if [ $1 = "all" ]; then

@@ -28,6 +28,7 @@ FimEmulator::FimEmulator(void)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called ";
     get_fim_block_info(&fbi_);
+    rocm_path = std::getenv("ROCM_PATH");
 }
 
 FimEmulator* FimEmulator::get_instance(void)
@@ -89,8 +90,10 @@ int FimEmulator::execute_gemv(FimBo* output, FimBo* fim_data, FimMemTraceData* f
 
     int out_dim = fim_data->bshape.h * output->bshape.n;
     sim_output = new uint16_t[out_dim];
-    fim_sim_.initialize("/opt/rocm/include/dramsim2/ini/HBM2_samsung_2M_16B_x64.ini",
-                        "/opt/rocm/include/dramsim2/ini/system_hbm_vega20.ini", 256 * 64 * 2, 64, 1);
+    std::string rocm_path = ROCM_PATH;
+
+    fim_sim_.initialize(rocm_path + "/include/dramsim2/ini/HBM2_samsung_2M_16B_x64.ini",
+                        rocm_path + "/include/dramsim2/ini/system_hbm_vega20.ini", 256 * 64 * 2, 64, 1);
     uint64_t tmp_data_addr = reinterpret_cast<uint64_t>(temp_buf);
     uint64_t fim_data_addr = reinterpret_cast<uint64_t>(fim_data->data);
 
@@ -121,8 +124,9 @@ int FimEmulator::execute_gemv_add(FimBo* output, FimBo* fim_data, FimMemTraceDat
     int out_num = fim_data->bshape.h;
     int out_dim = out_num * num_batch;
     sim_output = new uint16_t[out_dim];
-    fim_sim_.initialize("/opt/rocm/include/dramsim2/ini/HBM2_samsung_2M_16B_x64.ini",
-                        "/opt/rocm/include/dramsim2/ini/system_hbm_vega20.ini", 256 * 64 * 2, 64, 1);
+    std::string rocm_path = ROCM_PATH;
+    fim_sim_.initialize(rocm_path + "/include/dramsim2/ini/HBM2_samsung_2M_16B_x64.ini",
+                        rocm_path + "/include/dramsim2/ini/system_hbm_vega20.ini", 256 * 64 * 2, 64, 1);
     uint64_t tmp_data_addr = reinterpret_cast<uint64_t>(temp_buf);
     uint64_t fim_data_addr = reinterpret_cast<uint64_t>(fim_data->data);
     uint64_t output_addr = reinterpret_cast<uint64_t>(output->data);
@@ -159,8 +163,9 @@ int FimEmulator::execute_bn(FimBo* output, FimBo* fim_data, FimMemTraceData* fmt
 
     num_element = output->size / sizeof(uint16_t);
     sim_output = new uint16_t[num_element];
-    fim_sim_.initialize("/opt/rocm/include/dramsim2/ini/HBM2_samsung_2M_16B_x64.ini",
-                        "/opt/rocm/include/dramsim2/ini/system_hbm_vega20.ini", 256 * 64 * 2, 64, 1);
+    std::string rocm_path = ROCM_PATH;
+    fim_sim_.initialize(rocm_path + "/include/dramsim2/ini/HBM2_samsung_2M_16B_x64.ini",
+                        rocm_path + "/include/dramsim2/ini/system_hbm_vega20.ini", 256 * 64 * 2, 64, 1);
     uint64_t tmp_data_addr = reinterpret_cast<uint64_t>(temp_buf);
     uint64_t fim_data_addr = reinterpret_cast<uint64_t>(fim_data->data);
     uint64_t output_addr = reinterpret_cast<uint64_t>(output->data);
@@ -187,8 +192,9 @@ int FimEmulator::execute_elt_op(FimBo* output, FimBo* operand0, FimBo* operand1,
 
     num_element = output->size / sizeof(uint16_t);
     sim_output = new uint16_t[num_element];
-    fim_sim_.initialize("/opt/rocm/include/dramsim2/ini/HBM2_samsung_2M_16B_x64.ini",
-                        "/opt/rocm/include/dramsim2/ini/system_hbm_vega20.ini", 256 * 64 * 2, 64, 1);
+    std::string rocm_path = ROCM_PATH;
+    fim_sim_.initialize(rocm_path + "/include/dramsim2/ini/HBM2_samsung_2M_16B_x64.ini",
+                        rocm_path + "/include/dramsim2/ini/system_hbm_vega20.ini", 256 * 64 * 2, 64, 1);
     uint64_t input0_addr = reinterpret_cast<uint64_t>(operand0->data);
     uint64_t input1_addr = reinterpret_cast<uint64_t>(operand1->data);
     uint64_t output_addr = reinterpret_cast<uint64_t>(output->data);
@@ -215,8 +221,9 @@ int FimEmulator::execute_relu(FimBo* output, FimBo* fim_data, FimMemTraceData* f
 
     num_element = output->size / sizeof(uint16_t);
     sim_output = new uint16_t[num_element];
-    fim_sim_.initialize("/opt/rocm/include/dramsim2/ini/HBM2_samsung_2M_16B_x64.ini",
-                        "/opt/rocm/include/dramsim2/ini/system_hbm_vega20.ini", 256 * 64 * 2, 64, 1);
+    std::string rocm_path = ROCM_PATH;
+    fim_sim_.initialize(rocm_path + "/include/dramsim2/ini/HBM2_samsung_2M_16B_x64.ini",
+                        rocm_path + "/include/dramsim2/ini/system_hbm_vega20.ini", 256 * 64 * 2, 64, 1);
     uint64_t fim_data_addr = reinterpret_cast<uint64_t>(fim_data->data);
     uint64_t output_addr = reinterpret_cast<uint64_t>(output->data);
 

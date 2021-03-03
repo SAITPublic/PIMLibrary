@@ -20,7 +20,7 @@ MIOpen Setup is required only if you work on modifying MIOpen code.
 ```
 git clone -b roc-3.0.x git@github.sec.samsung.net:FIM/MIOpen.git
 cd MIOpen
-sudo cmake -P install_deps.cmake --prefix /opt/rocm
+sudo cmake -P install_deps.cmake --prefix $ROCM_PATH
 ```
 
 ### Build And Install MIOpen
@@ -29,7 +29,7 @@ sudo cmake -P install_deps.cmake --prefix /opt/rocm
 cd MIOpen
 mkdir build
 cd build
-CXX=/opt/rocm/bin/hcc cmake -DMIOPEN_BACKEND=HIP -DCMAKE_PREFIX_PATH="/opt/rocm" -DCMAKE_INSTALL_PREFIX=/opt/rocm ..
+CXX=${ROCM_PATH}/bin/hcc cmake -DMIOPEN_BACKEND=HIP -DCMAKE_PREFIX_PATH=$ROCM_PATH -DCMAKE_INSTALL_PREFIX=$ROCM_PATH ..
 make -j8
 sudo make install
 ```
@@ -56,7 +56,7 @@ install : installs to rocm path
 ```
 mkdir build
 cd build
-cmake -DCMAKE_BUILD_TYPE=<Build Type> -DCMAKE_INSTALL_PREFIX=/opt/rocm -DMIOPEN_APPS=<option> ..
+cmake -DCMAKE_BUILD_TYPE=<Build Type> -DCMAKE_INSTALL_PREFIX=$ROCM_PATH -DMIOPEN_APPS=<option> ..
 <build Type> : Release, Debug
 <option>     : ON, OFF
 make -j8
@@ -64,7 +64,7 @@ sudo make install
 ```
 
 # Note
-- Build in release mode if you want to install all Lib and Simulator to /opt/rocm/
+- Build in release mode if you want to install all Lib and Simulator to ROCM_PATH
 - Logs will be generated only in Debug mode in /tmp/ directory
 
 ## DLOG Generation
@@ -103,7 +103,7 @@ For MIOpenTests to be added to FimIntegration test, -m option need to be enabled
 
 ## How To Run TF apps
 ```
-export PYTHONPATH=/opt/rocm/lib
+export PYTHONPATH=$ROCM_PATH/lib
 
 cd examples
 python3 tf_custom_op/<test_file>

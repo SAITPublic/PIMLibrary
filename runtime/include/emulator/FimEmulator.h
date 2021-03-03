@@ -47,6 +47,7 @@ class FimEmulator
    private:
     FimBlockInfo fbi_;
     FimSimulator fim_sim_;
+    char* rocm_path;
 };
 
 } /* namespace emulator */
