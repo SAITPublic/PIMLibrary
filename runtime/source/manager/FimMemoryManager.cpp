@@ -14,6 +14,7 @@
 #include <string.h>
 #include <iostream>
 #include "utility/fim_util.h"
+#include "hip/hip_runtime.h"
 
 extern "C" uint64_t fmm_map_fim(uint32_t, uint32_t, uint64_t);
 extern bool fim_alloc_done;
@@ -643,8 +644,13 @@ uint64_t FimMemoryManager::FimBlockAllocator::allocate_fim_block(size_t bsize) c
     ********************************************/
     if (!fim_alloc_done) {
         ret = fmm_map_fim(node_id, gpu_id, bsize);
-        fim_alloc_done = true;
-        g_fim_base_addr = ret;
+	if (ret) {
+	    fim_alloc_done = true;
+	    g_fim_base_addr = ret;
+	    hipHostRegister((void *)g_fim_base_addr, bsize, hipRegisterExternalSvm);
+	}
+	else
+	    std::cout << "fmm_map_fim failed!" << std::endl;
     }
 
     return ret;
