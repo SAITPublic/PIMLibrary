@@ -1,3 +1,13 @@
+/*
+ * Copyright (C) 2021 Samsung Electronics Co. LTD
+ *
+ * This software is a property of Samsung Electronics.
+ * No part of this software, either material or conceptual may be copied or distributed, transmitted,
+ * transcribed, stored in a retrieval system or translated into any human or computer language in any form by any means,
+ * electronic, mechanical, manual or otherwise, or disclosed
+ * to third parties without the express written permission of Samsung Electronics.
+ */
+
 #include <assert.h>
 #include <gtest/gtest.h>
 #include <stdio.h>
@@ -82,7 +92,7 @@ int fim_bn_nr1(bool block)
 
     hipEventElapsedTime(&eventMs, start, stop);
 
-//    printf("kernel Execution time             = %6.3fms\n", eventMs / 100);
+    //    printf("kernel Execution time             = %6.3fms\n", eventMs / 100);
 
     FimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
 

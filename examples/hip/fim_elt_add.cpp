@@ -1,3 +1,13 @@
+/*
+ * Copyright (C) 2021 Samsung Electronics Co. LTD
+ *
+ * This software is a property of Samsung Electronics.
+ * No part of this software, either material or conceptual may be copied or distributed, transmitted,
+ * transcribed, stored in a retrieval system or translated into any human or computer language in any form by any means,
+ * electronic, mechanical, manual or otherwise, or disclosed
+ * to third parties without the express written permission of Samsung Electronics.
+ */
+
 #include <assert.h>
 #include <gtest/gtest.h>
 #include <stdio.h>
@@ -315,9 +325,9 @@ int fim_elt_add_profile(bool block, int len)
         FimExecuteAdd(device_output, fim_input0, fim_input1, nullptr, block);
 #ifdef TARGET
     }
-//    if (!block) FimSynchronize();
-//    FIM_PROFILE_TOCK(ELT_ADD_1);
-//    printf("[ %d execution time ]\n", iter);
+    //    if (!block) FimSynchronize();
+    //    FIM_PROFILE_TOCK(ELT_ADD_1);
+    //    printf("[ %d execution time ]\n", iter);
 
     hipEventRecord(stop, nullptr);
     hipEventSynchronize(stop);

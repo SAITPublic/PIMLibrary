@@ -1,3 +1,13 @@
+/*
+ * Copyright (C) 2021 Samsung Electronics Co. LTD
+ *
+ * This software is a property of Samsung Electronics.
+ * No part of this software, either material or conceptual may be copied or distributed, transmitted,
+ * transcribed, stored in a retrieval system or translated into any human or computer language in any form by any means,
+ * electronic, mechanical, manual or otherwise, or disclosed
+ * to third parties without the express written permission of Samsung Electronics.
+ */
+
 #include "utility/fim_util.h"
 
 __host__ void get_fim_block_info(FimBlockInfo* fbi) { memcpy(fbi, &vega20_fbi, sizeof(FimBlockInfo)); }
@@ -141,7 +151,7 @@ __device__ void B_CMD(int type)
     (type == 0) ? __syncthreads() : __threadfence();
 }
 
-#else /* TARGET */
+#else  /* TARGET */
 
 __device__ void R_CMD(volatile uint8_t* __restrict__ addr)
 {
