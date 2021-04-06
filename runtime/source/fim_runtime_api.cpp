@@ -24,7 +24,6 @@ bool fim_alloc_done = false;
 uint64_t g_fim_base_addr = 0x0;
 int FimInitialize(FimRuntimeType rt_type, FimPrecision precision)
 {
-    fim_alloc_done = false;
     if (!log_initialized) {
 #if CONSOLE
         FLAGS_logtostderr = 1;
