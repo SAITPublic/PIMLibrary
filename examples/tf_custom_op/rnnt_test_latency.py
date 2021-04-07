@@ -47,6 +47,7 @@ parser.add_argument(
     type=int)
 parser.add_argument(
     '-p', '--profile', action="store_true", help="Enabled/Disable profiling")
+parser.add_argument('-b','--batch_size', default=1, help="Input batch size", type=int)
 
 args = parser.parse_args()
 
@@ -113,10 +114,10 @@ class RNNT(tf.keras.Model):
     def __init__(self, num_classes):
         super(RNNT, self).__init__()
 
-        self.f = tf.random.uniform([1, 1, 1, 1024], dtype=tf.float16)
-        self.g = tf.random.uniform([1, 1, 1, 320], dtype=tf.float16)
-        self.predictor_input = tf.random.uniform([1, 1, 320], dtype=tf.float16)
-        self.lstm3_input = tf.random.uniform([1, 76, 2048], dtype=tf.float16)
+        self.f = tf.random.uniform([args.batch_size, 1, 1, 1024], dtype=tf.float16)
+        self.g = tf.random.uniform([args.batch_size, 1, 1, 320], dtype=tf.float16)
+        self.predictor_input = tf.random.uniform([args.batch_size, 1, 320], dtype=tf.float16)
+        self.lstm3_input = tf.random.uniform([args.batch_size, 76, 2048], dtype=tf.float16)
 
         self.encoder_lstm1 = lstm(encoder_n_hidden, 1)
         self.encoder_lstm2 = lstm(encoder_n_hidden, 2)
@@ -209,8 +210,8 @@ class RNNT(tf.keras.Model):
 
 tf_fim_ops.fim_init()
 rnnt_model = RNNT(OUTPUT_SIZE)
-inputs = tf.random.normal([1, 151, 240], dtype=tf.float16)
-rnnt_model([inputs, tf.random.normal([1], dtype=tf.float16)])
+inputs = tf.random.normal([args.batch_size, 151, 240], dtype=tf.float16)
+rnnt_model([inputs, tf.random.normal([args.batch_size, 1], dtype=tf.float16)])
 
 if args.profile == False:
     end_to_end_latency = timeit.timeit(

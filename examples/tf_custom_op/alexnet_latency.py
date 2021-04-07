@@ -139,7 +139,7 @@ class AlexNet(tf.keras.Model):
                 (timeit.timeit(lambda: layer(input), number = args.iterations)), input.shape, output.shape])
 
 
-    def call(self, inputs , verify=False):
+    def profile_model(self, inputs , verify):
         x = self.conv1(inputs)
         self.timeit_add(self.conv1,1,"Conv ",inputs,x)
         x1 = self.pool1(x)
@@ -199,12 +199,55 @@ class AlexNet(tf.keras.Model):
               self.timeit_add(self.fim_dense3,3,"Dense ",x3,x4)
               return x4
 
+    def call(self, inputs , verify):
+        x = self.conv1(inputs)
+        x1 = self.pool1(x)
+        x = self.bn1(x1)
+        x1 = self.conv2(x)
+        x = self.pool2(x1)
+        x1 = self.bn2(x)
+        x = self.conv3(x1)
+        x1 = self.conv4(x)
+        x = self.conv5(x1)
+        x1 = self.pool3(x)
+
+        #Additional pool for 4096 matching
+        x = self.pool3(x1)
+        x1 = self.flatten1(x)
+
+        if verify:
+            x1_gpu = np.copy(x1)
+            x1_fim = np.copy(x1)
+
+            x2 = self.dense1(x1_gpu)
+            x3 = self.dense2(x2)
+            x4_gpu = self.dense3(x3)
+
+            x2 = self.fim_dense1(x1_fim)
+            x3 = self.fim_dense2(x2)
+            x4_fim = self.fim_dense3(x3)
+
+            result = np.testing.assert_array_almost_equal(x4_gpu, x4_fim, decimal=5)
+            print("Functional Verification : {}".format(result))
+            return x4_gpu
+        else:
+            if args.module == 'keras':
+              x2 = self.dense1(x1)
+              x3 = self.dense2(x2)
+              x4 = self.dense3(x3)
+              return x4
+            else:
+              x2 = self.fim_dense1(x1)
+              x3 = self.fim_dense2(x2)
+              x4 = self.fim_dense3(x3)
+              return x4
+
 def copy_weights(model,input):
     #Warmup and initialize weights
     #model.build( input_shape=(1,image_height, image_width, channels))
     orig_module = args.module
     args.module = 'keras'
-    model(input)
+    model(input, False)
     model.fill_weights()
     args.module = orig_module
 
@@ -219,30 +262,26 @@ def alexnet_model_run(dtype):
     if args.profile:
         # model and gpu initialization and LUT load
         DummyExecute()
-        args.profile = False
-        predictions = model(input)
-        args.profile = True
+        predictions = model(input, False)
 
     if args.functional_verify:
-       predictions = model(input,True)
+       predictions = model(input, True)
 
     eval_time.clear()
-    predictions = model(input)
+    predictions = model.profile_model(input, False)
 
     #Model Summary , Todo:
-    #model.summary()
+    # model.summary()
 
     if args.profile:
         # for disabling internal profiling calls.
-        args.profile = False
-        eval_time.append(["End to End", (timeit.timeit(lambda : model(input),
+        eval_time.append(["End to End ", (timeit.timeit(lambda : model(input, False),
                             number = args.iterations)), input.shape, predictions.shape])
 
         for i in range(len(eval_time)):
             eval_time[i][1] = (eval_time[i][1] * 1000 ) / args.iterations
 
         print(tabulate(eval_time, headers=["Index", "Layer", "Time(ms)", "Input", "Output"], showindex="always", tablefmt='github'))
-        args.profile = True
 
     tf_fim_ops.fim_deinit()
 
