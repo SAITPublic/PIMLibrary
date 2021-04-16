@@ -1,6 +1,7 @@
 import unittest
 import numpy as np
 import torch
+import torch.nn as nn
 import py_fim_ops
 import datetime
 
