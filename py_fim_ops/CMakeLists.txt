@@ -14,8 +14,8 @@ find_package(Torch REQUIRED)
 
 set(CMAKE_CXX_COMPILER "${ROCM_PATH}/bin/hipcc")
 set(HCC_CXX_FLAGS
-	"-hc --amdgpu-target=gfx900  --amdgpu-target=gfx906 --amdgpu-target=gfx908 ${TORCH_CXX_FLAGS}")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HCC_CXX_FLAGS}")
+	" --amdgpu-target=gfx900  --amdgpu-target=gfx906 --amdgpu-target=gfx908 ${TORCH_CXX_FLAGS}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ")
 
 set(PY_FIM_INIT_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/cc/py_fim_init.cpp)
 set(PY_FIM_DEINIT_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/cc/py_fim_deinit.cpp)
@@ -74,6 +74,8 @@ install ( TARGETS py_fim_gemv LIBRARY DESTINATION
 	${ROCM_PATH}/lib)
 install ( TARGETS py_fim_lstm LIBRARY DESTINATION
 	${ROCM_PATH}/lib)
+install ( TARGETS py_fim_dense LIBRARY DESTINATION
+	           ${ROCM_PATH}/lib)
 install ( DIRECTORY python DESTINATION ${ROCM_PATH}/lib/py_fim_ops )
 install ( DIRECTORY modules DESTINATION ${ROCM_PATH}/lib/py_fim_ops )
 install ( FILES ${CMAKE_CURRENT_SOURCE_DIR}/__init__.py  DESTINATION ${ROCM_PATH}/lib/py_fim_ops)

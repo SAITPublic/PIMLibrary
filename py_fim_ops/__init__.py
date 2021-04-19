@@ -4,7 +4,7 @@ from py_fim_ops.python.py_fim_eltwise_ops import py_fim_eltwise
 from py_fim_ops.python.py_fim_bn_ops import py_fim_bn
 from py_fim_ops.python.py_fim_activation_ops import py_fim_activation
 from py_fim_ops.python.py_fim_gemv_ops import py_fim_gemv
-#from py_fim_ops.python.py_fim_lstm_ops import py_fim_lstm
+from py_fim_ops.python.py_fim_lstm_ops import py_fim_lstm
 from py_fim_ops.python.py_fim_dense_ops import py_fim_dense
 
 # import all FIM based customized pytorch module wrapper's

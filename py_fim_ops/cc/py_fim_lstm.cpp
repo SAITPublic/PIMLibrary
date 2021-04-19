@@ -121,14 +121,14 @@ void KernelLauncher(const void* i_data, const void* w_data, const void* h_data, 
     PrintHalf("Weightb " ,w_data,0);
     PrintHalf("Weightb " ,w_data,7);
     */
-    FimSynchronize();
+//    FimSynchronize();
     t.start();
 
     miopenRNNForwardInference(handle, rnnDesc, nseq, input_tensors.data(), i_data, hidden_tensor, h_data, hidden_tensor,
                               c_data, weight_tensor, w_data, output_tensors.data(), o_data, hidden_tensor, ho_data,
                               hidden_tensor, co_data, ws_data, ws_len);
 
-    FimSynchronize();
+//    FimSynchronize();
     t.stop();
     std::cout << "RNNfwd Duration: " << t.gettime_ms() << std::endl;
 

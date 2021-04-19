@@ -6,5 +6,6 @@ set(CMAKE_C_FLAGS "-std=c14")
 
 include_directories(./include)
 add_executable(crfcodegen ${crfcode_source})
+target_link_libraries (crfcodegen FimRuntime)
 
-target_link_libraries (crfcodegen FimRuntime hip_hcc)
+#target_link_libraries (crfcodegen FimRuntime hip_hcc)
