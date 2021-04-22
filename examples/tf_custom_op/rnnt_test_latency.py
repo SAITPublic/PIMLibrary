@@ -62,7 +62,9 @@ class lstm(tf.keras.layers.Layer):
             return_sequences=True,
             return_state=True,
             dropout=0.32,
-            trainable=False)
+            trainable=False,
+            recurrent_initializer='random_uniform',
+            dtype='float16')
 
     def call(self, inputs, initial_state=None):
 
