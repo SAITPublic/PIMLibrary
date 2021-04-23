@@ -68,7 +68,7 @@ sudo make install
 - Logs will be generated only in Debug mode in /tmp/ directory
 
 ## DLOG Generation
-For generating debug logs, 
+For generating debug logs,
 1. Set log level
 ``` 
 export FIM_LOG_LEVEL=<severity> 
@@ -101,7 +101,7 @@ For MIOpenTests to be added to FimIntegration test, -m option need to be enabled
 ./build/examples/FimIntegrationTests --gtest_filter_test=MIOpenIntegrationTests.*
 ```
 
-## How To Run TF apps
+## How To Run Tensorflow apps
 ```
 export PYTHONPATH=$ROCM_PATH/lib
 
@@ -109,10 +109,15 @@ cd examples
 python3 tf_custom_op/<test_file>
 ```
 
+## How To Run Pytorch apps
+```
+Please refer to "python_libs/pytorch_setup.md"
+```
+
 # Profiling of FIM Library
 ## FIM Library profiler
 Profiler has been developed for Profiling FIM Library
- 
+
 ### Pre requisites
 1. FIMLibrary in debug mode
    FIM Library need to be build in debug mode for generating debug logs for profiling. Logs will be generated in /tmp/ folder
@@ -121,10 +126,10 @@ Profiler has been developed for Profiling FIM Library
    ``export MIOPEN_ENABLE_LOGGING=1``
 3. rocProfiler logs [Optional]
    For adding GPU profiling data
-   
+
 ### Profiler Usage
 For more details about usage, refer [Profiler](https://github.sec.samsung.net/FIM/FIMLibrary/tree/develop/tools/profiler)
-   
+
 
 ## ROC-profiler
 ROC profiler developed by ROCm developer tools. It provides low-level performance analysis for profiling GPU compute applications.
@@ -134,7 +139,7 @@ ROC profiler can be downloaded and installed from the repository: https://github
 
 ### Profiler Usage
 
-Roc profiler provides a variety of options to gather profiling information. 
+Roc profiler provides a variety of options to gather profiling information.
 ```
 rocprof [-h] [--list-basic] [--list-derived] [-i <input .txt/.xml file>] [-o <output CSV file>] <app command line>
 

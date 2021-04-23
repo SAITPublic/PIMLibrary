@@ -6,7 +6,7 @@ __Step1__: Docker Setup
 ./docker_fim.sh fim-rocm4.0:tf2.4-latest-dev <mapping folder>
 ```
 
-__Step2__: Installing Pytorch 
+__Step2__: Installing Pytorch
 #### rocPRIM
 ```
 git clone https://github.com/ROCmSoftwarePlatform/rocPRIM.git
@@ -103,11 +103,11 @@ pip3 list | grep torch
 **Test with **
 ```
 
-PYTORCH_TEST_WITH_ROCM=1 python3 pytorch/test/run_test.py --verbosecd 
+PYTORCH_TEST_WITH_ROCM=1 python3 pytorch/test/run_test.py --verbosed
 ```
 
 __Step3__: Setup Torch ENV
-``` 
+```
 alias python=python3.6
 Line39 in vim /home/user/.local/lib/python3.6/site-packages/torch/share/cmake/Torch/TorchConfig.cmake ---->>>set it to OFF
 Line 243 in vim /home/user/.local/lib/python3.6/site-packages/torch/include/c10/macros/Macros.h modify __assert_fail_ function name. 
