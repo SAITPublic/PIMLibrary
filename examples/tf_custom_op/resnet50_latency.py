@@ -38,6 +38,18 @@ import argparse
 import os
 from tabulate import tabulate
 
+import tf_fim_ops
+from tf_fim_ops.python.layers import fim_layers
+
+parser = argparse.ArgumentParser(description='Process Resnet arguments')
+parser.add_argument('-b','--batch_size', default=1, help="Input batch size", type=int)
+parser.add_argument('-i','--iterations', default=10, help="Number of iterations for profiling", type=int)
+parser.add_argument('-p','--profile', action="store_true", help="Enabled/Disable profiling")
+parser.add_argument('-d','--dtype', default='fp16' , help="fp16 or fp32 execution")
+parser.add_argument('-m','--module', default='keras' , help="keras or fim execution")
+
+args = parser.parse_args()
+
 def ResNet(stack_fn,
            preact,
            use_bias,
@@ -162,8 +174,12 @@ def ResNet(stack_fn,
   if include_top:
     x = layers.GlobalAveragePooling2D(name='avg_pool')(x)
     imagenet_utils.validate_activation(classifier_activation, weights)
-    x = layers.Dense(classes, activation=classifier_activation,
-                     name='predictions')(x)
+    if args.module == 'fim':
+        x = fim_layers.FimDense(classes, activation=classifier_activation,
+                                name='predictions')(x)
+    else:
+        x = layers.Dense(classes, activation=classifier_activation,
+                         name='predictions')(x)
   else:
     if pooling == 'avg':
       x = layers.GlobalAveragePooling2D(name='avg_pool')(x)
@@ -439,13 +455,6 @@ SEED = 1235
 initializer = tf.keras.initializers.RandomNormal(seed=SEED)
 
 eval_time = []
-parser = argparse.ArgumentParser(description='Process Resnet arguments')
-parser.add_argument('-b','--batch_size', default=1, help="Input batch size", type=int)
-parser.add_argument('-i','--iterations', default=10, help="Number of iterations for profiling", type=int)
-parser.add_argument('-p','--profile', action="store_true", help="Enabled/Disable profiling")
-parser.add_argument('-d','--dtype', default='fp16' , help="fp16 or fp32 execution")
-
-args = parser.parse_args()
 
 def DummyExecute():
     # Create some tensors
@@ -488,9 +497,11 @@ def resnet_model_run(dtype):
 
 if __name__ == '__main__':
     print('User arguments {}'.format(args))
+    tf_fim_ops.fim_init()
     dtype = tf.float16
     if args.dtype == 'fp32':
         dtype = tf.float32
     else:
         tf.keras.backend.set_floatx('float16')
     resnet_model_run(dtype)
+    tf_fim_ops.fim_deinit()
