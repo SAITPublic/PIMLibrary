@@ -209,25 +209,38 @@ class RNNT(tf.keras.Model):
 
         return joint_op2
 
+def DummyExecute():
+    # Create some tensors
+    a = tf.constant([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
+    b = tf.constant([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]])
+    c = tf.matmul(a, b)
 
-tf_fim_ops.fim_init()
-rnnt_model = RNNT(OUTPUT_SIZE)
-inputs = tf.random.normal([args.batch_size, 151, 240], dtype=tf.float16)
-rnnt_model([inputs, tf.random.normal([args.batch_size, 1], dtype=tf.float16)])
 
-if args.profile == False:
-    end_to_end_latency = timeit.timeit(
-        lambda: rnnt_model.rnnt_e2e([inputs, tf.random.normal([1])]),
-        number=args.iterations) / args.iterations * 1000
-    print("End-to-End RNNT Model Latency (ms)", end_to_end_latency)
+if __name__ == '__main__':
+    print('User arguments {}'.format(args))
+    tf_fim_ops.fim_init()
+    rnnt_model = RNNT(OUTPUT_SIZE)
+    DummyExecute()
 
-else:
+    inputs = tf.random.normal([args.batch_size, 151, 240], dtype=tf.float16)
+    output = rnnt_model([inputs, tf.random.normal([args.batch_size, 1], dtype=tf.float16)])
 
-    for i in range(len(eval_time)):
-        eval_time[i][1] = (eval_time[i][1] * 1000) / args.iterations
+    if args.profile == False:
+        end_to_end_latency = timeit.timeit(
+            lambda: rnnt_model.rnnt_e2e([inputs, tf.random.normal([1])]),
+            number=args.iterations) / args.iterations * 1000
+        print("End-to-End RNNT Model Latency (ms)", end_to_end_latency)
 
-    print(tabulate(
-        eval_time,
-        headers=["Layer", "Time(ms)", "Input Shape", "Output Shape"]))
+    else:
+        # Summation of all layers time
+        evaltime_sum = sum(row[1] for row in eval_time)
+        eval_time.append(["Sum of layers time", evaltime_sum, inputs.shape, output.shape])
 
-tf_fim_ops.fim_deinit()
+        for i in range(len(eval_time)):
+            eval_time[i][1] = (eval_time[i][1] * 1000) / args.iterations
+
+        print(tabulate(
+            eval_time,
+            headers=["Layer", "Time(ms)", "Input Shape", "Output Shape"]))
+
+    tf_fim_ops.fim_deinit()

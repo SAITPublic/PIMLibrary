@@ -15,6 +15,7 @@ set(EXEC_PREFIX "${PREFIX}/bin")
 set(ROCM_PATH $ENV{ROCM_PATH})
 
 option(MIOPEN_APPS "Enable MIOpens apps build" OFF)
+option(PYTORCH_BUILD "Enable pytorch apps build" OFF)
 option(TARGET "Enable TARGET apps build" OFF)
 option(RADEON7 "Enable TARGET:RADEON7 apps build" OFF)
 option(MI50 "Enable TARGET:MI50 apps build" OFF)

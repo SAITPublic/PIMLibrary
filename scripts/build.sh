@@ -11,8 +11,8 @@ if [[ ${PIPESTATUS[0]} -ne 4 ]]; then
     exit 1
 fi
 
-OPTIONS=do:mt:ve
-LONGOPTS=debug,output:,miopen,target:,verbose,emulator
+OPTIONS=do:mt:vep
+LONGOPTS=debug,output:,miopen,target:,verbose,emulator,pytorch
 
 # -regarding ! and PIPESTATUS see above
 # -temporarily store output to be able to check for errors
@@ -27,7 +27,7 @@ fi
 # read getopt’s output this way to handle the quoting right:
 eval set -- "$PARSED"
 
-d=n v=n proj_cmake_dir=- miopen=n target_device="mi50" emulator=n
+d=n v=n proj_cmake_dir=- miopen=n target_device="mi50" emulator=n pytorch_enable=n
 
 # now enjoy the options in order and nicely split until we see --
 while true; do
@@ -55,6 +55,10 @@ while true; do
             ;;
 	-e|--emulator)
 	    emulator=y
+	    shift
+	    ;;
+	-p|--pytorch)
+            pytorch_enable=y
 	    shift
 	    ;;
         --)
@@ -88,6 +92,12 @@ if [ $miopen = "y" ]; then
     cmake_build_options="${cmake_build_options} -DMIOPEN_APPS=ON"
 else
     cmake_build_options="${cmake_build_options} -DMIOPEN_APPS=OFF"
+fi
+
+if [ $pytorch_enable = "y" ]; then
+    cmake_build_options="${cmake_build_options} -DPYTORCH_BUILD=ON"
+else
+    cmake_build_options="${cmake_build_options} -DPYTORCH_BUILD=OFF"
 fi
 
 if [ $emulator = "y" ]; then
