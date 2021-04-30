@@ -1,4 +1,4 @@
-FROM rocm/tensorflow:rocm4.0-tf2.4-dev
+FROM rocm/tensorflow:rocm4.0-tf2.3-dev
 MAINTAINER Shashidhar G <shashidhar.g@samsung.com>
 
 # Default env setup to pass through damn proxy..
