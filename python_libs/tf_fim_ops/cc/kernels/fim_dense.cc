@@ -110,7 +110,7 @@ class FimDenseOp : public OpKernel
 
         int has_bias = 0;
         const Tensor& input_tensor3 = context->input(3);
-        has_bias = input_tensor3.flat<int32>().data()[0];
+//        has_bias = input_tensor3.flat<int32>().data()[0];
 
         DLOG(INFO) << "Input Dims :" << num_dims;
         DLOG(INFO) << "Input Num batches : " << num_batch;

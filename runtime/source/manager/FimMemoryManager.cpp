@@ -423,10 +423,17 @@ int FimMemoryManager::convert_data_layout_for_gemv_weight(FimBo* dst, FimBo* src
     if (src->bshape.w != src->bshape_r.w || src->bshape.h != src->bshape_r.h) {
         src_temp = (char*)calloc(src->size / sizeof(half), sizeof(half));
         for (int i = 0; i < src->bshape_r.h; i++) {
-            memcpy((half*)src_temp + i * src->bshape.w, (half*)src_data + i * src->bshape_r.w,
-                   src->bshape_r.w * sizeof(half));
+            if (hipMemcpy((half*)src_temp + i * src->bshape.w, (half*)src_data + i * src->bshape_r.w,
+                          src->bshape_r.w * sizeof(half), hipMemcpyDeviceToHost) != hipSuccess) {
+                DLOG(INFO) << "[END] " << __FUNCTION__ << " Failed to copy";
+                return -1;
+            }
         }
-        memcpy(src_data, src_temp, src->size);
+
+        if (hipMemcpy(src_data, src_temp, src->size, hipMemcpyHostToDevice) != hipSuccess) {
+            DLOG(INFO) << "[END] " << __FUNCTION__ << " Failed to copy";
+            return -1;
+        }
         free(src_temp);
     }
 
@@ -445,7 +452,11 @@ int FimMemoryManager::convert_data_layout_for_gemv_weight(FimBo* dst, FimBo* src
 #else
                             int d_idx = (y + tiled_y + grfb_idx) * in_cnt + x + grfa_idx;
 #endif
-                            memcpy(dst_data + addr, src_data + d_idx * trans_size, trans_size);
+                            if (hipMemcpy(dst_data + addr, src_data + d_idx * trans_size, trans_size,
+                                          hipMemcpyDeviceToDevice) != hipSuccess) {
+                                DLOG(INFO) << "[END] " << __FUNCTION__ << " Failed to copy";
+                                return -1;
+                            }
                             col++;
                         }
                     }
@@ -486,7 +497,11 @@ int FimMemoryManager::convert_data_layout_for_gemv_weight(FimBo* dst, FimBo* src
 #else
                             int d_idx = (y + tiled_y + grfb_idx) * in_cnt + x + grfa_idx;
 #endif
-                            memcpy(dst_data + addr, src_data + d_idx * trans_size, trans_size);
+                            if (hipMemcpy(dst_data + addr, src_data + d_idx * trans_size, trans_size,
+                                          hipMemcpyDeviceToDevice) != hipSuccess) {
+                                DLOG(INFO) << "[END] " << __FUNCTION__ << " Failed to copy";
+                                return -1;
+                            }
                             col++;
                         }
                     }
@@ -644,13 +659,12 @@ uint64_t FimMemoryManager::FimBlockAllocator::allocate_fim_block(size_t bsize) c
     ********************************************/
     if (!fim_alloc_done) {
         ret = fmm_map_fim(node_id, gpu_id, bsize);
-	if (ret) {
-	    fim_alloc_done = true;
-	    g_fim_base_addr = ret;
-	    hipHostRegister((void *)g_fim_base_addr, bsize, hipRegisterExternalSvm);
-	}
-	else
-	    std::cout << "fmm_map_fim failed!" << std::endl;
+        if (ret) {
+            fim_alloc_done = true;
+            g_fim_base_addr = ret;
+            hipHostRegister((void*)g_fim_base_addr, bsize, hipRegisterExternalSvm);
+        } else
+            std::cout << "fmm_map_fim failed!" << std::endl;
     }
 
     return ret;
