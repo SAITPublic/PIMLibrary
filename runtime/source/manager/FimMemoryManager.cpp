@@ -13,8 +13,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <iostream>
-#include "utility/fim_util.h"
 #include "hip/hip_runtime.h"
+#include "utility/fim_util.h"
 
 extern "C" uint64_t fmm_map_fim(uint32_t, uint32_t, uint64_t);
 extern bool fim_alloc_done;
@@ -62,7 +62,9 @@ int FimMemoryManager::alloc_memory(void** ptr, size_t size, FimMemType mem_type)
             return -1;
         }
     } else if (mem_type == MEM_TYPE_HOST) {
-        *ptr = (void*)malloc(size);
+        if (hipHostMalloc((void**)ptr, size) != hipSuccess) {
+            return -1;
+        }
     } else if (mem_type == MEM_TYPE_FIM) {
         *ptr = fragment_allocator_.alloc(size);
     }
@@ -82,7 +84,10 @@ int FimMemoryManager::alloc_memory(FimBo* fim_bo)
             return -1;
         }
     } else if (fim_bo->mem_type == MEM_TYPE_HOST) {
-        fim_bo->data = (void*)malloc(fim_bo->size);
+        if (hipHostMalloc((void**)&fim_bo->data, fim_bo->size) != hipSuccess) {
+            DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+            return -1;
+        }
     } else if (fim_bo->mem_type == MEM_TYPE_FIM) {
         fim_bo->data = fragment_allocator_.alloc(fim_bo->size);
     }
@@ -102,7 +107,7 @@ int FimMemoryManager::free_memory(void* ptr, FimMemType mem_type)
             return -1;
         }
     } else if (mem_type == MEM_TYPE_HOST) {
-        free(ptr);
+        hipHostFree(ptr);
     } else if (mem_type == MEM_TYPE_FIM) {
         return fragment_allocator_.free(ptr);
     }
@@ -122,7 +127,7 @@ int FimMemoryManager::free_memory(FimBo* fim_bo)
             return -1;
         }
     } else if (fim_bo->mem_type == MEM_TYPE_HOST) {
-        free(fim_bo->data);
+        hipHostFree(fim_bo->data);
     } else if (fim_bo->mem_type == MEM_TYPE_FIM) {
         if (fragment_allocator_.free(fim_bo->data)) return 0;
         DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
