@@ -11,8 +11,8 @@ if [[ ${PIPESTATUS[0]} -ne 4 ]]; then
     exit 1
 fi
 
-OPTIONS=do:mt:vep
-LONGOPTS=debug,output:,miopen,target:,verbose,emulator,pytorch
+OPTIONS=do:mt:vepf
+LONGOPTS=debug,output:,miopen,target:,verbose,emulator,pytorch,tensorflow
 
 # -regarding ! and PIPESTATUS see above
 # -temporarily store output to be able to check for errors
@@ -27,7 +27,7 @@ fi
 # read getopt’s output this way to handle the quoting right:
 eval set -- "$PARSED"
 
-d=n v=n proj_cmake_dir=- miopen=n target_device="mi50" emulator=n pytorch_enable=n
+d=n v=n proj_cmake_dir=- miopen=n target_device="mi50" emulator=n pytorch_enable=n tf_enable=n
 
 # now enjoy the options in order and nicely split until we see --
 while true; do
@@ -59,6 +59,10 @@ while true; do
 	    ;;
 	-p|--pytorch)
             pytorch_enable=y
+	    shift
+	    ;;
+	-f|--tensorflow)
+            tf_enable=y
 	    shift
 	    ;;
         --)
@@ -98,6 +102,12 @@ if [ $pytorch_enable = "y" ]; then
     cmake_build_options="${cmake_build_options} -DPYTORCH_BUILD=ON"
 else
     cmake_build_options="${cmake_build_options} -DPYTORCH_BUILD=OFF"
+fi
+
+if [ $tf_enable = "y" ]; then
+    cmake_build_options="${cmake_build_options} -DTF_BUILD=ON"
+else
+    cmake_build_options="${cmake_build_options} -DTF_BUILD=OFF"
 fi
 
 if [ $emulator = "y" ]; then
@@ -152,12 +162,12 @@ make_install_fn()
 
 uninstall_fn()
 {
-    sudo rm -f ${ROCM_PATH}/lib/libFimRuntime.so
-    sudo rm -f ${ROCM_PATH}/include/fim_runtime_api.h
-    sudo rm -f ${ROCM_PATH}/include/fim_data_types.h
+    sudo rm -f ${ROCM_PATH}/lib/libPimRuntime.so
+    sudo rm -f ${ROCM_PATH}/include/pim_runtime_api.h
+    sudo rm -f ${ROCM_PATH}/include/pim_data_types.h
     sudo rm -f ${ROCM_PATH}/lib/libdramsim2.so
     sudo rm -rf ${ROCM_PATH}/include/dramsim2
-    sudo rm -rf ${ROCM_PATH}/lib/tf_fim_ops
+    sudo rm -rf ${ROCM_PATH}/lib/tf_pim_ops
 }
 
 if [ $1 = "all" ]; then

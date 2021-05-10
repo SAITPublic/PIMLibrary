@@ -1,260 +1,260 @@
 Log file created at: 2020/06/03 10:23:41
 Running on machine: sait-Z390-AORUS-PRO
 Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg
-I0603 10:23:41.631451 20210 fim_runtime_api.cpp:24] [START] FimInitialize called
-I0603 10:23:41.631603 20210 FimRuntime.cpp:15] [START] FimRuntime called
-I0603 10:23:41.631605 20210 FimManager.cpp:37] [START] get_instance called
-I0603 10:23:41.631608 20210 FimManager.cpp:17] [START] FimManager called
-I0603 10:23:41.631613 20210 FimDevice.cpp:15] [START] FimDevice called
-I0603 10:23:41.631614 20210 FimControlManager.cpp:17] [START] FimControlManager called
-I0603 10:23:41.631615 20210 FimControlManager.cpp:18] [END] FimControlManager called
-I0603 10:23:41.631640 20210 FimMemoryManager.cpp:20] [START] FimMemoryManager called
-I0603 10:23:41.631646 20210 FimMemoryManager.cpp:22] [END] FimMemoryManager called
-I0603 10:23:41.631650 20210 FimManager.cpp:22] [END] FimManager called
-I0603 10:23:41.631652 20210 FimManager.cpp:40] [END] get_instance called
-I0603 10:23:41.631655 20210 FimExecutor.cpp:36] [START] get_instance Called
-I0603 10:23:41.631657 20210 FimExecutor.cpp:21] [START] FimExecutor called 
-I0603 10:23:41.631660 20210 FimEmulator.cpp:24] [START] get_instance called
-I0603 10:23:41.631664 20210 FimEmulator.cpp:18] [START] FimEmulator called 
-I0603 10:23:41.631664 20210 FimExecutor.cpp:31] [END] FimExecutor called
-I0603 10:23:41.631664 20210 FimExecutor.cpp:39] [END] get_instance called
-I0603 10:23:41.631665 20210 FimRuntime.cpp:20] [END] FimRuntime called
-I0603 10:23:41.631667 20210 FimRuntime.cpp:25] [START] initialize called
-I0603 10:23:41.631669 20210 FimManager.cpp:46] [START] initialize called
-I0603 10:23:41.631669 20210 FimDevice.cpp:20] [START] initialize called
-I0603 10:23:41.631670 20210 FimDevice.cpp:56] [START] open_device called
-I0603 10:23:41.631671 20210 FimDevice.cpp:59] [END] open_device called
-I0603 10:23:41.631672 20210 FimDevice.cpp:26] [END] initialize called
-I0603 10:23:41.631675 20210 FimControlManager.cpp:24] [START] initialize called
-I0603 10:23:41.631675 20210 FimControlManager.cpp:28] [END] initialize called
-I0603 10:23:41.631676 20210 FimMemoryManager.cpp:28] [START] initialize called
-I0603 10:23:41.631677 20210 FimMemoryManager.cpp:31] [END] initialize called
-I0603 10:23:41.631677 20210 FimManager.cpp:53] [END] initialize called
-I0603 10:23:41.631680 20210 FimExecutor.cpp:45] [START] initialize Intialization done 
-I0603 10:23:41.667788 20210 FimManager.cpp:37] [START] get_instance called
-I0603 10:23:41.667794 20210 FimManager.cpp:40] [END] get_instance called
-I0603 10:23:41.667939 20210 FimExecutor.cpp:79] [END] initialize called
-I0603 10:23:41.667943 20210 FimRuntime.cpp:31] [END] initialize called
-I0603 10:23:41.667943 20210 fim_runtime_api.cpp:30] Initialize time (us) : 36342.8
-I0603 10:23:41.667956 20210 fim_runtime_api.cpp:32] [END] FimInitialize called
-I0603 10:23:41.667959 20210 fim_runtime_api.cpp:117] called
-I0603 10:23:41.667960 20210 fim_runtime_api.cpp:131] CreateDesc time (us) : 0.854
-I0603 10:23:41.667963 20210 fim_runtime_api.cpp:89] called
-I0603 10:23:41.667966 20210 FimRuntime.cpp:60] [START] alloc_memory called
-I0603 10:23:41.667968 20210 FimManager.cpp:83] [START] alloc_memory called
-I0603 10:23:41.667969 20210 FimMemoryManager.cpp:65] [START] alloc_memory called
-I0603 10:23:41.667970 20210 FimMemoryManager.cpp:79] [END] alloc_memory called
-I0603 10:23:41.667971 20210 FimManager.cpp:88] [END] alloc_memory called
-I0603 10:23:41.667973 20210 FimRuntime.cpp:65] [END] alloc_memory called
-I0603 10:23:41.667977 20210 fim_runtime_api.cpp:89] called
-I0603 10:23:41.667979 20210 FimRuntime.cpp:60] [START] alloc_memory called
-I0603 10:23:41.667979 20210 FimManager.cpp:83] [START] alloc_memory called
-I0603 10:23:41.667980 20210 FimMemoryManager.cpp:65] [START] alloc_memory called
-I0603 10:23:41.667981 20210 FimMemoryManager.cpp:79] [END] alloc_memory called
-I0603 10:23:41.667982 20210 FimManager.cpp:88] [END] alloc_memory called
-I0603 10:23:41.667984 20210 FimRuntime.cpp:65] [END] alloc_memory called
-I0603 10:23:41.667984 20210 fim_runtime_api.cpp:89] called
-I0603 10:23:41.667984 20210 FimRuntime.cpp:60] [START] alloc_memory called
-I0603 10:23:41.667985 20210 FimManager.cpp:83] [START] alloc_memory called
-I0603 10:23:41.667986 20210 FimMemoryManager.cpp:65] [START] alloc_memory called
-I0603 10:23:41.668005 20210 FimMemoryManager.cpp:79] [END] alloc_memory called
-I0603 10:23:41.668006 20210 FimManager.cpp:88] [END] alloc_memory called
-I0603 10:23:41.668007 20210 FimRuntime.cpp:65] [END] alloc_memory called
-I0603 10:23:41.668009 20210 fim_runtime_api.cpp:89] called
-I0603 10:23:41.668009 20210 FimRuntime.cpp:60] [START] alloc_memory called
-I0603 10:23:41.668010 20210 FimManager.cpp:83] [START] alloc_memory called
-I0603 10:23:41.668011 20210 FimMemoryManager.cpp:65] [START] alloc_memory called
-I0603 10:23:41.668015 20210 FimMemoryManager.cpp:79] [END] alloc_memory called
-I0603 10:23:41.668016 20210 FimManager.cpp:88] [END] alloc_memory called
-I0603 10:23:41.668017 20210 FimRuntime.cpp:65] [END] alloc_memory called
-I0603 10:23:41.668018 20210 fim_runtime_api.cpp:89] called
-I0603 10:23:41.668018 20210 FimRuntime.cpp:60] [START] alloc_memory called
-I0603 10:23:41.668020 20210 FimManager.cpp:83] [START] alloc_memory called
-I0603 10:23:41.668020 20210 FimMemoryManager.cpp:65] [START] alloc_memory called
-I0603 10:23:41.668022 20210 FimMemoryManager.cpp:79] [END] alloc_memory called
-I0603 10:23:41.668023 20210 FimManager.cpp:88] [END] alloc_memory called
-I0603 10:23:41.668025 20210 FimRuntime.cpp:65] [END] alloc_memory called
-I0603 10:23:41.668046 20210 fim_runtime_api.cpp:89] called
-I0603 10:23:41.668047 20210 FimRuntime.cpp:60] [START] alloc_memory called
-I0603 10:23:41.668048 20210 FimManager.cpp:83] [START] alloc_memory called
-I0603 10:23:41.668049 20210 FimMemoryManager.cpp:65] [START] alloc_memory called
-I0603 10:23:41.668051 20210 FimMemoryManager.cpp:79] [END] alloc_memory called
-I0603 10:23:41.668051 20210 FimManager.cpp:88] [END] alloc_memory called
-I0603 10:23:41.668052 20210 FimRuntime.cpp:65] [END] alloc_memory called
-I0603 10:23:41.668053 20210 fim_runtime_api.cpp:89] called
-I0603 10:23:41.668054 20210 FimRuntime.cpp:60] [START] alloc_memory called
-I0603 10:23:41.668056 20210 FimManager.cpp:83] [START] alloc_memory called
-I0603 10:23:41.668056 20210 FimMemoryManager.cpp:65] [START] alloc_memory called
-I0603 10:23:41.668084 20210 FimMemoryManager.cpp:570] [START] alloc called
-I0603 10:23:41.668267 20210 FimMemoryManager.cpp:581] [END] alloc called
-I0603 10:23:41.668388 20210 FimMemoryManager.cpp:79] [END] alloc_memory called
-I0603 10:23:41.668390 20210 FimManager.cpp:88] [END] alloc_memory called
-I0603 10:23:41.668390 20210 FimRuntime.cpp:65] [END] alloc_memory called
-I0603 10:23:41.668391 20210 fim_runtime_api.cpp:89] called
-I0603 10:23:41.668392 20210 FimRuntime.cpp:60] [START] alloc_memory called
-I0603 10:23:41.668393 20210 FimManager.cpp:83] [START] alloc_memory called
-I0603 10:23:41.668395 20210 FimMemoryManager.cpp:65] [START] alloc_memory called
-I0603 10:23:41.668395 20210 FimMemoryManager.cpp:79] [END] alloc_memory called
-I0603 10:23:41.668396 20210 FimManager.cpp:88] [END] alloc_memory called
-I0603 10:23:41.668397 20210 FimRuntime.cpp:65] [END] alloc_memory called
-I0603 10:23:41.668397 20210 fim_runtime_api.cpp:89] called
-I0603 10:23:41.668398 20210 FimRuntime.cpp:60] [START] alloc_memory called
-I0603 10:23:41.668399 20210 FimManager.cpp:83] [START] alloc_memory called
-I0603 10:23:41.668401 20210 FimMemoryManager.cpp:65] [START] alloc_memory called
-I0603 10:23:41.668401 20210 FimMemoryManager.cpp:79] [END] alloc_memory called
-I0603 10:23:41.668402 20210 FimManager.cpp:88] [END] alloc_memory called
-I0603 10:23:41.668402 20210 FimRuntime.cpp:65] [END] alloc_memory called
-I0603 10:23:42.004446 20210 fim_runtime_api.cpp:321] [START] FimCopyMemory called
-I0603 10:23:42.004456 20210 FimRuntime.cpp:137] [START] copy_memory called
-I0603 10:23:42.004458 20210 FimManager.cpp:127] [START] copy_memory called
-I0603 10:23:42.004459 20210 FimMemoryManager.cpp:157] [START] copy_memory called
-I0603 10:23:42.007033 20210 FimMemoryManager.cpp:183] [END] copy_memory called
-I0603 10:23:42.007041 20210 FimManager.cpp:132] [END] copy_memory called
-I0603 10:23:42.007043 20210 FimRuntime.cpp:142] [END] copy_memory called
-I0603 10:23:42.007045 20210 fim_runtime_api.cpp:330] CopyMemory time (us) : 2590.55
-I0603 10:23:42.007074 20210 fim_runtime_api.cpp:332] [END] FimCopyMemory called
-I0603 10:23:42.007076 20210 fim_runtime_api.cpp:270] [START] FimConvertDataLayout called
-I0603 10:23:42.007078 20210 FimRuntime.cpp:104] [START] convert_data_layout called
-I0603 10:23:42.007081 20210 FimManager.cpp:149] [START] convert_data_layout called
-I0603 10:23:42.007082 20210 FimMemoryManager.cpp:203] [START] convert_data_layout called
-I0603 10:23:42.007084 20210 FimMemoryManager.cpp:378] [START] convert_data_layout_for_gemv_weight called
-I0603 10:23:42.019011 20210 FimMemoryManager.cpp:502] [END] convert_data_layout_for_gemv_weight called
-I0603 10:23:42.019016 20210 FimMemoryManager.cpp:216] [END] convert_data_layout called
-I0603 10:23:42.019017 20210 FimManager.cpp:154] [END] convert_data_layout called
-I0603 10:23:42.019018 20210 FimRuntime.cpp:109] [END] convert_data_layout called
-I0603 10:23:42.019019 20210 fim_runtime_api.cpp:279] ConvertDataLayout time (us) : 11943.1
-I0603 10:23:42.019026 20210 fim_runtime_api.cpp:281] [END] FimConvertDataLayout called
-I0603 10:23:42.019026 20210 fim_runtime_api.cpp:321] [START] FimCopyMemory called
-I0603 10:23:42.019028 20210 FimRuntime.cpp:137] [START] copy_memory called
-I0603 10:23:42.019029 20210 FimManager.cpp:127] [START] copy_memory called
-I0603 10:23:42.019030 20210 FimMemoryManager.cpp:157] [START] copy_memory called
-I0603 10:23:42.021184 20210 FimMemoryManager.cpp:183] [END] copy_memory called
-I0603 10:23:42.021188 20210 FimManager.cpp:132] [END] copy_memory called
-I0603 10:23:42.021188 20210 FimRuntime.cpp:142] [END] copy_memory called
-I0603 10:23:42.021189 20210 fim_runtime_api.cpp:330] CopyMemory time (us) : 2162.51
-I0603 10:23:42.021191 20210 fim_runtime_api.cpp:332] [END] FimCopyMemory called
-I0603 10:23:42.021194 20210 fim_runtime_api.cpp:414] [START] FimExecuteGEMV called
-I0603 10:23:42.021196 20210 FimRuntime.cpp:168] [START] execute_gemv called
-I0603 10:23:42.021198 20210 FimExecutor.cpp:181] [START] execute_gemv called
-I0603 10:23:42.021199 20210 FimManager.cpp:171] [START] create_crf_binary called
-I0603 10:23:42.021201 20210 FimCrfBinGen.cpp:13] [START] gen_binary called
-I0603 10:23:42.021203 20210 FimCrfBinGen.cpp:21] [START] create_fim_cmd called
-I0603 10:23:42.021248 20210 FimCrfBinGen.cpp:94] [END] create_fim_cmd called
-I0603 10:23:42.021250 20210 FimCrfBinGen.cpp:99] [START] change_to_binary called
-I0603 10:23:42.021253 20210 FimCrfBinGen.cpp:107] [END] change_to_binary called
-I0603 10:23:42.021255 20210 FimCrfBinGen.cpp:16] [END] gen_binary called
-I0603 10:23:42.021255 20210 FimManager.cpp:177] [END] create_crf_binary called
-I0603 10:23:42.515904 20210 FimEmulator.cpp:49] [START] convert_mem_trace_from_16B_to_32B called
-I0603 10:23:42.553984 20210 FimEmulator.cpp:72] [START] execute_gemv called
-I0603 10:23:48.456720 20210 FimExecutor.cpp:215] [END] execute_gemv called
-I0603 10:23:48.456727 20210 FimRuntime.cpp:173] [END] execute_gemv called
-I0603 10:23:48.456728 20210 fim_runtime_api.cpp:423] ExecuteGEMV time (us) : 6.43553e+06
-I0603 10:23:48.456734 20210 fim_runtime_api.cpp:425] [END] FimExecuteGEMV called
-I0603 10:23:48.456735 20210 fim_runtime_api.cpp:321] [START] FimCopyMemory called
-I0603 10:23:48.456737 20210 FimRuntime.cpp:137] [START] copy_memory called
-I0603 10:23:48.456738 20210 FimManager.cpp:127] [START] copy_memory called
-I0603 10:23:48.456739 20210 FimMemoryManager.cpp:157] [START] copy_memory called
-I0603 10:23:48.456760 20210 FimMemoryManager.cpp:183] [END] copy_memory called
-I0603 10:23:48.456761 20210 FimManager.cpp:132] [END] copy_memory called
-I0603 10:23:48.456761 20210 FimRuntime.cpp:142] [END] copy_memory called
-I0603 10:23:48.456763 20210 fim_runtime_api.cpp:330] CopyMemory time (us) : 26.792
-I0603 10:23:48.456764 20210 fim_runtime_api.cpp:332] [END] FimCopyMemory called
-I0603 10:23:55.067173 20210 fim_runtime_api.cpp:138] [START] FimDestroyBo called
-I0603 10:23:55.067181 20210 FimRuntime.cpp:82] [START] free_memory called
-I0603 10:23:55.067183 20210 FimManager.cpp:105] [START] free_memory called
-I0603 10:23:55.067185 20210 FimMemoryManager.cpp:105] [START] free_memory called
-I0603 10:23:55.067193 20210 FimMemoryManager.cpp:121] [END] free_memory called
-I0603 10:23:55.067194 20210 FimManager.cpp:110] [END] free_memory called
-I0603 10:23:55.067195 20210 FimRuntime.cpp:87] [END] free_memory called
-I0603 10:23:55.067198 20210 fim_runtime_api.cpp:154] DestroyBo time (us) : 17.682
-I0603 10:23:55.067201 20210 fim_runtime_api.cpp:156] [END] FimDestroyBo called
-I0603 10:23:55.067203 20210 fim_runtime_api.cpp:138] [START] FimDestroyBo called
-I0603 10:23:55.067203 20210 FimRuntime.cpp:82] [START] free_memory called
-I0603 10:23:55.067204 20210 FimManager.cpp:105] [START] free_memory called
-I0603 10:23:55.067205 20210 FimMemoryManager.cpp:105] [START] free_memory called
-I0603 10:23:55.067206 20210 FimMemoryManager.cpp:121] [END] free_memory called
-I0603 10:23:55.067207 20210 FimManager.cpp:110] [END] free_memory called
-I0603 10:23:55.067209 20210 FimRuntime.cpp:87] [END] free_memory called
-I0603 10:23:55.067209 20210 fim_runtime_api.cpp:154] DestroyBo time (us) : 6.42
-I0603 10:23:55.067210 20210 fim_runtime_api.cpp:156] [END] FimDestroyBo called
-I0603 10:23:55.067211 20210 fim_runtime_api.cpp:138] [START] FimDestroyBo called
-I0603 10:23:55.067212 20210 FimRuntime.cpp:82] [START] free_memory called
-I0603 10:23:55.067214 20210 FimManager.cpp:105] [START] free_memory called
-I0603 10:23:55.067214 20210 FimMemoryManager.cpp:105] [START] free_memory called
-I0603 10:23:55.067215 20210 FimMemoryManager.cpp:121] [END] free_memory called
-I0603 10:23:55.067215 20210 FimManager.cpp:110] [END] free_memory called
-I0603 10:23:55.067216 20210 FimRuntime.cpp:87] [END] free_memory called
-I0603 10:23:55.067217 20210 fim_runtime_api.cpp:154] DestroyBo time (us) : 5.978
-I0603 10:23:55.067219 20210 fim_runtime_api.cpp:156] [END] FimDestroyBo called
-I0603 10:23:55.067219 20210 fim_runtime_api.cpp:138] [START] FimDestroyBo called
-I0603 10:23:55.067220 20210 FimRuntime.cpp:82] [START] free_memory called
-I0603 10:23:55.067221 20210 FimManager.cpp:105] [START] free_memory called
-I0603 10:23:55.067222 20210 FimMemoryManager.cpp:105] [START] free_memory called
-I0603 10:23:55.067222 20210 FimMemoryManager.cpp:121] [END] free_memory called
-I0603 10:23:55.067224 20210 FimManager.cpp:110] [END] free_memory called
-I0603 10:23:55.067224 20210 FimRuntime.cpp:87] [END] free_memory called
-I0603 10:23:55.067225 20210 fim_runtime_api.cpp:154] DestroyBo time (us) : 5.666
-I0603 10:23:55.067226 20210 fim_runtime_api.cpp:156] [END] FimDestroyBo called
-I0603 10:23:55.067227 20210 fim_runtime_api.cpp:138] [START] FimDestroyBo called
-I0603 10:23:55.067229 20210 FimRuntime.cpp:82] [START] free_memory called
-I0603 10:23:55.067229 20210 FimManager.cpp:105] [START] free_memory called
-I0603 10:23:55.067229 20210 FimMemoryManager.cpp:105] [START] free_memory called
-I0603 10:23:55.067255 20210 FimMemoryManager.cpp:121] [END] free_memory called
-I0603 10:23:55.067255 20210 FimManager.cpp:110] [END] free_memory called
-I0603 10:23:55.067256 20210 FimRuntime.cpp:87] [END] free_memory called
-I0603 10:23:55.067257 20210 fim_runtime_api.cpp:154] DestroyBo time (us) : 29.834
-I0603 10:23:55.067258 20210 fim_runtime_api.cpp:156] [END] FimDestroyBo called
-I0603 10:23:55.067260 20210 fim_runtime_api.cpp:138] [START] FimDestroyBo called
-I0603 10:23:55.067260 20210 FimRuntime.cpp:82] [START] free_memory called
-I0603 10:23:55.067261 20210 FimManager.cpp:105] [START] free_memory called
-I0603 10:23:55.067262 20210 FimMemoryManager.cpp:105] [START] free_memory called
-I0603 10:23:55.067265 20210 FimMemoryManager.cpp:121] [END] free_memory called
-I0603 10:23:55.067265 20210 FimManager.cpp:110] [END] free_memory called
-I0603 10:23:55.067266 20210 FimRuntime.cpp:87] [END] free_memory called
-I0603 10:23:55.067267 20210 fim_runtime_api.cpp:154] DestroyBo time (us) : 7.286
-I0603 10:23:55.067268 20210 fim_runtime_api.cpp:156] [END] FimDestroyBo called
-I0603 10:23:55.067270 20210 fim_runtime_api.cpp:138] [START] FimDestroyBo called
-I0603 10:23:55.067270 20210 FimRuntime.cpp:82] [START] free_memory called
-I0603 10:23:55.067270 20210 FimManager.cpp:105] [START] free_memory called
-I0603 10:23:55.067276 20210 FimMemoryManager.cpp:105] [START] free_memory called
-I0603 10:23:55.067322 20210 FimManager.cpp:110] [END] free_memory called
-I0603 10:23:55.067323 20210 FimRuntime.cpp:87] [END] free_memory called
-I0603 10:23:55.067324 20210 fim_runtime_api.cpp:154] DestroyBo time (us) : 55.211
-I0603 10:23:55.067327 20210 fim_runtime_api.cpp:156] [END] FimDestroyBo called
-I0603 10:23:55.067327 20210 fim_runtime_api.cpp:138] [START] FimDestroyBo called
-I0603 10:23:55.067327 20210 FimRuntime.cpp:82] [START] free_memory called
-I0603 10:23:55.067328 20210 FimManager.cpp:105] [START] free_memory called
-I0603 10:23:55.067329 20210 FimMemoryManager.cpp:105] [START] free_memory called
-I0603 10:23:55.067330 20210 FimMemoryManager.cpp:121] [END] free_memory called
-I0603 10:23:55.067332 20210 FimManager.cpp:110] [END] free_memory called
-I0603 10:23:55.067332 20210 FimRuntime.cpp:87] [END] free_memory called
-I0603 10:23:55.067333 20210 fim_runtime_api.cpp:154] DestroyBo time (us) : 5.9
-I0603 10:23:55.067334 20210 fim_runtime_api.cpp:156] [END] FimDestroyBo called
-I0603 10:23:55.067335 20210 fim_runtime_api.cpp:138] [START] FimDestroyBo called
-I0603 10:23:55.067335 20210 FimRuntime.cpp:82] [START] free_memory called
-I0603 10:23:55.067337 20210 FimManager.cpp:105] [START] free_memory called
-I0603 10:23:55.067337 20210 FimMemoryManager.cpp:105] [START] free_memory called
-I0603 10:23:55.067338 20210 FimMemoryManager.cpp:121] [END] free_memory called
-I0603 10:23:55.067339 20210 FimManager.cpp:110] [END] free_memory called
-I0603 10:23:55.067340 20210 FimRuntime.cpp:87] [END] free_memory called
-I0603 10:23:55.067340 20210 fim_runtime_api.cpp:154] DestroyBo time (us) : 5.754
-I0603 10:23:55.067342 20210 fim_runtime_api.cpp:156] [END] FimDestroyBo called
-I0603 10:23:55.067343 20210 fim_runtime_api.cpp:162] called
-I0603 10:23:55.067344 20210 fim_runtime_api.cpp:171] DestroyBo time (us) : 0.865
-I0603 10:23:55.067346 20210 fim_runtime_api.cpp:38] [START] FimDeinitialize called
-I0603 10:23:55.067348 20210 FimRuntime.cpp:37] [START] deinitialize called
-I0603 10:23:55.067349 20210 FimManager.cpp:59] [START] deinitialize called
-I0603 10:23:55.067350 20210 FimMemoryManager.cpp:37] [START] deinitialize called
-I0603 10:23:55.067351 20210 FimMemoryManager.cpp:40] [END] deinitialize called
-I0603 10:23:55.067353 20210 FimControlManager.cpp:34] [START] deinitialize called
-I0603 10:23:55.067353 20210 FimControlManager.cpp:38] [END] deinitialize called
-I0603 10:23:55.067354 20210 FimDevice.cpp:32] [START] deinitialize called
-I0603 10:23:55.067356 20210 FimDevice.cpp:65] [START] close_device called
-I0603 10:23:55.067358 20210 FimDevice.cpp:68] [END] close_device called
-I0603 10:23:55.067358 20210 FimDevice.cpp:38] [END] deinitialize called
-I0603 10:23:55.067358 20210 FimManager.cpp:66] [END] deinitialize called
-I0603 10:23:55.067360 20210 FimExecutor.cpp:85] [START] deinitialize called
-I0603 10:23:55.067533 20210 FimExecutor.cpp:99] [END] deinitialize called
-I0603 10:23:55.067535 20210 FimRuntime.cpp:43] [END] deinitialize called
-I0603 10:23:55.067538 20210 fim_runtime_api.cpp:47] Deinitialize time (us) : 191.214
-I0603 10:23:55.067540 20210 fim_runtime_api.cpp:49] [END] FimDeinitialize called
+I0603 10:23:41.631451 20210 pim_runtime_api.cpp:24] [START] PimInitialize called
+I0603 10:23:41.631603 20210 PimRuntime.cpp:15] [START] PimRuntime called
+I0603 10:23:41.631605 20210 PimManager.cpp:37] [START] get_instance called
+I0603 10:23:41.631608 20210 PimManager.cpp:17] [START] PimManager called
+I0603 10:23:41.631613 20210 PimDevice.cpp:15] [START] PimDevice called
+I0603 10:23:41.631614 20210 PimControlManager.cpp:17] [START] PimControlManager called
+I0603 10:23:41.631615 20210 PimControlManager.cpp:18] [END] PimControlManager called
+I0603 10:23:41.631640 20210 PimMemoryManager.cpp:20] [START] PimMemoryManager called
+I0603 10:23:41.631646 20210 PimMemoryManager.cpp:22] [END] PimMemoryManager called
+I0603 10:23:41.631650 20210 PimManager.cpp:22] [END] PimManager called
+I0603 10:23:41.631652 20210 PimManager.cpp:40] [END] get_instance called
+I0603 10:23:41.631655 20210 PimExecutor.cpp:36] [START] get_instance Called
+I0603 10:23:41.631657 20210 PimExecutor.cpp:21] [START] PimExecutor called 
+I0603 10:23:41.631660 20210 PimEmulator.cpp:24] [START] get_instance called
+I0603 10:23:41.631664 20210 PimEmulator.cpp:18] [START] PimEmulator called 
+I0603 10:23:41.631664 20210 PimExecutor.cpp:31] [END] PimExecutor called
+I0603 10:23:41.631664 20210 PimExecutor.cpp:39] [END] get_instance called
+I0603 10:23:41.631665 20210 PimRuntime.cpp:20] [END] PimRuntime called
+I0603 10:23:41.631667 20210 PimRuntime.cpp:25] [START] initialize called
+I0603 10:23:41.631669 20210 PimManager.cpp:46] [START] initialize called
+I0603 10:23:41.631669 20210 PimDevice.cpp:20] [START] initialize called
+I0603 10:23:41.631670 20210 PimDevice.cpp:56] [START] open_device called
+I0603 10:23:41.631671 20210 PimDevice.cpp:59] [END] open_device called
+I0603 10:23:41.631672 20210 PimDevice.cpp:26] [END] initialize called
+I0603 10:23:41.631675 20210 PimControlManager.cpp:24] [START] initialize called
+I0603 10:23:41.631675 20210 PimControlManager.cpp:28] [END] initialize called
+I0603 10:23:41.631676 20210 PimMemoryManager.cpp:28] [START] initialize called
+I0603 10:23:41.631677 20210 PimMemoryManager.cpp:31] [END] initialize called
+I0603 10:23:41.631677 20210 PimManager.cpp:53] [END] initialize called
+I0603 10:23:41.631680 20210 PimExecutor.cpp:45] [START] initialize Intialization done 
+I0603 10:23:41.667788 20210 PimManager.cpp:37] [START] get_instance called
+I0603 10:23:41.667794 20210 PimManager.cpp:40] [END] get_instance called
+I0603 10:23:41.667939 20210 PimExecutor.cpp:79] [END] initialize called
+I0603 10:23:41.667943 20210 PimRuntime.cpp:31] [END] initialize called
+I0603 10:23:41.667943 20210 pim_runtime_api.cpp:30] Initialize time (us) : 36342.8
+I0603 10:23:41.667956 20210 pim_runtime_api.cpp:32] [END] PimInitialize called
+I0603 10:23:41.667959 20210 pim_runtime_api.cpp:117] called
+I0603 10:23:41.667960 20210 pim_runtime_api.cpp:131] CreateDesc time (us) : 0.854
+I0603 10:23:41.667963 20210 pim_runtime_api.cpp:89] called
+I0603 10:23:41.667966 20210 PimRuntime.cpp:60] [START] alloc_memory called
+I0603 10:23:41.667968 20210 PimManager.cpp:83] [START] alloc_memory called
+I0603 10:23:41.667969 20210 PimMemoryManager.cpp:65] [START] alloc_memory called
+I0603 10:23:41.667970 20210 PimMemoryManager.cpp:79] [END] alloc_memory called
+I0603 10:23:41.667971 20210 PimManager.cpp:88] [END] alloc_memory called
+I0603 10:23:41.667973 20210 PimRuntime.cpp:65] [END] alloc_memory called
+I0603 10:23:41.667977 20210 pim_runtime_api.cpp:89] called
+I0603 10:23:41.667979 20210 PimRuntime.cpp:60] [START] alloc_memory called
+I0603 10:23:41.667979 20210 PimManager.cpp:83] [START] alloc_memory called
+I0603 10:23:41.667980 20210 PimMemoryManager.cpp:65] [START] alloc_memory called
+I0603 10:23:41.667981 20210 PimMemoryManager.cpp:79] [END] alloc_memory called
+I0603 10:23:41.667982 20210 PimManager.cpp:88] [END] alloc_memory called
+I0603 10:23:41.667984 20210 PimRuntime.cpp:65] [END] alloc_memory called
+I0603 10:23:41.667984 20210 pim_runtime_api.cpp:89] called
+I0603 10:23:41.667984 20210 PimRuntime.cpp:60] [START] alloc_memory called
+I0603 10:23:41.667985 20210 PimManager.cpp:83] [START] alloc_memory called
+I0603 10:23:41.667986 20210 PimMemoryManager.cpp:65] [START] alloc_memory called
+I0603 10:23:41.668005 20210 PimMemoryManager.cpp:79] [END] alloc_memory called
+I0603 10:23:41.668006 20210 PimManager.cpp:88] [END] alloc_memory called
+I0603 10:23:41.668007 20210 PimRuntime.cpp:65] [END] alloc_memory called
+I0603 10:23:41.668009 20210 pim_runtime_api.cpp:89] called
+I0603 10:23:41.668009 20210 PimRuntime.cpp:60] [START] alloc_memory called
+I0603 10:23:41.668010 20210 PimManager.cpp:83] [START] alloc_memory called
+I0603 10:23:41.668011 20210 PimMemoryManager.cpp:65] [START] alloc_memory called
+I0603 10:23:41.668015 20210 PimMemoryManager.cpp:79] [END] alloc_memory called
+I0603 10:23:41.668016 20210 PimManager.cpp:88] [END] alloc_memory called
+I0603 10:23:41.668017 20210 PimRuntime.cpp:65] [END] alloc_memory called
+I0603 10:23:41.668018 20210 pim_runtime_api.cpp:89] called
+I0603 10:23:41.668018 20210 PimRuntime.cpp:60] [START] alloc_memory called
+I0603 10:23:41.668020 20210 PimManager.cpp:83] [START] alloc_memory called
+I0603 10:23:41.668020 20210 PimMemoryManager.cpp:65] [START] alloc_memory called
+I0603 10:23:41.668022 20210 PimMemoryManager.cpp:79] [END] alloc_memory called
+I0603 10:23:41.668023 20210 PimManager.cpp:88] [END] alloc_memory called
+I0603 10:23:41.668025 20210 PimRuntime.cpp:65] [END] alloc_memory called
+I0603 10:23:41.668046 20210 pim_runtime_api.cpp:89] called
+I0603 10:23:41.668047 20210 PimRuntime.cpp:60] [START] alloc_memory called
+I0603 10:23:41.668048 20210 PimManager.cpp:83] [START] alloc_memory called
+I0603 10:23:41.668049 20210 PimMemoryManager.cpp:65] [START] alloc_memory called
+I0603 10:23:41.668051 20210 PimMemoryManager.cpp:79] [END] alloc_memory called
+I0603 10:23:41.668051 20210 PimManager.cpp:88] [END] alloc_memory called
+I0603 10:23:41.668052 20210 PimRuntime.cpp:65] [END] alloc_memory called
+I0603 10:23:41.668053 20210 pim_runtime_api.cpp:89] called
+I0603 10:23:41.668054 20210 PimRuntime.cpp:60] [START] alloc_memory called
+I0603 10:23:41.668056 20210 PimManager.cpp:83] [START] alloc_memory called
+I0603 10:23:41.668056 20210 PimMemoryManager.cpp:65] [START] alloc_memory called
+I0603 10:23:41.668084 20210 PimMemoryManager.cpp:570] [START] alloc called
+I0603 10:23:41.668267 20210 PimMemoryManager.cpp:581] [END] alloc called
+I0603 10:23:41.668388 20210 PimMemoryManager.cpp:79] [END] alloc_memory called
+I0603 10:23:41.668390 20210 PimManager.cpp:88] [END] alloc_memory called
+I0603 10:23:41.668390 20210 PimRuntime.cpp:65] [END] alloc_memory called
+I0603 10:23:41.668391 20210 pim_runtime_api.cpp:89] called
+I0603 10:23:41.668392 20210 PimRuntime.cpp:60] [START] alloc_memory called
+I0603 10:23:41.668393 20210 PimManager.cpp:83] [START] alloc_memory called
+I0603 10:23:41.668395 20210 PimMemoryManager.cpp:65] [START] alloc_memory called
+I0603 10:23:41.668395 20210 PimMemoryManager.cpp:79] [END] alloc_memory called
+I0603 10:23:41.668396 20210 PimManager.cpp:88] [END] alloc_memory called
+I0603 10:23:41.668397 20210 PimRuntime.cpp:65] [END] alloc_memory called
+I0603 10:23:41.668397 20210 pim_runtime_api.cpp:89] called
+I0603 10:23:41.668398 20210 PimRuntime.cpp:60] [START] alloc_memory called
+I0603 10:23:41.668399 20210 PimManager.cpp:83] [START] alloc_memory called
+I0603 10:23:41.668401 20210 PimMemoryManager.cpp:65] [START] alloc_memory called
+I0603 10:23:41.668401 20210 PimMemoryManager.cpp:79] [END] alloc_memory called
+I0603 10:23:41.668402 20210 PimManager.cpp:88] [END] alloc_memory called
+I0603 10:23:41.668402 20210 PimRuntime.cpp:65] [END] alloc_memory called
+I0603 10:23:42.004446 20210 pim_runtime_api.cpp:321] [START] PimCopyMemory called
+I0603 10:23:42.004456 20210 PimRuntime.cpp:137] [START] copy_memory called
+I0603 10:23:42.004458 20210 PimManager.cpp:127] [START] copy_memory called
+I0603 10:23:42.004459 20210 PimMemoryManager.cpp:157] [START] copy_memory called
+I0603 10:23:42.007033 20210 PimMemoryManager.cpp:183] [END] copy_memory called
+I0603 10:23:42.007041 20210 PimManager.cpp:132] [END] copy_memory called
+I0603 10:23:42.007043 20210 PimRuntime.cpp:142] [END] copy_memory called
+I0603 10:23:42.007045 20210 pim_runtime_api.cpp:330] CopyMemory time (us) : 2590.55
+I0603 10:23:42.007074 20210 pim_runtime_api.cpp:332] [END] PimCopyMemory called
+I0603 10:23:42.007076 20210 pim_runtime_api.cpp:270] [START] PimConvertDataLayout called
+I0603 10:23:42.007078 20210 PimRuntime.cpp:104] [START] convert_data_layout called
+I0603 10:23:42.007081 20210 PimManager.cpp:149] [START] convert_data_layout called
+I0603 10:23:42.007082 20210 PimMemoryManager.cpp:203] [START] convert_data_layout called
+I0603 10:23:42.007084 20210 PimMemoryManager.cpp:378] [START] convert_data_layout_for_gemv_weight called
+I0603 10:23:42.019011 20210 PimMemoryManager.cpp:502] [END] convert_data_layout_for_gemv_weight called
+I0603 10:23:42.019016 20210 PimMemoryManager.cpp:216] [END] convert_data_layout called
+I0603 10:23:42.019017 20210 PimManager.cpp:154] [END] convert_data_layout called
+I0603 10:23:42.019018 20210 PimRuntime.cpp:109] [END] convert_data_layout called
+I0603 10:23:42.019019 20210 pim_runtime_api.cpp:279] ConvertDataLayout time (us) : 11943.1
+I0603 10:23:42.019026 20210 pim_runtime_api.cpp:281] [END] PimConvertDataLayout called
+I0603 10:23:42.019026 20210 pim_runtime_api.cpp:321] [START] PimCopyMemory called
+I0603 10:23:42.019028 20210 PimRuntime.cpp:137] [START] copy_memory called
+I0603 10:23:42.019029 20210 PimManager.cpp:127] [START] copy_memory called
+I0603 10:23:42.019030 20210 PimMemoryManager.cpp:157] [START] copy_memory called
+I0603 10:23:42.021184 20210 PimMemoryManager.cpp:183] [END] copy_memory called
+I0603 10:23:42.021188 20210 PimManager.cpp:132] [END] copy_memory called
+I0603 10:23:42.021188 20210 PimRuntime.cpp:142] [END] copy_memory called
+I0603 10:23:42.021189 20210 pim_runtime_api.cpp:330] CopyMemory time (us) : 2162.51
+I0603 10:23:42.021191 20210 pim_runtime_api.cpp:332] [END] PimCopyMemory called
+I0603 10:23:42.021194 20210 pim_runtime_api.cpp:414] [START] PimExecuteGEMV called
+I0603 10:23:42.021196 20210 PimRuntime.cpp:168] [START] execute_gemv called
+I0603 10:23:42.021198 20210 PimExecutor.cpp:181] [START] execute_gemv called
+I0603 10:23:42.021199 20210 PimManager.cpp:171] [START] create_crf_binary called
+I0603 10:23:42.021201 20210 PimCrfBinGen.cpp:13] [START] gen_binary called
+I0603 10:23:42.021203 20210 PimCrfBinGen.cpp:21] [START] create_pim_cmd called
+I0603 10:23:42.021248 20210 PimCrfBinGen.cpp:94] [END] create_pim_cmd called
+I0603 10:23:42.021250 20210 PimCrfBinGen.cpp:99] [START] change_to_binary called
+I0603 10:23:42.021253 20210 PimCrfBinGen.cpp:107] [END] change_to_binary called
+I0603 10:23:42.021255 20210 PimCrfBinGen.cpp:16] [END] gen_binary called
+I0603 10:23:42.021255 20210 PimManager.cpp:177] [END] create_crf_binary called
+I0603 10:23:42.515904 20210 PimEmulator.cpp:49] [START] convert_mem_trace_from_16B_to_32B called
+I0603 10:23:42.553984 20210 PimEmulator.cpp:72] [START] execute_gemv called
+I0603 10:23:48.456720 20210 PimExecutor.cpp:215] [END] execute_gemv called
+I0603 10:23:48.456727 20210 PimRuntime.cpp:173] [END] execute_gemv called
+I0603 10:23:48.456728 20210 pim_runtime_api.cpp:423] ExecuteGEMV time (us) : 6.43553e+06
+I0603 10:23:48.456734 20210 pim_runtime_api.cpp:425] [END] PimExecuteGEMV called
+I0603 10:23:48.456735 20210 pim_runtime_api.cpp:321] [START] PimCopyMemory called
+I0603 10:23:48.456737 20210 PimRuntime.cpp:137] [START] copy_memory called
+I0603 10:23:48.456738 20210 PimManager.cpp:127] [START] copy_memory called
+I0603 10:23:48.456739 20210 PimMemoryManager.cpp:157] [START] copy_memory called
+I0603 10:23:48.456760 20210 PimMemoryManager.cpp:183] [END] copy_memory called
+I0603 10:23:48.456761 20210 PimManager.cpp:132] [END] copy_memory called
+I0603 10:23:48.456761 20210 PimRuntime.cpp:142] [END] copy_memory called
+I0603 10:23:48.456763 20210 pim_runtime_api.cpp:330] CopyMemory time (us) : 26.792
+I0603 10:23:48.456764 20210 pim_runtime_api.cpp:332] [END] PimCopyMemory called
+I0603 10:23:55.067173 20210 pim_runtime_api.cpp:138] [START] PimDestroyBo called
+I0603 10:23:55.067181 20210 PimRuntime.cpp:82] [START] free_memory called
+I0603 10:23:55.067183 20210 PimManager.cpp:105] [START] free_memory called
+I0603 10:23:55.067185 20210 PimMemoryManager.cpp:105] [START] free_memory called
+I0603 10:23:55.067193 20210 PimMemoryManager.cpp:121] [END] free_memory called
+I0603 10:23:55.067194 20210 PimManager.cpp:110] [END] free_memory called
+I0603 10:23:55.067195 20210 PimRuntime.cpp:87] [END] free_memory called
+I0603 10:23:55.067198 20210 pim_runtime_api.cpp:154] DestroyBo time (us) : 17.682
+I0603 10:23:55.067201 20210 pim_runtime_api.cpp:156] [END] PimDestroyBo called
+I0603 10:23:55.067203 20210 pim_runtime_api.cpp:138] [START] PimDestroyBo called
+I0603 10:23:55.067203 20210 PimRuntime.cpp:82] [START] free_memory called
+I0603 10:23:55.067204 20210 PimManager.cpp:105] [START] free_memory called
+I0603 10:23:55.067205 20210 PimMemoryManager.cpp:105] [START] free_memory called
+I0603 10:23:55.067206 20210 PimMemoryManager.cpp:121] [END] free_memory called
+I0603 10:23:55.067207 20210 PimManager.cpp:110] [END] free_memory called
+I0603 10:23:55.067209 20210 PimRuntime.cpp:87] [END] free_memory called
+I0603 10:23:55.067209 20210 pim_runtime_api.cpp:154] DestroyBo time (us) : 6.42
+I0603 10:23:55.067210 20210 pim_runtime_api.cpp:156] [END] PimDestroyBo called
+I0603 10:23:55.067211 20210 pim_runtime_api.cpp:138] [START] PimDestroyBo called
+I0603 10:23:55.067212 20210 PimRuntime.cpp:82] [START] free_memory called
+I0603 10:23:55.067214 20210 PimManager.cpp:105] [START] free_memory called
+I0603 10:23:55.067214 20210 PimMemoryManager.cpp:105] [START] free_memory called
+I0603 10:23:55.067215 20210 PimMemoryManager.cpp:121] [END] free_memory called
+I0603 10:23:55.067215 20210 PimManager.cpp:110] [END] free_memory called
+I0603 10:23:55.067216 20210 PimRuntime.cpp:87] [END] free_memory called
+I0603 10:23:55.067217 20210 pim_runtime_api.cpp:154] DestroyBo time (us) : 5.978
+I0603 10:23:55.067219 20210 pim_runtime_api.cpp:156] [END] PimDestroyBo called
+I0603 10:23:55.067219 20210 pim_runtime_api.cpp:138] [START] PimDestroyBo called
+I0603 10:23:55.067220 20210 PimRuntime.cpp:82] [START] free_memory called
+I0603 10:23:55.067221 20210 PimManager.cpp:105] [START] free_memory called
+I0603 10:23:55.067222 20210 PimMemoryManager.cpp:105] [START] free_memory called
+I0603 10:23:55.067222 20210 PimMemoryManager.cpp:121] [END] free_memory called
+I0603 10:23:55.067224 20210 PimManager.cpp:110] [END] free_memory called
+I0603 10:23:55.067224 20210 PimRuntime.cpp:87] [END] free_memory called
+I0603 10:23:55.067225 20210 pim_runtime_api.cpp:154] DestroyBo time (us) : 5.666
+I0603 10:23:55.067226 20210 pim_runtime_api.cpp:156] [END] PimDestroyBo called
+I0603 10:23:55.067227 20210 pim_runtime_api.cpp:138] [START] PimDestroyBo called
+I0603 10:23:55.067229 20210 PimRuntime.cpp:82] [START] free_memory called
+I0603 10:23:55.067229 20210 PimManager.cpp:105] [START] free_memory called
+I0603 10:23:55.067229 20210 PimMemoryManager.cpp:105] [START] free_memory called
+I0603 10:23:55.067255 20210 PimMemoryManager.cpp:121] [END] free_memory called
+I0603 10:23:55.067255 20210 PimManager.cpp:110] [END] free_memory called
+I0603 10:23:55.067256 20210 PimRuntime.cpp:87] [END] free_memory called
+I0603 10:23:55.067257 20210 pim_runtime_api.cpp:154] DestroyBo time (us) : 29.834
+I0603 10:23:55.067258 20210 pim_runtime_api.cpp:156] [END] PimDestroyBo called
+I0603 10:23:55.067260 20210 pim_runtime_api.cpp:138] [START] PimDestroyBo called
+I0603 10:23:55.067260 20210 PimRuntime.cpp:82] [START] free_memory called
+I0603 10:23:55.067261 20210 PimManager.cpp:105] [START] free_memory called
+I0603 10:23:55.067262 20210 PimMemoryManager.cpp:105] [START] free_memory called
+I0603 10:23:55.067265 20210 PimMemoryManager.cpp:121] [END] free_memory called
+I0603 10:23:55.067265 20210 PimManager.cpp:110] [END] free_memory called
+I0603 10:23:55.067266 20210 PimRuntime.cpp:87] [END] free_memory called
+I0603 10:23:55.067267 20210 pim_runtime_api.cpp:154] DestroyBo time (us) : 7.286
+I0603 10:23:55.067268 20210 pim_runtime_api.cpp:156] [END] PimDestroyBo called
+I0603 10:23:55.067270 20210 pim_runtime_api.cpp:138] [START] PimDestroyBo called
+I0603 10:23:55.067270 20210 PimRuntime.cpp:82] [START] free_memory called
+I0603 10:23:55.067270 20210 PimManager.cpp:105] [START] free_memory called
+I0603 10:23:55.067276 20210 PimMemoryManager.cpp:105] [START] free_memory called
+I0603 10:23:55.067322 20210 PimManager.cpp:110] [END] free_memory called
+I0603 10:23:55.067323 20210 PimRuntime.cpp:87] [END] free_memory called
+I0603 10:23:55.067324 20210 pim_runtime_api.cpp:154] DestroyBo time (us) : 55.211
+I0603 10:23:55.067327 20210 pim_runtime_api.cpp:156] [END] PimDestroyBo called
+I0603 10:23:55.067327 20210 pim_runtime_api.cpp:138] [START] PimDestroyBo called
+I0603 10:23:55.067327 20210 PimRuntime.cpp:82] [START] free_memory called
+I0603 10:23:55.067328 20210 PimManager.cpp:105] [START] free_memory called
+I0603 10:23:55.067329 20210 PimMemoryManager.cpp:105] [START] free_memory called
+I0603 10:23:55.067330 20210 PimMemoryManager.cpp:121] [END] free_memory called
+I0603 10:23:55.067332 20210 PimManager.cpp:110] [END] free_memory called
+I0603 10:23:55.067332 20210 PimRuntime.cpp:87] [END] free_memory called
+I0603 10:23:55.067333 20210 pim_runtime_api.cpp:154] DestroyBo time (us) : 5.9
+I0603 10:23:55.067334 20210 pim_runtime_api.cpp:156] [END] PimDestroyBo called
+I0603 10:23:55.067335 20210 pim_runtime_api.cpp:138] [START] PimDestroyBo called
+I0603 10:23:55.067335 20210 PimRuntime.cpp:82] [START] free_memory called
+I0603 10:23:55.067337 20210 PimManager.cpp:105] [START] free_memory called
+I0603 10:23:55.067337 20210 PimMemoryManager.cpp:105] [START] free_memory called
+I0603 10:23:55.067338 20210 PimMemoryManager.cpp:121] [END] free_memory called
+I0603 10:23:55.067339 20210 PimManager.cpp:110] [END] free_memory called
+I0603 10:23:55.067340 20210 PimRuntime.cpp:87] [END] free_memory called
+I0603 10:23:55.067340 20210 pim_runtime_api.cpp:154] DestroyBo time (us) : 5.754
+I0603 10:23:55.067342 20210 pim_runtime_api.cpp:156] [END] PimDestroyBo called
+I0603 10:23:55.067343 20210 pim_runtime_api.cpp:162] called
+I0603 10:23:55.067344 20210 pim_runtime_api.cpp:171] DestroyBo time (us) : 0.865
+I0603 10:23:55.067346 20210 pim_runtime_api.cpp:38] [START] PimDeinitialize called
+I0603 10:23:55.067348 20210 PimRuntime.cpp:37] [START] deinitialize called
+I0603 10:23:55.067349 20210 PimManager.cpp:59] [START] deinitialize called
+I0603 10:23:55.067350 20210 PimMemoryManager.cpp:37] [START] deinitialize called
+I0603 10:23:55.067351 20210 PimMemoryManager.cpp:40] [END] deinitialize called
+I0603 10:23:55.067353 20210 PimControlManager.cpp:34] [START] deinitialize called
+I0603 10:23:55.067353 20210 PimControlManager.cpp:38] [END] deinitialize called
+I0603 10:23:55.067354 20210 PimDevice.cpp:32] [START] deinitialize called
+I0603 10:23:55.067356 20210 PimDevice.cpp:65] [START] close_device called
+I0603 10:23:55.067358 20210 PimDevice.cpp:68] [END] close_device called
+I0603 10:23:55.067358 20210 PimDevice.cpp:38] [END] deinitialize called
+I0603 10:23:55.067358 20210 PimManager.cpp:66] [END] deinitialize called
+I0603 10:23:55.067360 20210 PimExecutor.cpp:85] [START] deinitialize called
+I0603 10:23:55.067533 20210 PimExecutor.cpp:99] [END] deinitialize called
+I0603 10:23:55.067535 20210 PimRuntime.cpp:43] [END] deinitialize called
+I0603 10:23:55.067538 20210 pim_runtime_api.cpp:47] Deinitialize time (us) : 191.214
+I0603 10:23:55.067540 20210 pim_runtime_api.cpp:49] [END] PimDeinitialize called

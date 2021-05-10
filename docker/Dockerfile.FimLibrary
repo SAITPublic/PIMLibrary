@@ -38,11 +38,11 @@ RUN apt-get update
 
 RUN cpan File::Which
 
-# FIM Library requirements
+# PIM Library requirements
 RUN apt-get --yes --allow-unauthenticated install libgoogle-glog-dev
 RUN apt-get update
 
-ENV QWORKSPACE=/home/user/fim-workspace
+ENV QWORKSPACE=/home/user/pim-workspace
 ENV ROCM_PATH=/opt/rocm
 ENV HIP_PATH=${ROCM_PATH}/hip
 ENV HCC_HOME=${ROCM_PATH}/hcc

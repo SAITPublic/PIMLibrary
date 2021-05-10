@@ -8,7 +8,7 @@ from bokeh.palettes import Category20
 
 from visualizer.Config import get_config
 
-def create(listEvntsName, evntStartTime, evntEndTime, listTagsName, title, plot_height=get_config('timeline_plot_height'), plot_width = get_config('timeline_plot_width'), tools=None, colorPallete=None, x_axis_label = 'Time', y_axis_label = 'Calls', border_color=None, fim_plot=None):
+def create(listEvntsName, evntStartTime, evntEndTime, listTagsName, title, plot_height=get_config('timeline_plot_height'), plot_width = get_config('timeline_plot_width'), tools=None, colorPallete=None, x_axis_label = 'Time', y_axis_label = 'Calls', border_color=None, pim_plot=None):
     ''' Creates Timeline Visualization '''
 
     numEvnts = len(listEvntsName)
@@ -19,7 +19,7 @@ def create(listEvntsName, evntStartTime, evntEndTime, listTagsName, title, plot_
     assert numEvnts == len(evntEndTime), 'Num of events do not match'
 
     xdr = DataRange1d()
-    if(fim_plot):
+    if(pim_plot):
         ydr = DataRange1d(end = numEvnts+3)
     else:
         ydr = DataRange1d()
@@ -45,7 +45,7 @@ def create(listEvntsName, evntStartTime, evntEndTime, listTagsName, title, plot_
             glyph = plot.quad(left="left", right="right", top="top", bottom="bottom",fill_color=colorPallete[clr_ctr], line_color=colorPallete[clr_ctr],
                               source=source)
             glyphs.append(glyph)
-            if(fim_plot):
+            if(pim_plot):
                 if(listTagsName[i][j].endswith('.cpp')):
                     glyph.visible=False
                 else:

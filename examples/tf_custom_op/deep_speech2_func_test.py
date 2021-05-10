@@ -24,7 +24,7 @@ from six.moves import xrange    # pylint: disable=redefined-builtin
 import tensorflow as tf
 from tensorflow.keras import Input
 from tensorflow.keras import Model
-import tf_fim_ops
+import tf_pim_ops
 
 tf.keras.backend.set_floatx('float16')
 initializer = tf.constant_initializer(value=0.1)
@@ -288,19 +288,19 @@ def profile_ds2_eager(batch_size=1,training=False):
      value = conv_layer_two(value, training)
      print('conv2 output shape',value.shape)
 
-     orig_env = os.environ['ENABLE_FIM']
+     orig_env = os.environ['ENABLE_PIM']
 
-     os.environ['ENABLE_FIM'] = '0'
+     os.environ['ENABLE_PIM'] = '0'
      golden = rshape(value)
      golden = lstm(golden,training=False)
      print('gpu_lstm output shape' , golden.shape)
 
-     os.environ['ENABLE_FIM'] = '1'
+     os.environ['ENABLE_PIM'] = '1'
      value = rshape(value)
      value = lstm(value,training=False)
-     print('fim_lstm output shape', value.shape)
+     print('pim_lstm output shape', value.shape)
 
-     os.environ['ENABLE_FIM'] = orig_env
+     os.environ['ENABLE_PIM'] = orig_env
 
      result = np.testing.assert_array_almost_equal(value,golden,decimal=5)
 
@@ -338,7 +338,7 @@ def profile_ds2():
         print('Duration', duration)
 
 
-tf_fim_ops.fim_init()
+tf_pim_ops.pim_init()
 #profile_ds2()
 profile_ds2_eager()
-tf_fim_ops.fim_deinit()
+tf_pim_ops.pim_deinit()

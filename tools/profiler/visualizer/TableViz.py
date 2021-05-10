@@ -26,7 +26,7 @@ def create_table(df, heading = 'Summary Table', cols = None, width = get_config(
 	return column(children=[heading_div, table_plot])
 
 def create_table_logs(df, heading = 'Logs', cols = None, width = get_config('table_plot_width'), height=get_config('table_plot_height')):
-	'''Creates a Table for FIM logs to select start and end logs
+	'''Creates a Table for PIM logs to select start and end logs
 	   df = Pandas dataframe contaning data
 	   heading = Table heading
 	   cols =  List of columns to display in output. If None, whole dataframe is produced as output

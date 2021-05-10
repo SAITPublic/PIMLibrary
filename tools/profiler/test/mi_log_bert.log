@@ -25,14 +25,14 @@ graph_options {
     meta_optimizer_iterations: ONE
   }
 }
-, '_master': '', '_experimental_max_worker_delay_secs': None, '_global_id_in_cluster': 0, '_keep_checkpoint_max': 5, '_save_checkpoints_steps': 1000, '_model_dir': '/home/user/fim-workspace/downloads/models/bert/bert_fim/output/', '_experimental_distribute': None, '_protocol': None, '_device_fn': None, '_num_ps_replicas': 0, '_cluster': None, '_log_step_count_steps': None}
+, '_master': '', '_experimental_max_worker_delay_secs': None, '_global_id_in_cluster': 0, '_keep_checkpoint_max': 5, '_save_checkpoints_steps': 1000, '_model_dir': '/home/user/pim-workspace/downloads/models/bert/bert_pim/output/', '_experimental_distribute': None, '_protocol': None, '_device_fn': None, '_num_ps_replicas': 0, '_cluster': None, '_log_step_count_steps': None}
 I0505 13:01:23.297942 140081799423744 estimator.py:216] Using config: {'_cluster_spec': ClusterSpec({}), '_tf_random_seed': None, '_service': None, '_num_worker_replicas': 1, '_is_chief': True, '_task_type': 'worker', '_train_distribute': None, '_keep_checkpoint_every_n_hours': 10000, '_save_checkpoints_secs': None, '_evaluation_master': '', '_session_creation_timeout_secs': 7200, '_task_id': 0, '_tpu_config': TPUConfig(iterations_per_loop=1000, num_shards=8, num_cores_per_replica=None, per_host_input_for_training=3, tpu_job_name=None, initial_infeed_sleep_secs=None, input_partition_dims=None, eval_training_input_configuration=2, experimental_host_call_every_n_steps=1), '_save_summary_steps': 100, '_eval_distribute': None, '_session_config': allow_soft_placement: true
 graph_options {
   rewrite_options {
     meta_optimizer_iterations: ONE
   }
 }
-, '_master': '', '_experimental_max_worker_delay_secs': None, '_global_id_in_cluster': 0, '_keep_checkpoint_max': 5, '_save_checkpoints_steps': 1000, '_model_dir': '/home/user/fim-workspace/downloads/models/bert/bert_fim/output/', '_experimental_distribute': None, '_protocol': None, '_device_fn': None, '_num_ps_replicas': 0, '_cluster': None, '_log_step_count_steps': None}
+, '_master': '', '_experimental_max_worker_delay_secs': None, '_global_id_in_cluster': 0, '_keep_checkpoint_max': 5, '_save_checkpoints_steps': 1000, '_model_dir': '/home/user/pim-workspace/downloads/models/bert/bert_pim/output/', '_experimental_distribute': None, '_protocol': None, '_device_fn': None, '_num_ps_replicas': 0, '_cluster': None, '_log_step_count_steps': None}
 INFO:tensorflow:_TPUContext: eval_on_tpu True
 I0505 13:01:23.298372 140081799423744 tpu_context.py:221] _TPUContext: eval_on_tpu True
 WARNING:tensorflow:eval_on_tpu ignored because use_tpu is False.
@@ -73,8 +73,8 @@ INFO:tensorflow:  Num examples = 2 (2 actual, 0 padding)
 I0505 13:01:23.305092 140081799423744 run_classifier.py:909]   Num examples = 2 (2 actual, 0 padding)
 INFO:tensorflow:  Batch size = 4
 I0505 13:01:23.305194 140081799423744 run_classifier.py:910]   Batch size = 4
-INFO:tensorflow:Could not find trained model in model_dir: /home/user/fim-workspace/downloads/models/bert/bert_fim/output/, running initialization to evaluate.
-I0505 13:01:23.305648 140081799423744 estimator.py:503] Could not find trained model in model_dir: /home/user/fim-workspace/downloads/models/bert/bert_fim/output/, running initialization to evaluate.
+INFO:tensorflow:Could not find trained model in model_dir: /home/user/pim-workspace/downloads/models/bert/bert_pim/output/, running initialization to evaluate.
+I0505 13:01:23.305648 140081799423744 estimator.py:503] Could not find trained model in model_dir: /home/user/pim-workspace/downloads/models/bert/bert_pim/output/, running initialization to evaluate.
 WARNING:tensorflow:From /usr/local/lib/python3.5/dist-packages/tensorflow_core/python/ops/resource_variable_ops.py:1635: calling BaseResourceVariable.__init__ (from tensorflow.python.ops.resource_variable_ops) with constraint is deprecated and will be removed in a future version.
 Instructions for updating:
 If using Keras pass *_constraint arguments to layers.
@@ -103,16 +103,16 @@ INFO:tensorflow:  name = label_ids, shape = (None,)
 I0505 13:01:23.627632 140081799423744 run_classifier.py:632]   name = label_ids, shape = (None,)
 INFO:tensorflow:  name = segment_ids, shape = (None, 128)
 I0505 13:01:23.627757 140081799423744 run_classifier.py:632]   name = segment_ids, shape = (None, 128)
-WARNING:tensorflow:From /home/user/fim-workspace/downloads/models/bert/bert_fim/modeling.py:382: Layer.apply (from tensorflow.python.keras.engine.base_layer) is deprecated and will be removed in a future version.
+WARNING:tensorflow:From /home/user/pim-workspace/downloads/models/bert/bert_pim/modeling.py:382: Layer.apply (from tensorflow.python.keras.engine.base_layer) is deprecated and will be removed in a future version.
 Instructions for updating:
 Please use `layer.__call__` method instead.
-W0505 13:01:23.672412 140081799423744 deprecation.py:323] From /home/user/fim-workspace/downloads/models/bert/bert_fim/modeling.py:382: Layer.apply (from tensorflow.python.keras.engine.base_layer) is deprecated and will be removed in a future version.
+W0505 13:01:23.672412 140081799423744 deprecation.py:323] From /home/user/pim-workspace/downloads/models/bert/bert_pim/modeling.py:382: Layer.apply (from tensorflow.python.keras.engine.base_layer) is deprecated and will be removed in a future version.
 Instructions for updating:
 Please use `layer.__call__` method instead.
-WARNING:tensorflow:From /home/user/fim-workspace/downloads/models/bert/bert_fim/modeling.py:701: dense (from tensorflow.python.layers.core) is deprecated and will be removed in a future version.
+WARNING:tensorflow:From /home/user/pim-workspace/downloads/models/bert/bert_pim/modeling.py:701: dense (from tensorflow.python.layers.core) is deprecated and will be removed in a future version.
 Instructions for updating:
 Use keras.layers.Dense instead.
-W0505 13:01:23.714618 140081799423744 deprecation.py:323] From /home/user/fim-workspace/downloads/models/bert/bert_fim/modeling.py:701: dense (from tensorflow.python.layers.core) is deprecated and will be removed in a future version.
+W0505 13:01:23.714618 140081799423744 deprecation.py:323] From /home/user/pim-workspace/downloads/models/bert/bert_pim/modeling.py:701: dense (from tensorflow.python.layers.core) is deprecated and will be removed in a future version.
 Instructions for updating:
 Use keras.layers.Dense instead.
 2020-05-05 13:01:23.756090: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library libhip_hcc.so

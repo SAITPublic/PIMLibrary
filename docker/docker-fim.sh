@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 image_name=$1
-container_name=fim-${image_name//[:\/]/-}-$(id -u -n $USER)
+container_name=pim-${image_name//[:\/]/-}-$(id -u -n $USER)
 WORKSPACE=$HOME/$2
 
 docker ps -a | grep ${container_name} > /dev/null 2>&1
@@ -25,7 +25,7 @@ if [ ! $result -eq 0 ]; then
                  -v /tmp/.X11-unix:/tmp/.X11-unix \
                  -v /root/.Xauthority:/root/.Xauthority:rw \
 		 -v /lib/modules:/lib/modules \
-		 -v $WORKSPACE:/home/user/fim-workspace \
+		 -v $WORKSPACE:/home/user/pim-workspace \
 		 --name=${container_name} \
                  $image_name /bin/bash
 else

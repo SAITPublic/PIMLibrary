@@ -21,8 +21,8 @@ def parse_csv_file(file_name, cols=['Kernel Operation', 'begin', 'end', 'duratio
 		df=df[cols]
 	return df
 
-def parse_fim_log_file(file_name, cols=None):
-	'''Parses fim log file
+def parse_pim_log_file(file_name, cols=None):
+	'''Parses pim log file
 		file_name = name of the file
 		cols = List of columns to return in dataframe. If cols=None (default), then it return all columns.
 		Returns pandas dataframes for APIs and buffer
@@ -112,7 +112,7 @@ def parse_miopen_log_file(file_name, cols=None):
 
 if(__name__=='__main__'):
 	#Test the parser with default file
-	df, df_buf = parse_fim_log_file('../test/FIM.INFO')
+	df, df_buf = parse_pim_log_file('../test/PIM.INFO')
 	print (df)
 	print (df_buf)
 	df = parse_miopen_log_file('../test/mi_log_bert.log')

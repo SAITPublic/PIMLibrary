@@ -1,15 +1,15 @@
-# FIMLibrary
+# PIMLibrary
 
-FIM Runtime Library and Tools
+PIM Runtime Library and Tools
 
 # Setup Contribution Environment
 ## Docker env
 
-All Prequisits for FIMLibrary build and testing are installed in docker image. For more info refer [Dockefile](https://github.sec.samsung.net/FIM/FIMLibrary/blob/develop/docker/Dockerfile.FimLibrary)
+All Prequisits for PIMLibrary build and testing are installed in docker image. For more info refer [Dockefile](https://github.sec.samsung.net/PIM/PIMLibrary/blob/develop/docker/Dockerfile.PimLibrary)
 ```
-docker/docker-fim.sh <image name> <directory>
+docker/docker-pim.sh <image name> <directory>
 
-image name : docker image to be used ( SAIT-Korea : fim-tf2:rocm3.0-python3)
+image name : docker image to be used ( SAIT-Korea : pim-tf2:rocm3.0-python3)
 directory  : (optional) Directory to be mapped inside container. default your home directory is mapped
 ```
 
@@ -18,7 +18,7 @@ MIOpen Setup is required only if you work on modifying MIOpen code.
 
 ### Install PreRequisits
 ```
-git clone -b roc-3.0.x git@github.sec.samsung.net:FIM/MIOpen.git
+git clone -b roc-3.0.x git@github.sec.samsung.net:PIM/MIOpen.git
 cd MIOpen
 sudo cmake -P install_deps.cmake --prefix $ROCM_PATH
 ```
@@ -40,9 +40,9 @@ sudo make install
 ./scripts <build> <options>
 <build>
 all : uninstall, cmake, make, install
-uninstall : removes all FIMLibrary so and binaries from rocm path
+uninstall : removes all PIMLibrary so and binaries from rocm path
 cmake : Does cmake
-make : build FIMLibrary
+make : build PIMLibrary
 install : installs to rocm path
 
 <options>
@@ -71,34 +71,34 @@ sudo make install
 For generating debug logs,
 1. Set log level
 ``` 
-export FIM_LOG_LEVEL=<severity> 
+export PIM_LOG_LEVEL=<severity> 
 severity
 0 : INFO
 1 : WARNING
 2 : ERROR
 ```
-2. Compile FIMLibrary in Debug mode. (cmake, build and install required) : use all and -d option in build script
+2. Compile PIMLibrary in Debug mode. (cmake, build and install required) : use all and -d option in build script
 3. Execute application. Debug logs will be dumped in /tmp/ directory with date and time as filename.
 
 # Testing
 
-## How to run FimIntegrationTests
+## How to run PimIntegrationTests
 
 ### Run all Tests
 ```
-./build/examples/FimIntegrationTests
+./build/examples/PimIntegrationTests
 ```
 
 [Optional]
 ### List all available Tests
-``./build/examples/FimIntegrationTests --gtest_list_tests``
+``./build/examples/PimIntegrationTests --gtest_list_tests``
 ### Run Single Test
-`` ./build/examples/FimIntegrationTests --gtest_filter_test=<Test from List>``
+`` ./build/examples/PimIntegrationTests --gtest_filter_test=<Test from List>``
 
 ## How to Run MIOpen Tests
-For MIOpenTests to be added to FimIntegration test, -m option need to be enabled during FIMBuild
+For MIOpenTests to be added to PimIntegration test, -m option need to be enabled during PIMBuild
 ```
-./build/examples/FimIntegrationTests --gtest_filter_test=MIOpenIntegrationTests.*
+./build/examples/PimIntegrationTests --gtest_filter_test=MIOpenIntegrationTests.*
 ```
 
 ## How To Run Tensorflow apps
@@ -114,13 +114,13 @@ python3 tf_custom_op/<test_file>
 Please refer to "python_libs/pytorch_setup.md"
 ```
 
-# Profiling of FIM Library
-## FIM Library profiler
-Profiler has been developed for Profiling FIM Library
+# Profiling of PIM Library
+## PIM Library profiler
+Profiler has been developed for Profiling PIM Library
 
 ### Pre requisites
-1. FIMLibrary in debug mode
-   FIM Library need to be build in debug mode for generating debug logs for profiling. Logs will be generated in /tmp/ folder
+1. PIMLibrary in debug mode
+   PIM Library need to be build in debug mode for generating debug logs for profiling. Logs will be generated in /tmp/ folder
 2. Generate MIOpen Logs [Optional]
    MIOpen logs need to be generated for adding MIOpen Level log information in Profiler.
    ``export MIOPEN_ENABLE_LOGGING=1``
@@ -128,7 +128,7 @@ Profiler has been developed for Profiling FIM Library
    For adding GPU profiling data
 
 ### Profiler Usage
-For more details about usage, refer [Profiler](https://github.sec.samsung.net/FIM/FIMLibrary/tree/develop/tools/profiler)
+For more details about usage, refer [Profiler](https://github.sec.samsung.net/PIM/PIMLibrary/tree/develop/tools/profiler)
 
 
 ## ROC-profiler

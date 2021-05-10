@@ -1,8 +1,8 @@
 Visualizer
 
 This component of profiler is responsible for generating graphical representation
-for profile info for FIM. The modules provided by visualizer will be used 
-directly by profiler modules to showcase specific information important for FIM
+for profile info for PIM. The modules provided by visualizer will be used 
+directly by profiler modules to showcase specific information important for PIM
 performance debugging.
 
 

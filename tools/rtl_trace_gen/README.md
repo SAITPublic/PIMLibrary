@@ -7,7 +7,7 @@ this is testing tool for rtl. this generates memory trace and simulation result.
 1. Set ini file (system_hbm_vega20.ini)
 
     - MEM_TRACE_OUTPUT = true
-    - MEM_TRACE_PATH = /tmp/fim_rtl/
+    - MEM_TRACE_PATH = /tmp/pim_rtl/
 
         notice) Do not change path
 

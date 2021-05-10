@@ -6,12 +6,12 @@ from visualizer.Config import get_config
 
 def get_content(plot_type):
 	'''Utility function to get  name and description for different profiler plot pages
-	   plot_type = can either be fim/gpu
+	   plot_type = can either be pim/gpu
 	   Returns name and description
 	'''
-	if plot_type == 'fim' :
-		name = 'FIM SDK Profile Data'
-		desc = ['Timeline plot for FIM SDK executions sequence', 'Stats of FIM Modules execution', 'API Trace and Performance', 'Buffers created']
+	if plot_type == 'pim' :
+		name = 'PIM SDK Profile Data'
+		desc = ['Timeline plot for PIM SDK executions sequence', 'Stats of PIM Modules execution', 'API Trace and Performance', 'Buffers created']
 	elif plot_type == 'gpu' :
 		name = 'GPU Profile Data'
 		desc = ['Timeline plot of kernel operations', 'Stats of kernel execution']

@@ -1,6 +1,6 @@
 import tensorflow as tf
 import numpy as np
-import tf_fim_ops
+import tf_pim_ops
 import timeit
 import argparse
 import os
@@ -21,7 +21,7 @@ parser.add_argument('-i','--iterations', default=10, help="Number of iterations 
 parser.add_argument('-p','--profile', action="store_true", help="Enabled/Disable profiling")
 parser.add_argument('-f','--functional_verify', action="store_true", help="Enabled/Disable Functional verification")
 parser.add_argument('-d','--dtype', default='fp16' , help="fp16 or fp32 execution")
-parser.add_argument('-m','--module', default='keras' , help="keras or fim_custom execution")
+parser.add_argument('-m','--module', default='keras' , help="keras or pim_custom execution")
 
 args = parser.parse_args()
 
@@ -31,9 +31,9 @@ def DummyExecute():
     b = tf.constant([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]])
     c = tf.matmul(a, b)
 
-class FimDenseLayer(tf.keras.layers.Layer):
+class PimDenseLayer(tf.keras.layers.Layer):
     def __init__(self, weight, bias, has_bias, dtype=tf.float16):
-        super(FimDenseLayer, self).__init__()
+        super(PimDenseLayer, self).__init__()
         #print(type(weight))
         self.kernel = weight
         self.bias = bias
@@ -46,7 +46,7 @@ class FimDenseLayer(tf.keras.layers.Layer):
         pass
 
     def call(self, input):
-      return tf_fim_ops.fim_dense(input, self.kernel, self.bias, self.has_bias, self.reorder)
+      return tf_pim_ops.pim_dense(input, self.kernel, self.bias, self.has_bias, self.reorder)
 
 
 class AlexNet(tf.keras.Model):
@@ -113,23 +113,23 @@ class AlexNet(tf.keras.Model):
        weights1 = self.dense1.get_weights()
        has_bias1 = len(weights1) > 1
        if has_bias1 == True:
-           self.fim_dense1 = FimDenseLayer(tf.convert_to_tensor(weights1[0]),tf.convert_to_tensor(weights1[1]),has_bias1, dtype=tf.float16)
+           self.pim_dense1 = PimDenseLayer(tf.convert_to_tensor(weights1[0]),tf.convert_to_tensor(weights1[1]),has_bias1, dtype=tf.float16)
        else:
-           self.fim_dense1 = FimDenseLayer(tf.convert_to_tensor(weights1[0]),tf.constant([0.0],dtype=tf.float16) ,has_bias1, dtype=tf.float16)
+           self.pim_dense1 = PimDenseLayer(tf.convert_to_tensor(weights1[0]),tf.constant([0.0],dtype=tf.float16) ,has_bias1, dtype=tf.float16)
 
        weights2 = self.dense2.get_weights()
        has_bias2 = len(weights2) > 1
        if has_bias2 == True:
-           self.fim_dense2 = FimDenseLayer(tf.convert_to_tensor(weights2[0]),tf.convert_to_tensor(weights2[1]),has_bias2, dtype=tf.float16)
+           self.pim_dense2 = PimDenseLayer(tf.convert_to_tensor(weights2[0]),tf.convert_to_tensor(weights2[1]),has_bias2, dtype=tf.float16)
        else:
-           self.fim_dense2 = FimDenseLayer(tf.convert_to_tensor(weights2[0]),tf.constant([0.0],dtype=tf.float16),has_bias2, dtype=tf.float16)
+           self.pim_dense2 = PimDenseLayer(tf.convert_to_tensor(weights2[0]),tf.constant([0.0],dtype=tf.float16),has_bias2, dtype=tf.float16)
 
        weights3 = self.dense3.get_weights()
        has_bias3 = len(weights3) > 1
        if has_bias3 == True:
-           self.fim_dense3 = FimDenseLayer(tf.convert_to_tensor(weights3[0]),tf.convert_to_tensor(weights3[1]),has_bias3, dtype=tf.float16)
+           self.pim_dense3 = PimDenseLayer(tf.convert_to_tensor(weights3[0]),tf.convert_to_tensor(weights3[1]),has_bias3, dtype=tf.float16)
        else:
-           self.fim_dense3 = FimDenseLayer(tf.convert_to_tensor(weights3[0]),tf.constant([0.0],dtype=tf.float16),has_bias3, dtype=tf.float16)
+           self.pim_dense3 = PimDenseLayer(tf.convert_to_tensor(weights3[0]),tf.constant([0.0],dtype=tf.float16),has_bias3, dtype=tf.float16)
 
 
     def timeit_add(self,layer,index,name,input,output):
@@ -168,17 +168,17 @@ class AlexNet(tf.keras.Model):
 
         if verify:
             x1_gpu = np.copy(x1)
-            x1_fim = np.copy(x1)
+            x1_pim = np.copy(x1)
 
             x2 = self.dense1(x1_gpu)
             x3 = self.dense2(x2)
             x4_gpu = self.dense3(x3)
 
-            x2 = self.fim_dense1(x1_fim)
-            x3 = self.fim_dense2(x2)
-            x4_fim = self.fim_dense3(x3)
+            x2 = self.pim_dense1(x1_pim)
+            x3 = self.pim_dense2(x2)
+            x4_pim = self.pim_dense3(x3)
 
-            result = np.testing.assert_array_almost_equal(x4_gpu, x4_fim, decimal=5)
+            result = np.testing.assert_array_almost_equal(x4_gpu, x4_pim, decimal=5)
             print("Functional Verification : {}".format(result))
             return x4_gpu
         else:
@@ -191,12 +191,12 @@ class AlexNet(tf.keras.Model):
               self.timeit_add(self.dense3,3,"Dense ",x3,x4)
               return x4
             else:
-              x2 = self.fim_dense1(x1)
-              self.timeit_add(self.fim_dense1,1,"Dense ",x1,x2)
-              x3 = self.fim_dense2(x2)
-              self.timeit_add(self.fim_dense2,2,"Dense ",x2,x3)
-              x4 = self.fim_dense3(x3)
-              self.timeit_add(self.fim_dense3,3,"Dense ",x3,x4)
+              x2 = self.pim_dense1(x1)
+              self.timeit_add(self.pim_dense1,1,"Dense ",x1,x2)
+              x3 = self.pim_dense2(x2)
+              self.timeit_add(self.pim_dense2,2,"Dense ",x2,x3)
+              x4 = self.pim_dense3(x3)
+              self.timeit_add(self.pim_dense3,3,"Dense ",x3,x4)
               return x4
 
     def call(self, inputs , verify):
@@ -217,17 +217,17 @@ class AlexNet(tf.keras.Model):
 
         if verify:
             x1_gpu = np.copy(x1)
-            x1_fim = np.copy(x1)
+            x1_pim = np.copy(x1)
 
             x2 = self.dense1(x1_gpu)
             x3 = self.dense2(x2)
             x4_gpu = self.dense3(x3)
 
-            x2 = self.fim_dense1(x1_fim)
-            x3 = self.fim_dense2(x2)
-            x4_fim = self.fim_dense3(x3)
+            x2 = self.pim_dense1(x1_pim)
+            x3 = self.pim_dense2(x2)
+            x4_pim = self.pim_dense3(x3)
 
-            result = np.testing.assert_array_almost_equal(x4_gpu, x4_fim, decimal=5)
+            result = np.testing.assert_array_almost_equal(x4_gpu, x4_pim, decimal=5)
             print("Functional Verification : {}".format(result))
             return x4_gpu
         else:
@@ -237,9 +237,9 @@ class AlexNet(tf.keras.Model):
               x4 = self.dense3(x3)
               return x4
             else:
-              x2 = self.fim_dense1(x1)
-              x3 = self.fim_dense2(x2)
-              x4 = self.fim_dense3(x3)
+              x2 = self.pim_dense1(x1)
+              x3 = self.pim_dense2(x2)
+              x4 = self.pim_dense3(x3)
               return x4
 
 def copy_weights(model,input):
@@ -253,7 +253,7 @@ def copy_weights(model,input):
 
 
 def alexnet_model_run(dtype):
-    tf_fim_ops.fim_init()
+    tf_pim_ops.pim_init()
 
     input   = tf.random.uniform(shape=(args.batch_size, image_height, image_width, channels),dtype=dtype)
     model = AlexNet(dtype)
@@ -283,7 +283,7 @@ def alexnet_model_run(dtype):
 
         print(tabulate(eval_time, headers=["Index", "Layer", "Time(ms)", "Input", "Output"], showindex="always", tablefmt='github'))
 
-    tf_fim_ops.fim_deinit()
+    tf_pim_ops.pim_deinit()
 
 
 if __name__ == '__main__':

@@ -40,7 +40,7 @@ RUN apt-get --yes --allow-unauthenticated install python3-pip
 
 RUN cpan File::Which
 
-# FIM Library requirements
+# PIM Library requirements
 RUN apt-get --yes --allow-unauthenticated install libgoogle-glog-dev
 RUN apt-get update
 
@@ -52,7 +52,7 @@ RUN wget https://dl.google.com/go/go1.11.linux-amd64.tar.gz
 RUN tar -xvf go1.11.linux-amd64.tar.gz
 RUN mv go /usr/local
 
-ENV QWORKSPACE=/home/user/fim-workspace
+ENV QWORKSPACE=/home/user/pim-workspace
 ENV ROCM_PATH=/opt/rocm
 ENV HIP_PATH=${ROCM_PATH}/hip
 ENV HCC_HOME=${ROCM_PATH}/hcc

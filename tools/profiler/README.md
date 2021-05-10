@@ -26,9 +26,9 @@ The profiler output can then been seen from any other machine by going to the fo
 http://<IP address of system where server is running>:5006 
 ```
 
-To execute FimProfiler for any other file, provide name of the files with path in the -g, -f and -m flag after --args flag:
+To execute PimProfiler for any other file, provide name of the files with path in the -g, -f and -m flag after --args flag:
 ```
-bokeh serve --show . --args -g <name_of_gpu_kernels_csv_file_with_path> -f <name_of_fim_log_file_with_path> -m <name_of_miopen_log_file_with_path>
+bokeh serve --show . --args -g <name_of_gpu_kernels_csv_file_with_path> -f <name_of_pim_log_file_with_path> -m <name_of_miopen_log_file_with_path>
 ```
 
 Use -h flag to view help with all command line arguments.

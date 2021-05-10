@@ -1,9 +1,9 @@
-# FIM-PyTorch
+# PIM-PyTorch
 
 ### Setup
 __Step1__: Docker Setup
 ```
-./docker_fim.sh fim-rocm4.0:tf2.4-latest-dev <mapping folder>
+./docker_pim.sh pim-rocm4.0:tf2.4-latest-dev <mapping folder>
 ```
 
 __Step2__: Installing Pytorch
@@ -119,20 +119,20 @@ export PYTHONPATH=${ROCM_PATH}/lib
 export HIP_PATH=${ROCM_PATH}/hip
 export Torch_DIR=/home/user/.local/lib/python3.6/site-packages/torch/share/cmake/Torch
 ```
-__Step4__: Setup FIMLibrary
+__Step4__: Setup PIMLibrary
 ```
-git clone git@github.sec.samsung.net:FIM/FIMLibrary.git
+git clone git@github.sec.samsung.net:PIM/PIMLibrary.git
 
-cd FIMLibrary
+cd PIMLibrary
 
 ./scripts/build.sh all -o . -t radeon7 -e
 
-./build/examples/FimIntegrationTests
+./build/examples/PimIntegrationTests
 ```
 
 __Step5__: Setup MIOpen
 ```
- git clone git@github.sec.samsung.net:FIM/MIOpen.git
+ git clone git@github.sec.samsung.net:PIM/MIOpen.git
 
 cd MIOpen
 
@@ -152,5 +152,5 @@ sudo make install
 ```
 
 ### Testing
-  * Run a sample test case by executing `python examples/pytorch_custom_op/fim_eltwise_add_test.py`
+  * Run a sample test case by executing `python examples/pytorch_custom_op/pim_eltwise_add_test.py`
   * Run a sample custom model by executing `python examples/pytorch_custom_op/test_sample_model.py`

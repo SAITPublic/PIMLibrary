@@ -12,12 +12,12 @@
 #include <iostream>
 #include "hip/hip_runtime.h"
 
-extern "C" uint64_t fmm_map_fim(uint32_t, uint32_t, uint64_t);
+extern "C" uint64_t fmm_map_pim(uint32_t, uint32_t, uint64_t);
 
 #define RADEON7 1
 
-#define FIM_RESERVED_8GB (0x200000000)
-#define FIM_RESERVED_16GB (0x400000000)
+#define PIM_RESERVED_8GB (0x200000000)
+#define PIM_RESERVED_16GB (0x400000000)
 #define CHANNEL (64)
 #define CH_BIT (6)
 
@@ -25,10 +25,10 @@ extern "C" uint64_t fmm_map_fim(uint32_t, uint32_t, uint64_t);
 #define PARK_IN 1
 #define CHANGE_SB_HAB 1
 #define PROGRAM_CRF 1
-#define CHANGE_HAB_HABFIM 1
+#define CHANGE_HAB_HABPIM 1
 #define PROGRAM_CRF 1
 #define COMPUTE_ELT_OP 1
-#define CHANGE_HABFIM_HAB 1
+#define CHANGE_HABPIM_HAB 1
 #define CHANGE_HAB_SB 1
 #define PARK_OUT 1
 
@@ -199,8 +199,8 @@ __device__ uint64_t addr_gen(unsigned int ch, unsigned int rank, unsigned int bg
     return addr;
 }
 
-__global__ void elt_add_fim(uint8_t* operand0, uint8_t* operand1, uint8_t* fim_ctr, uint8_t* output, int num_tile,
-                            uint8_t* crf_binary, int crf_size, uint8_t* hab_to_fim, uint8_t* fim_to_hab)
+__global__ void elt_add_pim(uint8_t* operand0, uint8_t* operand1, uint8_t* pim_ctr, uint8_t* output, int num_tile,
+                            uint8_t* crf_binary, int crf_size, uint8_t* hab_to_pim, uint8_t* pim_to_hab)
 {
 #if PREPARE_KERNEL
     int num_col = 32;
@@ -213,7 +213,7 @@ __global__ void elt_add_fim(uint8_t* operand0, uint8_t* operand1, uint8_t* fim_c
     uint64_t addr, addr_even, addr_odd;
 #endif
     /* Radeon7(VEGA20) memory is 16GB but our target is 32GB system */
-    /* so program_crf and chagne_fim_mode functions can not access to over 8GB in our system */
+    /* so program_crf and chagne_pim_mode functions can not access to over 8GB in our system */
 #if PARK_IN
 
     addr = addr_gen(hipBlockIdx_x, 0, gidx / num_ba, gidx % num_ba, 0, 0);
@@ -225,16 +225,16 @@ __global__ void elt_add_fim(uint8_t* operand0, uint8_t* operand1, uint8_t* fim_c
 #if CHANGE_SB_HAB
     if (hipThreadIdx_x < 2) {
         addr = addr_gen(hipBlockIdx_x, 0, 2, gidx, 0x27ff, 0x1f);
-        W_CMD(&fim_ctr[addr + offset]);
+        W_CMD(&pim_ctr[addr + offset]);
         B_CMD(1);
         addr = addr_gen(hipBlockIdx_x, 0, 2, gidx + 1, 0x27ff, 0x1f);
-        W_CMD(&fim_ctr[addr + offset]);
+        W_CMD(&pim_ctr[addr + offset]);
         B_CMD(1);
         addr = addr_gen(hipBlockIdx_x, 0, 0, gidx, 0x27ff, 0x1f);
-        W_CMD(&fim_ctr[addr + offset]);
+        W_CMD(&pim_ctr[addr + offset]);
         B_CMD(1);
         addr = addr_gen(hipBlockIdx_x, 0, 0, gidx + 1, 0x27ff, 0x1f);
-        W_CMD(&fim_ctr[addr + offset]);
+        W_CMD(&pim_ctr[addr + offset]);
         B_CMD(1);
     }
     B_CMD(0);
@@ -244,15 +244,15 @@ __global__ void elt_add_fim(uint8_t* operand0, uint8_t* operand1, uint8_t* fim_c
 #if PROGRAM_CRF
     if (hipThreadIdx_x < 2 * crf_size) {
         addr = addr_gen(hipBlockIdx_x, 0, 0, 1, 0x3fff, 0x4 + gidx);
-        W_CMD_R(&fim_ctr[addr + offset], crf_binary + hipThreadIdx_x * 16);
+        W_CMD_R(&pim_ctr[addr + offset], crf_binary + hipThreadIdx_x * 16);
     }
     B_CMD(0);
 #endif
 
-#if CHANGE_HAB_HABFIM
+#if CHANGE_HAB_HABPIM
     if (hipThreadIdx_x < 2) {
         addr = addr_gen(hipBlockIdx_x, 0, 0, 0, 0x3fff, 0x0);
-        W_CMD_R(&fim_ctr[addr + offset], hab_to_fim + hipThreadIdx_x * 16);
+        W_CMD_R(&pim_ctr[addr + offset], hab_to_pim + hipThreadIdx_x * 16);
     }
     B_CMD(0);
 #endif
@@ -292,10 +292,10 @@ __global__ void elt_add_fim(uint8_t* operand0, uint8_t* operand1, uint8_t* fim_c
     }
 #endif
 
-#if CHANGE_HABFIM_HAB
+#if CHANGE_HABPIM_HAB
     if (hipThreadIdx_x < 2) {
         addr = addr_gen(hipBlockIdx_x, 0, 0, 0, 0x3fff, 0x0);
-        W_CMD_R(&fim_ctr[addr + offset], fim_to_hab + hipThreadIdx_x * 16);
+        W_CMD_R(&pim_ctr[addr + offset], pim_to_hab + hipThreadIdx_x * 16);
     }
     B_CMD(0);
 #endif
@@ -303,7 +303,7 @@ __global__ void elt_add_fim(uint8_t* operand0, uint8_t* operand1, uint8_t* fim_c
 #if CHANGE_HAB_SB
     if (hipThreadIdx_x < 4) {
         addr = addr_gen(hipBlockIdx_x, 0, 0, gidx, 0x2fff, 0x1f);
-        W_CMD(&fim_ctr[addr + offset]);
+        W_CMD(&pim_ctr[addr + offset]);
     }
     B_CMD(0);
 #endif
@@ -318,15 +318,15 @@ __global__ void elt_add_fim(uint8_t* operand0, uint8_t* operand1, uint8_t* fim_c
 
 int main(int argc, char* argv[])
 {
-    uint64_t fim_base;
+    uint64_t pim_base;
     uint64_t *mode1_d, *mode2_d, *crf_bin_d;
     uint64_t *mode1_h, *mode2_h, *crf_bin_h;
     size_t N = 4;
     size_t Nbytes = N * sizeof(uint64_t);
     static int device = 0;
 
-    int num_fim_blocks = 8;
-    int num_fim_chan = CHANNEL;
+    int num_pim_blocks = 8;
+    int num_pim_chan = CHANNEL;
     int num_grf = 8;
 
     int input_size = 128 * 1024 * sizeof(char);
@@ -353,9 +353,9 @@ int main(int argc, char* argv[])
       ARG2 : gpu-id
       ARG3 : block size
     ********************************************/
-    uint64_t bsize = FIM_RESERVED_8GB;
-    fim_base = fmm_map_fim(1, gpu_id, bsize);
-    std::cout << std::hex << "fimBaseAddr = " << fim_base << std::endl;
+    uint64_t bsize = PIM_RESERVED_8GB;
+    pim_base = fmm_map_pim(1, gpu_id, bsize);
+    std::cout << std::hex << "pimBaseAddr = " << pim_base << std::endl;
 
     crf_bin_h = (uint64_t*)malloc(Nbytes);
     CHECK(crf_bin_h == 0 ? hipErrorOutOfMemory : hipSuccess);
@@ -385,13 +385,13 @@ int main(int argc, char* argv[])
     CHECK(hipMemcpy(mode1_d, mode1_h, Nbytes, hipMemcpyHostToDevice));
     CHECK(hipMemcpy(mode2_d, mode2_h, Nbytes, hipMemcpyHostToDevice));
 
-    int num_tile = (input_size / sizeof(uint16_t)) / (num_fim_blocks * num_fim_chan * num_grf);
+    int num_tile = (input_size / sizeof(uint16_t)) / (num_pim_blocks * num_pim_chan * num_grf);
 
     const unsigned blocks = 64;
     const unsigned threadsPerBlock = 16;
 
-    hipLaunchKernelGGL(elt_add_fim, dim3(blocks), dim3(threadsPerBlock), 0, 0, (uint8_t*)fim_base,
-                       (uint8_t*)fim_base + 0x100000, (uint8_t*)fim_base, (uint8_t*)fim_base + 0x200000, num_tile,
+    hipLaunchKernelGGL(elt_add_pim, dim3(blocks), dim3(threadsPerBlock), 0, 0, (uint8_t*)pim_base,
+                       (uint8_t*)pim_base + 0x100000, (uint8_t*)pim_base, (uint8_t*)pim_base + 0x200000, num_tile,
                        (uint8_t*)crf_bin_d, 1, (uint8_t*)mode1_d, (uint8_t*)mode2_d);
 
     free(mode1_h);

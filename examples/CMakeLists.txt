@@ -9,10 +9,10 @@ if(MIOPEN_APPS)
     file(GLOB MIOPEN_SOURCES miopen/*.cpp)
 endif()
 
-add_executable(FimIntegrationTests ${HIP_SOURCES} ${MIOPEN_SOURCES})
+add_executable(PimIntegrationTests ${HIP_SOURCES} ${MIOPEN_SOURCES})
 
 if(MIOPEN_APPS)
-    target_link_libraries(FimIntegrationTests MIOpen gtest_main gtest FimRuntime)
+    target_link_libraries(PimIntegrationTests MIOpen gtest_main gtest PimRuntime)
 else()
-    target_link_libraries(FimIntegrationTests gtest_main gtest FimRuntime)
+    target_link_libraries(PimIntegrationTests gtest_main gtest PimRuntime)
 endif()

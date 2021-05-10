@@ -3,10 +3,10 @@
 This test app is implemented based on 32GB memory with 32 channel.
 You need to reserve 16GB memory size using ROCK patch before execute this test app.
 
-This is the test code for eltwise-add operation on FIM.
-The kernel includes just adding part of the fim-elt-add.
+This is the test code for eltwise-add operation on PIM.
+The kernel includes just adding part of the pim-elt-add.
 It can be used to verify memory transactions are generated properly.
-elt_add_fim.cpp requires a driver patch for FIM to get a base physical address of FIM area.
+elt_add_pim.cpp requires a driver patch for PIM to get a base physical address of PIM area.
 
 # Install ROCT and ROCK
 

@@ -18,8 +18,8 @@
 #include <utility>
 #include <vector>
 
-#include "utility/fim_dump.hpp"
-#include "utility/fim_profile.h"
+#include "utility/pim_dump.hpp"
+#include "utility/pim_profile.h"
 #define LENGTH (128 * 1024)
 
 int miopen_elt_add()
@@ -135,13 +135,13 @@ int miopen_elt_add_batch_profile(int batch)
     return ret;
 }
 
-TEST(MIOpenIntegrationTest, MIOpenFimEltAdd) { EXPECT_TRUE(miopen_elt_add() == 0); }
-TEST(MIOpenIntegrationTest, MIOpenFimEltAddBatchProfile1) { EXPECT_TRUE(miopen_elt_add_batch_profile(1) == 0); }
-TEST(MIOpenIntegrationTest, MIOpenFimEltAddBatchProfile2) { EXPECT_TRUE(miopen_elt_add_batch_profile(2) == 0); }
-TEST(MIOpenIntegrationTest, MIOpenFimEltAddBatchProfile4) { EXPECT_TRUE(miopen_elt_add_batch_profile(4) == 0); }
-TEST(MIOpenIntegrationTest, MIOpenFimEltAddBatchProfile8) { EXPECT_TRUE(miopen_elt_add_batch_profile(8) == 0); }
-TEST(MIOpenIntegrationTest, MIOpenFimEltAddBatchProfile16) { EXPECT_TRUE(miopen_elt_add_batch_profile(16) == 0); }
-TEST(MIOpenIntegrationTest, MIOpenFimEltAddBatchProfile32) { EXPECT_TRUE(miopen_elt_add_batch_profile(32) == 0); }
-TEST(MIOpenIntegrationTest, MIOpenFimEltAddBatchProfile64) { EXPECT_TRUE(miopen_elt_add_batch_profile(64) == 0); }
-TEST(MIOpenIntegrationTest, MIOpenFimEltAddBatchProfile128) { EXPECT_TRUE(miopen_elt_add_batch_profile(128) == 0); }
-TEST(MIOpenIntegrationTest, MIOpenFimEltAddBatchProfile256) { EXPECT_TRUE(miopen_elt_add_batch_profile(256) == 0); }
+TEST(MIOpenIntegrationTest, MIOpenPimEltAdd) { EXPECT_TRUE(miopen_elt_add() == 0); }
+TEST(MIOpenIntegrationTest, MIOpenPimEltAddBatchProfile1) { EXPECT_TRUE(miopen_elt_add_batch_profile(1) == 0); }
+TEST(MIOpenIntegrationTest, MIOpenPimEltAddBatchProfile2) { EXPECT_TRUE(miopen_elt_add_batch_profile(2) == 0); }
+TEST(MIOpenIntegrationTest, MIOpenPimEltAddBatchProfile4) { EXPECT_TRUE(miopen_elt_add_batch_profile(4) == 0); }
+TEST(MIOpenIntegrationTest, MIOpenPimEltAddBatchProfile8) { EXPECT_TRUE(miopen_elt_add_batch_profile(8) == 0); }
+TEST(MIOpenIntegrationTest, MIOpenPimEltAddBatchProfile16) { EXPECT_TRUE(miopen_elt_add_batch_profile(16) == 0); }
+TEST(MIOpenIntegrationTest, MIOpenPimEltAddBatchProfile32) { EXPECT_TRUE(miopen_elt_add_batch_profile(32) == 0); }
+TEST(MIOpenIntegrationTest, MIOpenPimEltAddBatchProfile64) { EXPECT_TRUE(miopen_elt_add_batch_profile(64) == 0); }
+TEST(MIOpenIntegrationTest, MIOpenPimEltAddBatchProfile128) { EXPECT_TRUE(miopen_elt_add_batch_profile(128) == 0); }
+TEST(MIOpenIntegrationTest, MIOpenPimEltAddBatchProfile256) { EXPECT_TRUE(miopen_elt_add_batch_profile(256) == 0); }

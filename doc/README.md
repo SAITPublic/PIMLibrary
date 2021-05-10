@@ -1,1 +1,1 @@
-This folder is to contain fim documentation for sw developer
+This folder is to contain pim documentation for sw developer

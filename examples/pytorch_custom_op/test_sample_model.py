@@ -2,22 +2,22 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-import py_fim_ops
-from py_fim_ops import FimEltwise, FimBN, FimActivation, FimGemv
+import py_pim_ops
+from py_pim_ops import PimEltwise, PimBN, PimActivation, PimGemv
 
 
 class SampleNetwork(nn.Module):
     def __init__(self):
         super(SampleNetwork, self).__init__()
 
-        self.bn1 = FimBN(num_features=3, eps=1e-5)
-        self.relu1 = FimActivation()
+        self.bn1 = PimBN(num_features=3, eps=1e-5)
+        self.relu1 = PimActivation()
 
-        self.bn2 = FimBN(num_features=3, eps=1e-5)
-        self.relu2 = FimActivation()
+        self.bn2 = PimBN(num_features=3, eps=1e-5)
+        self.relu2 = PimActivation()
 
-        self.add = FimEltwise(operation=0)
-        self.fc = FimGemv(in_features=2352, out_features=16, reorder=1)
+        self.add = PimEltwise(operation=0)
+        self.fc = PimGemv(in_features=2352, out_features=16, reorder=1)
 
     def forward(self, x1, x2):
         x1 = self.bn1(x1)
@@ -40,7 +40,7 @@ if __name__ == '__main__':
         np.random.uniform(-500, 500, size=[2, 3, 28, 28]).astype(np.float16))
 
     model = SampleNetwork()
-    py_fim_ops.py_fim_init()
+    py_pim_ops.py_pim_init()
     output = model(inp1, inp2)
-    py_fim_ops.py_fim_deinit()
+    py_pim_ops.py_pim_deinit()
     print("==>Output Tensor size is: ", output.size())

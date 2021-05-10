@@ -2,6 +2,6 @@
 
 int main(void)
 {
-    std::cout << "fim profiler" << std::endl;
+    std::cout << "pim profiler" << std::endl;
     return 0;
 }

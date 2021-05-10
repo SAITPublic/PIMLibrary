@@ -9,7 +9,7 @@
  */
 
 #include <iostream>
-#include "fim_crf_gen_api.h"
+#include "pim_crf_gen_api.h"
 
 int main(void)
 {
@@ -19,8 +19,8 @@ int main(void)
         0,
     };
 
-    FimCommand test_cmd(FimCmdType::MAC, FimOpdType::GRF_B, FimOpdType::GRF_A, FimOpdType::GRF_A, 1, 0, 0, 0);
-    // FimCommand test_cmd(FimCmdType::MAC, FimOpdType::GRF_B, FimOpdType::GRF_A, FimOpdType::EVEN_BANK, 1,0,0,0);
+    PimCommand test_cmd(PimCmdType::MAC, PimOpdType::GRF_B, PimOpdType::GRF_A, PimOpdType::GRF_A, 1, 0, 0, 0);
+    // PimCommand test_cmd(PimCmdType::MAC, PimOpdType::GRF_B, PimOpdType::GRF_A, PimOpdType::EVEN_BANK, 1,0,0,0);
     std::cout << ConvertToBinary(test_cmd, buffer) << std::endl;
 
     return 0;
@@ -28,11 +28,11 @@ int main(void)
 
 // void test_operand_check()
 // {
-//     FimCmdType test_cmd[4] = {FimCmdType::MUL, FimCmdType::ADD, FimCmdType::MAC, FimCmdType::MAD};
-//     FimOpdType test_src[6] = {FimOpdType::GRF_A,    FimOpdType::GRF_B, FimOpdType::EVEN_BANK,
-//                               FimOpdType::ODD_BANK, FimOpdType::SRF_M, FimOpdType::SRF_A};
-//     FimOpdType test_src2[7] = {FimOpdType::A_OUT,    FimOpdType::GRF_A, FimOpdType::GRF_B, FimOpdType::EVEN_BANK,
-//                                FimOpdType::ODD_BANK, FimOpdType::SRF_M, FimOpdType::SRF_A};
+//     PimCmdType test_cmd[4] = {PimCmdType::MUL, PimCmdType::ADD, PimCmdType::MAC, PimCmdType::MAD};
+//     PimOpdType test_src[6] = {PimOpdType::GRF_A,    PimOpdType::GRF_B, PimOpdType::EVEN_BANK,
+//                               PimOpdType::ODD_BANK, PimOpdType::SRF_M, PimOpdType::SRF_A};
+//     PimOpdType test_src2[7] = {PimOpdType::A_OUT,    PimOpdType::GRF_A, PimOpdType::GRF_B, PimOpdType::EVEN_BANK,
+//                                PimOpdType::ODD_BANK, PimOpdType::SRF_M, PimOpdType::SRF_A};
 
 //     cmds_.clear();
 
@@ -42,9 +42,9 @@ int main(void)
 //                 for (int src0_idx = 0; src0_idx < 6; src0_idx++) {
 //                     for (int src1_idx = 0; src1_idx < 6; src1_idx++) {
 //                         for (int cmd_idx = 0; cmd_idx < 4; cmd_idx++) {
-//                             FimCommand test_fim(test_cmd[cmd_idx], test_src[dst_idx], test_src[src0_idx],
+//                             PimCommand test_pim(test_cmd[cmd_idx], test_src[dst_idx], test_src[src0_idx],
 //                                                 test_src[src1_idx], test_src2[src2_idx], auto_idx);
-//                             cmds_.push_back(test_fim);
+//                             cmds_.push_back(test_pim);
 //                         }
 //                     }
 //                 }

@@ -22,12 +22,12 @@ from six.moves import xrange    # pylint: disable=redefined-builtin
 import tensorflow as tf
 from tensorflow.keras import Input
 from tensorflow.keras import Model
-import tf_fim_ops
+import tf_pim_ops
 import timeit
 import argparse
 from tabulate import tabulate
 import os
-import tf_fim_ops as fim_ops
+import tf_pim_ops as pim_ops
 
 SEED = 1234
 
@@ -69,7 +69,7 @@ parser.add_argument('-i','--iterations', default=100, help="Number of iterations
 parser.add_argument('-p','--profile', action="store_true", help="Enabled/Disable profiling")
 parser.add_argument('-f','--functional_verify', action="store_true", help="Enabled/Disable Functional verification")
 parser.add_argument('-d','--dtype', default='fp16' , help="fp16 or fp32 execution")
-parser.add_argument('-m','--module', default='keras' , help="keras or fim_custom execution")
+parser.add_argument('-m','--module', default='keras' , help="keras or pim_custom execution")
 
 args = parser.parse_args()
 
@@ -157,7 +157,7 @@ class conv_bn_layer(tf.keras.layers.Layer):
 
         return retval
 
-class rnn_fim_layer(tf.keras.layers.Layer):
+class rnn_pim_layer(tf.keras.layers.Layer):
     """Defines a batch normalization + rnn layer.
     Args:
         inputs: input tensors for the current layer.
@@ -175,7 +175,7 @@ class rnn_fim_layer(tf.keras.layers.Layer):
     """
 
     def __init__(self, rnn_hidden_size, num_layers, is_batch_norm, is_bidirectional, dtype=tf.float16):
-        super(rnn_fim_layer, self).__init__()
+        super(rnn_pim_layer, self).__init__()
         self.is_batch_norm = is_batch_norm
         self.float_type = dtype
         self.is_bi_direction = is_bidirectional
@@ -203,7 +203,7 @@ class rnn_fim_layer(tf.keras.layers.Layer):
 
     def call(self, inputs):
         inputs = np.expand_dims(inputs, 0)
-        result, hidden_out, cell_out, ws = tf_fim_ops.fim_lstm(
+        result, hidden_out, cell_out, ws = tf_pim_ops.pim_lstm(
                                                             inputs,
                                                             self.weights_ext,
                                                             self.hidden_states,
@@ -214,7 +214,7 @@ class rnn_fim_layer(tf.keras.layers.Layer):
         rnn_output = np.expand_dims(result[0],0)
 
         if args.profile == True :
-            eval_time.append(["LSTM ",(timeit.timeit(lambda: tf_fim_ops.fim_lstm(
+            eval_time.append(["LSTM ",(timeit.timeit(lambda: tf_pim_ops.pim_lstm(
                                             inputs,
                                             self.weights_ext,
                                             self.hidden_states,
@@ -311,7 +311,7 @@ def get_params(kernel , recurrent_kernel , bias = None):
                     transpose_weights=True)
     return params
 
-#Todo: fim.lstm , bias is disabled for now
+#Todo: pim.lstm , bias is disabled for now
 def get_keras_lstm_weight(model , count , bi_dir=False, add_bias=True):
 
     for i in range(count):
@@ -380,7 +380,7 @@ class DeepSpeech2(tf.keras.Model):
                                                layer_id=layer_counter + 1, is_batch_norm=is_batch_norm,
                                                dtype=self.float_type, initializer=kernel_initializer))
 
-            self.lstm_fim = rnn_fim_layer(rnn_hidden_size=self.rnn_hidden_size,
+            self.lstm_pim = rnn_pim_layer(rnn_hidden_size=self.rnn_hidden_size,
                                       num_layers = self.num_rnn_layers,
                                       is_batch_norm = True,
                                       is_bidirectional = True,
@@ -389,8 +389,8 @@ class DeepSpeech2(tf.keras.Model):
 
         self.bnorm = batch_norm(dtype=self.float_type)
         self.dense = tf.keras.layers.Dense(self.num_classes, use_bias=self.use_bias, dtype=self.float_type)
-        self.fim_dense_weights =  tf.random.uniform(shape=(rnn_hidden_size*2 , num_classes), dtype=tf.float16)
-        self.fim_dense_bias = tf.random.uniform(shape=[num_classes], dtype=tf.float16)
+        self.pim_dense_weights =  tf.random.uniform(shape=(rnn_hidden_size*2 , num_classes), dtype=tf.float16)
+        self.pim_dense_bias = tf.random.uniform(shape=[num_classes], dtype=tf.float16)
         self.reorder = tf.constant([1])
         self.use_bias_int  = tf.constant([1])
         if self.use_bias == False:
@@ -411,29 +411,29 @@ class DeepSpeech2(tf.keras.Model):
                 (timeit.timeit(lambda: self.rshape(inputs=conv2), number = args.iterations)), conv2.shape, output.shape])
 
         if args.functional_verify:
-            orig_env = os.environ['ENABLE_FIM']
+            orig_env = os.environ['ENABLE_PIM']
 
             reshape_out_gpu = np.copy(output)
-            reshape_out_fim = np.copy(output)
-            os.environ['ENABLE_FIM'] = '0'
+            reshape_out_pim = np.copy(output)
+            os.environ['ENABLE_PIM'] = '0'
 
             for layer_counter in xrange(self.num_rnn_layers):
                 reshape_out_gpu = self.lstm[layer_counter](reshape_out_gpu, training)
 
-            os.environ['ENABLE_FIM'] = '1'
+            os.environ['ENABLE_PIM'] = '1'
             if args.module == 'keras':
                 for layer_counter in xrange(self.num_rnn_layers):
-                    reshape_out_fim = self.lstm[layer_counter](reshape_out_fim, training)
+                    reshape_out_pim = self.lstm[layer_counter](reshape_out_pim, training)
             else:
-                reshape_out_fim = self.lstm_fim(reshape_out_fim)
+                reshape_out_pim = self.lstm_pim(reshape_out_pim)
 
-            os.environ['ENABLE_FIM'] = orig_env
+            os.environ['ENABLE_PIM'] = orig_env
 
-            result = np.testing.assert_array_almost_equal(reshape_out_fim, reshape_out_gpu, decimal=5)
+            result = np.testing.assert_array_almost_equal(reshape_out_pim, reshape_out_gpu, decimal=5)
             print("Functional Verification : {}".format(result))
 
             if orig_env == 1:
-                output = reshape_out_fim
+                output = reshape_out_pim
             else:
                 output = reshape_out_gpu
         else:
@@ -442,7 +442,7 @@ class DeepSpeech2(tf.keras.Model):
                 for layer_counter in xrange(self.num_rnn_layers):
                     output = self.lstm[layer_counter](output, training)
             else:
-                output = self.lstm_fim(output)
+                output = self.lstm_pim(output)
 
         # Batch Normalization
         bn_out = self.bnorm(output, training)
@@ -451,13 +451,13 @@ class DeepSpeech2(tf.keras.Model):
         logits = self.dense(bn_out)
 
         if args.functional_verify:
-            #No need to track ENABLE_FIM , since miopen not used for dense.
+            #No need to track ENABLE_PIM , since miopen not used for dense.
             weights = self.dense.get_weights()
-            bias = fim_dense_bias
+            bias = pim_dense_bias
             if self.use_bias == True:
                     bias = weights[1]
-            fim_logits = tf_fim_ops.fim_dense(bn_out, weights[0], bias, self.use_bias_int, self.reorder)
-            tf.test.TestCase.assertAllClose(logits, fim_logits, atol=1e-3)
+            pim_logits = tf_pim_ops.pim_dense(bn_out, weights[0], bias, self.use_bias_int, self.reorder)
+            tf.test.TestCase.assertAllClose(logits, pim_logits, atol=1e-3)
 
         if args.profile == True :
             print(" Dense input shape {}".format(bn_out.shape))
@@ -466,9 +466,9 @@ class DeepSpeech2(tf.keras.Model):
                 eval_time.append(["Dense",
                     (timeit.timeit(lambda: self.dense(inputs=bn_out), number = args.iterations)), bn_out.shape, logits.shape])
             else:
-                logits = tf_fim_ops.fim_dense(bn_out, self.fim_dense_weights, self.fim_dense_bias, self.use_bias_int, self.reorder)
+                logits = tf_pim_ops.pim_dense(bn_out, self.pim_dense_weights, self.pim_dense_bias, self.use_bias_int, self.reorder)
                 eval_time.append(["Dense",
-                    (timeit.timeit(lambda: tf_fim_ops.fim_dense(bn_out, self.fim_dense_weights, self.fim_dense_bias, self.use_bias_int, self.reorder), number = args.iterations)), bn_out.shape, logits.shape])
+                    (timeit.timeit(lambda: tf_pim_ops.pim_dense(bn_out, self.pim_dense_weights, self.pim_dense_bias, self.use_bias_int, self.reorder), number = args.iterations)), bn_out.shape, logits.shape])
 
             print(" Dense output shape {}".format(logits.shape))
         return logits
@@ -486,7 +486,7 @@ def profile_ds2(dtype):
     x = tf.random.uniform(shape=(args.batch_size, INPUT_HEIGHT, INPUT_WIDTH, 1), dtype=dtype)
 
     if args.profile:
-        # For initialization of GPU and FIM preloading
+        # For initialization of GPU and PIM preloading
         args.profile = False
         res = model(x)
         args.profile = True
@@ -509,10 +509,10 @@ def profile_ds2(dtype):
         print(tabulate(eval_time, headers=["Index", "Layer", "Time(ms)", "Input Shape", "Output Shape"], showindex="always", tablefmt='github'))
 
 if __name__ == '__main__':
-    tf_fim_ops.fim_init()
+    tf_pim_ops.pim_init()
     print('User arguments {}'.format(args))
     dtype = tf.float16
     if args.dtype == 'fp32':
         dtype = tf.float32
     profile_ds2(dtype)
-    tf_fim_ops.fim_deinit()
+    tf_pim_ops.pim_deinit()

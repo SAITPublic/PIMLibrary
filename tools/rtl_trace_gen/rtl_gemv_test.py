@@ -6,7 +6,7 @@ import sys
 import shutil
 import tensorflow as tf
 import numpy as np
-import tf_fim_ops
+import tf_pim_ops
 
 tf.debugging.set_log_device_placement(True)
 np.set_printoptions(threshold=sys.maxsize)
@@ -45,15 +45,15 @@ class GemvTest(tf.test.TestCase):
                     minval=minv,
                     maxval=maxv,
                     dtype=tf.dtypes.float16)
-                tf_fim_ops.fim_init()
+                tf_pim_ops.pim_init()
                 golden = tf.linalg.matmul(a, b)
-                result = tf_fim_ops.fim_gemv(a, b, tf.constant([1]))
-                tf_fim_ops.fim_deinit()
+                result = tf_pim_ops.pim_gemv(a, b, tf.constant([1]))
+                tf_pim_ops.pim_deinit()
                 
                 trace_file_name = "trace_file_" + str(batch)+ "x"+str(size[0]) + "x" + str(size[1])
                 golden_file_name = "golden_file_" + str(batch)+ "x"+str(size[0]) + "x" + str(size[1])
-                shutil.copyfile("/tmp/fim_rtl/mem_trace_debug.txt",  "rtl_tv/" + trace_file_name)
-                shutil.copyfile("/tmp/fim_rtl/rtl_output_golden.txt",  "rtl_tv/" + golden_file_name)
+                shutil.copyfile("/tmp/pim_rtl/mem_trace_debug.txt",  "rtl_tv/" + trace_file_name)
+                shutil.copyfile("/tmp/pim_rtl/rtl_output_golden.txt",  "rtl_tv/" + golden_file_name)
 
                 try:
                     self.assertAllClose(result, golden, rtol=5e-1)

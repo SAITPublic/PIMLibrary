@@ -2,7 +2,7 @@ import tensorflow as tf
 from tabulate import tabulate
 
 import time
-import tf_fim_ops
+import tf_pim_ops
 import timeit
 import argparse
 import os
@@ -88,20 +88,20 @@ class Encoder(tf.keras.Model):
         print('encoder embed output dimensions(batch, timestep, units): {}'.format(x.shape))
 
     if args.functional_verify:
-        orig_env = os.environ['ENABLE_FIM']
+        orig_env = os.environ['ENABLE_PIM']
 
-        os.environ['ENABLE_FIM'] = '0'
+        os.environ['ENABLE_PIM'] = '0'
         output_gpu, h_state_gpu, c_state_gpu = self.lstm_encoder(x)
 
-        os.environ['ENABLE_FIM'] = '1'
-        output_fim, h_state_fim, c_state_fim = self.lstm_encoder(x)
+        os.environ['ENABLE_PIM'] = '1'
+        output_pim, h_state_pim, c_state_pim = self.lstm_encoder(x)
 
-        os.environ['ENABLE_FIM'] = orig_env
+        os.environ['ENABLE_PIM'] = orig_env
 
-        result = np.testing.assert_array_almost_equal(output_fim, output_gpu, decimal=5)
+        result = np.testing.assert_array_almost_equal(output_pim, output_gpu, decimal=5)
         print("Functional Verification : {}".format(result))
-        if os.environ['ENABLE_FIM']:
-            output, h_state, c_state = output_fim, h_state_fim, c_state_fim
+        if os.environ['ENABLE_PIM']:
+            output, h_state, c_state = output_pim, h_state_pim, c_state_pim
         else:
             output, h_state, c_state = output_gpu, h_state_gpu, c_state_gpu
     else:
@@ -315,7 +315,7 @@ def evaluate(inputs, encoder, decoder, dtype, h_state, c_state, dec_input, max_l
     return predictions
 
 def gnmt_model_run(dtype):
-    tf_fim_ops.fim_init()
+    tf_pim_ops.pim_init()
     initializer = tf.keras.initializers.RandomNormal(seed=SEED)
     encoder, decoder = create_gnmt_model(VOCAB_SIZE, EMBEDDING_DIM, HIDDEN_SIZE, args.max_seq_length, args.batch_size, initializer, dtype)
 
@@ -352,7 +352,7 @@ def gnmt_model_run(dtype):
         print(tabulate(eval_time, headers=["Index", "Layer", "Time(ms)", "Input", "Output"], showindex="always", tablefmt='github'))
         args.profile = True
 
-    tf_fim_ops.fim_deinit()
+    tf_pim_ops.pim_deinit()
 
 if __name__ == '__main__':
     print('User arguments {}'.format(args))

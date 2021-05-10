@@ -16,7 +16,7 @@ import timeit
 import argparse
 from tabulate import tabulate
 import os
-import tf_fim_ops
+import tf_pim_ops
 
 tf.keras.backend.set_floatx('float16')
 """   [rnnt] config info """
@@ -218,7 +218,7 @@ def DummyExecute():
 
 if __name__ == '__main__':
     print('User arguments {}'.format(args))
-    tf_fim_ops.fim_init()
+    tf_pim_ops.pim_init()
     rnnt_model = RNNT(OUTPUT_SIZE)
     DummyExecute()
 
@@ -243,4 +243,4 @@ if __name__ == '__main__':
             eval_time,
             headers=["Layer", "Time(ms)", "Input Shape", "Output Shape"]))
 
-    tf_fim_ops.fim_deinit()
+    tf_pim_ops.pim_deinit()

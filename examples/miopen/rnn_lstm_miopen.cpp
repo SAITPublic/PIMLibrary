@@ -17,9 +17,9 @@
 #include <memory>
 #include <utility>
 #include <vector>
-#include "fim_runtime_api.h"
+#include "pim_runtime_api.h"
 #include "half.hpp"
-#include "utility/fim_dump.hpp"
+#include "utility/pim_dump.hpp"
 #define LENGTH (64 * 1024)
 
 using half_float::half;
@@ -37,8 +37,8 @@ inline int compare_data_round_off(half *data_a, half *data_b, size_t size, doubl
 
 int miopen_rnn_lstm()
 {
-    /* __FIM_API__ call : Initialize FimRuntime */
-    FimInitialize(RT_TYPE_HIP, FIM_FP16);
+    /* __PIM_API__ call : Initialize PimRuntime */
+    PimInitialize(RT_TYPE_HIP, PIM_FP16);
 
     void *in_dev, *hx_dev, *out_dev, *wei_dev, *cx_dev, *workspace_dev, *hy_dev, *cy_dev;
     miopenTensorDescriptor_t input_tensor, hidden_tensor, weight_tensor, output_tensor;
@@ -217,8 +217,8 @@ int miopen_rnn_lstm()
 
     free(golden);
 
-    /* __FIM_API__ call : Deinitialize FimRuntime */
-    FimDeinitialize();
+    /* __PIM_API__ call : Deinitialize PimRuntime */
+    PimDeinitialize();
 
     return ret;
 }

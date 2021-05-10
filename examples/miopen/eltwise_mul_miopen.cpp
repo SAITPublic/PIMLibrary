@@ -18,8 +18,8 @@
 #include <utility>
 #include <vector>
 
-#include "utility/fim_dump.hpp"
-#include "utility/fim_profile.h"
+#include "utility/pim_dump.hpp"
+#include "utility/pim_profile.h"
 #define LENGTH (128 * 1024)
 
 int miopen_elt_mul()
@@ -83,4 +83,4 @@ int miopen_elt_mul()
     return ret;
 }
 
-TEST(MIOpenIntegrationTest, MIOpenFimEltMul) { EXPECT_TRUE(miopen_elt_mul() == 0); }
+TEST(MIOpenIntegrationTest, MIOpenPimEltMul) { EXPECT_TRUE(miopen_elt_mul() == 0); }
