@@ -37,8 +37,8 @@
 #include "Bank.h"
 #include "BankState.h"
 #include "BusPacket.h"
-#include "FIMBlock.h"
-#include "FIMCmd.h"
+#include "PIMBlock.h"
+#include "PIMCmd.h"
 #include "SimulatorObject.h"
 #include "SystemConfiguration.h"
 
@@ -83,15 +83,15 @@ class Rank : public SimulatorObject
 
     void read_sb(BusPacket* packet);
     void read_hab(BusPacket* packet);
-    //    void read_fim(BusPacket* packet);
+    //    void read_pim(BusPacket* packet);
     void write_sb(BusPacket* packet);
     void write_hab(BusPacket* packet);
-    //    void write_fim(BusPacket* packet);
-    void do_fim(BusPacket* packet);
-    void control_fim(BusPacket* packet);
+    //    void write_pim(BusPacket* packet);
+    void do_pim(BusPacket* packet);
+    void control_pim(BusPacket* packet);
 
-    void read_opd(int fb, BurstType& bst, fim_opd_type type, BusPacket* packet, int idx, bool is_auto, bool is_mac);
-    void write_opd(int fb, BurstType& bst, fim_opd_type type, BusPacket* packet, int idx, bool is_auto, bool is_mac);
+    void read_opd(int fb, BurstType& bst, pim_opd_type type, BusPacket* packet, int idx, bool is_auto, bool is_mac);
+    void write_opd(int fb, BurstType& bst, pim_opd_type type, BusPacket* packet, int idx, bool is_auto, bool is_mac);
     void time_checker(BusPacket* packet);
     void start_time_check(BusPacket* packet, string time_tag, uint64_t* timer);
     void end_time_check(BusPacket* packet, string time_tag, uint64_t* timer, uint64_t* total_timer = NULL);
@@ -109,19 +109,19 @@ class Rank : public SimulatorObject
     vector<Bank> banks;
     vector<BankState> bankStates;
 
-    bool fim_timer_on;
-    uint64_t fim_start_time;
+    bool pim_timer_on;
+    uint64_t pim_start_time;
     uint64_t park_in_time;
     uint64_t park_out_time;
-    uint64_t fim_time;
+    uint64_t pim_time;
     uint64_t transition_time;
     uint64_t counter_act;
     uint64_t total_transition_time;
 
-    fim_mode mode_;
-    vector<fim_block_t> fimblocks;
+    pim_mode mode_;
+    vector<pim_block_t> pimblocks;
 
-    int FIM_PC_;
+    int PIM_PC_;
     int last_jump_idx_;
     int num_jump_to_be_taken_;
     int last_repeat_idx_;
@@ -134,7 +134,7 @@ class Rank : public SimulatorObject
     bool sbmr1;
     bool sbmr2;
 
-    bool fim_op_mode;
+    bool pim_op_mode;
     bool toggle_even_bank;
     bool toggle_odd_bank;
     bool toggle_ra12h;
@@ -146,11 +146,11 @@ class Rank : public SimulatorObject
     const char* get_mode_color()
     {
         switch (mode_) {
-            case fim_mode::SB:
+            case pim_mode::SB:
                 return END;
-            case fim_mode::HAB:
+            case pim_mode::HAB:
                 return GREEN;
-            case fim_mode::HAB_FIM:
+            case pim_mode::HAB_PIM:
                 return CYAN;
         }
     }

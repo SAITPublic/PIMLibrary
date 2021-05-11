@@ -67,8 +67,7 @@ class MemorySystem : public MemoryObject
 
     virtual bool addTransaction(Transaction* trans);
     virtual bool addTransaction(bool isWrite, uint64_t addr, BurstType* data);
-    virtual bool addTransaction(bool isWrite, uint64_t addr, const char* tag, BurstType* data);
-    virtual bool addTransaction(bool isWrite, uint64_t addr, std::string tag, BurstType* data);
+    virtual bool addTransaction(bool isWrite, uint64_t addr, const std::string& tag, BurstType* data);
 
     bool addBarrier();
     bool WillAcceptTransaction();

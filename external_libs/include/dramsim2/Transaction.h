@@ -64,7 +64,7 @@ class Transaction
     friend ostream& operator<<(ostream& os, const Transaction& t);
     // functions
     Transaction(TransactionType transType, uint64_t addr, BurstType* dat);
-    Transaction(TransactionType transType, uint64_t addr, BurstType* dat, std::string tag);
+    Transaction(TransactionType transType, uint64_t addr, const std::string& str, BurstType* dat);
     Transaction(const Transaction& t);
 
     BusPacketType getBusPacketType()

@@ -66,9 +66,9 @@ extern bool DEBUG_POWER;
 extern bool USE_LOW_POWER;
 extern bool VIS_FILE_OUTPUT;
 extern bool PRINT_CHAN_STAT;
-extern bool DEBUG_FIM_TIME;
+extern bool DEBUG_PIM_TIME;
 extern bool DEBUG_CMD_TRACE;
-extern bool DEBUG_FIM_BLOCK;
+extern bool DEBUG_PIM_BLOCK;
 
 extern uint64_t TOTAL_STORAGE;
 extern unsigned NUM_BANKS;
@@ -81,7 +81,7 @@ extern unsigned NUM_ROWS;
 extern unsigned NUM_ROWS_LOG;
 extern unsigned NUM_COLS;
 extern unsigned NUM_COLS_LOG;
-extern unsigned NUM_FIM_BLOCKS;
+extern unsigned NUM_PIM_BLOCKS;
 extern unsigned FENCE_CYCLE;
 
 /* ---------------------- */
@@ -142,10 +142,8 @@ extern unsigned tRTPL;
 extern unsigned tRTPS;
 
 extern std::string SIM_TRACE_FILE;
-extern std::string MEM_TRACE_PATH;
 extern bool SHOW_SIM_OUTPUT;
 extern bool LOG_OUTPUT;
-extern bool MEM_TRACE_OUTPUT;
 
 #define READ_TO_PRE_DELAY (AL + BL / 2 + max(tRTPL, tCCDL) - tCCDL)
 #define READ_TO_PRE_DELAY_LONG (AL + BL / 2 + max(tRTPL, tCCDL) - tCCDL)
@@ -191,7 +189,7 @@ extern unsigned EPOCH_LENGTH;
 
 extern unsigned TOTAL_ROW_ACCESSES;
 
-extern std::string FIM_PRECISION;
+extern std::string PIM_PRECISION;
 
 extern std::string ROW_BUFFER_POLICY;
 extern std::string SCHEDULING_POLICY;
@@ -258,12 +256,12 @@ enum RowBufferPolicy { OpenPage, ClosePage };
 enum QueuingStructure { PerRank, PerRankPerBank };
 enum SchedulingPolicy { RankThenBankRoundRobin, BankThenRankRoundRobin };
 
-enum FIMMode { mac_in_bankgroup, mac_in_bank };
-enum FIMPrecision { FP16, INT8, FP32 };
+enum PIMMode { mac_in_bankgroup, mac_in_bank };
+enum PIMPrecision { FP16, INT8, FP32 };
 
-enum class fim_mode { SB, HAB, HAB_FIM };
+enum class pim_mode { SB, HAB, HAB_PIM };
 
-enum class fim_bank_type { EVEN_BANK, ODD_BANK, ALL_BANK };
+enum class pim_bank_type { EVEN_BANK, ODD_BANK, ALL_BANK };
 enum TestKernelType {
     ADD_16,
     ADD_16_NOP,
@@ -286,9 +284,9 @@ extern RowBufferPolicy rowBufferPolicy;
 extern SchedulingPolicy schedulingPolicy;
 extern AddressMappingScheme addressMappingScheme;
 extern QueuingStructure queuingStructure;
-extern FIMMode fimMode;
-extern FIMPrecision fimPrecision;
-extern int fimDataLength;
+extern PIMMode pimMode;
+extern PIMPrecision pimPrecision;
+extern int pimDataLength;
 
 //
 // FUNCTIONS

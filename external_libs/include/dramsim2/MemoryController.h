@@ -141,8 +141,8 @@ class MemoryController : public SimulatorObject
     vector<uint64_t> burstEnergy;
     vector<uint64_t> actpreEnergy;
     vector<uint64_t> refreshEnergy;
-    vector<uint64_t> aluFimEnergy;
-    vector<uint64_t> readFimEnergy;
+    vector<uint64_t> aluPimEnergy;
+    vector<uint64_t> readPimEnergy;
     double totalBandwidth;
 
     uint64_t num_mac_unit_;
