@@ -33,7 +33,6 @@ class PimRuntime
     int free_memory(PimBo* pimBo);
     int convert_data_layout(void* dst, void* src, size_t size, PimOpType op_type);
     int convert_data_layout(PimBo* dst, PimBo* src, PimOpType op_type);
-    int convert_data_layout(PimBo* dst, PimBo* src0, PimBo* src1, PimOpType op_type);
     int copy_memory(void* dst, void* src, size_t size, PimMemCpyType cpy_type);
     int copy_memory(PimBo* dst, PimBo* src, PimMemCpyType cpy_type);
 

@@ -178,18 +178,6 @@ __PIM_API__ int PimConvertDataLayout(void* dst, void* src, size_t size, PimOpTyp
 __PIM_API__ int PimConvertDataLayout(PimBo* dst, PimBo* src, PimOpType op_type);
 
 /**
- * @brief Convert data layout  of operations type op_type
- *
- * @param dst destination address of converted data
- * @param src0 source address 1
- * @param src1 source address 2
- * @param op_type operation type
- *
- * @return success/failure
- */
-__PIM_API__ int PimConvertDataLayout(PimBo* dst, PimBo* src0, PimBo* src1, PimOpType op_type);
-
-/**
  * @brief Copies data from source to destination
  *
  * @param dst destination address of buffer

@@ -164,17 +164,6 @@ int PimManager::convert_data_layout(PimBo* dst, PimBo* src, PimOpType op_type)
     return ret;
 }
 
-int PimManager::convert_data_layout(PimBo* dst, PimBo* src0, PimBo* src1, PimOpType op_type)
-{
-    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
-    int ret = 0;
-
-    ret = pim_memory_manager_->convert_data_layout(dst, src0, src1, op_type);
-
-    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
-    return ret;
-}
-
 uint8_t* PimManager::get_crf_binary() { return h_binary_buffer_; }
 int PimManager::get_crf_size() { return crf_size_; }
 } /* namespace manager */

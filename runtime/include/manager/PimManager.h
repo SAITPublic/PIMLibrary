@@ -45,7 +45,6 @@ class PimManager
     int copy_memory(PimBo* dst, PimBo* src, PimMemCpyType);
     int convert_data_layout(void* dst, void* src, size_t size, PimOpType op_type);
     int convert_data_layout(PimBo* dst, PimBo* src, PimOpType);
-    int convert_data_layout(PimBo* dst, PimBo* src0, PimBo* src1, PimOpType op_type);
 
     uint8_t* get_crf_binary();
     int get_crf_size();

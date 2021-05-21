@@ -127,17 +127,6 @@ int PimRuntime::convert_data_layout(PimBo* dst, PimBo* src, PimOpType op_type)
     return ret;
 }
 
-int PimRuntime::convert_data_layout(PimBo* dst, PimBo* src0, PimBo* src1, PimOpType op_type)
-{
-    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
-    int ret = 0;
-
-    ret = pim_manager_->convert_data_layout(dst, src0, src1, op_type);
-
-    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
-    return ret;
-}
-
 int PimRuntime::copy_memory(void* dst, void* src, size_t size, PimMemCpyType cpy_type)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";

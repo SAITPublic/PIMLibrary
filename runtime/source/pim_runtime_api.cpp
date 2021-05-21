@@ -304,23 +304,6 @@ int PimConvertDataLayout(PimBo* dst, PimBo* src, PimOpType op_type)
     return ret;
 }
 
-int PimConvertDataLayout(PimBo* dst, PimBo* src0, PimBo* src1, PimOpType op_type)
-{
-    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
-    PIM_PROFILE_TICK(ConvertDataLayout);
-    int ret = 0;
-
-    if (pim_runtime == nullptr) {
-        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
-        return -1;
-    }
-    ret = pim_runtime->convert_data_layout(dst, src0, src1, op_type);
-    PIM_PROFILE_TOCK(ConvertDataLayout);
-
-    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
-    return ret;
-}
-
 int PimCopyMemory(void* dst, void* src, size_t size, PimMemCpyType cpy_type)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";

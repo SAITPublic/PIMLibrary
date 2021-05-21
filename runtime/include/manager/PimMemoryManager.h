@@ -40,13 +40,9 @@ class PimMemoryManager
     int copy_memory(PimBo* dst, PimBo* src, PimMemCpyType cpy_type);
     int convert_data_layout(void* dst, void* src, size_t size, PimOpType op_type);
     int convert_data_layout(PimBo* dst, PimBo* src, PimOpType op_type);
-    int convert_data_layout(PimBo* dst, PimBo* src0, PimBo* src1, PimOpType op_type);
 
    private:
-    int convert_data_layout_for_elt_op(PimBo* dst, PimBo* src, PimBankType pim_bank_type);
     int convert_data_layout_for_gemv_weight(PimBo* dst, PimBo* src);
-    int convert_data_layout_for_relu(PimBo* dst, PimBo* src);
-    int convert_data_layout_for_bn(PimBo* dst, PimBo* src);
 
    private:
     PimDevice* pim_device_;
