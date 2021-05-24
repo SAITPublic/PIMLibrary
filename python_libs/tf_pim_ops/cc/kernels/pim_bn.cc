@@ -27,21 +27,18 @@ void KernelLauncher(const void* inp_data, const int N, const int DIMS, const voi
     const int WIDTH = in_dims[3];
 
     /* __PIM_API__ call : Create PIM Buffer Object */
-    PimBo* host_input = PimCreateBo(WIDTH, HEIGHT, CH, BATCH, PIM_FP16, MEM_TYPE_HOST);
+    PimBo* pim_input = PimCreateBo(WIDTH, HEIGHT, CH, BATCH, PIM_FP16, MEM_TYPE_PIM);
     PimBo* host_mean = PimCreateBo(1, 1, CH, 1, PIM_FP16, MEM_TYPE_HOST);
     PimBo* host_var = PimCreateBo(1, 1, CH, 1, PIM_FP16, MEM_TYPE_HOST);
     PimBo* host_beta = PimCreateBo(1, 1, CH, 1, PIM_FP16, MEM_TYPE_HOST);
     PimBo* host_gamma = PimCreateBo(1, 1, CH, 1, PIM_FP16, MEM_TYPE_HOST);
-    double host_epsilon = 0.0;
-
-    PimBo* preloaded_pim_input = PimCreateBo(WIDTH, HEIGHT, CH, BATCH, PIM_FP16, MEM_TYPE_PIM);
     PimBo* device_output = PimCreateBo(WIDTH, HEIGHT, CH, BATCH, PIM_FP16, MEM_TYPE_PIM);
-
-    PimCopyMemory((void*)host_input->data, (void*)inp_data, sizeof(half) * N, DEVICE_TO_HOST);
+    double host_epsilon = 0.0;
 
     /* __PIM_API__ call : Preload input data on PIM memory */
     // PimConvertDataLayout(preloaded_pim_input, host_input, OP_BN);
 
+    PimCopyMemory((void*)pim_input->data, (void*)inp_data, sizeof(half) * N, DEVICE_TO_PIM);
     PimCopyMemory(host_mean->data, (void*)mean, sizeof(half) * CH, DEVICE_TO_HOST);
     PimCopyMemory(host_var->data, (void*)var, sizeof(half) * CH, DEVICE_TO_HOST);
     PimCopyMemory(host_gamma->data, (void*)gamma, sizeof(half) * CH, DEVICE_TO_HOST);
@@ -49,18 +46,17 @@ void KernelLauncher(const void* inp_data, const int N, const int DIMS, const voi
     PimCopyMemory((void*)&host_epsilon, (void*)epsilon, sizeof(double), DEVICE_TO_HOST);
 
     /* __PIM_API__ call : Execute PIM kernel */
-    PimExecuteBN(device_output, host_input, host_beta, host_gamma, host_mean, host_var, host_epsilon);
+    PimExecuteBN(device_output, pim_input, host_beta, host_gamma, host_mean, host_var, host_epsilon);
     PimSynchronize();
 
-    PimCopyMemory((void*)out_data, (void*)device_output->data, sizeof(half) * N, PIM_TO_HOST);
+    PimCopyMemory((void*)out_data, (void*)device_output->data, sizeof(half) * N, HOST_TO_DEVICE);
 
     /* __PIM_API__ call : Free memory */
-    PimDestroyBo(host_input);
     PimDestroyBo(host_mean);
     PimDestroyBo(host_var);
     PimDestroyBo(host_beta);
     PimDestroyBo(host_gamma);
-    PimDestroyBo(preloaded_pim_input);
+    PimDestroyBo(pim_input);
     PimDestroyBo(device_output);
 }
 

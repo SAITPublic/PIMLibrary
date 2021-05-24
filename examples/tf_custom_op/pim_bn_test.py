@@ -12,39 +12,43 @@ tf.debugging.set_log_device_placement(True)
 class PimBn4DGolden(tf.test.TestCase):
     def test(self):
         with self.test_session():
-            BATCH = 2
-            CH = 64
-            WIDTH = 1024
+            BATCH = 1
+            CH = 1
+            WIDTH = 131072
             HEIGHT = 1
 
             input0 = np.fromfile(
-                "test_vectors/load/bn/input_256KB.dat",
+                "test_vectors/load/bn/nr_input_256KB.dat",
                 dtype=np.float16)
             t_input0 = tf.convert_to_tensor(input0, np.float16)
 
             beta = np.fromfile(
-                "test_vectors/load/bn/beta_128B.dat",
+                "test_vectors/load/bn/nr_beta_256KB.dat",
                 dtype=np.float16)
+            beta = beta[0:CH]
             t_beta = tf.convert_to_tensor(beta, np.float16)
 
             gamma = np.fromfile(
-                "test_vectors/load/bn/gamma_128B.dat",
+                "test_vectors/load/bn/nr_gamma_256KB.dat",
                 dtype=np.float16)
+            gamma = gamma[0:CH]
             t_gamma = tf.convert_to_tensor(gamma, np.float16)
 
             mean = np.fromfile(
-                "test_vectors/load/bn/mean_128B.dat",
+                "test_vectors/load/bn/nr_mean_256KB.dat",
                 dtype=np.float16)
+            mean = mean[0:CH]
             t_mean = tf.convert_to_tensor(mean, np.float16)
 
             var = np.fromfile(
-                "test_vectors/load/bn/variance_128B.dat",
+                "test_vectors/load/bn/nr_variance_256KB.dat",
                 dtype=np.float16)
+            var = var[0:CH]
             t_var = tf.convert_to_tensor(var, np.float16)
 
             epsilon = 1e-5
             golden = np.fromfile(
-                "test_vectors/load/bn/output_256KB.dat",
+                "test_vectors/load/bn/nr_output_256KB.dat",
                 dtype=np.float16)
             t_golden = tf.convert_to_tensor(golden, np.float16)
 
@@ -60,14 +64,14 @@ class PimBn4DGolden(tf.test.TestCase):
             self.assertAllClose(result, t_golden, atol=5e-3)
 
 
-class PIMBn4DOpc(tf.test.TestCase):
+class PimBn4DOpc(tf.test.TestCase):
 
     def test(self):
         with self.test_session():
             sizes = [
-                (1, 1, 128, 768),
-                (1, 1, 256, 768),
-                (1, 1, 384, 768),
+                #(1, 1, 128, 768),
+                #(1, 1, 256, 768),
+                #(1, 1, 384, 768),
                 (4, 1, 128, 768),
                 (4, 1, 256, 768),
                 (4, 1, 384, 768),
@@ -83,6 +87,14 @@ class PIMBn4DOpc(tf.test.TestCase):
                 (8, 1, 128, 1024),
                 (8, 1, 256, 1024),
                 (8, 1, 384, 1024),
+                (1, 1, 1 , 131072),
+                (1, 1, 1 , 131072 * 2),
+                (1, 1, 1 , 131072 * 4),
+                (1, 1, 1 , 131072 * 8),
+                (1, 1, 1 , 131072 * 16),
+                (1, 1, 1 , 131072 * 32),
+                (1, 1, 1 , 131072 * 64),
+                (1, 1, 1 , 131072 * 128),
             ]
             success = True
             failed_cases = []
@@ -106,6 +118,7 @@ class PIMBn4DOpc(tf.test.TestCase):
                     t_input0, mean, var, offset, scale, var_epsilon)
                 tf_golden = tf.nn.batch_normalization(
                     t_input0, mean, var, offset, scale, var_epsilon)
+
                 try:
                     self.assertAllClose(result, tf_golden, atol=1e-2)
                 except Exception as ex:
