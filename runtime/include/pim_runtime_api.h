@@ -75,7 +75,8 @@ __PIM_API__ PimBo* PimCreateBo(int w, int h, int c, int n, PimPrecision precisio
  *
  * @return Pointer to buffer object
  */
-__PIM_API__ PimBo* PimCreateBo(PimDesc* pim_desc, PimMemType mem_type, PimMemFlag mem_flag = ELT_OP);
+__PIM_API__ PimBo* PimCreateBo(PimDesc* pim_desc, PimMemType mem_type, PimMemFlag mem_flag = ELT_OP,
+                               void* user_ptr = nullptr);
 
 /**
  * @brief Destroy Buffer object

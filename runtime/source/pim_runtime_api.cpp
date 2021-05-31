@@ -96,7 +96,7 @@ PimBo* PimCreateBo(int w, int h, int c, int n, PimPrecision precision, PimMemTyp
     return pim_bo;
 }
 
-PimBo* PimCreateBo(PimDesc* pim_desc, PimMemType mem_type, PimMemFlag mem_flag)
+PimBo* PimCreateBo(PimDesc* pim_desc, PimMemType mem_type, PimMemFlag mem_flag, void* user_ptr)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     PIM_PROFILE_TICK(CreateBo);
@@ -117,11 +117,19 @@ PimBo* PimCreateBo(PimDesc* pim_desc, PimMemType mem_type, PimMemFlag mem_flag)
     pim_bo->mem_type = mem_type;
     pim_bo->precision = pim_desc->precision;
 
-    ret = pim_runtime->alloc_memory(pim_bo);
-    if (ret != 0) {
-        DLOG(ERROR) << "Fail to alloc memory";
-        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
-        return nullptr;
+    if (!user_ptr) {
+        ret = pim_runtime->alloc_memory(pim_bo);
+        if (ret != 0) {
+            DLOG(ERROR) << "Fail to alloc memory";
+
+            DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+            return nullptr;
+        }
+
+        pim_bo->user_ptr = false;
+    } else {
+        pim_bo->data = user_ptr;
+        pim_bo->user_ptr = true;
     }
 
 #ifdef EMULATOR
@@ -166,11 +174,14 @@ int PimDestroyBo(PimBo* pim_bo)
         DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
         return -1;
     }
-    ret = pim_runtime->free_memory(pim_bo);
-    if (ret != 0) {
-        DLOG(ERROR) << "Fail to alloc memory";
-        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
-        return -1;
+
+    if (!pim_bo->user_ptr) {
+        ret = pim_runtime->free_memory(pim_bo);
+        if (ret != 0) {
+            DLOG(ERROR) << "Fail to alloc memory";
+            DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+            return -1;
+        }
     }
     delete pim_bo;
     PIM_PROFILE_TOCK(DestroyBo);
