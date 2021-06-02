@@ -20,10 +20,13 @@ using namespace pim::runtime;
 
 PimRuntime* pim_runtime = nullptr;
 static bool log_initialized = false;
+static bool pim_initialized = false;
 bool pim_alloc_done = false;
 uint64_t g_pim_base_addr = 0x0;
 int PimInitialize(PimRuntimeType rt_type, PimPrecision precision)
 {
+    int ret = 0;
+
     if (!log_initialized) {
 #if CONSOLE
         FLAGS_logtostderr = 1;
@@ -33,15 +36,21 @@ int PimInitialize(PimRuntimeType rt_type, PimPrecision precision)
         FLAGS_minloglevel = PIM_LOG_LEVEL;
         log_initialized = true;
     }
-    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
-    PIM_PROFILE_TICK(Initialize);
-    int ret = 0;
 
-    if (pim_runtime == nullptr) pim_runtime = new PimRuntime(rt_type, precision);
-    ret = pim_runtime->initialize();
-    PIM_PROFILE_TOCK(Initialize);
+    if (!pim_initialized) {
+        DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
+        PIM_PROFILE_TICK(Initialize);
 
-    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+        if (pim_runtime == nullptr) pim_runtime = new PimRuntime(rt_type, precision);
+        ret = pim_runtime->initialize();
+        pim_initialized = true;
+        PIM_PROFILE_TOCK(Initialize);
+
+        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+    } else {
+        DLOG(INFO) << "PIM Already initialized " << __FUNCTION__ << " called";
+    }
+
     return ret;
 }
 
@@ -126,10 +135,10 @@ PimBo* PimCreateBo(PimDesc* pim_desc, PimMemType mem_type, PimMemFlag mem_flag, 
             return nullptr;
         }
 
-        pim_bo->user_ptr = false;
+        pim_bo->use_user_ptr = false;
     } else {
         pim_bo->data = user_ptr;
-        pim_bo->user_ptr = true;
+        pim_bo->use_user_ptr = true;
     }
 
 #ifdef EMULATOR
@@ -175,10 +184,10 @@ int PimDestroyBo(PimBo* pim_bo)
         return -1;
     }
 
-    if (!pim_bo->user_ptr) {
+    if (!pim_bo->use_user_ptr) {
         ret = pim_runtime->free_memory(pim_bo);
         if (ret != 0) {
-            DLOG(ERROR) << "Fail to alloc memory";
+            DLOG(ERROR) << "Fail to Destroy Bo";
             DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
             return -1;
         }

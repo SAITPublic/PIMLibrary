@@ -68,7 +68,7 @@ typedef struct __PimBufferObject {
     PimPrecision precision;
     size_t size;
     void* data;
-    bool user_ptr;
+    bool use_user_ptr;
 } PimBo;
 
 typedef struct __PimDescriptor {

@@ -72,7 +72,8 @@ __PIM_API__ PimBo* PimCreateBo(int w, int h, int c, int n, PimPrecision precisio
  * @param pim_desc PIM descriptor
  * @param mem_type type of memory need to be allocated (PIM/GPU/HOST)
  * @param mem_flag Describes operation for which buffer is used for( element wise or gemv)
- *
+ * @param user_ptr external memory passed by user. If passed, Bo is created with user pointer.
+ *                 if nullptr, pim library does the allocation
  * @return Pointer to buffer object
  */
 __PIM_API__ PimBo* PimCreateBo(PimDesc* pim_desc, PimMemType mem_type, PimMemFlag mem_flag = ELT_OP,
