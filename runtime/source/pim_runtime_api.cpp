@@ -64,6 +64,7 @@ int PimDeinitialize(void)
         ret = pim_runtime->deinitialize();
         delete pim_runtime;
         pim_runtime = nullptr;
+        pim_initialized = false;
     }
     PIM_PROFILE_TOCK(Deinitialize);
 
