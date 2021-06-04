@@ -135,35 +135,7 @@ inline int compare_data(char* data_a, char* data_b, size_t size)
     return ret;
 }
 
-inline int compare_data_round_off(half_float::half* data_a, half_float::half* data_b, int size)
-{
-    int pass_cnt = 0;
-    int fail_cnt = 0;
-    int ret = 0;
-
-    for (int i = 0; i < size; i++) {
-        if (abs(float(data_a[i]) - float(data_b[i])) < 0.1) {
-            pass_cnt++;
-        } else {
-            fail_cnt++;
-#ifdef DEBUG_PIM
-            printf("fail %f: %f\n", float(data_a[i]), float(data_b[i]));
-#endif
-            ret = 1;
-        }
-    }
-
-#ifdef DEBUG_PIM
-    if (ret) {
-        printf("pass_cnt : %d, fail_cnt : %d, pass ratio : %f\n", pass_cnt, fail_cnt,
-               ((float)pass_cnt / ((float)fail_cnt + (float)pass_cnt) * 100.));
-    }
-#endif
-
-    return ret;
-}
-
-inline int compare_data_round_off(half_float::half* data_a, half_float::half* data_b, int size, float epsilon)
+inline int compare_data_round_off(half_float::half* data_a, half_float::half* data_b, int size, float epsilon = 0.001)
 {
     int pass_cnt = 0;
     int fail_cnt = 0;

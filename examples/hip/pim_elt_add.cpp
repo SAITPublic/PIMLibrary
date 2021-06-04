@@ -71,7 +71,7 @@ int pim_elt_add_1(bool block)
         PimCopyMemory(host_output, device_output, PIM_TO_HOST);
 
         ret = compare_data_round_off((half*)golden_output->data, (half*)host_output->data,
-                                     host_output->size / sizeof(half), 0.05);
+                                     host_output->size / sizeof(half));
     }
     //    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
 
@@ -137,7 +137,7 @@ int pim_elt_add_2(bool block)
         PimCopyMemory(&host_output, &device_output, PIM_TO_HOST);
 
         ret = compare_data_round_off((half*)golden_output.data, (half*)host_output.data,
-                                     host_output.size / sizeof(half), 0.05);
+                                     host_output.size / sizeof(half));
     }
     //    dump_data(output_dump.c_str(), (char*)host_output.data, host_output.size);
 
@@ -194,7 +194,7 @@ int pim_elt_add_3(bool block)
         PimCopyMemory(host_output, device_output, PIM_TO_HOST);
 
         ret = compare_data_round_off((half*)golden_output->data, (half*)host_output->data,
-                                     host_output->size / sizeof(half), 0.05);
+                                     host_output->size / sizeof(half));
     }
     //    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
 
@@ -254,7 +254,7 @@ int pim_elt_add_4(bool block)
         if (!block) PimSynchronize();
 
         PimCopyMemory(host_output, device_output, PIM_TO_HOST);
-        ret = compare_data_round_off((half*)golden_output->data, (half*)host_output->data, in_size, 0.05);
+        ret = compare_data_round_off((half*)golden_output->data, (half*)host_output->data, in_size);
     }
     //    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
 
@@ -338,8 +338,7 @@ int pim_elt_add_profile(bool block, int len)
 #endif
     PimCopyMemory(host_output, device_output, PIM_TO_HOST);
 
-    ret = compare_data_round_off((half*)golden_output->data, (half*)host_output->data, host_output->size / sizeof(half),
-                                 0.05);
+    ret = compare_data_round_off((half*)golden_output->data, (half*)host_output->data, host_output->size / sizeof(half));
 
     //    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
 
