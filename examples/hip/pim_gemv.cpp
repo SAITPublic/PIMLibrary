@@ -600,6 +600,7 @@ int pim_gemv_uniform_128(bool block)
         //    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
 
         ret = compare_data_round_off((half*)golden_output->data, (half*)host_output->data, OUT_LENGTH, EPSILON);
+        ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data, OUT_LENGTH);
     }
     /* __PIM_API__ call : Destroy PIM Buffer Object */
     PimDestroyBo(host_input);
@@ -664,6 +665,7 @@ int pim_gemv_normal_128(bool block)
         //    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
 
         ret = compare_data_round_off((half*)golden_output->data, (half*)host_output->data, OUT_LENGTH, EPSILON);
+        ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data, OUT_LENGTH);
     }
     /* __PIM_API__ call : Destroy PIM Buffer Object */
     PimDestroyBo(host_input);
@@ -729,6 +731,7 @@ int pim_gemv_uniform_4096(bool block)
         //    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
 
         ret = compare_data_round_off((half*)golden_output->data, (half*)host_output->data, OUT_LENGTH, EPSILON);
+        ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data, OUT_LENGTH);
     }
     /* __PIM_API__ call : Destroy PIM Buffer Object */
     PimDestroyBo(host_input);
@@ -793,6 +796,7 @@ int pim_gemv_normal_4096(bool block)
         //    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
 
         ret = compare_data_round_off((half*)golden_output->data, (half*)host_output->data, OUT_LENGTH, EPSILON);
+        ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data, OUT_LENGTH);
     }
     /* __PIM_API__ call : Destroy PIM Buffer Object */
     PimDestroyBo(host_input);

@@ -165,4 +165,63 @@ inline int compare_data_round_off(half_float::half* data_a, half_float::half* da
 
     return ret;
 }
+
+inline int compare_half_Ulps(half_float::half data_a, half_float::half data_b, int maxUlpsDiff) 
+{  
+    uint16_t Ai = *((uint16_t*)&data_a);
+    uint16_t Bi = *((uint16_t*)&data_b);
+
+    if ((Ai&(1<<15)) != (Bi&(1<<15)))
+        {
+            if (Ai == Bi)
+                return true;
+            return false;
+        }
+ 
+    // Find the difference in ULPs.
+    int ulpsDiff = abs(Ai - Bi);
+    if (ulpsDiff <= maxUlpsDiff)
+        return true;
+ 
+    return false;
+}
+
+
+inline int compare_half_relative(half_float::half* data_a, half_float::half* data_b, int size)
+{
+    int pass_cnt = 0;
+    int warning_cnt = 0;
+    int fail_cnt = 0;
+    int ret = 0;
+
+    float max_diff=0.0;
+
+    for (int i = 0; i < size; i++) {
+
+        if(compare_half_Ulps(data_a[i], data_b[i], 4)){
+            pass_cnt++;
+        }
+        else if(compare_half_Ulps(data_a[i], data_b[i], 256)){
+            warning_cnt++;
+        }
+        else {
+
+            if ( abs(float(data_a[i]) - float(data_b[i])) > max_diff) {
+                max_diff = abs(float(data_a[i]) - float(data_b[i])) ;
+            }
+
+            fail_cnt++;
+        }
+    }
+
+    int quasi_cnt = pass_cnt + warning_cnt;
+
+    printf("pass_cnt : %d, warning_cnt : %d, fail_cnt : %d, pass ratio : %f\n", pass_cnt, fail_cnt,
+               ((float)quasi_cnt  / ((float)fail_cnt + (float)warning_cnt + (float)pass_cnt) * 100));
+
+    printf("max diff : %f\n", max_diff);
+
+    return ret;
+}
+
 #endif /* _PIM_DUMP_HPP_ */
