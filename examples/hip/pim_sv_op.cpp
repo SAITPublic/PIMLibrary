@@ -14,8 +14,8 @@
 #include <stdlib.h>
 #include <algorithm>
 #include <iostream>
-#include "pim_runtime_api.h"
 #include "half.hpp"
+#include "pim_runtime_api.h"
 #include "utility/pim_dump.hpp"
 
 #define LENGTH (128 * 1024)

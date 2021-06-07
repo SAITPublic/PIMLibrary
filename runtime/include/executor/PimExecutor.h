@@ -15,11 +15,11 @@
 #ifdef EMULATOR
 #include "emulator/PimEmulator.h"
 #endif
-#include "pim_data_types.h"
 #include "hip/hip_fp16.h"
 #include "hip/hip_runtime.h"
 #include "manager/PimInfo.h"
 #include "manager/PimManager.h"
+#include "pim_data_types.h"
 
 namespace pim
 {

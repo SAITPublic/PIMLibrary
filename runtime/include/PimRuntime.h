@@ -13,8 +13,8 @@
 
 #include <unordered_map>
 #include "executor/PimExecutor.h"
-#include "pim_data_types.h"
 #include "manager/PimManager.h"
+#include "pim_data_types.h"
 
 namespace pim
 {

@@ -15,8 +15,8 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
-#include "pim_data_types.h"
 #include "manager/PimInfo.h"
+#include "pim_data_types.h"
 #include "utility/pim_log.h"
 
 namespace pim

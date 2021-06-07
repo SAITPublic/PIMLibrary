@@ -14,9 +14,9 @@
 #include <stdlib.h>
 #include <algorithm>
 #include <iostream>
-#include "pim_runtime_api.h"
 #include "half.hpp"
 #include "hip/hip_runtime.h"
+#include "pim_runtime_api.h"
 #include "utility/pim_dump.hpp"
 
 #ifdef DEBUG_PIM

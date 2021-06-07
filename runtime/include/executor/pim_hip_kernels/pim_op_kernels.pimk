@@ -11,13 +11,10 @@
 #ifndef _PIM_OP_KERNELS_PIMK_
 #define _PIM_OP_KERNELS_PIMK_
 
+#include "manager/PimInfo.h"
 #include "pim_crf_bins.h"
 #include "pim_data_types.h"
-#include "manager/PimInfo.h"
 #include "utility/pim_util.h"
-#include "pim_crf_bins.h"
-
-
 
 __host__ __device__ uint32_t mask_by_bit(uint32_t value, uint32_t start, uint32_t end)
 {
@@ -125,7 +122,8 @@ __device__ void _W_CMD(volatile uint8_t* __restrict__ addr, PimMemTracer* __rest
     emulator_trace->g_fmtd16[ridx].cmd = 'W';
 }
 
-__device__ void _W_CMD_R(volatile uint8_t* __restrict__ addr, volatile uint8_t* __restrict__ src, PimMemTracer* __restrict__ emulator_trace)
+__device__ void _W_CMD_R(volatile uint8_t* __restrict__ addr, volatile uint8_t* __restrict__ src,
+                         PimMemTracer* __restrict__ emulator_trace)
 {
     int bid = hipBlockIdx_x;
     int tid = hipThreadIdx_x;
@@ -153,7 +151,7 @@ __device__ void _B_CMD(int type, PimMemTracer* __restrict__ emulator_trace)
     (type == 0) ? __syncthreads() : __threadfence();
 }
 
-#else /* TARGET */
+#else  /* TARGET */
 
 __device__ void _R_CMD(volatile uint8_t* __restrict__ addr)
 {
@@ -190,15 +188,15 @@ __device__ void _B_CMD(int type)
 #endif /* EMULATOR */
 
 #ifdef EMULATOR
-    #define R_CMD(x) _R_CMD(x, emulator_trace)
-    #define W_CMD(x) _W_CMD(x, emulator_trace)
-    #define W_CMD_R(x, y) _W_CMD_R(x,y, emulator_trace)
-    #define B_CMD(x) _B_CMD(x, emulator_trace)
+#define R_CMD(x) _R_CMD(x, emulator_trace)
+#define W_CMD(x) _W_CMD(x, emulator_trace)
+#define W_CMD_R(x, y) _W_CMD_R(x, y, emulator_trace)
+#define B_CMD(x) _B_CMD(x, emulator_trace)
 #else
-    #define R_CMD(x) _R_CMD(x)
-    #define W_CMD(x) _W_CMD(x)
-    #define W_CMD_R(x, y) _W_CMD_R(x,y)
-    #define B_CMD(x) _B_CMD(x)
+#define R_CMD(x) _R_CMD(x)
+#define W_CMD(x) _W_CMD(x)
+#define W_CMD_R(x, y) _W_CMD_R(x, y)
+#define B_CMD(x) _B_CMD(x)
 #endif
 
 #include "pim_bn_kernels.pimk"

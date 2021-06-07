@@ -11,12 +11,12 @@
 #ifndef _PIM_MANAGER_H_
 #define _PIM_MANAGER_H_
 
-#include "pim_data_types.h"
 #include "manager/PimControlManager.h"
 #include "manager/PimCrfBinGen.h"
 #include "manager/PimDevice.h"
 #include "manager/PimInfo.h"
 #include "manager/PimMemoryManager.h"
+#include "pim_data_types.h"
 
 namespace pim
 {

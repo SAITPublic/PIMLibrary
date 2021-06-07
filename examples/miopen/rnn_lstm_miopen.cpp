@@ -17,8 +17,8 @@
 #include <memory>
 #include <utility>
 #include <vector>
-#include "pim_runtime_api.h"
 #include "half.hpp"
+#include "pim_runtime_api.h"
 #include "utility/pim_dump.hpp"
 #define LENGTH (64 * 1024)
 
@@ -27,12 +27,33 @@ using half_float::half;
 inline float convertH2F(half h_val) { return half_float::detail::half2float<float>(h_val); }
 inline int compare_data_round_off(half *data_a, half *data_b, size_t size, double epsilon = 0.001)
 {
+    int pass_cnt = 0;
+    int fail_cnt = 0;
+    int ret = 0;
+    float abs_diff;
+    float max_diff = 0.0;
+    float avg_diff = 0.0;
+
     for (int i = 0; i < size; i++) {
-        if (!((abs(data_a[i]) - abs(data_b[i])) < (half)epsilon)) {
-            return -1;
+        abs_diff = abs(float(data_a[i]) - float(data_b[i]));
+        if (abs_diff < epsilon) {
+            pass_cnt++;
+        } else {
+            fail_cnt++;
+            if (max_diff < abs_diff) max_diff = abs_diff;
+            avg_diff += abs_diff;
+            ret = 1;
         }
     }
-    return 0;
+    avg_diff /= fail_cnt;
+
+    if (ret) {
+        printf("pass_cnt : %d, fail_cnt : %d, pass ratio : %f\n", pass_cnt, fail_cnt,
+               ((float)pass_cnt / ((float)fail_cnt + (float)pass_cnt) * 100.));
+        printf("max_diff : %f, avg_diff : %f\n", max_diff, avg_diff);
+    }
+
+    return ret;
 }
 
 int miopen_rnn_lstm()

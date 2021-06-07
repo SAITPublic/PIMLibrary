@@ -147,7 +147,8 @@ int PimExecutor::execute_add(PimBo* output, PimBo* operand0, PimBo* operand1, hi
     hipLaunchKernelGGL(elt_op_pim, dim3(blocks), dim3(threads_per_block), 0, stream, (uint8_t*)operand0->data,
                        (uint8_t*)operand1->data, (uint8_t*)g_pim_base_addr, (uint8_t*)output->data, num_tile,
 #ifdef EMULATOR
-                       (PimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_, (PimMemTracer*)d_emulator_trace_,
+                       (PimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_,
+                       (PimMemTracer*)d_emulator_trace_,
 #endif
                        (uint8_t*)crf_bin, crf_size);
 #ifdef EMULATOR
@@ -189,7 +190,8 @@ int PimExecutor::execute_mul(PimBo* output, PimBo* operand0, PimBo* operand1, hi
     hipLaunchKernelGGL(elt_op_pim, dim3(blocks), dim3(threads_per_block), 0, stream, (uint8_t*)operand0->data,
                        (uint8_t*)operand1->data, (uint8_t*)g_pim_base_addr, (uint8_t*)output->data, num_tile,
 #ifdef EMULATOR
-                       (PimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_, (PimMemTracer*)d_emulator_trace_,
+                       (PimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_,
+                       (PimMemTracer*)d_emulator_trace_,
 #endif
                        (uint8_t*)crf_bin, crf_size);
 #ifdef EMULATOR
@@ -248,7 +250,8 @@ int PimExecutor::execute_gemv(PimBo* output, PimBo* operand0, PimBo* operand1, h
                        (uint8_t*)input->data, (uint8_t*)output->data, n_batch, n_memory_tile, n_compute_tile,
                        n_out_tile, real_out_size,
 #ifdef EMULATOR
-                       (PimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_, (PimMemTracer*)d_emulator_trace_,
+                       (PimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_,
+                       (PimMemTracer*)d_emulator_trace_,
 #endif
                        (uint8_t*)crf_bin, crf_size, is_gemv_add);
 #ifndef EMULATOR
@@ -316,7 +319,8 @@ int PimExecutor::execute_gemv_add(PimBo* output, PimBo* operand0, PimBo* operand
                        (uint8_t*)input->data, (uint8_t*)output->data, n_batch, n_memory_tile, n_compute_tile,
                        n_out_tile, real_out_size,
 #ifdef EMULATOR
-                       (PimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_, (PimMemTracer*)d_emulator_trace_,
+                       (PimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_,
+                       (PimMemTracer*)d_emulator_trace_,
 #endif
                        (uint8_t*)crf_bin, crf_size, is_gemv_add);
 #ifndef EMULATOR
@@ -363,7 +367,8 @@ int PimExecutor::execute_relu(PimBo* output, PimBo* pim_data, hipStream_t stream
     hipLaunchKernelGGL(relu_pim, dim3(blocks), dim3(threads_per_block), 0, stream, (uint8_t*)pim_data->data,
                        (uint8_t*)g_pim_base_addr, (uint8_t*)output->data, (int)output->size,
 #ifdef EMULATOR
-                       (PimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_, (PimMemTracer*)d_emulator_trace_,
+                       (PimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_,
+                       (PimMemTracer*)d_emulator_trace_,
 #endif
                        (uint8_t*)crf_bin, crf_size);
 #ifdef EMULATOR
@@ -457,7 +462,8 @@ int PimExecutor::execute_bn(PimBo* output, PimBo* pim_data, PimBo* beta, PimBo* 
                        (uint8_t*)g_pim_base_addr, (uint8_t*)pim_gemv_tmp_buffer_, (uint8_t*)output->data, (int)num_tile,
                        output->bshape.n, output->bshape.c, output->bshape.w,
 #ifdef EMULATOR
-                       (PimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_, (PimMemTracer*)d_emulator_trace_,
+                       (PimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_,
+                       (PimMemTracer*)d_emulator_trace_,
 #endif
                        (uint8_t*)crf_bin, crf_size, (uint8_t*)d_srf_bin_buffer_, srf_size);
 

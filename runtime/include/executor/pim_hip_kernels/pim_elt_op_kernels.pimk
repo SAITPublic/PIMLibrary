@@ -24,7 +24,7 @@
 __global__ void elt_op_pim(volatile uint8_t* __restrict__ operand0, volatile uint8_t* __restrict__ operand1,
                            volatile uint8_t* __restrict__ pim_ctr, volatile uint8_t* __restrict__ output, int num_tile,
 #ifdef EMULATOR
-                           PimMemTraceData* fmtd16, int* frd_size, int mt_width, PimMemTracer *emulator_trace,
+                           PimMemTraceData* fmtd16, int* frd_size, int mt_width, PimMemTracer* emulator_trace,
 #endif
                            uint8_t* crf_binary, int crf_size)
 {

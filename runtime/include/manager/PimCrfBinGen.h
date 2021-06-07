@@ -12,9 +12,9 @@
 #define _PIM_CRF_BIN_GEN_H_
 
 #include <vector>
-#include "pim_data_types.h"
 #include "manager/PimCommand.h"
 #include "manager/PimInfo.h"
+#include "pim_data_types.h"
 
 namespace pim
 {

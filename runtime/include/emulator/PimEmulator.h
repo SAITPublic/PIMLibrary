@@ -13,8 +13,8 @@
 
 #include "PimTraceCoalescer.h"
 #include "dramsim2/PimSimulator.h"
-#include "pim_data_types.h"
 #include "manager/PimInfo.h"
+#include "pim_data_types.h"
 
 namespace pim
 {

@@ -25,7 +25,7 @@ __global__ void bn_pim_nr_sip(volatile uint8_t* __restrict__ pim_data, volatile 
                               volatile uint8_t* __restrict__ pim_bn_tmp_buffer, volatile uint8_t* __restrict__ output,
                               int num_tile, int num_ba, int num_ch, int num_w,
 #ifdef EMULATOR
-                              PimMemTraceData* fmtd16, int* frd_size, int mt_width, PimMemTracer *emulator_trace,
+                              PimMemTraceData* fmtd16, int* frd_size, int mt_width, PimMemTracer* emulator_trace,
 #endif
                               uint8_t* crf_binary, int crf_size, uint8_t* srf_binary, int srf_size)
 {

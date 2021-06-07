@@ -11,9 +11,9 @@
 #ifndef _PIM_DUMP_HPP_
 #define _PIM_DUMP_HPP_
 
-#include "pim_data_types.h"
 #include "half.hpp"
 #include "manager/PimInfo.h"
+#include "pim_data_types.h"
 #include "stdio.h"
 
 inline const char* get_pim_op_string(PimOpType op_type)
@@ -140,25 +140,28 @@ inline int compare_data_round_off(half_float::half* data_a, half_float::half* da
     int pass_cnt = 0;
     int fail_cnt = 0;
     int ret = 0;
+    float abs_diff;
+    float max_diff = 0.0;
+    float avg_diff = 0.0;
 
     for (int i = 0; i < size; i++) {
-        if (abs(float(data_a[i]) - float(data_b[i])) < epsilon) {
+        abs_diff = abs(float(data_a[i]) - float(data_b[i]));
+        if (abs_diff < epsilon) {
             pass_cnt++;
         } else {
             fail_cnt++;
-#ifdef DEBUG_PIM
-            printf("fail %f: %f\n", float(data_a[i]), float(data_b[i]));
-#endif
+            if (max_diff < abs_diff) max_diff = abs_diff;
+            avg_diff += abs_diff;
             ret = 1;
         }
     }
+    avg_diff /= fail_cnt;
 
-#ifdef DEBUG_PIM
     if (ret) {
         printf("pass_cnt : %d, fail_cnt : %d, pass ratio : %f\n", pass_cnt, fail_cnt,
                ((float)pass_cnt / ((float)fail_cnt + (float)pass_cnt) * 100.));
+        printf("max_diff : %f, avg_diff : %f\n", max_diff, avg_diff);
     }
-#endif
 
     return ret;
 }

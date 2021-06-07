@@ -11,10 +11,10 @@
 #ifndef _PIM_UTIL_H_
 #define _PIM_UTIL_H_
 
-#include "pim_data_types.h"
 #include "hip/hip_fp16.h"
 #include "hip/hip_runtime.h"
 #include "manager/PimInfo.h"
+#include "pim_data_types.h"
 #include "utility/pim_log.h"
 
 /* TODO: get VEGA20 scheme from device driver */

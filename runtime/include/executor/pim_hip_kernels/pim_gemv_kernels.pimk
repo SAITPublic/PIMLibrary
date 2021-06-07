@@ -29,7 +29,8 @@ __global__ void gemv_pim_64cu_64th_fp16(volatile uint8_t* __restrict__ pim_ctr,
                                         int batch_dim, int n_memory_tile, int n_compute_tile, int n_out_tile,
                                         int output_dim,
 #ifdef EMULATOR
-                                        PimMemTraceData* fmtd16, int* frd_size, int mt_width, PimMemTracer *emulator_trace,
+                                        PimMemTraceData* fmtd16, int* frd_size, int mt_width,
+                                        PimMemTracer* emulator_trace,
 #endif
                                         uint8_t* crf_binary, int crf_size, int is_gemv_add)
 {

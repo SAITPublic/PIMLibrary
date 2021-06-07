@@ -11,9 +11,9 @@
 #ifndef _PIM_CONTROL_MANAGER_H_
 #define _PIM_CONTROL_MANAGER_H_
 
-#include "pim_data_types.h"
 #include "manager/PimInfo.h"
 #include "manager/PimManager.h"
+#include "pim_data_types.h"
 
 namespace pim
 {

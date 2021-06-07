@@ -14,9 +14,9 @@
 #include <stdlib.h>
 #include <algorithm>
 #include <iostream>
-#include "pim_runtime_api.h"
 #include "half.hpp"
 #include "hip/hip_runtime.h"
+#include "pim_runtime_api.h"
 #include "utility/pim_dump.hpp"
 #include "utility/pim_profile.h"
 
@@ -136,8 +136,8 @@ int pim_elt_add_2(bool block)
 
         PimCopyMemory(&host_output, &device_output, PIM_TO_HOST);
 
-        ret = compare_data_round_off((half*)golden_output.data, (half*)host_output.data,
-                                     host_output.size / sizeof(half));
+        ret =
+            compare_data_round_off((half*)golden_output.data, (half*)host_output.data, host_output.size / sizeof(half));
     }
     //    dump_data(output_dump.c_str(), (char*)host_output.data, host_output.size);
 
@@ -338,7 +338,8 @@ int pim_elt_add_profile(bool block, int len)
 #endif
     PimCopyMemory(host_output, device_output, PIM_TO_HOST);
 
-    ret = compare_data_round_off((half*)golden_output->data, (half*)host_output->data, host_output->size / sizeof(half));
+    ret =
+        compare_data_round_off((half*)golden_output->data, (half*)host_output->data, host_output->size / sizeof(half));
 
     //    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
 

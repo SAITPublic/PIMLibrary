@@ -23,7 +23,7 @@
 __global__ void relu_pim(volatile uint8_t* __restrict__ pim_data, volatile uint8_t* __restrict__ pim_ctr,
                          volatile uint8_t* __restrict__ output, int size,
 #ifdef EMULATOR
-                         PimMemTraceData* fmtd16, int* frd_size, int mt_width, PimMemTracer *emulator_trace,
+                         PimMemTraceData* fmtd16, int* frd_size, int mt_width, PimMemTracer* emulator_trace,
 #endif
                          uint8_t* crf_binary, int crf_size)
 {
