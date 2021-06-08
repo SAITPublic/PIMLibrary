@@ -552,8 +552,6 @@ int pim_gemv_lut_profile(bool block)
     return ret;
 }
 
-
-
 int pim_gemv_uniform_128(bool block)
 {
     int ret = 0;
@@ -574,7 +572,7 @@ int pim_gemv_uniform_128(bool block)
     /* Initialize the input, weight, output data */
     std::string test_vector_data = TEST_VECTORS_DATA;
 
-    // input is 0 from 128 to 255  
+    // input is 0 from 128 to 255
     std::string input = test_vector_data + "load/gemv/uniform_input_256x1.dat";
     std::string weight = test_vector_data + "load/gemv/uniform_weight_256x4096.dat";
     std::string output = test_vector_data + "load/gemv/uniform_output_4096x1.dat";
@@ -618,7 +616,6 @@ int pim_gemv_uniform_128(bool block)
     return ret;
 }
 
-
 int pim_gemv_normal_128(bool block)
 {
     int ret = 0;
@@ -639,7 +636,7 @@ int pim_gemv_normal_128(bool block)
     /* Initialize the input, weight, output data */
     std::string test_vector_data = TEST_VECTORS_DATA;
 
-    // input is 0 from 128 to 255  
+    // input is 0 from 128 to 255
     std::string input = test_vector_data + "load/gemv/normal_input_256x1.dat";
     std::string weight = test_vector_data + "load/gemv/normal_weight_256x4096.dat";
     std::string output = test_vector_data + "load/gemv/normal_output_4096x1.dat";
@@ -683,13 +680,10 @@ int pim_gemv_normal_128(bool block)
     return ret;
 }
 
-
-
-
 int pim_gemv_uniform_4096(bool block)
 {
     int ret = 0;
-    int input_length =4096;
+    int input_length = 4096;
     /* __PIM_API__ call : Initialize PimRuntime */
     PimInitialize(RT_TYPE_HIP, PIM_FP16);
 
@@ -749,7 +743,6 @@ int pim_gemv_uniform_4096(bool block)
     return ret;
 }
 
-
 int pim_gemv_normal_4096(bool block)
 {
     int ret = 0;
@@ -770,7 +763,7 @@ int pim_gemv_normal_4096(bool block)
     /* Initialize the input, weight, output data */
     std::string test_vector_data = TEST_VECTORS_DATA;
 
-    // input is 0 from 128 to 255  
+    // input is 0 from 128 to 255
     std::string input = test_vector_data + "load/gemv/normal_input_4096x1.dat";
     std::string weight = test_vector_data + "load/gemv/normal_weight_4096x4096.dat";
     std::string output = test_vector_data + "load/gemv/normal_output_4096x4096.dat";
@@ -813,12 +806,6 @@ int pim_gemv_normal_4096(bool block)
 
     return ret;
 }
-
-
-
-
-
-
 
 TEST(HIPIntegrationTest, PimGemvBatchSync) { EXPECT_TRUE(pim_gemv_batch(true) == 0); }
 TEST(HIPIntegrationTest, PimGemvBatchAsync) { EXPECT_TRUE(pim_gemv_batch(false) == 0); }
