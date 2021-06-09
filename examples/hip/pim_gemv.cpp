@@ -120,7 +120,7 @@ int pim_gemv_256(bool block)
     std::string weight = test_vector_data + "load/gemv/weight_256x4096.dat";
     std::string output = test_vector_data + "load/gemv/output_4096x1.dat";
     std::string preload_weight = test_vector_data + "dump/gemv/preloaded_weight_256x4096.dat";
-    std::string output_dump = test_vector_data + "dump/gemv/output_4096x1.dat";
+    std::string output_dump = test_vector_data + "dump/gemv/output_4096x1_256.dat";
 
     load_data(input.c_str(), (char*)host_input->data, host_input->size);
     load_data(weight.c_str(), (char*)host_weight->data, host_weight->size);
@@ -247,11 +247,11 @@ int pim_gemv_desc(bool block)
     /* Initialize the input, weight, output data */
     std::string test_vector_data = TEST_VECTORS_DATA;
 
-    std::string input = test_vector_data + "load/gemv/gemv_input_1024x4096.dat";
-    std::string weight = test_vector_data + "load/gemv/gemv_weight_1024x4096.dat";
-    std::string output = test_vector_data + "load/gemv/gemv_output_1024x4096.dat";
-    std::string preload_weight = test_vector_data + "dump/gemv/gemv_preloaded_weight_1024x4096.dat";
-    std::string output_dump = test_vector_data + "dump/gemv/gemv_output_1024x4096.dat";
+    std::string input = test_vector_data + "load/gemv/input_1024x1.dat";
+    std::string weight = test_vector_data + "load/gemv/weight_1024x4096.dat";
+    std::string output = test_vector_data + "load/gemv/output_4096x1_1024.dat";
+    std::string preload_weight = test_vector_data + "dump/gemv/preloaded_weight_1024x4096.dat";
+    std::string output_dump = test_vector_data + "dump/gemv/output_4096x1_1024.dat";
 
     load_data(input.c_str(), (char*)host_input->data, host_input->size);
     load_data(weight.c_str(), (char*)temp_weight->data, temp_weight->size);
@@ -276,6 +276,7 @@ int pim_gemv_desc(bool block)
         //    dump_data(preload_weight.c_str(), (char*)preloaded_weight->data, preloaded_weight->size);
         //    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
         ret = compare_data_round_off((half*)golden_output->data, (half*)host_output->data, out_size, EPSILON);
+        ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data, out_size);
     }
 
     /* __PIM_API__ call : Destroy PIM Buffer Object */
@@ -322,9 +323,9 @@ int pim_gemv_desc_batch(bool block)
     /* Initialize the input, weight, output data */
     std::string test_vector_data = TEST_VECTORS_DATA;
 
-    std::string input = test_vector_data + "load/gemv/gemv_batch_input_4x1024.dat";
-    std::string weight = test_vector_data + "load/gemv/gemv_batch_weight_1024x4096.dat";
-    std::string output = test_vector_data + "load/gemv/gemv_batch_output_4x4096.dat";
+    std::string input = test_vector_data + "load/gemv/batch_input_4x1024.dat";
+    std::string weight = test_vector_data + "load/gemv/batch_weight_1024x4096.dat";
+    std::string output = test_vector_data + "load/gemv/batch_output_4x4096.dat";
     std::string preload_weight = test_vector_data + "dump/gemv/gemv_batch_preloaded_weight_1024x4096.dat";
     std::string output_dump = test_vector_data + "dump/gemv/gemv_batch_output_4x4096.dat";
 
@@ -356,6 +357,7 @@ int pim_gemv_desc_batch(bool block)
 
         ret = compare_data_round_off((half*)golden_output->data, (half*)host_output->data, OUT_LENGTH * BATCH_DIM,
                                      EPSILON);
+        ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data, OUT_LENGTH * BATCH_DIM);
     }
     /* __PIM_API__ call : Destroy PIM Buffer Object */
     PimDestroyBo(host_input);
@@ -406,12 +408,12 @@ int pim_gemv_lut(bool block)
     /* Initialize the input, weight, output data */
     std::string test_vector_data = TEST_VECTORS_DATA;
 
-    std::string input = test_vector_data + "load/gemv/gemv_input_1024x4096.dat";
-    std::string weight = test_vector_data + "load/gemv/gemv_weight_1024x4096.dat";
-    std::string output = test_vector_data + "load/gemv/gemv_output_1024x4096.dat";
-    std::string preload_weight = test_vector_data + "dump/gemv/gemv_preloaded_weight_1024x4096.dat";
-    std::string output_dump = test_vector_data + "dump/gemv/gemv_output_1024x4096.dat";
-
+    std::string input = test_vector_data + "load/gemv/input_1024x1.dat";
+    std::string weight = test_vector_data + "load/gemv/weight_1024x4096.dat";
+    std::string output = test_vector_data + "load/gemv/output_4096x1_1024.dat";
+    std::string preload_weight = test_vector_data + "dump/gemv/preloaded_weight_1024x4096.dat";
+    std::string output_dump = test_vector_data + "dump/gemv/output_4096x1_1024.dat";
+    
     load_data(input.c_str(), (char*)host_input->data, host_input->size);
     load_data(weight.c_str(), (char*)temp_weight->data, temp_weight->size);
     load_data(output.c_str(), (char*)golden_output->data, out_size * sizeof(half));
@@ -489,11 +491,11 @@ int pim_gemv_lut_profile(bool block)
     /* Initialize the input, weight, output data */
     std::string test_vector_data = TEST_VECTORS_DATA;
 
-    std::string input = test_vector_data + "load/gemv/gemv_input_1024x4096.dat";
-    std::string weight = test_vector_data + "load/gemv/gemv_weight_1024x4096.dat";
-    std::string output = test_vector_data + "load/gemv/gemv_output_1024x4096.dat";
-    std::string preload_weight = test_vector_data + "dump/gemv/gemv_preloaded_weight_1024x4096.dat";
-    std::string output_dump = test_vector_data + "dump/gemv/gemv_output_1024x4096.dat";
+    std::string input = test_vector_data + "load/gemv/input_1024x1.dat";
+    std::string weight = test_vector_data + "load/gemv/weight_1024x4096.dat";
+    std::string output = test_vector_data + "load/gemv/output_4096x1_1024.dat";
+    std::string preload_weight = test_vector_data + "dump/gemv/preloaded_weight_1024x4096.dat";
+    std::string output_dump = test_vector_data + "dump/gemv/output_4096x1_1024.dat";
 
     load_data(input.c_str(), (char*)host_input->data, host_input->size);
     load_data(weight.c_str(), (char*)temp_weight->data, temp_weight->size);
