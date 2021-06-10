@@ -191,6 +191,19 @@ int PimRuntime::execute_gemv_add(PimBo* output, PimBo* operand0, PimBo* operand1
     return ret;
 }
 
+
+int PimRuntime::execute_gemv_tree(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream, bool block)
+{
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
+    int ret = 0;
+
+    ret = pim_executor_->execute_gemv_tree(output, operand0, operand1, (hipStream_t)stream, block);
+
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+    return ret;
+}
+
+
 int PimRuntime::execute_relu(PimBo* output, PimBo* pim_data, void* stream, bool block)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";

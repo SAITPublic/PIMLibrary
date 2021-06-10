@@ -42,6 +42,7 @@ typedef enum __PimMemCpyType {
 
 typedef enum __PimOpType {
     OP_GEMV,
+    OP_GEMV_TREE,
     OP_ELT_ADD,
     OP_ELT_MUL,
     OP_RELU,

@@ -263,6 +263,25 @@ union BurstType {
         return sum;
     }
 
+    fp16 fp16_adder_tree()
+    {
+        fp16 sum[16];
+        int num_data = 16;
+
+        for (int i = 0; i < num_data; i++) {
+            sum[i] = fp16_data_[i];
+        }
+
+        for (int i = 0; i < 4; i++) {
+            num_data = num_data / 2;
+            for (int j = 0; j < num_data; j++) {
+                sum[j] = sum[j * 2] + sum[j * 2 + 1];
+            }
+        }
+
+        return sum[0];
+    }
+
     float fp32_reducesum()
     {
         float sum = 0.0;

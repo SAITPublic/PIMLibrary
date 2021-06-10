@@ -289,6 +289,8 @@ __PIM_API__ int PimExecuteRelu(PimBo* output, PimBo* pim_data, void* stream = nu
 __PIM_API__ int PimExecuteGemv(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream = nullptr,
                                bool block = false);
 
+__PIM_API__ int PimExecuteGemvTree(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream, bool block);
+
 /**
  * @brief Executes PIM GEMV + Add operation
  *

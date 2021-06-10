@@ -43,6 +43,7 @@ class PimExecutor
     int execute_add(PimBo* output, PimBo* operand0, PimBo* operand1, hipStream_t stream, bool block);
     int execute_mul(PimBo* output, PimBo* operand0, PimBo* operand1, hipStream_t stream, bool block);
     int execute_relu(PimBo* output, PimBo* pim_data, hipStream_t stream, bool block);
+    int execute_gemv_tree(PimBo* output, PimBo* operand0, PimBo* operand1, hipStream_t stream, bool block);
     int execute_gemv(PimBo* output, PimBo* operand0, PimBo* operand1, hipStream_t stream, bool block);
     int execute_gemv_add(PimBo* output, PimBo* operand0, PimBo* operand1, hipStream_t stream, bool block);
     int execute_bn(PimBo* output, PimBo* pim_data, PimBo* beta, PimBo* gamma, PimBo* mean, PimBo* variance,
@@ -62,6 +63,7 @@ class PimExecutor
     PimPrecision precision_;
     hipDeviceProp_t dev_prop_;
     uint8_t* pim_gemv_tmp_buffer_;
+    uint8_t* zero_buffer_;
     PimBlockInfo fbi_;
 #ifdef EMULATOR
     PimMemTraceData* d_fmtd16_;

@@ -149,6 +149,7 @@ class PIMController
                            NumpyBurstType* beta_npbst, NumpyBurstType* input_npbst, fp16** params, float eps);
 
     void execute_gemv(NumpyBurstType* w_data, NumpyBurstType* i_data);
+    void execute_gemv_tree(NumpyBurstType* w_data, NumpyBurstType* i_data);
     void execute_eltwise(int dim, pim_bank_type bank_type, KernelType ktype, int input0_row, int result_row,
                          int input1_row = 0);
 
@@ -189,6 +190,7 @@ class PIMController
                         unsigned starting_row = 0, unsigned starting_col = 0);
 
     void preload_no_replacement(NumpyBurstType* operand, unsigned starting_row, unsigned starting_col);
+    void adder_tree(BurstType* result, int output_dim, int num_tile, int step, fp16* temp);
 };
 
 #endif

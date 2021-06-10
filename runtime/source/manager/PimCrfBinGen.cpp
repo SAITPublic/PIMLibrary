@@ -67,6 +67,17 @@ void PimCrfBinGen::create_pim_cmd(PimOpType op_type, int lc)
             PimCommand(PimCmdType::MAC, PimOpdType::GRF_B, PimOpdType::GRF_A, PimOpdType::ODD_BANK, 1, 0, 0, 0),
             PimCommand(PimCmdType::JUMP, odd_lc, 2), PimCommand(PimCmdType::NOP, 23)};
         cmds_.assign(tmp_cmds.begin(), tmp_cmds.end());
+    } else if (op_type == OP_GEMV_TREE) {
+        std::vector<PimCommand> tmp_cmds{
+            PimCommand(PimCmdType::MAC, PimOpdType::GRF_B, PimOpdType::GRF_A, PimOpdType::EVEN_BANK, 1, 0, 0, 0),
+            PimCommand(PimCmdType::JUMP, 7, 2),
+            PimCommand(PimCmdType::NOP, 23),
+            PimCommand(PimCmdType::MUL, PimOpdType::GRF_B, PimOpdType::GRF_B, PimOpdType::EVEN_BANK, 1),
+            PimCommand(PimCmdType::MAC, PimOpdType::GRF_B, PimOpdType::GRF_A, PimOpdType::ODD_BANK, 1, 0, 0, 0),
+            PimCommand(PimCmdType::JUMP, 7, 2),
+            PimCommand(PimCmdType::NOP, 23),
+            PimCommand(PimCmdType::MUL, PimOpdType::GRF_B, PimOpdType::GRF_B, PimOpdType::EVEN_BANK, 1)};
+        cmds_.assign(tmp_cmds.begin(), tmp_cmds.end());
     } else if (op_type == OP_BN) {
         std::vector<PimCommand> tmp_cmds{PimCommand(PimCmdType::MAD, PimOpdType::GRF_A, PimOpdType::EVEN_BANK,
                                                     PimOpdType::SRF_M, PimOpdType::SRF_A, 1, 0, 0, 0),
