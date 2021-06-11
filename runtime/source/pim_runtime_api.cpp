@@ -455,24 +455,6 @@ int PimExecuteGemv(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream
     return ret;
 }
 
-int PimExecuteGemvTree(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream, bool block)
-{
-    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
-    PIM_PROFILE_TICK(ExecuteGEMV);
-    int ret = 0;
-
-    if (pim_runtime == nullptr) {
-        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
-        return -1;
-    }
-    ret = pim_runtime->execute_gemv_tree(output, operand0, operand1, stream, block);
-    PIM_PROFILE_TOCK(ExecuteGEMV);
-
-    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
-    return ret;
-}
-
-
 int PimExecuteGemvAdd(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream, bool block)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";

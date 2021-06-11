@@ -100,7 +100,7 @@ int PimEmulator::execute_gemv_tree(PimBo* output, PimBo* pim_data, PimMemTraceDa
     uint64_t pim_data_addr = reinterpret_cast<uint64_t>(pim_data->data);
 
     pim_sim_.preload_data_with_addr(pim_data_addr - pim_base_addr, pim_data->data, pim_data->size);
-    pim_sim_.preload_data_with_addr(zero_data_buf - pim_base_addr, (void*)zero_buf, 256*1024);
+    pim_sim_.preload_data_with_addr(zero_data_buf - pim_base_addr, (void*)zero_buf, 256 * 1024);
     pim_sim_.execute_kernel((void*)fmtd32, fmtd32_size);
     pim_sim_.read_result_gemv_tree(sim_output, tmp_data_addr - pim_base_addr, out_dim, num_input_tile);
 

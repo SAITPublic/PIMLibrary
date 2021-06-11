@@ -486,7 +486,9 @@ __global__ void gemv_tree_pim_64cu_64th_fp16(volatile uint8_t* __restrict__ pim_
     int out_idx;
     int out_offset;
     int li;
-    float t_output[1000];
+
+    // FIXME 
+    float t_output[32];
     float temp_sum[16];
     int num_data=16;
 

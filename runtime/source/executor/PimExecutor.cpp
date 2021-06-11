@@ -302,12 +302,9 @@ int PimExecutor::execute_gemv_tree(PimBo* output, PimBo* operand0, PimBo* operan
     unsigned threads_per_block = 64;
 
     int memory_size = weight->bshape.w;
-    //int compute_size = 128 * ceil((float)weight->bshape_r.w / 128);
-    //if (compute_size < 256) compute_size = 256;
     int out_size = weight->bshape.h;
     int real_out_size = weight->bshape_r.h;
     int n_batch = input->bshape.n;
-    //int n_compute_tile = compute_size * sizeof(uint16_t) / fbi_.trans_size / fbi_.num_grf_A;
     int n_memory_tile = memory_size * sizeof(uint16_t) / fbi_.trans_size / fbi_.num_grf_A;
     int n_out_tile = out_size / (fbi_.num_pim_chan * fbi_.num_pim_blocks * fbi_.num_grf_B);
 

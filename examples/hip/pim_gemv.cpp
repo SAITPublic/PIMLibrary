@@ -848,7 +848,7 @@ int pim_gemv_no_accum_512(bool block)
     PimCopyMemory(preloaded_weight, host_reordered_weight, HOST_TO_DEVICE);
     for (int i = 0; i < NUM_ITER; i++) {
         /* __PIM_API__ call : Execute PIM kernel (GEMV) */
-        PimExecuteGemvTree(device_output, device_input, preloaded_weight, nullptr, block);
+        PimExecuteGemv(device_output, device_input, preloaded_weight, nullptr, block);
         if (!block) PimSynchronize();
 
         PimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
@@ -913,7 +913,7 @@ int pim_gemv_no_accum_256(bool block)
     PimCopyMemory(preloaded_weight, host_reordered_weight, HOST_TO_DEVICE);
     for (int i = 0; i < NUM_ITER; i++) {
         /* __PIM_API__ call : Execute PIM kernel (GEMV) */
-        PimExecuteGemvTree(device_output, device_input, preloaded_weight, nullptr, block);
+        PimExecuteGemv(device_output, device_input, preloaded_weight, nullptr, block);
         if (!block) PimSynchronize();
 
         PimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
@@ -988,7 +988,7 @@ int pim_gemv_no_accum_desc(bool block)
     PimCopyMemory(preloaded_weight, host_reordered_weight, HOST_TO_PIM);
     for (int i = 0; i < NUM_ITER; i++) {
         /* __PIM_API__ call : Execute PIM kernel (GEMV) */
-        PimExecuteGemvTree(device_output, device_input, preloaded_weight, nullptr, block);
+        PimExecuteGemv(device_output, device_input, preloaded_weight, nullptr, block);
         if (!block) PimSynchronize();
 
         PimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
@@ -1019,16 +1019,16 @@ int pim_gemv_no_accum_desc(bool block)
 
 
 
-TEST(HIPIntegrationTest, PimGemvBatchSync) { EXPECT_TRUE(pim_gemv_batch(true) == 0); }
-TEST(HIPIntegrationTest, PimGemvBatchAsync) { EXPECT_TRUE(pim_gemv_batch(false) == 0); }
+//TEST(HIPIntegrationTest, PimGemvBatchSync) { EXPECT_TRUE(pim_gemv_batch(true) == 0); }
+//TEST(HIPIntegrationTest, PimGemvBatchAsync) { EXPECT_TRUE(pim_gemv_batch(false) == 0); }
 TEST(HIPIntegrationTest, PimGemv256Sync) { EXPECT_TRUE(pim_gemv_256(true) == 0); }
 TEST(HIPIntegrationTest, PimGemv256Async) { EXPECT_TRUE(pim_gemv_256(false) == 0); }
 TEST(HIPIntegrationTest, PimGemv512Sync) { EXPECT_TRUE(pim_gemv_512(true) == 0); }
 TEST(HIPIntegrationTest, PimGemv512Async) { EXPECT_TRUE(pim_gemv_512(false) == 0); }
 TEST(HIPIntegrationTest, PimGemvDescSync) { EXPECT_TRUE(pim_gemv_desc(true) == 0); }
 TEST(HIPIntegrationTest, PimGemvDescAsync) { EXPECT_TRUE(pim_gemv_desc(false) == 0); }
-TEST(HIPIntegrationTest, PimGemvDescBatchSync) { EXPECT_TRUE(pim_gemv_desc_batch(true) == 0); }
-TEST(HIPIntegrationTest, PimGemvDescBatchASync) { EXPECT_TRUE(pim_gemv_desc_batch(false) == 0); }
+//TEST(HIPIntegrationTest, PimGemvDescBatchSync) { EXPECT_TRUE(pim_gemv_desc_batch(true) == 0); }
+//TEST(HIPIntegrationTest, PimGemvDescBatchASync) { EXPECT_TRUE(pim_gemv_desc_batch(false) == 0); }
 TEST(HIPIntegrationTest, PimGemvLutSync) { EXPECT_TRUE(pim_gemv_lut(true) == 0); }
 TEST(HIPIntegrationTest, PimGemvLutAsync) { EXPECT_TRUE(pim_gemv_lut(false) == 0); }
 TEST(HIPIntegrationTest, PimGemvLutProfileAsync) { EXPECT_TRUE(pim_gemv_lut_profile(false) == 0); }
