@@ -135,41 +135,16 @@ inline int compare_data(char* data_a, char* data_b, size_t size)
     return ret;
 }
 
-inline int compare_data_round_off(half_float::half* data_a, half_float::half* data_b, int size, float epsilon = 0.001)
-{
-    int pass_cnt = 0;
-    int fail_cnt = 0;
-    int ret = 0;
-    float abs_diff;
-    float max_diff = 0.0;
-    float avg_diff = 0.0;
-
-    for (int i = 0; i < size; i++) {
-        abs_diff = abs(float(data_a[i]) - float(data_b[i]));
-        if (abs_diff < epsilon) {
-            pass_cnt++;
-        } else {
-            fail_cnt++;
-            if (max_diff < abs_diff) max_diff = abs_diff;
-            avg_diff += abs_diff;
-            ret = 1;
-        }
-    }
-    avg_diff /= fail_cnt;
-
-    if (ret) {
-        printf("pass_cnt : %d, fail_cnt : %d, pass ratio : %f\n", pass_cnt, fail_cnt,
-               ((float)pass_cnt / ((float)fail_cnt + (float)pass_cnt) * 100.));
-        printf("max_diff : %f, avg_diff : %f\n", max_diff, avg_diff);
-    }
-
-    return ret;
-}
-
-inline int compare_half_Ulps(half_float::half data_a, half_float::half data_b, int maxUlpsDiff)
+inline int compare_half_Ulps_and_absoulte(half_float::half data_a, half_float::half data_b, int maxUlpsDiff, float absTolerance  = 0.001)
 {
     uint16_t Ai = *((uint16_t*)&data_a);
     uint16_t Bi = *((uint16_t*)&data_b);
+    
+    float diff = fabs((float) data_a - (float) data_b);
+
+    if(diff <= absTolerance) {
+        return true;
+    }
 
     if ((Ai & (1 << 15)) != (Bi & (1 << 15))) {
         if (Ai == Bi) return true;
@@ -178,12 +153,13 @@ inline int compare_half_Ulps(half_float::half data_a, half_float::half data_b, i
 
     // Find the difference in ULPs.
     int ulpsDiff = abs(Ai - Bi);
+
     if (ulpsDiff <= maxUlpsDiff) return true;
 
     return false;
 }
 
-inline int compare_half_relative(half_float::half* data_a, half_float::half* data_b, int size)
+inline int compare_half_relative(half_float::half* data_a, half_float::half* data_b, int size, float absTolerance)
 {
     int pass_cnt = 0;
     int warning_cnt = 0;
@@ -196,14 +172,18 @@ inline int compare_half_relative(half_float::half* data_a, half_float::half* dat
     float max_diff = 0.0;
     
     for (int i = 0; i < size; i++) {
-        if (compare_half_Ulps(data_a[i], data_b[i], 4)) {
+        if (compare_half_Ulps_and_absoulte(data_a[i], data_b[i], 4)) {
+
+            //std::cout << "c data_a : " << (float)data_a[i] << " data_b : "  <<(float)data_b[i]  << std::endl;
             pass_cnt++;
-        } else if (compare_half_Ulps(data_a[i], data_b[i], 256)) {
+        } else if (compare_half_Ulps_and_absoulte(data_a[i], data_b[i], 256, absTolerance)) {
+            //std::cout << "w data_a : " << (float)data_a[i] << " data_b : "  <<(float)data_b[i]  << std::endl;
             warning_cnt++;
         } else {
             if (abs(float(data_a[i]) - float(data_b[i])) > max_diff) {
                 max_diff = abs(float(data_a[i]) - float(data_b[i]));
             }
+          //  std::cout << "f data_a : " << (float)data_a[i] << " data_b : "  <<(float)data_b[i]  << std::endl;
             
             fail_idx.push_back(pass_cnt + warning_cnt + fail_cnt);
             fail_data_pim.push_back((float)data_a[i]);
@@ -218,13 +198,100 @@ inline int compare_half_relative(half_float::half* data_a, half_float::half* dat
     if (ret) {
         printf("relative - pass_cnt : %d, warning_cnt : %d, fail_cnt : %d, pass ratio : %f\n", pass_cnt, warning_cnt, fail_cnt,
                ((float)quasi_cnt / ((float)fail_cnt + (float)warning_cnt + (float)pass_cnt) * 100));
+        
+//#ifdef DEBUG_PIM
         for (int i=0; i<fail_idx.size(); i++) {
             std::cout << fail_idx[i] << " pim : " << fail_data_pim[i] << " golden :" << fail_data_goldeny[i] << std::endl;
         }   
         printf("max diff : %f\n", max_diff);
+//#endif
+
     }
 
     return ret;
 }
+
+
+inline void addressMapping(uint64_t physicalAddress, unsigned& newTransactionChan, unsigned& newTransactionRank,
+                    unsigned& newTransactionBank, unsigned& newTransactionRow, unsigned& newTransactionColumn) {
+    uint64_t tempA, tempB;
+    uint64_t transactionSize = 32;
+    uint64_t transactionMask = transactionSize - 1; // ex: (64 bit bus width) x (8
+                                                    // Burst Length) - 1 = 64
+                                                    // bytes - 1 = 63 = 0x3f mask
+    uint64_t channelBitWidth = 6;
+    uint64_t rankBitWidth = 1;
+    uint64_t bankBitWidth = 2;
+    uint64_t bankgroupBitWidth = 2;
+    uint64_t rowBitWidth = 14;
+    uint64_t colBitWidth = 5;
+
+    uint64_t byteOffsetWidth = 5;
+    physicalAddress >>= byteOffsetWidth;
+
+    uint64_t colLowBitWidth = 2;
+
+    physicalAddress >>= colLowBitWidth;
+
+    uint64_t colHighBitWidth = colBitWidth - colLowBitWidth;
+
+    int col_low_width = 2;
+    int ba_low_width = (bankBitWidth - bankgroupBitWidth) / 2;
+    int col_high_width = colHighBitWidth - col_low_width;
+    int ba_high_width = (bankBitWidth - bankgroupBitWidth) - ba_low_width;
+
+    tempA = physicalAddress;
+    physicalAddress = physicalAddress >> 1;
+    tempB = physicalAddress << 1;
+    newTransactionColumn = tempA ^ tempB;
+
+    tempA = physicalAddress;
+    physicalAddress = physicalAddress >> 1;
+    tempB = physicalAddress << 1;
+    newTransactionChan = tempA ^ tempB;
+
+    tempA = physicalAddress;
+    physicalAddress = physicalAddress >> (col_low_width - 1);
+    tempB = physicalAddress << (col_low_width - 1);
+    newTransactionColumn |= (tempA ^ tempB) << 1;
+
+    
+    tempA = physicalAddress;
+    physicalAddress = physicalAddress >> (channelBitWidth - 1);
+    tempB = physicalAddress << (channelBitWidth - 1);
+    newTransactionChan |= (tempA ^ tempB) << 1;
+    
+    tempA = physicalAddress;
+    physicalAddress = physicalAddress >> ba_low_width;
+    tempB = physicalAddress << ba_low_width;
+    newTransactionBank = tempA ^ tempB;
+    // bankgroup
+    tempA = physicalAddress;
+    physicalAddress = physicalAddress >> bankgroupBitWidth;
+    tempB = physicalAddress << bankgroupBitWidth;
+    newTransactionBank |= (tempA ^tempB) << (bankBitWidth - bankgroupBitWidth);
+
+    tempA = physicalAddress;
+    physicalAddress = physicalAddress >> ba_high_width;
+    tempB = physicalAddress << ba_high_width;
+    newTransactionBank |= (tempA ^ tempB) << ba_low_width;
+
+    tempA = physicalAddress;
+    physicalAddress = physicalAddress >> col_high_width;
+    tempB = physicalAddress << col_high_width;
+    newTransactionColumn |= (tempA ^ tempB) << col_low_width;
+
+    tempA = physicalAddress;
+    physicalAddress = physicalAddress >> rowBitWidth;
+    tempB = physicalAddress << rowBitWidth;
+    newTransactionRow = tempA ^ tempB;
+
+    tempA = physicalAddress;
+    physicalAddress = physicalAddress >> rankBitWidth;
+    tempB = physicalAddress << rankBitWidth;
+    newTransactionRank = tempA ^ tempB;
+
+}
+
 
 #endif /* _PIM_DUMP_HPP_ */

@@ -25,6 +25,8 @@
 #define NUM_ITER (1)
 #endif
 
+#define EPSILON (0.1)
+
 using namespace std;
 using half_float::half;
 
@@ -96,7 +98,7 @@ int pim_bn_nr1(bool block)
 
     PimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
 
-    ret = compare_data_round_off((half*)golden_output->data, (half*)host_output->data, host_output->size / 2);
+    ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data, host_output->size / 2, EPSILON);
 
     // dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
 
@@ -186,7 +188,7 @@ int pim_bn_nr2(bool block)
 
     PimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
 
-    ret = compare_data_round_off((half*)golden_output->data, (half*)host_output->data, host_output->size / 2);
+    ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data, host_output->size / 2, EPSILON);
 
     // dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
 
@@ -274,7 +276,7 @@ int pim_bn_nr3(bool block)
     printf("kernel Execution time             = %6.3fms\n", eventMs / 100);
 
     PimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
-    ret = compare_data_round_off((half*)golden_output->data, (half*)host_output->data, host_output->size / 2);
+    ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data, host_output->size / 2, EPSILON);
     // cout <<" ITER : " << i <<endl;
     //    dump_data(preload_input.c_str(), (char*)preloaded_pim_input->data, preloaded_pim_input->size);
     //    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
@@ -363,7 +365,7 @@ int pim_bn_nr4(bool block)
     printf("kernel Execution time             = %6.3fms\n", eventMs / 100);
 
     PimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
-    ret = compare_data_round_off((half*)golden_output->data, (half*)host_output->data, host_output->size / 2);
+    ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data, host_output->size / 2, EPSILON);
     // cout <<" ITER : " << i <<endl;
     //    dump_data(preload_input.c_str(), (char*)preloaded_pim_input->data, preloaded_pim_input->size);
     //    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
@@ -452,7 +454,7 @@ int pim_bn_nr5(bool block)
     printf("kernel Execution time             = %6.3fms\n", eventMs / 100);
 
     PimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
-    ret = compare_data_round_off((half*)golden_output->data, (half*)host_output->data, host_output->size / 2);
+    ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data, host_output->size / 2, EPSILON);
 
     //    dump_data(preload_input.c_str(), (char*)preloaded_pim_input->data, preloaded_pim_input->size);
     //    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
@@ -541,7 +543,7 @@ int pim_bn_nr6(bool block)
     printf("kernel Execution time             = %6.3fms\n", eventMs / 100);
 
     PimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
-    ret = compare_data_round_off((half*)golden_output->data, (half*)host_output->data, host_output->size / 2);
+    ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data, host_output->size / 2, EPSILON);
 
     //    dump_data(preload_input.c_str(), (char*)preloaded_pim_input->data, preloaded_pim_input->size);
     //    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
@@ -630,7 +632,7 @@ int pim_bn_nr7(bool block)
     printf("kernel Execution time             = %6.3fms\n", eventMs / 100);
 
     PimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
-    ret = compare_data_round_off((half*)golden_output->data, (half*)host_output->data, host_output->size / 2);
+    ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data, host_output->size / 2, EPSILON);
 
     //    dump_data(preload_input.c_str(), (char*)preloaded_pim_input->data, preloaded_pim_input->size);
     //    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
@@ -719,7 +721,7 @@ int pim_bn_nr8(bool block)
     printf("kernel Execution time             = %6.3fms\n", eventMs / 100);
 
     PimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
-    ret = compare_data_round_off((half*)golden_output->data, (half*)host_output->data, host_output->size / 2);
+    ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data, host_output->size / 2, EPSILON);
 
     //    dump_data(preload_input.c_str(), (char*)preloaded_pim_input->data, preloaded_pim_input->size);
     //    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);

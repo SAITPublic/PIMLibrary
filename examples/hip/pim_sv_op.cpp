@@ -19,6 +19,7 @@
 #include "utility/pim_dump.hpp"
 
 #define LENGTH (128 * 1024)
+#define EPSILON (0.1)
 
 using namespace std;
 using half_float::half;
@@ -57,7 +58,7 @@ int pim_sv_add_1(void)
     PimCopyMemory(host_output, device_output, PIM_TO_HOST);
 
     ret =
-        compare_data_round_off((half*)golden_output->data, (half*)host_output->data, host_output->size / sizeof(half));
+        compare_half_relative((half*)golden_output->data, (half*)host_output->data, host_output->size / sizeof(half), EPSILON);
     //    ret = compare_data((char*)golden_output->data, (char*)host_output->data, host_output->size);
     //    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
 
@@ -110,7 +111,7 @@ int pim_sv_mul_1(void)
     PimCopyMemory(host_output, device_output, PIM_TO_HOST);
 
     ret =
-        compare_data_round_off((half*)golden_output->data, (half*)host_output->data, host_output->size / sizeof(half));
+        compare_half_relative((half*)golden_output->data, (half*)host_output->data, host_output->size / sizeof(half), EPSILON);
     //    ret = compare_data((char*)golden_output->data, (char*)host_output->data, host_output->size);
     //    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
 

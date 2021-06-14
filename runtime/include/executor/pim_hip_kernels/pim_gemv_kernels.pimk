@@ -355,7 +355,6 @@ __global__ void gemv_tree_pim_64cu_64th_fp16(volatile uint8_t* __restrict__ pim_
                     odd_row = even_row + 1;
 
                     if ( i_idx % 2 == 0) {
-
                         addr = addr_gen(ch, 0, 0, 0, even_row, gidx);
                         R_CMD(&pim_weight[addr + offset]);
 
@@ -381,7 +380,7 @@ __global__ void gemv_tree_pim_64cu_64th_fp16(volatile uint8_t* __restrict__ pim_
                         R_CMD(&pim_weight[addr + offset]);
                         B_CMD(1);
 
-                        loc = b_idx * n_out_tile * num_grf + o_idx * num_grf + gidx + i_idx * num_grf;
+                        loc = b_idx * n_out_tile * n_compute_tile * num_grf + o_idx * num_grf * n_compute_tile + i_idx * num_grf +  gidx;
                         row = loc / num_col;
                         col = loc % num_col;
 
@@ -398,7 +397,6 @@ __global__ void gemv_tree_pim_64cu_64th_fp16(volatile uint8_t* __restrict__ pim_
                         R_CMD(&zero_buffer[addr + offset]);
                         B_CMD(1);
                     } else {
-
                         addr = addr_gen(ch, 0, 0, 1, even_row, gidx);
                         R_CMD(&pim_weight[addr + offset]);
 
@@ -424,7 +422,7 @@ __global__ void gemv_tree_pim_64cu_64th_fp16(volatile uint8_t* __restrict__ pim_
                         R_CMD(&pim_weight[addr + offset]);
                         B_CMD(1);
 
-                        loc = b_idx * n_out_tile * num_grf + o_idx * num_grf + gidx + i_idx * num_grf;
+                        loc = b_idx * n_out_tile * n_compute_tile * num_grf + o_idx * num_grf * n_compute_tile + i_idx * num_grf +  gidx;
                         row = loc / num_col;
                         col = loc % num_col;
 
@@ -442,7 +440,6 @@ __global__ void gemv_tree_pim_64cu_64th_fp16(volatile uint8_t* __restrict__ pim_
                         B_CMD(1);
                     }
                 }
-
 
                 addr = addr_gen(ch, 0, 0, 0, 0x3fff, 0x0);
                 W_CMD_R(&pim_ctr[addr + offset], gemv_hab_pim_to_hab + offset);
@@ -492,16 +489,14 @@ __global__ void gemv_tree_pim_64cu_64th_fp16(volatile uint8_t* __restrict__ pim_
     float temp_sum[16];
     int num_data=16;
 
-    
     for (int bi = 0; bi < batch_dim; bi++) {
         for (int oi = 0; oi < n_out_tile; oi++) {
             out_idx = oi * out_per_tile + t_idx;
+            li = bi * n_out_tile * n_compute_tile + oi * n_compute_tile;
             if (out_idx < output_dim) {
-                
                 for (int tile_idx = 0; tile_idx < n_compute_tile; tile_idx++) {
-                    li = bi * n_out_tile + oi;
-                    row = li / 4 + (8 * tile_idx / 32) ;
-                    col = hipThreadIdx_x % 8 + ((li % 4) * 8) + 8 * (tile_idx % 4)  ;
+                    row = li / 4 + (((li % 4) + tile_idx) / 4 );
+                    col = hipThreadIdx_x % 8 + (((li + tile_idx) % 4) * 8);
 
                     addr = addr_gen(ch, 0, bg, ba, row, col);
                     
@@ -535,26 +530,15 @@ __global__ void gemv_tree_pim_64cu_64th_fp16(volatile uint8_t* __restrict__ pim_
                     } else {
                         num_tile = num_tile / 2;
                     }
-                    
                 }
-                
-
-
                 out_offset = bi * output_dim + out_idx;
                 if (is_gemv_add)
                     ((half*)output)[out_offset] += __float2half(t_output[0]);
                 else
                     ((half*)output)[out_offset] = __float2half(t_output[0]);
-
-
             }
         }
     }
 #endif
-
 }
-
-
-
-
 #endif /* _PIM_GEMV_KERNELS_PIMK_ */

@@ -82,7 +82,7 @@ int PimExecutor::initialize(void)
     /* PIM HW can generate only gemv output without reduction sum */
     /* so PimExecutor needs to maintain intermediate output buffer for gemv op */
 
-    pim_manager_->alloc_memory((void**)&pim_gemv_tmp_buffer_, 2 * 1024 * 1024, MEM_TYPE_PIM);
+    pim_manager_->alloc_memory((void**)&pim_gemv_tmp_buffer_, 8*2 * 1024 * 1024, MEM_TYPE_PIM);
 
     // FIXME: 256 x 1024 size occur error in emulator.
     pim_manager_->alloc_memory((void**)&zero_buffer_, 2 * 1024 * 1024, MEM_TYPE_PIM);

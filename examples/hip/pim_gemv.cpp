@@ -31,7 +31,7 @@
 
 using half_float::half;
 
-#define EPSILON (0.1)
+#define EPSILON (0.005)
 
 int pim_gemv_batch(bool block)
 {
@@ -76,7 +76,8 @@ int pim_gemv_batch(bool block)
         if (!block) PimSynchronize();
 
         PimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
-        ret = compare_data_round_off((half*)golden_output->data, (half*)host_output->data, OUT_LENGTH * BATCH_DIM,
+        
+        ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data, OUT_LENGTH * BATCH_DIM,
                                      EPSILON);
     }
 
@@ -140,8 +141,7 @@ int pim_gemv_256(bool block)
         //    dump_data(preload_weight.c_str(), (char*)preloaded_weight->data, preloaded_weight->size);
         //    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
 
-        ret = compare_data_round_off((half*)golden_output->data, (half*)host_output->data, OUT_LENGTH, EPSILON);
-        ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data, OUT_LENGTH);
+        ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data, OUT_LENGTH, EPSILON);
     }
     /* __PIM_API__ call : Destroy PIM Buffer Object */
     PimDestroyBo(host_input);
@@ -203,8 +203,7 @@ int pim_gemv_512(bool block)
 
         //    dump_data(preload_weight.c_str(), (char*)preloaded_weight->data, preloaded_weight->size);
         //    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
-        ret = compare_data_round_off((half*)golden_output->data, (half*)host_output->data, OUT_LENGTH, EPSILON);
-        ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data, OUT_LENGTH);
+        ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data, OUT_LENGTH, EPSILON);
     }
 
     /* __PIM_API__ call : Destroy PIM Buffer Object */
@@ -277,8 +276,7 @@ int pim_gemv_desc(bool block)
 
         //    dump_data(preload_weight.c_str(), (char*)preloaded_weight->data, preloaded_weight->size);
         //    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
-        ret = compare_data_round_off((half*)golden_output->data, (half*)host_output->data, out_size, EPSILON);
-        ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data, out_size);
+        ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data, out_size, EPSILON);
     }
 
     /* __PIM_API__ call : Destroy PIM Buffer Object */
@@ -357,9 +355,7 @@ int pim_gemv_desc_batch(bool block)
 
         PimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
 
-        ret = compare_data_round_off((half*)golden_output->data, (half*)host_output->data, OUT_LENGTH * BATCH_DIM,
-                                     EPSILON);
-        ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data, OUT_LENGTH * BATCH_DIM);
+        ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data, OUT_LENGTH * BATCH_DIM, EPSILON);
     }
     /* __PIM_API__ call : Destroy PIM Buffer Object */
     PimDestroyBo(host_input);
@@ -446,7 +442,7 @@ int pim_gemv_lut(bool block)
 
     //    dump_data(preload_weight.c_str(), (char*)preloaded_weight->data, preloaded_weight->size);
     //    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
-    ret = compare_data_round_off((half*)golden_output->data, (half*)host_output->data, out_size, EPSILON);
+    ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data, out_size, EPSILON);
 
     /* __PIM_API__ call : Destroy PIM Buffer Object */
     PimDestroyBo(host_input);
@@ -539,7 +535,7 @@ int pim_gemv_lut_profile(bool block)
     PimCopyMemory(host_output, dev_out, DEVICE_TO_HOST);
     //    dump_data(preload_weight.c_str(), (char*)preloaded_weight->data, preloaded_weight->size);
     //    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
-    ret = compare_data_round_off((half*)golden_output->data, (half*)host_output->data, out_size, EPSILON);
+    ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data, out_size, EPSILON);
 
     /* __PIM_API__ call : Destroy PIM Buffer Object */
     PimDestroyBo(host_input);
@@ -600,9 +596,7 @@ int pim_gemv_uniform_128(bool block)
         PimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
         //    dump_data(preload_weight.c_str(), (char*)preloaded_weight->data, preloaded_weight->size);
         //    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
-
-        ret = compare_data_round_off((half*)golden_output->data, (half*)host_output->data, OUT_LENGTH, EPSILON);
-        ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data, OUT_LENGTH);
+        ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data, OUT_LENGTH, EPSILON);
     }
     /* __PIM_API__ call : Destroy PIM Buffer Object */
     PimDestroyBo(host_input);
@@ -664,9 +658,7 @@ int pim_gemv_normal_128(bool block)
         PimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
         //    dump_data(preload_weight.c_str(), (char*)preloaded_weight->data, preloaded_weight->size);
         //    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
-
-        ret = compare_data_round_off((half*)golden_output->data, (half*)host_output->data, OUT_LENGTH, EPSILON);
-        ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data, OUT_LENGTH);
+        ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data, OUT_LENGTH, EPSILON);
     }
     /* __PIM_API__ call : Destroy PIM Buffer Object */
     PimDestroyBo(host_input);
@@ -728,8 +720,7 @@ int pim_gemv_uniform_4096(bool block)
         //    dump_data(preload_weight.c_str(), (char*)preloaded_weight->data, preloaded_weight->size);
         //    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
 
-        ret = compare_data_round_off((half*)golden_output->data, (half*)host_output->data, OUT_LENGTH, EPSILON);
-        ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data, OUT_LENGTH);
+        ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data, OUT_LENGTH, EPSILON);
     }
     /* __PIM_API__ call : Destroy PIM Buffer Object */
     PimDestroyBo(host_input);
@@ -792,8 +783,7 @@ int pim_gemv_normal_4096(bool block)
         //    dump_data(preload_weight.c_str(), (char*)preloaded_weight->data, preloaded_weight->size);
         //    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
 
-        ret = compare_data_round_off((half*)golden_output->data, (half*)host_output->data, OUT_LENGTH, EPSILON);
-        ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data, OUT_LENGTH);
+        ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data, OUT_LENGTH, EPSILON);
     }
     /* __PIM_API__ call : Destroy PIM Buffer Object */
     PimDestroyBo(host_input);
@@ -855,8 +845,7 @@ int pim_gemv_no_accum_512(bool block)
 
         //    dump_data(preload_weight.c_str(), (char*)preloaded_weight->data, preloaded_weight->size);
         //    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
-        ret = compare_data_round_off((half*)golden_output->data, (half*)host_output->data, OUT_LENGTH, EPSILON);
-        ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data, OUT_LENGTH);
+        ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data, OUT_LENGTH, EPSILON);
     }
 
     /* __PIM_API__ call : Destroy PIM Buffer Object */
@@ -874,7 +863,6 @@ int pim_gemv_no_accum_512(bool block)
 
     return ret;
 }
-
 
 int pim_gemv_no_accum_256(bool block)
 {
@@ -920,8 +908,7 @@ int pim_gemv_no_accum_256(bool block)
 
         //    dump_data(preload_weight.c_str(), (char*)preloaded_weight->data, preloaded_weight->size);
         //    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
-        ret = compare_data_round_off((half*)golden_output->data, (half*)host_output->data, OUT_LENGTH, EPSILON);
-        ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data, OUT_LENGTH);
+        ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data, OUT_LENGTH, EPSILON);
     }
 
     /* __PIM_API__ call : Destroy PIM Buffer Object */
@@ -939,7 +926,6 @@ int pim_gemv_no_accum_256(bool block)
 
     return ret;
 }
-
 
 int pim_gemv_no_accum_desc(bool block)
 {
@@ -995,11 +981,12 @@ int pim_gemv_no_accum_desc(bool block)
 
         //    dump_data(preload_weight.c_str(), (char*)preloaded_weight->data, preloaded_weight->size);
         //    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
-        ret = compare_data_round_off((half*)golden_output->data, (half*)host_output->data, out_size, EPSILON);
-        ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data, out_size);
+        ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data, out_size, EPSILON);
     }
 
     /* __PIM_API__ call : Destroy PIM Buffer Object */
+    
+    PimDestroyDesc(pim_desc);
     PimDestroyBo(host_input);
     PimDestroyBo(host_weight);
     PimDestroyBo(temp_weight);
@@ -1009,7 +996,6 @@ int pim_gemv_no_accum_desc(bool block)
     PimDestroyBo(preloaded_weight);
     PimDestroyBo(host_reordered_weight);
     PimDestroyBo(golden_output);
-    PimDestroyDesc(pim_desc);
 
     /* __PIM_API__ call : Deinitialize PimRuntime */
     PimDeinitialize();
@@ -1017,22 +1003,19 @@ int pim_gemv_no_accum_desc(bool block)
     return ret;
 }
 
-
-
-//TEST(HIPIntegrationTest, PimGemvBatchSync) { EXPECT_TRUE(pim_gemv_batch(true) == 0); }
-//TEST(HIPIntegrationTest, PimGemvBatchAsync) { EXPECT_TRUE(pim_gemv_batch(false) == 0); }
+TEST(HIPIntegrationTest, PimGemvBatchSync) { EXPECT_TRUE(pim_gemv_batch(true) == 0); }
+TEST(HIPIntegrationTest, PimGemvBatchAsync) { EXPECT_TRUE(pim_gemv_batch(false) == 0); }
 TEST(HIPIntegrationTest, PimGemv256Sync) { EXPECT_TRUE(pim_gemv_256(true) == 0); }
 TEST(HIPIntegrationTest, PimGemv256Async) { EXPECT_TRUE(pim_gemv_256(false) == 0); }
 TEST(HIPIntegrationTest, PimGemv512Sync) { EXPECT_TRUE(pim_gemv_512(true) == 0); }
 TEST(HIPIntegrationTest, PimGemv512Async) { EXPECT_TRUE(pim_gemv_512(false) == 0); }
 TEST(HIPIntegrationTest, PimGemvDescSync) { EXPECT_TRUE(pim_gemv_desc(true) == 0); }
 TEST(HIPIntegrationTest, PimGemvDescAsync) { EXPECT_TRUE(pim_gemv_desc(false) == 0); }
-//TEST(HIPIntegrationTest, PimGemvDescBatchSync) { EXPECT_TRUE(pim_gemv_desc_batch(true) == 0); }
-//TEST(HIPIntegrationTest, PimGemvDescBatchASync) { EXPECT_TRUE(pim_gemv_desc_batch(false) == 0); }
+TEST(HIPIntegrationTest, PimGemvDescBatchSync) { EXPECT_TRUE(pim_gemv_desc_batch(true) == 0); }
+TEST(HIPIntegrationTest, PimGemvDescBatchASync) { EXPECT_TRUE(pim_gemv_desc_batch(false) == 0); }
 TEST(HIPIntegrationTest, PimGemvLutSync) { EXPECT_TRUE(pim_gemv_lut(true) == 0); }
 TEST(HIPIntegrationTest, PimGemvLutAsync) { EXPECT_TRUE(pim_gemv_lut(false) == 0); }
 TEST(HIPIntegrationTest, PimGemvLutProfileAsync) { EXPECT_TRUE(pim_gemv_lut_profile(false) == 0); }
-
 TEST(HIPIntegrationTest, PimGemvUniform128Sync) { EXPECT_TRUE(pim_gemv_uniform_128(true) == 0); }
 TEST(HIPIntegrationTest, PimGemvNormal128Sync) { EXPECT_TRUE(pim_gemv_normal_128(true) == 0); }
 TEST(HIPIntegrationTest, PimGemvUniform4096Sync) { EXPECT_TRUE(pim_gemv_uniform_4096(true) == 0); }

@@ -102,7 +102,7 @@ class SimpleHeap
 
    public:
     explicit SimpleHeap(const Allocator& BlockAllocator = Allocator())
-        : block_allocator_(BlockAllocator), in_use_size_(0), cache_size_(0), align_size_(256 * 1024)
+        : block_allocator_(BlockAllocator), in_use_size_(0), cache_size_(0), align_size_(2 * 1024 * 1024)
     {
     }
     ~SimpleHeap()
