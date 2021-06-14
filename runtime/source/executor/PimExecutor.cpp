@@ -35,6 +35,7 @@ PimExecutor::PimExecutor(PimRuntimeType rt_type, PimPrecision precision) : rt_ty
     fmtd_size_per_ch_ = 100000;
     max_block_size_ = fbi_.num_pim_chan;
     max_fmtd_size_ = fmtd_size_per_ch_ * max_block_size_;
+    is_gemv_tree_ = true;
 #endif
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
 }
@@ -125,9 +126,9 @@ int PimExecutor::get_loop_counter(PimOpType op_type, int input_size)
     int num_parallelism = fbi_.num_pim_blocks * fbi_.num_pim_chan * fbi_.num_pim_rank * fbi_.num_grf;
     int num_tile = num_transaction / num_parallelism;
 
-    if (op_type == OP_GEMV) {
+    if (op_type == OP_GEMV && is_gemv_tree_ == false) {
         lc = input_size / fbi_.trans_size / fbi_.num_grf_A;
-    }  else if (op_type == OP_GEMV_TREE) {
+    }  else if (op_type == OP_GEMV && is_gemv_tree_ == true) {
         lc = (input_size / fbi_.trans_size / fbi_.num_grf_A / 2) - 1;
     }else {
         lc = num_tile / 2 - 1;
@@ -310,10 +311,10 @@ int PimExecutor::execute_gemv_tree(PimBo* output, PimBo* operand0, PimBo* operan
 
     PIM_PROFILE_TICK(CreateCRFBin);
 
-    uint8_t* crf_bin = find_crf(OP_GEMV_TREE, memory_size * sizeof(uint16_t));
+    uint8_t* crf_bin = find_crf(OP_GEMV, memory_size * sizeof(uint16_t));
     int crf_size = 64;
     if (crf_bin == nullptr) {
-        crf_bin = make_crf_bin(OP_GEMV_TREE, memory_size * sizeof(uint16_t));
+        crf_bin = make_crf_bin(OP_GEMV, memory_size * sizeof(uint16_t));
     }
     PIM_PROFILE_TOCK(CreateCRFBin);
 
@@ -347,8 +348,8 @@ int PimExecutor::execute_gemv_tree(PimBo* output, PimBo* operand0, PimBo* operan
     }
     h_fmtd16_size_[0] *= blocks;
 
-    pim_emulator_->convert_mem_trace_from_16B_to_32B(h_fmtd32_, h_fmtd32_size_, h_fmtd16_, h_fmtd16_size_[0], OP_GEMV_TREE);
-    pim_emulator_->execute_gemv_tree(output, weight, h_fmtd32_, h_fmtd32_size_[0], OP_GEMV_TREE, g_pim_base_addr,
+    pim_emulator_->convert_mem_trace_from_16B_to_32B(h_fmtd32_, h_fmtd32_size_, h_fmtd16_, h_fmtd16_size_[0], OP_GEMV);
+    pim_emulator_->execute_gemv_tree(output, weight, h_fmtd32_, h_fmtd32_size_[0], OP_GEMV, g_pim_base_addr,
                                 pim_gemv_tmp_buffer_, zero_buffer_);
     PIM_PROFILE_TOCK(RunGemvEmulation);
 #endif

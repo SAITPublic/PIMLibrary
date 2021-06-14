@@ -65,6 +65,8 @@ class PimExecutor
     uint8_t* pim_gemv_tmp_buffer_;
     uint8_t* zero_buffer_;
     PimBlockInfo fbi_;
+    bool is_gemv_tree_;
+
 #ifdef EMULATOR
     PimMemTraceData* d_fmtd16_;
     int* d_fmtd16_size_;

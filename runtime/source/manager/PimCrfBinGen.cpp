@@ -17,7 +17,7 @@ namespace runtime
 {
 namespace manager
 {
-PimCrfBinGen::PimCrfBinGen() {}
+PimCrfBinGen::PimCrfBinGen() : is_gemv_tree_(true) {}
 
 void PimCrfBinGen::gen_binary_with_loop(PimOpType op_type, int lc, uint8_t* bin_buf, int* crf_sz)
 {
@@ -59,25 +59,27 @@ void PimCrfBinGen::create_pim_cmd(PimOpType op_type, int lc)
             PimCommand(PimCmdType::NOP, 15) /*, PimCommand(PimCmdType::NOP, 0)*/};
         cmds_.assign(tmp_cmds.begin(), tmp_cmds.end());
     } else if (op_type == OP_GEMV) {
-        int even_lc = 8 * ceil((float)lc / 2) - 1;
-        int odd_lc = 8 * (lc / 2) - 1;
-        std::vector<PimCommand> tmp_cmds{
-            PimCommand(PimCmdType::MAC, PimOpdType::GRF_B, PimOpdType::GRF_A, PimOpdType::EVEN_BANK, 1, 0, 0, 0),
-            PimCommand(PimCmdType::JUMP, even_lc, 2),
-            PimCommand(PimCmdType::MAC, PimOpdType::GRF_B, PimOpdType::GRF_A, PimOpdType::ODD_BANK, 1, 0, 0, 0),
-            PimCommand(PimCmdType::JUMP, odd_lc, 2), PimCommand(PimCmdType::NOP, 23)};
-        cmds_.assign(tmp_cmds.begin(), tmp_cmds.end());
-    } else if (op_type == OP_GEMV_TREE) {
-        std::vector<PimCommand> tmp_cmds{
-            PimCommand(PimCmdType::MAC, PimOpdType::GRF_B, PimOpdType::GRF_A, PimOpdType::EVEN_BANK, 1, 0, 0, 0),
-            PimCommand(PimCmdType::JUMP, 7, 2),
-            PimCommand(PimCmdType::NOP, 23),
-            PimCommand(PimCmdType::MUL, PimOpdType::GRF_B, PimOpdType::GRF_B, PimOpdType::EVEN_BANK, 1),
-            PimCommand(PimCmdType::MAC, PimOpdType::GRF_B, PimOpdType::GRF_A, PimOpdType::ODD_BANK, 1, 0, 0, 0),
-            PimCommand(PimCmdType::JUMP, 7, 2),
-            PimCommand(PimCmdType::NOP, 23),
-            PimCommand(PimCmdType::MUL, PimOpdType::GRF_B, PimOpdType::GRF_B, PimOpdType::EVEN_BANK, 1)};
-        cmds_.assign(tmp_cmds.begin(), tmp_cmds.end());
+        if (is_gemv_tree_) { 
+            std::vector<PimCommand> tmp_cmds{
+                PimCommand(PimCmdType::MAC, PimOpdType::GRF_B, PimOpdType::GRF_A, PimOpdType::EVEN_BANK, 1, 0, 0, 0),
+                PimCommand(PimCmdType::JUMP, 7, 2),
+                PimCommand(PimCmdType::NOP, 23),
+                PimCommand(PimCmdType::MUL, PimOpdType::GRF_B, PimOpdType::GRF_B, PimOpdType::EVEN_BANK, 1),
+                PimCommand(PimCmdType::MAC, PimOpdType::GRF_B, PimOpdType::GRF_A, PimOpdType::ODD_BANK, 1, 0, 0, 0),
+                PimCommand(PimCmdType::JUMP, 7, 2),
+                PimCommand(PimCmdType::NOP, 23),
+                PimCommand(PimCmdType::MUL, PimOpdType::GRF_B, PimOpdType::GRF_B, PimOpdType::EVEN_BANK, 1)};
+            cmds_.assign(tmp_cmds.begin(), tmp_cmds.end());
+        } else {
+            int even_lc = 8 * ceil((float)lc / 2) - 1;
+            int odd_lc = 8 * (lc / 2) - 1;
+            std::vector<PimCommand> tmp_cmds{
+                PimCommand(PimCmdType::MAC, PimOpdType::GRF_B, PimOpdType::GRF_A, PimOpdType::EVEN_BANK, 1, 0, 0, 0),
+                PimCommand(PimCmdType::JUMP, even_lc, 2),
+                PimCommand(PimCmdType::MAC, PimOpdType::GRF_B, PimOpdType::GRF_A, PimOpdType::ODD_BANK, 1, 0, 0, 0),
+                PimCommand(PimCmdType::JUMP, odd_lc, 2), PimCommand(PimCmdType::NOP, 23)};
+            cmds_.assign(tmp_cmds.begin(), tmp_cmds.end());
+        }
     } else if (op_type == OP_BN) {
         std::vector<PimCommand> tmp_cmds{PimCommand(PimCmdType::MAD, PimOpdType::GRF_A, PimOpdType::EVEN_BANK,
                                                     PimOpdType::SRF_M, PimOpdType::SRF_A, 1, 0, 0, 0),
@@ -95,7 +97,7 @@ void PimCrfBinGen::create_pim_cmd(PimOpType op_type, int lc)
         cmds_.assign(tmp_cmds.begin(), tmp_cmds.end());
     }
 
-    if (lc != 0 && op_type != OP_GEMV) {
+    if (lc != 0 && is_gemv_tree_ == true || op_type != OP_GEMV) {
         cmds_.push_back(PimCommand(PimCmdType::JUMP, lc, cmds_.size() + 1));
     }
 

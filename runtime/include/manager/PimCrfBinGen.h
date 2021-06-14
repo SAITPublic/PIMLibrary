@@ -33,6 +33,7 @@ class PimCrfBinGen
 
    private:
     std::vector<PimCommand> cmds_;
+    bool is_gemv_tree_;
 };
 
 } /* namespace manager */
