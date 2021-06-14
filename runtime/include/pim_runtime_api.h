@@ -152,34 +152,6 @@ __PIM_API__ int PimFreeMemory(void* ptr, PimMemType mem_type);
 __PIM_API__ int PimFreeMemory(PimBo* pim_bo);
 
 /**
- * @brief Convert Data layout of operations  type op_type
- *
- * This API converts data layout from App format to PIM data layout
- * Uses Buffer pointers for access
- *
- * @param dst destination address of converted data
- * @param src source address of data to be converted
- * @param size size of buffer
- * @param op_type operation type ( elt add, mul, gemv)
- *
- * @return success/failure
- */
-__PIM_API__ int PimConvertDataLayout(void* dst, void* src, size_t size, PimOpType op_type);
-
-/**
- * @brief Convert data layout of operations type op_type
- *
- * This API converts data layout from App format to PIM. uses Pim buffer objects
- *
- * @param dst destination buffer object
- * @param src source buffer object
- * @param op_type type of operation ( elt add, mul, gemv)
- *
- * @return
- */
-__PIM_API__ int PimConvertDataLayout(PimBo* dst, PimBo* src, PimOpType op_type);
-
-/**
  * @brief Copies data from source to destination
  *
  * @param dst destination address of buffer
@@ -282,11 +254,12 @@ __PIM_API__ int PimExecuteRelu(PimBo* output, PimBo* pim_data, void* stream = nu
  * @param operand1 vector input
  * @param stream void pointer to stream identifier. default=nullptr
  * @param block enable/disable synchronization. default=false
+
  *
  * @return success or failure
  */
 
-__PIM_API__ int PimExecuteGemv(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream = nullptr,
+__PIM_API__ int PimExecuteGemv(PimBo* output, PimBo* operand0, PimBo* operand1 = nullptr, void* stream = nullptr,
                                bool block = false);
 
 /**
@@ -338,41 +311,6 @@ __PIM_API__ int PimSynchronize(void* stream = nullptr);
  */
 __PIM_API__ int PimExecuteDummy(void);
 
-/**
- * @brief Create Bundle used for gemv
- *
- * Contains input and weight addresses that are used several times for gemv operation
- *
- * @param input input buffer object for gemv
- * @param weight weight buffer object for gemv
- * @param output output buffer object for gemv
- *
- * @return Pointer to created gemv-bundle
- */
-__PIM_API__ PimGemvBundle* PimCreateGemvBundle(PimBo* input, PimBo* weight, PimBo* output);
-
-/**
- * @brief Find proper gemv-bundle to use
- *
- * Finds a gemv-bundle that has weight and input memory slot to do gemv.
- *
- * @param w_addr weight address is searching key to find gemv-bundle
- *
- * @return Pointer to found gemv-bundle
- */
-__PIM_API__ PimGemvBundle* PimFindGemvBundle(uint64_t w_addr);
-
-/**
- * @brief Insert gemv-bundle to the map
- *
- * Insert gemv-bundle if there is no exsisting weight related to the given weight address.
- *
- * @param w_addr weight address is searching key to find gemv-bundle
- * @param pim_addr pointer to gemv-bundle to be added on the map
- *
- * @return success or failure
- */
-__PIM_API__ int PimInsertGemvBundle(uint64_t w_addr, PimGemvBundle* bundle);
-
 /**@}*/
+
 #endif /* _PIM_RUNTIME_API_H_ */

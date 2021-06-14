@@ -29,36 +29,10 @@ void KernelLauncher(const void* i_data, const void* w_data, const int num_batch,
     PimBo t_dev_out;
 
     uint64_t weight_key = reinterpret_cast<uint64_t>(w_data);
-
-    PimGemvBundle* bundle = PimFindGemvBundle(weight_key);
-    if (bundle == nullptr) {
-        PimDesc* pim_desc = PimCreateDesc(num_batch, 1, OUT_LENGTH, IN_LENGTH, PIM_FP16, OP_GEMV);
-        PimBo* weight = PimCreateBo(pim_desc, MEM_TYPE_DEVICE, GEMV_WEIGHT);
-        pre_wei = PimCreateBo(pim_desc, MEM_TYPE_PIM, GEMV_WEIGHT);
-        dev_in = PimCreateBo(pim_desc, MEM_TYPE_DEVICE, GEMV_INPUT);
-        dev_out = PimCreateBo(pim_desc, MEM_TYPE_DEVICE, GEMV_OUTPUT);
-
-        // Transpose the weight matrix for PIM spec.
-        for (int i = 0; i < IN_LENGTH; i++) {
-            for (int j = 0; j < OUT_LENGTH; j++) {
-                PimCopyMemory((void*)(static_cast<half*>(weight->data) + (j * IN_LENGTH + i)),
-                              (void*)(static_cast<const half*>(w_data) + (i * OUT_LENGTH + j)), sizeof(half),
-                              DEVICE_TO_DEVICE);
-            }
-        }
-
-        PimConvertDataLayout(pre_wei, weight, OP_GEMV);
-
-        bundle = PimCreateGemvBundle(dev_in, pre_wei, dev_out);
-        PimInsertGemvBundle(weight_key, bundle);
-
-        PimDestroyBo(weight);
-        PimDestroyDesc(pim_desc);
-    } else {
-        dev_in = bundle->in;
-        pre_wei = bundle->wei;
-        dev_out = bundle->out;
-    }
+    PimDesc* pim_desc = PimCreateDesc(num_batch, 1, OUT_LENGTH, IN_LENGTH, PIM_FP16, OP_GEMV);
+    PimBo* dev_weight = PimCreateBo(pim_desc, MEM_TYPE_DEVICE, GEMV_WEIGHT, const_cast<void*>(w_data));
+    dev_in = PimCreateBo(pim_desc, MEM_TYPE_DEVICE, GEMV_INPUT);
+    dev_out = PimCreateBo(pim_desc, MEM_TYPE_DEVICE, GEMV_OUTPUT);
 
     void* dev_data_ptr = dev_in->data;
     if (num_batch > 1) {
@@ -74,17 +48,19 @@ void KernelLauncher(const void* i_data, const void* w_data, const int num_batch,
     t_dev_out = *dev_out;
     t_dev_out.data = o_data;
 
-    PimExecuteGemv(&t_dev_out, dev_in, pre_wei);
+    PimExecuteGemv(&t_dev_out, dev_in, dev_weight);
 
     // Not setting this causes a crash in pim_deinit()
     dev_in->data = dev_data_ptr;
+
+    PimDestroyBo(dev_weight);
+    PimDestroyDesc(pim_desc);
 }
 
 class PimDenseOp : public OpKernel
 {
    public:
     explicit PimDenseOp(OpKernelConstruction* context) : OpKernel(context) {}
-
     void Compute(OpKernelContext* context) override
     {
         // Grab the input tensor

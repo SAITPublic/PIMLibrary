@@ -40,7 +40,7 @@ void KernelLauncher(const void* inp_data, const int N, const int DIMS, const voi
     PimCopyMemory((void*)host_input->data, (void*)inp_data, sizeof(half) * N, DEVICE_TO_HOST);
 
     /* __PIM_API__ call : Preload input data on PIM memory */
-    PimConvertDataLayout(preloaded_pim_input, host_input, OP_BN);
+    // PimConvertDataLayout(preloaded_pim_input, host_input, OP_BN);
 
     PimCopyMemory(host_mean->data, (void*)mean, sizeof(half) * CH, DEVICE_TO_HOST);
     PimCopyMemory(host_var->data, (void*)var, sizeof(half) * CH, DEVICE_TO_HOST);
@@ -49,7 +49,7 @@ void KernelLauncher(const void* inp_data, const int N, const int DIMS, const voi
     PimCopyMemory((void*)&host_epsilon, (void*)epsilon, sizeof(double), DEVICE_TO_HOST);
 
     /* __PIM_API__ call : Execute PIM kernel */
-    PimExecuteBN(device_output, preloaded_pim_input, host_beta, host_gamma, host_mean, host_var, host_epsilon);
+    PimExecuteBN(device_output, host_input, host_beta, host_gamma, host_mean, host_var, host_epsilon);
     PimSynchronize();
 
     PimCopyMemory((void*)out_data, (void*)device_output->data, sizeof(half) * N, PIM_TO_HOST);
@@ -68,7 +68,6 @@ class PimBnOp : public OpKernel
 {
    public:
     explicit PimBnOp(OpKernelConstruction* context) : OpKernel(context) {}
-
     void Compute(OpKernelContext* context) override
     {
         // Grab the input tensor

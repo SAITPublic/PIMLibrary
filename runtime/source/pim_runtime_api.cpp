@@ -11,6 +11,7 @@
 #include "pim_runtime_api.h"
 #include <iostream>
 #include "PimRuntime.h"
+#include "half.hpp"
 #include "hip/hip_runtime.h"
 #include "utility/pim_log.h"
 #include "utility/pim_profile.h"
@@ -291,40 +292,6 @@ int PimFreeMemory(PimBo* pim_bo)
     return ret;
 }
 
-int PimConvertDataLayout(void* dst, void* src, size_t size, PimOpType op_type)
-{
-    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
-    PIM_PROFILE_TICK(ConvertDataLayout);
-    int ret = 0;
-
-    if (pim_runtime == nullptr) {
-        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
-        return -1;
-    }
-    ret = pim_runtime->convert_data_layout(dst, src, size, op_type);
-    PIM_PROFILE_TOCK(ConvertDataLayout);
-
-    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
-    return ret;
-}
-
-int PimConvertDataLayout(PimBo* dst, PimBo* src, PimOpType op_type)
-{
-    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
-    PIM_PROFILE_TICK(ConvertDataLayout);
-    int ret = 0;
-
-    if (pim_runtime == nullptr) {
-        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
-        return -1;
-    }
-    ret = pim_runtime->convert_data_layout(dst, src, op_type);
-    PIM_PROFILE_TOCK(ConvertDataLayout);
-
-    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
-    return ret;
-}
-
 int PimCopyMemory(void* dst, void* src, size_t size, PimMemCpyType cpy_type)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
@@ -357,6 +324,69 @@ int PimCopyMemory(PimBo* dst, PimBo* src, PimMemCpyType cpy_type)
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
+}
+
+PimGemvBundle* PimGetGemvBundle(PimBo* weight, PimBo* dev_in, PimBo* dev_out)
+{
+    /*
+    If the bundle already exists: return that bundle
+    Else: create a new bundle, fill it up and return it
+    */
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
+    PIM_PROFILE_TICK(GetGemvBundle);
+
+    if (pim_runtime == nullptr) {
+        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+        return nullptr;
+    }
+
+    PimDesc* pim_desc = PimCreateDesc(weight->bshape_r.n, 1, weight->bshape_r.h, weight->bshape_r.w, PIM_FP16, OP_GEMV);
+    PimBo* host_weight = nullptr;
+
+    if (weight->data == nullptr) {
+        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+        return nullptr;
+    }
+    if (weight->mem_type == MEM_TYPE_HOST) {
+        host_weight = weight;
+    } else if (weight->mem_type == MEM_TYPE_DEVICE || weight->mem_type == MEM_TYPE_PIM) {
+        uint32_t w_size = weight->bshape_r.h * weight->bshape_r.w;
+        host_weight = PimCreateBo(pim_desc, MEM_TYPE_HOST, GEMV_WEIGHT);
+        hipMemcpy(host_weight->data, weight->data, w_size * sizeof(half_float::half), hipMemcpyDeviceToHost);
+    }
+
+    // TODO: change the key from uint64_t to (keybo*, size): pull_req: 456)?
+    uint64_t w_addr = reinterpret_cast<uint64_t>(weight->data);
+
+    PimGemvBundle* bundle = nullptr;
+    bundle = pim_runtime->find_gemv_bundle(w_addr);
+
+    if (bundle == nullptr) {
+        uint32_t w_size = pim_desc->bshape_r.h * pim_desc->bshape_r.w;
+        PimBo* host_reordered_weight = PimCreateBo(pim_desc, MEM_TYPE_HOST, GEMV_WEIGHT);
+        PimBo* pre_wei = PimCreateBo(pim_desc, MEM_TYPE_PIM, GEMV_WEIGHT);
+
+        pim_runtime->convert_data_layout(host_reordered_weight, host_weight, OP_GEMV);
+        PimCopyMemory(pre_wei, host_reordered_weight, HOST_TO_PIM);
+
+        // bundle = PimCreateGemvBundle(dev_in, pre_wei, dev_out);
+        bundle = new PimGemvBundle;
+        bundle->in = dev_in;
+        bundle->wei = pre_wei;
+        bundle->out = dev_out;
+
+        pim_runtime->insert_gemv_bundle(w_addr, bundle);
+
+        PimDestroyDesc(pim_desc);
+        PimDestroyBo(host_reordered_weight);
+        if (host_weight != weight) {
+            PimDestroyBo(host_weight);
+        }
+    }
+
+    PIM_PROFILE_TOCK(GetGemvBundle);
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+    return bundle;
 }
 
 int PimExecuteAdd(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream, bool block)
@@ -439,6 +469,7 @@ int PimExecuteMul(PimBo* output, void* scalar, PimBo* vector, void* stream, bool
 
 int PimExecuteGemv(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream, bool block)
 {
+    // Assuming operand1 is always weight, operand0 is always input
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     PIM_PROFILE_TICK(ExecuteGEMV);
     int ret = 0;
@@ -447,6 +478,10 @@ int PimExecuteGemv(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream
         DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
         return -1;
     }
+
+    PimGemvBundle* bundle = PimGetGemvBundle(operand1, operand0, output);
+    operand1 = bundle->wei;
+
     ret = pim_runtime->execute_gemv(output, operand0, operand1, stream, block);
     PIM_PROFILE_TOCK(ExecuteGEMV);
 
@@ -456,6 +491,7 @@ int PimExecuteGemv(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream
 
 int PimExecuteGemvAdd(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream, bool block)
 {
+    // Assuming operand1 is always weight, operand0 is always input
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     PIM_PROFILE_TICK(ExecuteGEMVAdd);
     int ret = 0;
@@ -464,6 +500,9 @@ int PimExecuteGemvAdd(PimBo* output, PimBo* operand0, PimBo* operand1, void* str
         DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
         return -1;
     }
+
+    PimGemvBundle* bundle = PimGetGemvBundle(operand1, operand0, output);
+    operand1 = bundle->wei;
 
     ret = pim_runtime->execute_gemv_add(output, operand0, operand1, stream, block);
     PIM_PROFILE_TOCK(ExecuteGEMVAdd);
@@ -535,65 +574,6 @@ int PimExecuteDummy(void)
     }
     ret = pim_runtime->execute_dummy();
     PIM_PROFILE_TOCK(ExecuteDummy);
-
-    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
-    return ret;
-}
-
-PimGemvBundle* PimCreateGemvBundle(PimBo* input, PimBo* weight, PimBo* output)
-{
-    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
-    PIM_PROFILE_TICK(CreateGemvBundle);
-
-    if (pim_runtime == nullptr) {
-        DLOG(ERROR) << "PimRuntime is not initialized";
-        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
-        return nullptr;
-    }
-
-    PimGemvBundle* bundle = new PimGemvBundle;
-
-    bundle->in = input;
-    bundle->wei = weight;
-    bundle->out = output;
-
-    PIM_PROFILE_TOCK(CreateGemvBundle);
-
-    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
-    return bundle;
-}
-
-PimGemvBundle* PimFindGemvBundle(uint64_t w_addr)
-{
-    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
-    PIM_PROFILE_TICK(FindGemvBundle);
-
-    PimGemvBundle* addr = nullptr;
-
-    if (pim_runtime == nullptr) {
-        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
-        return addr;
-    }
-    addr = pim_runtime->find_gemv_bundle(w_addr);
-    PIM_PROFILE_TOCK(FindGemvBundle);
-
-    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
-    return addr;
-}
-
-int PimInsertGemvBundle(uint64_t w_addr, PimGemvBundle* bundle)
-{
-    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
-    PIM_PROFILE_TICK(InsertGemvBundle);
-
-    int ret = 0;
-
-    if (pim_runtime == nullptr) {
-        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
-        return -1;
-    }
-    ret = pim_runtime->insert_gemv_bundle(w_addr, bundle);
-    PIM_PROFILE_TOCK(InsertGemvBundle);
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;

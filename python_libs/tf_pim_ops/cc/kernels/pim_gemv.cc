@@ -28,10 +28,8 @@ void KernelLauncher(const void* i_data, const void* w_data, const int num_batch,
     /* __PIM_API__ call : Create PIM Buffer Object */
     PimBo* host_input = PimCreateBo(pim_desc, MEM_TYPE_HOST, GEMV_INPUT);
     PimBo* host_weight = PimCreateBo(pim_desc, MEM_TYPE_HOST, GEMV_WEIGHT);
-    PimBo* host_reordered_weight = PimCreateBo(pim_desc, MEM_TYPE_HOST, GEMV_WEIGHT);
     PimBo* device_input = PimCreateBo(pim_desc, MEM_TYPE_DEVICE, GEMV_INPUT);
     PimBo* device_output = PimCreateBo(pim_desc, MEM_TYPE_DEVICE, GEMV_OUTPUT);
-    PimBo* preloaded_weight = PimCreateBo(pim_desc, MEM_TYPE_PIM, GEMV_WEIGHT);
     PimBo* host_output = PimCreateBo(pim_desc, MEM_TYPE_HOST, GEMV_OUTPUT);
 
     // Copy , incement using descriptors bshape.w
@@ -56,18 +54,9 @@ void KernelLauncher(const void* i_data, const void* w_data, const int num_batch,
     /* Initialize the input, weight, output data */
     PimCopyMemory(device_input, host_input, HOST_TO_DEVICE);
 
-    /* __PIM_API__ call : Preload weight data on PIM memory */
-    if (reorder) {
-        std::cout << "Reordering" << std::endl;
-        PimConvertDataLayout(host_reordered_weight, host_weight, OP_GEMV);
-        PimCopyMemory(preloaded_weight, host_reordered_weight, HOST_TO_DEVICE);
-    } else {
-        PimCopyMemory(preloaded_weight, host_weight, HOST_TO_DEVICE);
-    }
-
     DLOG(INFO) << "Calling PIMExecuteGEMV";
     /* __PIM_API__ call : Execute PIM kernel (GEMV) */
-    PimExecuteGemv(device_output, device_input, preloaded_weight);
+    PimExecuteGemv(device_output, device_input, host_weight);
 
     PimCopyMemory(o_data, device_output->data, sizeof(half) * num_batch * OUT_LENGTH, DEVICE_TO_HOST);
 
@@ -77,8 +66,6 @@ void KernelLauncher(const void* i_data, const void* w_data, const int num_batch,
     PimDestroyBo(host_output);
     PimDestroyBo(device_input);
     PimDestroyBo(device_output);
-    PimDestroyBo(preloaded_weight);
-    PimDestroyBo(host_reordered_weight);
 
     //    /* __PIM_API__ call : Deinitialize PimRuntime */
     //    PimDeinitialize();
@@ -88,7 +75,6 @@ class PimGemvOp : public OpKernel
 {
    public:
     explicit PimGemvOp(OpKernelConstruction* context) : OpKernel(context) {}
-
     void Compute(OpKernelContext* context) override
     {
         // Grab the input tensor
