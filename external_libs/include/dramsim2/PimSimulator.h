@@ -35,7 +35,8 @@ class PimSimulator
     void read_result(uint16_t* output_data, uint64_t addr, size_t data_size);
     // Read data from address. it uses only odd bank.
     void read_result_gemv(uint16_t* output_data, uint64_t addr, size_t data_dim);
-    void read_result_gemv_tree(uint16_t* output_data, uint64_t addr, size_t data_dim, int num_input_tile);
+    void read_result_gemv_tree(uint16_t* output_data, uint64_t addr, size_t output_dim, size_t batch_dim,
+                               int num_input_tile);
 
    private:
     void run();

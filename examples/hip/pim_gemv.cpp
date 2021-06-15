@@ -355,8 +355,7 @@ int pim_gemv_desc_batch(bool block)
 
         PimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
 
-        ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data, OUT_LENGTH * BATCH_DIM,
-                                    EPSILON);
+        ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data, out_size * batch_n, EPSILON);
     }
     /* __PIM_API__ call : Destroy PIM Buffer Object */
     PimDestroyBo(host_input);

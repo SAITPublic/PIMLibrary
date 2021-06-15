@@ -82,27 +82,26 @@ int PimEmulator::convert_mem_trace_from_16B_to_32B(PimMemTraceData* fmtd32, int*
 }
 
 int PimEmulator::execute_gemv_tile_tree(PimBo* output, PimBo* pim_data, PimMemTraceData* fmtd32, int fmtd32_size,
-                                        PimOpType op_type, uint64_t pim_base_addr, uint8_t* temp_buf, uint8_t* zero_buf)
+                                        PimOpType op_type, uint64_t pim_base_addr, uint8_t* temp_buf)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
     uint16_t* sim_output = nullptr;
 
-    int out_dim = pim_data->bshape.h * output->bshape.n;
+    int out_dim = pim_data->bshape.h;
+    int batch_dim = output->bshape.n;
     int num_input_tile = pim_data->bshape.w / 128;
-    sim_output = new uint16_t[out_dim];
+    sim_output = new uint16_t[out_dim * batch_dim];
     std::string rocm_path = ROCM_PATH;
 
     pim_sim_.initialize(rocm_path + "/include/dramsim2/ini/HBM2_samsung_2M_16B_x64.ini",
                         rocm_path + "/include/dramsim2/ini/system_hbm_vega20.ini", 256 * 64 * 2, 64, 1);
     uint64_t tmp_data_addr = reinterpret_cast<uint64_t>(temp_buf);
-    uint64_t zero_data_buf = reinterpret_cast<uint64_t>(zero_buf);
     uint64_t pim_data_addr = reinterpret_cast<uint64_t>(pim_data->data);
 
     pim_sim_.preload_data_with_addr(pim_data_addr - pim_base_addr, pim_data->data, pim_data->size);
-    pim_sim_.preload_data_with_addr(zero_data_buf - pim_base_addr, (void*)zero_buf, 256 * 1024);
     pim_sim_.execute_kernel((void*)fmtd32, fmtd32_size);
-    pim_sim_.read_result_gemv_tree(sim_output, tmp_data_addr - pim_base_addr, out_dim, num_input_tile);
+    pim_sim_.read_result_gemv_tree(sim_output, tmp_data_addr - pim_base_addr, out_dim, batch_dim, num_input_tile);
 
     if (output->mem_type != MEM_TYPE_HOST) {
         for (int i = 0; i < output->bshape.n; i++) {

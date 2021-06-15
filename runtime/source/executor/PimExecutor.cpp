@@ -366,7 +366,7 @@ int PimExecutor::execute_gemv_tile_tree(PimBo* output, PimBo* operand0, PimBo* o
 
     pim_emulator_->convert_mem_trace_from_16B_to_32B(h_fmtd32_, h_fmtd32_size_, h_fmtd16_, h_fmtd16_size_[0], OP_GEMV);
     pim_emulator_->execute_gemv_tile_tree(output, weight, h_fmtd32_, h_fmtd32_size_[0], OP_GEMV, g_pim_base_addr,
-                                          pim_gemv_tmp_buffer_, zero_buffer_);
+                                          pim_gemv_tmp_buffer_);
     PIM_PROFILE_TOCK(RunGemvEmulation);
 #endif
 
