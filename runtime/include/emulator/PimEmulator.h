@@ -43,8 +43,8 @@ class PimEmulator
                      uint64_t pim_base_addr, uint8_t* temp_buf);
     int execute_gemv_add(PimBo* output, PimBo* pim_data, PimMemTraceData* fmtd32, int fmtd32_size, PimOpType op_type,
                          uint64_t pim_base_addr, uint8_t* temp_buf);
-    int execute_gemv_tree(PimBo* output, PimBo* pim_data, PimMemTraceData* fmtd32, int fmtd32_size,
-                                   PimOpType op_type, uint64_t pim_base_addr, uint8_t* temp_buf, uint8_t* zero_buf);
+    int execute_gemv_tree(PimBo* output, PimBo* pim_data, PimMemTraceData* fmtd32, int fmtd32_size, PimOpType op_type,
+                          uint64_t pim_base_addr, uint8_t* temp_buf, uint8_t* zero_buf);
 
    private:
     PimBlockInfo fbi_;

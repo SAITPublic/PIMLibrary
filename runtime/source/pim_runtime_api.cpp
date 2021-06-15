@@ -374,7 +374,6 @@ int PimExecuteAdd(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream,
     return ret;
 }
 
-
 int PimExecuteAdd(PimBo* output, void* scalar, PimBo* vector, void* stream, bool block)
 {
     DLOG(INFO) << "called";

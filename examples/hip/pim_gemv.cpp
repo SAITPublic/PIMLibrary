@@ -31,7 +31,7 @@
 
 using half_float::half;
 
-#define EPSILON (0.005)
+#define EPSILON (0.05)
 
 int pim_gemv_batch(bool block)
 {
@@ -76,9 +76,9 @@ int pim_gemv_batch(bool block)
         if (!block) PimSynchronize();
 
         PimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
-        
+
         ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data, OUT_LENGTH * BATCH_DIM,
-                                     EPSILON);
+                                    EPSILON);
     }
 
     /* __PIM_API__ call : Destroy PIM Buffer Object */
@@ -355,7 +355,8 @@ int pim_gemv_desc_batch(bool block)
 
         PimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
 
-        ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data, OUT_LENGTH * BATCH_DIM, EPSILON);
+        ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data, OUT_LENGTH * BATCH_DIM,
+                                    EPSILON);
     }
     /* __PIM_API__ call : Destroy PIM Buffer Object */
     PimDestroyBo(host_input);
@@ -867,7 +868,7 @@ int pim_gemv_no_accum_512(bool block)
 int pim_gemv_no_accum_256(bool block)
 {
     int ret = 0;
-    
+
     /* __PIM_API__ call : Initialize PimRuntime */
     PimInitialize(RT_TYPE_HIP, PIM_FP16);
 
@@ -985,7 +986,7 @@ int pim_gemv_no_accum_desc(bool block)
     }
 
     /* __PIM_API__ call : Destroy PIM Buffer Object */
-    
+
     PimDestroyDesc(pim_desc);
     PimDestroyBo(host_input);
     PimDestroyBo(host_weight);

@@ -256,20 +256,15 @@ __global__ void gemv_pim_64cu_64th_fp16(volatile uint8_t* __restrict__ pim_ctr,
 #endif
 }
 
-
-
-__global__ void gemv_tree_pim_64cu_64th_fp16(volatile uint8_t* __restrict__ pim_ctr,
-                                        volatile uint8_t* __restrict__ pim_weight,
-                                        volatile uint8_t* __restrict__ pim_gemv_tmp_buffer,
-                                        volatile uint8_t* __restrict__ zero_buffer,
-                                        volatile uint8_t* __restrict__ pim_input, volatile uint8_t* __restrict__ output,
-                                        int batch_dim, int n_memory_tile, int n_compute_tile, int n_out_tile,
-                                        int output_dim,
+__global__ void gemv_tree_pim_64cu_64th_fp16(
+    volatile uint8_t* __restrict__ pim_ctr, volatile uint8_t* __restrict__ pim_weight,
+    volatile uint8_t* __restrict__ pim_gemv_tmp_buffer, volatile uint8_t* __restrict__ zero_buffer,
+    volatile uint8_t* __restrict__ pim_input, volatile uint8_t* __restrict__ output, int batch_dim, int n_memory_tile,
+    int n_compute_tile, int n_out_tile, int output_dim,
 #ifdef EMULATOR
-                                        PimMemTraceData* fmtd16, int* frd_size, int mt_width,
-                                        PimMemTracer* emulator_trace,
+    PimMemTraceData* fmtd16, int* frd_size, int mt_width, PimMemTracer* emulator_trace,
 #endif
-                                        uint8_t* crf_binary, int crf_size, int is_gemv_add)
+    uint8_t* crf_binary, int crf_size, int is_gemv_add)
 {
 #ifdef EMULATOR
     emulator_trace->g_fba = (uint64_t)pim_ctr;
@@ -343,7 +338,6 @@ __global__ void gemv_tree_pim_64cu_64th_fp16(volatile uint8_t* __restrict__ pim_
                 int r_offset = (o_idx * n_memory_tile) / 2;
 
                 for (int i_idx = 0; i_idx < n_compute_tile; i_idx++) {
-
                     /* write grf_A from WRIO */
                     uint64_t i_addr = (i_offset + (i_idx * num_grf + gidx)) * trans_size;
                     addr = addr_gen(ch, 0, 0, 0, 0x3fff, 0x8 + gidx);
@@ -354,7 +348,7 @@ __global__ void gemv_tree_pim_64cu_64th_fp16(volatile uint8_t* __restrict__ pim_
                     even_row = ((i_idx / 2) + r_offset) * 2;
                     odd_row = even_row + 1;
 
-                    if ( i_idx % 2 == 0) {
+                    if (i_idx % 2 == 0) {
                         addr = addr_gen(ch, 0, 0, 0, even_row, gidx);
                         R_CMD(&pim_weight[addr + offset]);
 
@@ -380,7 +374,8 @@ __global__ void gemv_tree_pim_64cu_64th_fp16(volatile uint8_t* __restrict__ pim_
                         R_CMD(&pim_weight[addr + offset]);
                         B_CMD(1);
 
-                        loc = b_idx * n_out_tile * n_compute_tile * num_grf + o_idx * num_grf * n_compute_tile + i_idx * num_grf +  gidx;
+                        loc = b_idx * n_out_tile * n_compute_tile * num_grf + o_idx * num_grf * n_compute_tile +
+                              i_idx * num_grf + gidx;
                         row = loc / num_col;
                         col = loc % num_col;
 
@@ -390,12 +385,13 @@ __global__ void gemv_tree_pim_64cu_64th_fp16(volatile uint8_t* __restrict__ pim_
                         W_CMD(&pim_gemv_tmp_buffer[addr + offset]);
                         W_CMD(&pim_gemv_tmp_buffer[addr + offset]);
                         R_CMD(&pim_gemv_tmp_buffer[addr + offset]);
-                        B_CMD(1);   
-
-                        // Reset GRF_B using MUL 
-                        addr = addr_gen(ch, 0, 0, 0, 0, gidx);
-                        R_CMD(&zero_buffer[addr + offset]);
                         B_CMD(1);
+
+                        /* write grf_B from WRIO */
+                        addr = addr_gen(ch, 0, 0, 0, 0x3fff, 0x18 + gidx);
+                        W_CMD_R(&pim_ctr[addr + offset], &zero_buffer[offset]);
+                        B_CMD(1);
+
                     } else {
                         addr = addr_gen(ch, 0, 0, 1, even_row, gidx);
                         R_CMD(&pim_weight[addr + offset]);
@@ -422,7 +418,8 @@ __global__ void gemv_tree_pim_64cu_64th_fp16(volatile uint8_t* __restrict__ pim_
                         R_CMD(&pim_weight[addr + offset]);
                         B_CMD(1);
 
-                        loc = b_idx * n_out_tile * n_compute_tile * num_grf + o_idx * num_grf * n_compute_tile + i_idx * num_grf +  gidx;
+                        loc = b_idx * n_out_tile * n_compute_tile * num_grf + o_idx * num_grf * n_compute_tile +
+                              i_idx * num_grf + gidx;
                         row = loc / num_col;
                         col = loc % num_col;
 
@@ -434,9 +431,9 @@ __global__ void gemv_tree_pim_64cu_64th_fp16(volatile uint8_t* __restrict__ pim_
                         R_CMD(&pim_gemv_tmp_buffer[addr + offset]);
                         B_CMD(1);
 
-                        // Reset GRF_B using MUL 
-                        addr = addr_gen(ch, 0, 0, 0, 0, gidx);
-                        R_CMD(&zero_buffer[addr + offset]);
+                        /* write grf_B from WRIO */
+                        addr = addr_gen(ch, 0, 0, 0, 0x3fff, 0x18 + gidx);
+                        W_CMD_R(&pim_ctr[addr + offset], &zero_buffer[offset]);
                         B_CMD(1);
                     }
                 }
@@ -484,10 +481,10 @@ __global__ void gemv_tree_pim_64cu_64th_fp16(volatile uint8_t* __restrict__ pim_
     int out_offset;
     int li;
 
-    // FIXME 
+    // FIXME
     float t_output[32];
     float temp_sum[16];
-    int num_data=16;
+    int num_data = 16;
 
     for (int bi = 0; bi < batch_dim; bi++) {
         for (int oi = 0; oi < n_out_tile; oi++) {
@@ -495,20 +492,20 @@ __global__ void gemv_tree_pim_64cu_64th_fp16(volatile uint8_t* __restrict__ pim_
             li = bi * n_out_tile * n_compute_tile + oi * n_compute_tile;
             if (out_idx < output_dim) {
                 for (int tile_idx = 0; tile_idx < n_compute_tile; tile_idx++) {
-                    row = li / 4 + (((li % 4) + tile_idx) / 4 );
+                    row = li / 4 + (((li % 4) + tile_idx) / 4);
                     col = hipThreadIdx_x % 8 + (((li + tile_idx) % 4) * 8);
 
                     addr = addr_gen(ch, 0, bg, ba, row, col);
-                    
-                    for (int ti=0; ti<16; ti++) {
+
+                    for (int ti = 0; ti < 16; ti++) {
                         temp_sum[ti] = __half2float(((half*)pim_gemv_tmp_buffer)[(addr >> 1) + ti]);
                     }
 
-                    num_data=16;
-                    for (int i=0; i<4; i++) {
-                        num_data = num_data/2;
-                        for(int j=0; j<num_data; j++) {
-                            temp_sum[j] = temp_sum[j*2] + temp_sum[j*2+1];
+                    num_data = 16;
+                    for (int i = 0; i < 4; i++) {
+                        num_data = num_data / 2;
+                        for (int j = 0; j < num_data; j++) {
+                            temp_sum[j] = temp_sum[j * 2] + temp_sum[j * 2 + 1];
                         }
                     }
 
@@ -518,13 +515,13 @@ __global__ void gemv_tree_pim_64cu_64th_fp16(volatile uint8_t* __restrict__ pim_
                 int num_tile = n_compute_tile;
                 int iter;
 
-                while( num_tile > 1) {
-                    iter = num_tile / 2; 
-                    for(int j=0; j<iter; j++) {
-                        t_output[j] = t_output[j*2] + t_output[j*2+1];
+                while (num_tile > 1) {
+                    iter = num_tile / 2;
+                    for (int j = 0; j < iter; j++) {
+                        t_output[j] = t_output[j * 2] + t_output[j * 2 + 1];
                     }
 
-                    if ( num_tile % 2 == 1) {
+                    if (num_tile % 2 == 1) {
                         t_output[iter] = t_output[num_tile];
                         num_tile = num_tile / 2 + 1;
                     } else {

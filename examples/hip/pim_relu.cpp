@@ -65,7 +65,7 @@ int pim_relu_1(bool block)
 
         //    ret = compare_data((char*)golden_output->data, (char*)host_output->data, host_output->size);
         ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data,
-                                     host_output->size / sizeof(half), EPSILON);
+                                    host_output->size / sizeof(half), EPSILON);
     }
     //    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
 

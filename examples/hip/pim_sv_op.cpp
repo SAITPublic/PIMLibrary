@@ -57,8 +57,8 @@ int pim_sv_add_1(void)
 
     PimCopyMemory(host_output, device_output, PIM_TO_HOST);
 
-    ret =
-        compare_half_relative((half*)golden_output->data, (half*)host_output->data, host_output->size / sizeof(half), EPSILON);
+    ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data, host_output->size / sizeof(half),
+                                EPSILON);
     //    ret = compare_data((char*)golden_output->data, (char*)host_output->data, host_output->size);
     //    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
 
@@ -110,8 +110,8 @@ int pim_sv_mul_1(void)
 
     PimCopyMemory(host_output, device_output, PIM_TO_HOST);
 
-    ret =
-        compare_half_relative((half*)golden_output->data, (half*)host_output->data, host_output->size / sizeof(half), EPSILON);
+    ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data, host_output->size / sizeof(half),
+                                EPSILON);
     //    ret = compare_data((char*)golden_output->data, (char*)host_output->data, host_output->size);
     //    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
 

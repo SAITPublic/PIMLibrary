@@ -59,16 +59,15 @@ void PimCrfBinGen::create_pim_cmd(PimOpType op_type, int lc)
             PimCommand(PimCmdType::NOP, 15) /*, PimCommand(PimCmdType::NOP, 0)*/};
         cmds_.assign(tmp_cmds.begin(), tmp_cmds.end());
     } else if (op_type == OP_GEMV) {
-        if (is_gemv_tree_) { 
+        if (is_gemv_tree_) {
             std::vector<PimCommand> tmp_cmds{
                 PimCommand(PimCmdType::MAC, PimOpdType::GRF_B, PimOpdType::GRF_A, PimOpdType::EVEN_BANK, 1, 0, 0, 0),
                 PimCommand(PimCmdType::JUMP, 7, 2),
                 PimCommand(PimCmdType::NOP, 23),
-                PimCommand(PimCmdType::MUL, PimOpdType::GRF_B, PimOpdType::GRF_B, PimOpdType::EVEN_BANK, 1),
                 PimCommand(PimCmdType::MAC, PimOpdType::GRF_B, PimOpdType::GRF_A, PimOpdType::ODD_BANK, 1, 0, 0, 0),
                 PimCommand(PimCmdType::JUMP, 7, 2),
                 PimCommand(PimCmdType::NOP, 23),
-                PimCommand(PimCmdType::MUL, PimOpdType::GRF_B, PimOpdType::GRF_B, PimOpdType::EVEN_BANK, 1)};
+            };
             cmds_.assign(tmp_cmds.begin(), tmp_cmds.end());
         } else {
             int even_lc = 8 * ceil((float)lc / 2) - 1;

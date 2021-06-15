@@ -72,7 +72,7 @@ int pim_elt_add_1(bool block)
         PimCopyMemory(host_output, device_output, PIM_TO_HOST);
 
         ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data,
-                                     host_output->size / sizeof(half), EPSILON);
+                                    host_output->size / sizeof(half), EPSILON);
     }
     //    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
 
@@ -137,8 +137,8 @@ int pim_elt_add_2(bool block)
 
         PimCopyMemory(&host_output, &device_output, PIM_TO_HOST);
 
-        ret =
-            compare_half_relative((half*)golden_output.data, (half*)host_output.data, host_output.size / sizeof(half), EPSILON);
+        ret = compare_half_relative((half*)golden_output.data, (half*)host_output.data, host_output.size / sizeof(half),
+                                    EPSILON);
     }
     //    dump_data(output_dump.c_str(), (char*)host_output.data, host_output.size);
 
@@ -195,7 +195,7 @@ int pim_elt_add_3(bool block)
         PimCopyMemory(host_output, device_output, PIM_TO_HOST);
 
         ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data,
-                                     host_output->size / sizeof(half), EPSILON);
+                                    host_output->size / sizeof(half), EPSILON);
     }
     //    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
 
@@ -339,8 +339,8 @@ int pim_elt_add_profile(bool block, int len)
 #endif
     PimCopyMemory(host_output, device_output, PIM_TO_HOST);
 
-    ret =
-        compare_half_relative((half*)golden_output->data, (half*)host_output->data, host_output->size / sizeof(half), EPSILON);
+    ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data, host_output->size / sizeof(half),
+                                EPSILON);
 
     //    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
 

@@ -68,6 +68,9 @@ int PimExecutor::initialize(void)
     int max_srf_size = 2048;
 
     hipMalloc((void**)&d_srf_bin_buffer_, max_srf_size);
+    hipMalloc((void**)&zero_buffer_, 32);
+    std::fill_n(zero_buffer_, 32, 0);
+
 #ifdef EMULATOR
     int reserved_fmtd_size = max_fmtd_size_ * sizeof(PimMemTraceData);
     hipMalloc((void**)&d_fmtd16_, reserved_fmtd_size);
@@ -82,11 +85,7 @@ int PimExecutor::initialize(void)
     /* PIM HW can generate only gemv output without reduction sum */
     /* so PimExecutor needs to maintain intermediate output buffer for gemv op */
 
-    pim_manager_->alloc_memory((void**)&pim_gemv_tmp_buffer_, 8*2 * 1024 * 1024, MEM_TYPE_PIM);
-
-    // FIXME: 256 x 1024 size occur error in emulator.
-    pim_manager_->alloc_memory((void**)&zero_buffer_, 2 * 1024 * 1024, MEM_TYPE_PIM);
-    std::fill_n(zero_buffer_, 256*1024, 0);
+    pim_manager_->alloc_memory((void**)&pim_gemv_tmp_buffer_, 8 * 2 * 1024 * 1024, MEM_TYPE_PIM);
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
@@ -102,7 +101,7 @@ int PimExecutor::deinitialize(void)
         hipFree((void*)it->second);
     }
     crf_lut_.clear();
-
+    hipFree((void*)zero_buffer_);
 #ifdef EMULATOR
     hipFree((void*)d_fmtd16_);
     hipFree((void*)d_fmtd16_size_);
@@ -112,7 +111,6 @@ int PimExecutor::deinitialize(void)
     free(h_fmtd32_size_);
 #endif
     pim_manager_->free_memory((void*)pim_gemv_tmp_buffer_, MEM_TYPE_PIM);
-    pim_manager_->free_memory((void*)zero_buffer_, MEM_TYPE_PIM);
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
@@ -128,9 +126,9 @@ int PimExecutor::get_loop_counter(PimOpType op_type, int input_size)
 
     if (op_type == OP_GEMV && is_gemv_tree_ == false) {
         lc = input_size / fbi_.trans_size / fbi_.num_grf_A;
-    }  else if (op_type == OP_GEMV && is_gemv_tree_ == true) {
+    } else if (op_type == OP_GEMV && is_gemv_tree_ == true) {
         lc = (input_size / fbi_.trans_size / fbi_.num_grf_A / 2) - 1;
-    }else {
+    } else {
         lc = num_tile / 2 - 1;
     }
 
@@ -322,9 +320,8 @@ int PimExecutor::execute_gemv_tree(PimBo* output, PimBo* operand0, PimBo* operan
     hipLaunchKernelGGL(gemv_tree_pim_64cu_64th_fp16, dim3(blocks), dim3(threads_per_block), 0, stream,
                        (uint8_t*)g_pim_base_addr /* pim control base */, (uint8_t*)weight->data /* pim weight base */,
                        (uint8_t*)pim_gemv_tmp_buffer_, /* pim hw output buffer */
-                       (uint8_t*)zero_buffer_,
-                       (uint8_t*)input->data, (uint8_t*)output->data, n_batch, n_memory_tile, n_memory_tile,
-                       n_out_tile, real_out_size,
+                       (uint8_t*)zero_buffer_, (uint8_t*)input->data, (uint8_t*)output->data, n_batch, n_memory_tile,
+                       n_memory_tile, n_out_tile, real_out_size,
 #ifdef EMULATOR
                        (PimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_,
                        (PimMemTracer*)d_emulator_trace_,
@@ -350,7 +347,7 @@ int PimExecutor::execute_gemv_tree(PimBo* output, PimBo* operand0, PimBo* operan
 
     pim_emulator_->convert_mem_trace_from_16B_to_32B(h_fmtd32_, h_fmtd32_size_, h_fmtd16_, h_fmtd16_size_[0], OP_GEMV);
     pim_emulator_->execute_gemv_tree(output, weight, h_fmtd32_, h_fmtd32_size_[0], OP_GEMV, g_pim_base_addr,
-                                pim_gemv_tmp_buffer_, zero_buffer_);
+                                     pim_gemv_tmp_buffer_, zero_buffer_);
     PIM_PROFILE_TOCK(RunGemvEmulation);
 #endif
 
