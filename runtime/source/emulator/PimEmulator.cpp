@@ -81,8 +81,8 @@ int PimEmulator::convert_mem_trace_from_16B_to_32B(PimMemTraceData* fmtd32, int*
     return ret;
 }
 
-int PimEmulator::execute_gemv_tree(PimBo* output, PimBo* pim_data, PimMemTraceData* fmtd32, int fmtd32_size,
-                                   PimOpType op_type, uint64_t pim_base_addr, uint8_t* temp_buf, uint8_t* zero_buf)
+int PimEmulator::execute_gemv_tile_tree(PimBo* output, PimBo* pim_data, PimMemTraceData* fmtd32, int fmtd32_size,
+                                        PimOpType op_type, uint64_t pim_base_addr, uint8_t* temp_buf, uint8_t* zero_buf)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
@@ -116,8 +116,8 @@ int PimEmulator::execute_gemv_tree(PimBo* output, PimBo* pim_data, PimMemTraceDa
     return ret;
 }
 
-int PimEmulator::execute_gemv(PimBo* output, PimBo* pim_data, PimMemTraceData* fmtd32, int fmtd32_size,
-                              PimOpType op_type, uint64_t pim_base_addr, uint8_t* temp_buf)
+int PimEmulator::execute_gemv_tile_accum(PimBo* output, PimBo* pim_data, PimMemTraceData* fmtd32, int fmtd32_size,
+                                         PimOpType op_type, uint64_t pim_base_addr, uint8_t* temp_buf)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
@@ -148,8 +148,8 @@ int PimEmulator::execute_gemv(PimBo* output, PimBo* pim_data, PimMemTraceData* f
     return ret;
 }
 
-int PimEmulator::execute_gemv_add(PimBo* output, PimBo* pim_data, PimMemTraceData* fmtd32, int fmtd32_size,
-                                  PimOpType op_type, uint64_t pim_base_addr, uint8_t* temp_buf)
+int PimEmulator::execute_gemv_add_tile_accum(PimBo* output, PimBo* pim_data, PimMemTraceData* fmtd32, int fmtd32_size,
+                                             PimOpType op_type, uint64_t pim_base_addr, uint8_t* temp_buf)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;

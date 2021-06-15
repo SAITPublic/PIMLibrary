@@ -35,8 +35,8 @@ PimExecutor::PimExecutor(PimRuntimeType rt_type, PimPrecision precision) : rt_ty
     fmtd_size_per_ch_ = 100000;
     max_block_size_ = fbi_.num_pim_chan;
     max_fmtd_size_ = fmtd_size_per_ch_ * max_block_size_;
-    is_gemv_tree_ = true;
 #endif
+    is_gemv_tile_tree_ = true;
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
 }
 
@@ -124,9 +124,9 @@ int PimExecutor::get_loop_counter(PimOpType op_type, int input_size)
     int num_parallelism = fbi_.num_pim_blocks * fbi_.num_pim_chan * fbi_.num_pim_rank * fbi_.num_grf;
     int num_tile = num_transaction / num_parallelism;
 
-    if (op_type == OP_GEMV && is_gemv_tree_ == false) {
+    if (op_type == OP_GEMV && is_gemv_tile_tree_ == false) {
         lc = input_size / fbi_.trans_size / fbi_.num_grf_A;
-    } else if (op_type == OP_GEMV && is_gemv_tree_ == true) {
+    } else if (op_type == OP_GEMV && is_gemv_tile_tree_ == true) {
         lc = (input_size / fbi_.trans_size / fbi_.num_grf_A / 2) - 1;
     } else {
         lc = num_tile / 2 - 1;
@@ -222,6 +222,25 @@ int PimExecutor::execute_mul(PimBo* output, PimBo* operand0, PimBo* operand1, hi
 
 int PimExecutor::execute_gemv(PimBo* output, PimBo* operand0, PimBo* operand1, hipStream_t stream, bool block)
 {
+    int ret = 0;
+    if (is_gemv_tile_tree_ == true) {
+        ret = execute_gemv_tile_tree(output, operand0, operand1, stream, block);
+    } else {
+        ret = execute_gemv_tile_accum(output, operand0, operand1, stream, block);
+    }
+    return ret;
+}
+
+int PimExecutor::execute_gemv_add(PimBo* output, PimBo* operand0, PimBo* operand1, hipStream_t stream, bool block)
+{
+    /* TODO : add tile tree function */
+
+    return execute_gemv_add_tile_accum(output, operand0, operand1, stream, block);
+}
+
+int PimExecutor::execute_gemv_tile_accum(PimBo* output, PimBo* operand0, PimBo* operand1, hipStream_t stream,
+                                         bool block)
+{
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
     int is_gemv_add = 0;
@@ -280,8 +299,8 @@ int PimExecutor::execute_gemv(PimBo* output, PimBo* operand0, PimBo* operand1, h
     h_fmtd16_size_[0] *= blocks;
 
     pim_emulator_->convert_mem_trace_from_16B_to_32B(h_fmtd32_, h_fmtd32_size_, h_fmtd16_, h_fmtd16_size_[0], OP_GEMV);
-    pim_emulator_->execute_gemv(output, weight, h_fmtd32_, h_fmtd32_size_[0], OP_GEMV, g_pim_base_addr,
-                                pim_gemv_tmp_buffer_);
+    pim_emulator_->execute_gemv_tile_accum(output, weight, h_fmtd32_, h_fmtd32_size_[0], OP_GEMV, g_pim_base_addr,
+                                           pim_gemv_tmp_buffer_);
     PIM_PROFILE_TOCK(RunGemvEmulation);
 #endif
 
@@ -289,7 +308,7 @@ int PimExecutor::execute_gemv(PimBo* output, PimBo* operand0, PimBo* operand1, h
     return ret;
 }
 
-int PimExecutor::execute_gemv_tree(PimBo* output, PimBo* operand0, PimBo* operand1, hipStream_t stream, bool block)
+int PimExecutor::execute_gemv_tile_tree(PimBo* output, PimBo* operand0, PimBo* operand1, hipStream_t stream, bool block)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
@@ -346,8 +365,8 @@ int PimExecutor::execute_gemv_tree(PimBo* output, PimBo* operand0, PimBo* operan
     h_fmtd16_size_[0] *= blocks;
 
     pim_emulator_->convert_mem_trace_from_16B_to_32B(h_fmtd32_, h_fmtd32_size_, h_fmtd16_, h_fmtd16_size_[0], OP_GEMV);
-    pim_emulator_->execute_gemv_tree(output, weight, h_fmtd32_, h_fmtd32_size_[0], OP_GEMV, g_pim_base_addr,
-                                     pim_gemv_tmp_buffer_, zero_buffer_);
+    pim_emulator_->execute_gemv_tile_tree(output, weight, h_fmtd32_, h_fmtd32_size_[0], OP_GEMV, g_pim_base_addr,
+                                          pim_gemv_tmp_buffer_, zero_buffer_);
     PIM_PROFILE_TOCK(RunGemvEmulation);
 #endif
 
@@ -355,7 +374,8 @@ int PimExecutor::execute_gemv_tree(PimBo* output, PimBo* operand0, PimBo* operan
     return ret;
 }
 
-int PimExecutor::execute_gemv_add(PimBo* output, PimBo* operand0, PimBo* operand1, hipStream_t stream, bool block)
+int PimExecutor::execute_gemv_add_tile_accum(PimBo* output, PimBo* operand0, PimBo* operand1, hipStream_t stream,
+                                             bool block)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
@@ -415,8 +435,8 @@ int PimExecutor::execute_gemv_add(PimBo* output, PimBo* operand0, PimBo* operand
     h_fmtd16_size_[0] *= blocks;
 
     pim_emulator_->convert_mem_trace_from_16B_to_32B(h_fmtd32_, h_fmtd32_size_, h_fmtd16_, h_fmtd16_size_[0], OP_GEMV);
-    pim_emulator_->execute_gemv_add(output, weight, h_fmtd32_, h_fmtd32_size_[0], OP_GEMV, g_pim_base_addr,
-                                    pim_gemv_tmp_buffer_);
+    pim_emulator_->execute_gemv_add_tile_accum(output, weight, h_fmtd32_, h_fmtd32_size_[0], OP_GEMV, g_pim_base_addr,
+                                               pim_gemv_tmp_buffer_);
     PIM_PROFILE_TOCK(RunGemvEmulation);
 #endif
 

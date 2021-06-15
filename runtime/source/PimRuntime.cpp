@@ -174,8 +174,7 @@ int PimRuntime::execute_gemv(PimBo* output, PimBo* operand0, PimBo* operand1, vo
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
 
-    // ret = pim_executor_->execute_gemv(output, operand0, operand1, (hipStream_t)stream, block);
-    ret = pim_executor_->execute_gemv_tree(output, operand0, operand1, (hipStream_t)stream, block);
+    ret = pim_executor_->execute_gemv(output, operand0, operand1, (hipStream_t)stream, block);
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;

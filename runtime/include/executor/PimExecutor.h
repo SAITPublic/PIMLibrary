@@ -43,11 +43,10 @@ class PimExecutor
     int execute_add(PimBo* output, PimBo* operand0, PimBo* operand1, hipStream_t stream, bool block);
     int execute_mul(PimBo* output, PimBo* operand0, PimBo* operand1, hipStream_t stream, bool block);
     int execute_relu(PimBo* output, PimBo* pim_data, hipStream_t stream, bool block);
-    int execute_gemv_tree(PimBo* output, PimBo* operand0, PimBo* operand1, hipStream_t stream, bool block);
-    int execute_gemv(PimBo* output, PimBo* operand0, PimBo* operand1, hipStream_t stream, bool block);
-    int execute_gemv_add(PimBo* output, PimBo* operand0, PimBo* operand1, hipStream_t stream, bool block);
     int execute_bn(PimBo* output, PimBo* pim_data, PimBo* beta, PimBo* gamma, PimBo* mean, PimBo* variance,
                    double epsilon, hipStream_t stream, bool block);
+    int execute_gemv(PimBo* output, PimBo* operand0, PimBo* operand1, hipStream_t stream, bool block);
+    int execute_gemv_add(PimBo* output, PimBo* operand0, PimBo* operand1, hipStream_t stream, bool block);
     int execute_sync(hipStream_t stream);
     int execute_dummy(void);
 
@@ -65,7 +64,7 @@ class PimExecutor
     uint8_t* pim_gemv_tmp_buffer_;
     uint8_t* zero_buffer_;
     PimBlockInfo fbi_;
-    bool is_gemv_tree_;
+    bool is_gemv_tile_tree_;
 
 #ifdef EMULATOR
     PimMemTraceData* d_fmtd16_;
@@ -80,6 +79,9 @@ class PimExecutor
     int max_block_size_;
     int max_fmtd_size_;
 #endif
+    int execute_gemv_tile_accum(PimBo* output, PimBo* operand0, PimBo* operand1, hipStream_t stream, bool block);
+    int execute_gemv_tile_tree(PimBo* output, PimBo* operand0, PimBo* operand1, hipStream_t stream, bool block);
+    int execute_gemv_add_tile_accum(PimBo* output, PimBo* operand0, PimBo* operand1, hipStream_t stream, bool block);
 };
 
 } /* namespace executor */
