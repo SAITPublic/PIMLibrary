@@ -135,13 +135,14 @@ inline int compare_data(char* data_a, char* data_b, size_t size)
     return ret;
 }
 
-inline int compare_half_Ulps_and_absoulte(half_float::half data_a, half_float::half data_b, int maxUlpsDiff,
+inline int compare_half_Ulps_and_absoulte(half_float::half data_a, half_float::half data_b, int allow_bit_cnt,
                                           float absTolerance = 0.001)
 {
     uint16_t Ai = *((uint16_t*)&data_a);
     uint16_t Bi = *((uint16_t*)&data_b);
 
     float diff = fabs((float)data_a - (float)data_b);
+    int maxUlpsDiff = 1 << allow_bit_cnt;
 
     if (diff <= absTolerance) {
         return true;
@@ -160,7 +161,8 @@ inline int compare_half_Ulps_and_absoulte(half_float::half data_a, half_float::h
     return false;
 }
 
-inline int compare_half_relative(half_float::half* data_a, half_float::half* data_b, int size, float absTolerance)
+inline int compare_half_relative(half_float::half* data_a, half_float::half* data_b, int size,
+                                 float absTolerance = 0.0001)
 {
     int pass_cnt = 0;
     int warning_cnt = 0;
@@ -171,12 +173,14 @@ inline int compare_half_relative(half_float::half* data_a, half_float::half* dat
     std::vector<float> fail_data_goldeny;
 
     float max_diff = 0.0;
+    int pass_bit_cnt = 4;
+    int warn_bit_cnt = 8;
 
     for (int i = 0; i < size; i++) {
-        if (compare_half_Ulps_and_absoulte(data_a[i], data_b[i], 4)) {
+        if (compare_half_Ulps_and_absoulte(data_a[i], data_b[i], pass_bit_cnt)) {
             // std::cout << "c data_a : " << (float)data_a[i] << " data_b : "  <<(float)data_b[i]  << std::endl;
             pass_cnt++;
-        } else if (compare_half_Ulps_and_absoulte(data_a[i], data_b[i], 256, absTolerance)) {
+        } else if (compare_half_Ulps_and_absoulte(data_a[i], data_b[i], warn_bit_cnt, absTolerance)) {
             // std::cout << "w data_a : " << (float)data_a[i] << " data_b : "  <<(float)data_b[i]  << std::endl;
             warning_cnt++;
         } else {
@@ -196,16 +200,15 @@ inline int compare_half_relative(half_float::half* data_a, half_float::half* dat
 
     int quasi_cnt = pass_cnt + warning_cnt;
     if (ret) {
-        printf("relative - pass_cnt : %d, warning_cnt : %d, fail_cnt : %d, pass ratio : %f\n", pass_cnt, warning_cnt,
-               fail_cnt, ((float)quasi_cnt / ((float)fail_cnt + (float)warning_cnt + (float)pass_cnt) * 100));
-
-        //#ifdef DEBUG_PIM
+        printf("relative - pass_cnt : %d, warning_cnt : %d, fail_cnt : %d, pass ratio : %f, max diff : %f\n", pass_cnt,
+               warning_cnt, fail_cnt,
+               ((float)quasi_cnt / ((float)fail_cnt + (float)warning_cnt + (float)pass_cnt) * 100), max_diff);
+#ifdef DEBUG_PIM
         for (int i = 0; i < fail_idx.size(); i++) {
             std::cout << fail_idx[i] << " pim : " << fail_data_pim[i] << " golden :" << fail_data_goldeny[i]
                       << std::endl;
         }
-        printf("max diff : %f\n", max_diff);
-        //#endif
+#endif
     }
 
     return ret;

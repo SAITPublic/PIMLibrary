@@ -528,6 +528,7 @@ __global__ void gemv_tree_pim_64cu_64th_fp16(
                         num_tile = num_tile / 2;
                     }
                 }
+
                 out_offset = bi * output_dim + out_idx;
                 if (is_gemv_add)
                     ((half*)output)[out_offset] += __float2half(t_output[0]);
@@ -538,4 +539,5 @@ __global__ void gemv_tree_pim_64cu_64th_fp16(
     }
 #endif
 }
+
 #endif /* _PIM_GEMV_KERNELS_PIMK_ */

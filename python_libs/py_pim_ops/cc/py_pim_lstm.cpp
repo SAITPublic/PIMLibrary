@@ -121,14 +121,14 @@ void KernelLauncher(const void* i_data, const void* w_data, const void* h_data, 
     PrintHalf("Weightb " ,w_data,0);
     PrintHalf("Weightb " ,w_data,7);
     */
-//    PimSynchronize();
+    //    PimSynchronize();
     t.start();
 
     miopenRNNForwardInference(handle, rnnDesc, nseq, input_tensors.data(), i_data, hidden_tensor, h_data, hidden_tensor,
                               c_data, weight_tensor, w_data, output_tensors.data(), o_data, hidden_tensor, ho_data,
                               hidden_tensor, co_data, ws_data, ws_len);
 
-//    PimSynchronize();
+    //    PimSynchronize();
     t.stop();
     std::cout << "RNNfwd Duration: " << t.gettime_ms() << std::endl;
 
@@ -155,53 +155,52 @@ void KernelLauncher(const void* i_data, const void* w_data, const void* h_data, 
     miopenDestroy(handle);
 }
 
-torch::Tensor py_pim_lstm(torch::Tensor input, torch::Tensor weight, torch::Tensor hidden , torch::Tensor cell , torch::Tensor is_bi_dir , torch::Tensor n_ws_len)
+torch::Tensor py_pim_lstm(torch::Tensor input, torch::Tensor weight, torch::Tensor hidden, torch::Tensor cell,
+                          torch::Tensor is_bi_dir, torch::Tensor n_ws_len)
 {
-        Timer t;
+    Timer t;
 
-        // Grab the input tensors
-        auto input_tensor = torch::flatten(input).data_ptr<at::Half>();
-        auto weights_tensor = torch::flatten(weight).data_ptr<at::Half>();
-        auto hidden_states_tensor = torch::flatten(hidden).data_ptr<at::Half>();
-        auto cell_states_tensor = torch::flatten(cell).data_ptr<at::Half>();
+    // Grab the input tensors
+    auto input_tensor = torch::flatten(input).data_ptr<at::Half>();
+    auto weights_tensor = torch::flatten(weight).data_ptr<at::Half>();
+    auto hidden_states_tensor = torch::flatten(hidden).data_ptr<at::Half>();
+    auto cell_states_tensor = torch::flatten(cell).data_ptr<at::Half>();
 
+    // Todo , verify if PimCopyMemory is required
+    int bi_dir = is_bi_dir.item<int>();
+    ;
+    // PimCopyMemory((void*)&bi_dir, (void*)bi_dir_tensor.flat<int32>().data(), sizeof(int), DEVICE_TO_HOST);
 
-        //Todo , verify if PimCopyMemory is required
-        int bi_dir = is_bi_dir.item<int>();;
-        //PimCopyMemory((void*)&bi_dir, (void*)bi_dir_tensor.flat<int32>().data(), sizeof(int), DEVICE_TO_HOST);
+    int ws_len = n_ws_len.item<int>();
+    ;
+    // PimCopyMemory((void*)&bi_dir, (void*)bi_dir_tensor.flat<int32>().data(), sizeof(int), DEVICE_TO_HOST);
 
-        int ws_len = n_ws_len.item<int>();;
-        //PimCopyMemory((void*)&bi_dir, (void*)bi_dir_tensor.flat<int32>().data(), sizeof(int), DEVICE_TO_HOST);
+    // NOTE: We start from 1 as 0th entry is always 2 for 2x memory
+    std::vector<int> input_dims;
+    for (int i = 1; i < input.dim(); i++) input_dims.push_back(input.size(i));
 
+    std::vector<int> hidden_dims;
+    for (int i = 1; i < hidden.dim(); i++) hidden_dims.push_back(hidden.size(i));
 
-        // NOTE: We start from 1 as 0th entry is always 2 for 2x memory
-        std::vector<int> input_dims;
-        for (int i = 1; i < input.dim(); i++) input_dims.push_back(input.size(i));
+    // Todo , figure out correct output siz , why does doc state 2d when there is output for each timestep
+    auto hidden_out_tensor = torch::zeros_like(hidden);
+    auto ho = hidden_out_tensor.data_ptr<at::Half>();
+    auto cell_out_tensor = torch::zeros_like(cell);
+    auto co = cell_out_tensor.data_ptr<at::Half>();
+    auto ws_out_tensor = torch::zeros({1, ws_len}, torch::kF16);
+    auto ws = cell_out_tensor.data_ptr<at::Half>();
+    auto out_tensor = torch::zeros({2 * input_dims[0], input_dims[1], 2 * hidden_dims[2]}, torch::kF16);
+    torch::Tensor output_tensor = out_tensor.to(torch::kCUDA);
+    auto out_data = output_tensor.data_ptr<at::Half>();
 
-        std::vector<int> hidden_dims;
-        for (int i = 1; i < hidden.dim(); i++) hidden_dims.push_back(hidden.size(i));
+    t.start();
+    // PrintHalf("Input received",input.data(),0);
+    KernelLauncher(input_tensor, weights_tensor, hidden_states_tensor, cell_states_tensor, input_dims, hidden_dims,
+                   bi_dir, ws_len, ws, ho, co, out_data);
+    t.stop();
+    std::cout << "Kernel Duration: " << t.gettime_ms() << std::endl;
 
-
-        // Todo , figure out correct output siz , why does doc state 2d when there is output for each timestep
-        auto hidden_out_tensor = torch::zeros_like(hidden);
-        auto ho = hidden_out_tensor.data_ptr<at::Half>();
-        auto cell_out_tensor = torch::zeros_like(cell);
-        auto co = cell_out_tensor.data_ptr<at::Half>();
-        auto ws_out_tensor = torch::zeros({1,ws_len},torch::kF16);
-        auto ws = cell_out_tensor.data_ptr<at::Half>();
-        auto out_tensor = torch::zeros({2 * input_dims[0], input_dims[1], 2 * hidden_dims[2]},torch::kF16);
-        torch::Tensor output_tensor = out_tensor.to(torch::kCUDA);
-        auto out_data = output_tensor.data_ptr<at::Half>();
-
-        t.start();
-        // PrintHalf("Input received",input.data(),0);
-        KernelLauncher(input_tensor, weights_tensor, hidden_states_tensor, cell_states_tensor, input_dims, hidden_dims,
-                       bi_dir, ws_len, ws, ho, co, out_data);
-        t.stop();
-        std::cout << "Kernel Duration: " << t.gettime_ms() << std::endl;
-
-        return output_tensor;
+    return output_tensor;
 }
 
 static auto registry = torch::RegisterOperators("custom_ops::py_pim_lstm", &py_pim_lstm);
-
