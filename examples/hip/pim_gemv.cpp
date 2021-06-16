@@ -475,7 +475,7 @@ int pim_gemv_lut_profile(bool block)
                         PimCreateGemvBundle(device_input, preloaded_weight, device_output));
 
     int iter;
-#ifdef TARGET
+#ifndef EMULATOR
     PIM_PROFILE_TICK_A(GEMV_E2E);
     for (iter = 0; iter < 1000; iter++) {
 #else
@@ -490,7 +490,7 @@ int pim_gemv_lut_profile(bool block)
         PimExecuteGemv(dev_out, dev_in, pim_weight);
     }
     PimSynchronize();
-#ifdef TARGET
+#ifndef EMULATOR
     PIM_PROFILE_TOCK_A(GEMV_E2E);
     printf("[ %d execution time ]\n", iter);
 #endif

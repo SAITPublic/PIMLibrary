@@ -306,7 +306,7 @@ int pim_elt_mul_profile(bool block)
 
     PimExecuteDummy();
 /* __PIM_API__ call : Execute PIM kernel (ELT_MUL) */
-#ifdef TARGET
+#ifndef EMULATOR
     int iter;
     PIM_PROFILE_TICK(ELT_MUL_1);
     for (iter = 0; iter < 1000; iter++) {
@@ -314,7 +314,7 @@ int pim_elt_mul_profile(bool block)
         PimExecuteMul(device_output, pim_input0, pim_input1, nullptr, block);
         if (!block) PimSynchronize();
 
-#ifdef TARGET
+#ifndef EMULATOR
     }
     PIM_PROFILE_TOCK(ELT_MUL_1);
     // printf("[ %d execution time ]\n", iter);

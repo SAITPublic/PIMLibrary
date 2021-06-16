@@ -317,13 +317,13 @@ int pim_elt_add_profile(bool block, int len)
 
     hipEventRecord(start, nullptr);
 /* __PIM_API__ call : Execute PIM kernel (ELT_ADD) */
-#ifdef TARGET
+#ifndef EMULATOR
     int iter;
     //    PIM_PROFILE_TICK(ELT_ADD_1);
     for (iter = 0; iter < 100; iter++) {
 #endif
         PimExecuteAdd(device_output, pim_input0, pim_input1, nullptr, block);
-#ifdef TARGET
+#ifndef EMULATOR
     }
     //    if (!block) PimSynchronize();
     //    PIM_PROFILE_TOCK(ELT_ADD_1);

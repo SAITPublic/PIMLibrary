@@ -63,6 +63,7 @@ int PimExecutor::initialize(void)
     DLOG(INFO) << " hip Device prop succeeded " << std::endl;
 
     pim_manager_ = pim::runtime::manager::PimManager::get_instance(rt_type_, precision_);
+    pim_manager_->pim_crf_generator_->set_gemv_tile_tree(is_gemv_tile_tree_);
 
     max_crf_size_ = 128;
     int max_srf_size = 2048;
@@ -262,6 +263,7 @@ int PimExecutor::execute_gemv_tile_accum(PimBo* output, PimBo* operand0, PimBo* 
 
     PIM_PROFILE_TICK(CreateCRFBin);
 
+    /* TODO: check tile_accum crf bin */
     uint8_t* crf_bin = find_crf(OP_GEMV, compute_size * sizeof(uint16_t));
     int crf_size = 32;
     if (crf_bin == nullptr) {

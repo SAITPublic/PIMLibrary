@@ -30,10 +30,11 @@ class PimCrfBinGen
     void create_pim_cmd(PimOpType op_type, int lc);
     void change_to_binary(uint8_t* crf_binary, int* crf_size);
     void gen_binary_with_loop(PimOpType op_type, int lc, uint8_t* bin_buf, int* crf_sz);
+    void set_gemv_tile_tree(bool is_gemv_tile_tree);
 
    private:
     std::vector<PimCommand> cmds_;
-    bool is_gemv_tree_;
+    bool is_gemv_tile_tree_;
 };
 
 } /* namespace manager */

@@ -17,7 +17,7 @@ namespace runtime
 {
 namespace manager
 {
-PimCrfBinGen::PimCrfBinGen() : is_gemv_tree_(true) {}
+PimCrfBinGen::PimCrfBinGen() : is_gemv_tile_tree_(true) {}
 
 void PimCrfBinGen::gen_binary_with_loop(PimOpType op_type, int lc, uint8_t* bin_buf, int* crf_sz)
 {
@@ -59,7 +59,7 @@ void PimCrfBinGen::create_pim_cmd(PimOpType op_type, int lc)
             PimCommand(PimCmdType::NOP, 15) /*, PimCommand(PimCmdType::NOP, 0)*/};
         cmds_.assign(tmp_cmds.begin(), tmp_cmds.end());
     } else if (op_type == OP_GEMV) {
-        if (is_gemv_tree_) {
+        if (is_gemv_tile_tree_) {
             std::vector<PimCommand> tmp_cmds{
                 PimCommand(PimCmdType::MAC, PimOpdType::GRF_B, PimOpdType::GRF_A, PimOpdType::EVEN_BANK, 1, 0, 0, 0),
                 PimCommand(PimCmdType::JUMP, 7, 2),
@@ -96,7 +96,7 @@ void PimCrfBinGen::create_pim_cmd(PimOpType op_type, int lc)
         cmds_.assign(tmp_cmds.begin(), tmp_cmds.end());
     }
 
-    if (lc != 0 && is_gemv_tree_ == true || op_type != OP_GEMV) {
+    if (lc != 0 && is_gemv_tile_tree_ == true || op_type != OP_GEMV) {
         cmds_.push_back(PimCommand(PimCmdType::JUMP, lc, cmds_.size() + 1));
     }
 
@@ -107,6 +107,7 @@ void PimCrfBinGen::create_pim_cmd(PimOpType op_type, int lc)
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
 }
+
 void PimCrfBinGen::change_to_binary(uint8_t* crf_binary, int* crf_size)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
@@ -119,6 +120,8 @@ void PimCrfBinGen::change_to_binary(uint8_t* crf_binary, int* crf_size)
     }
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
 }
+
+void PimCrfBinGen::set_gemv_tile_tree(bool is_gemv_tile_tree) { is_gemv_tile_tree_ = is_gemv_tile_tree; }
 
 } /* namespace manager */
 } /* namespace runtime */

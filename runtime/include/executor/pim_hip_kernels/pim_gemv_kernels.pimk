@@ -18,7 +18,7 @@
 #define COMPUTE_GEMV 1
 #define CHANGE_HAB_SB 1
 #define PARK_OUT 1
-#ifdef TARGET
+#ifndef EMULATOR
 #define REDUCE_SUM 1
 #endif
 
