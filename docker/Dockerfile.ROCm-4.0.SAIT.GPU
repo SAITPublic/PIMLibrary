@@ -41,6 +41,7 @@ RUN apt-get update
 RUN apt-get --yes --allow-unauthenticated install sudo
 RUN apt-get --yes --allow-unauthenticated install wget
 RUN apt-get --yes --allow-unauthenticated install kmod
+RUN apt-get --yes --allow-unauthenticated install libbz2-dev
 
 # Add rocm apt repository
 RUN wget -qO - http://repo.radeon.com/rocm/apt/4.0/rocm.gpg.key | sudo apt-key add -
