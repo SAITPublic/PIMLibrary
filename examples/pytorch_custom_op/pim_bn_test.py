@@ -26,36 +26,46 @@ class PyPimBNTestRandom(unittest.TestCase):
 
 class PyPimBNTestFile(unittest.TestCase):
     def test(self):
-        BATCH = 2
-        CH = 64
+        gpu0 = torch.device(0)
+        BATCH = 1
+        CH = 1
+        WIDTH = 131072
         HEIGHT = 1
-        WIDTH = 1024
 
-        inp = torch.from_numpy(
-            np.fromfile("test_vectors/load/bn/input_256KB.dat",
-                        dtype=np.float16))
+        input0 = np.fromfile(
+            "test_vectors/load/bn/nr_input_256KB.dat",
+            dtype=np.float16)
+        inp = torch.from_numpy(input0)
 
-        mean = torch.from_numpy(
-            np.fromfile("test_vectors/load/bn/mean_128B.dat",
-                        dtype=np.float16))
+        beta = np.fromfile(
+            "test_vectors/load/bn/nr_beta_256KB.dat",
+            dtype=np.float16)
+        beta = beta[0:CH]
+        beta = torch.from_numpy(beta)
 
-        var = torch.from_numpy(
-            np.fromfile("test_vectors/load/bn/variance_128B.dat",
-                        dtype=np.float16))
+        gamma = np.fromfile(
+            "test_vectors/load/bn/nr_gamma_256KB.dat",
+            dtype=np.float16)
+        gamma = gamma[0:CH]
+        gamma = torch.from_numpy(gamma)
 
-        beta = torch.from_numpy(
-            np.fromfile("test_vectors/load/bn/beta_128B.dat",
-                        dtype=np.float16))
+        mean = np.fromfile(
+            "test_vectors/load/bn/nr_mean_256KB.dat",
+            dtype=np.float16)
+        mean = mean[0:CH]
+        mean = torch.from_numpy(mean)
 
-        gamma = torch.from_numpy(
-            np.fromfile("test_vectors/load/bn/gamma_128B.dat",
-                        dtype=np.float16))
-
+        var = np.fromfile(
+            "test_vectors/load/bn/nr_variance_256KB.dat",
+            dtype=np.float16)
+        var = var[0:CH]
+        var = torch.from_numpy(var)
         epsilon = torch.tensor([1e-5], dtype=torch.double)
 
-        golden = np.fromfile("test_vectors/load/bn/output_256KB.dat",
-                             dtype=np.float16)
-        golden = golden.reshape(BATCH, CH, HEIGHT, WIDTH)
+        golden = np.fromfile(
+            "test_vectors/load/bn/nr_output_256KB.dat",
+            dtype=np.float16)
+        golden = torch.from_numpy(golden)
 
         inp = torch.reshape(inp, [BATCH, CH, HEIGHT, WIDTH])
         mean = torch.reshape(mean, [1, CH, 1, 1])
