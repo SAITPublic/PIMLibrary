@@ -340,48 +340,47 @@ PimGemvBundle* PimGetGemvBundle(PimBo* weight, PimBo* dev_in, PimBo* dev_out)
         return nullptr;
     }
 
-    PimDesc* pim_desc = PimCreateDesc(weight->bshape_r.n, 1, weight->bshape_r.h, weight->bshape_r.w, PIM_FP16, OP_GEMV);
-    PimBo* host_weight = nullptr;
-
-    if (weight->data == nullptr) {
-        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
-        return nullptr;
-    }
-    if (weight->mem_type == MEM_TYPE_HOST) {
-        host_weight = weight;
-    } else if (weight->mem_type == MEM_TYPE_DEVICE || weight->mem_type == MEM_TYPE_PIM) {
-        uint32_t w_size = weight->bshape_r.h * weight->bshape_r.w;
-        host_weight = PimCreateBo(pim_desc, MEM_TYPE_HOST, GEMV_WEIGHT);
-        hipMemcpy(host_weight->data, weight->data, w_size * sizeof(half_float::half), hipMemcpyDeviceToHost);
-    }
-
     // TODO: change the key from uint64_t to (keybo*, size): pull_req: 456)?
     uint64_t w_addr = reinterpret_cast<uint64_t>(weight->data);
-
     PimGemvBundle* bundle = nullptr;
     bundle = pim_runtime->find_gemv_bundle(w_addr);
 
     if (bundle == nullptr) {
-        uint32_t w_size = pim_desc->bshape_r.h * pim_desc->bshape_r.w;
-        PimBo* host_reordered_weight = PimCreateBo(pim_desc, MEM_TYPE_HOST, GEMV_WEIGHT);
-        PimBo* pre_wei = PimCreateBo(pim_desc, MEM_TYPE_PIM, GEMV_WEIGHT);
+	PimDesc* pim_desc = PimCreateDesc(weight->bshape_r.n, 1, weight->bshape_r.h, weight->bshape_r.w, PIM_FP16, OP_GEMV);
+	PimBo* host_weight = nullptr;
 
-        pim_runtime->convert_data_layout(host_reordered_weight, host_weight, OP_GEMV);
-        PimCopyMemory(pre_wei, host_reordered_weight, HOST_TO_PIM);
+	if (weight->data == nullptr) {
+	    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+	    return nullptr;
+	}
+	if (weight->mem_type == MEM_TYPE_HOST) {
+	    host_weight = weight;
+	} else if (weight->mem_type == MEM_TYPE_DEVICE || weight->mem_type == MEM_TYPE_PIM) {
+	    uint32_t w_size = weight->bshape_r.h * weight->bshape_r.w;
+	    host_weight = PimCreateBo(pim_desc, MEM_TYPE_HOST, GEMV_WEIGHT);
+	    hipMemcpy(host_weight->data, weight->data, w_size * sizeof(half_float::half), hipMemcpyDeviceToHost);
+	}
 
-        // bundle = PimCreateGemvBundle(dev_in, pre_wei, dev_out);
-        bundle = new PimGemvBundle;
-        bundle->in = dev_in;
-        bundle->wei = pre_wei;
-        bundle->out = dev_out;
+	uint32_t w_size = pim_desc->bshape_r.h * pim_desc->bshape_r.w;
+	PimBo* host_reordered_weight = PimCreateBo(pim_desc, MEM_TYPE_HOST, GEMV_WEIGHT);
+	PimBo* pre_wei = PimCreateBo(pim_desc, MEM_TYPE_PIM, GEMV_WEIGHT);
 
-        pim_runtime->insert_gemv_bundle(w_addr, bundle);
+	pim_runtime->convert_data_layout(host_reordered_weight, host_weight, OP_GEMV);
+	PimCopyMemory(pre_wei, host_reordered_weight, HOST_TO_PIM);
 
-        PimDestroyDesc(pim_desc);
-        PimDestroyBo(host_reordered_weight);
-        if (host_weight != weight) {
-            PimDestroyBo(host_weight);
-        }
+	bundle = new PimGemvBundle;
+	bundle->in = dev_in;
+	bundle->wei = pre_wei;
+	bundle->out = dev_out;
+
+	pim_runtime->insert_gemv_bundle(w_addr, bundle);
+
+	PimDestroyDesc(pim_desc);
+	PimDestroyBo(host_reordered_weight);
+
+	if (host_weight != weight) {
+	    PimDestroyBo(host_weight);
+	}
     }
 
     PIM_PROFILE_TOCK(GetGemvBundle);
