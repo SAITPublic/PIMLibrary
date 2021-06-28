@@ -55,8 +55,8 @@ RNN_HIDDEN_SIZE = 800
 # Dense Layer
 OUTPUT_SIZE = 29
 
-initializer = tf.keras.initializers.RandomNormal(seed=SEED)
-kernel_initializer = tf.keras.initializers.RandomNormal(seed=SEED)
+initializer = tf.keras.initializers.RandomUniform(minval=0, maxval=0.05, seed=SEED)
+kernel_initializer = tf.keras.initializers.RandomUniform(minval=0, maxval=0.05, seed=SEED)
 
 # Performance table for different layers
 eval_time = []
@@ -389,8 +389,8 @@ class DeepSpeech2(tf.keras.Model):
 
         self.bnorm = batch_norm(dtype=self.float_type)
         self.dense = tf.keras.layers.Dense(self.num_classes, use_bias=self.use_bias, dtype=self.float_type)
-        self.pim_dense_weights =  tf.random.uniform(shape=(rnn_hidden_size*2 , num_classes), dtype=tf.float16)
-        self.pim_dense_bias = tf.random.uniform(shape=[num_classes], dtype=tf.float16)
+        self.pim_dense_weights =  tf.random.uniform(shape=(rnn_hidden_size*2 , num_classes), dtype=tf.float16, minval=0, maxval=0.05)
+        self.pim_dense_bias = tf.random.uniform(shape=[num_classes], dtype=tf.float16, minval=0, maxval=0.05)
         self.reorder = tf.constant([1])
         self.use_bias_int  = tf.constant([1])
         if self.use_bias == False:
@@ -453,11 +453,12 @@ class DeepSpeech2(tf.keras.Model):
         if args.functional_verify:
             #No need to track ENABLE_PIM , since miopen not used for dense.
             weights = self.dense.get_weights()
-            bias = pim_dense_bias
+            bias = self.pim_dense_bias
             if self.use_bias == True:
                     bias = weights[1]
             pim_logits = tf_pim_ops.pim_dense(bn_out, weights[0], bias, self.use_bias_int, self.reorder)
-            tf.test.TestCase.assertAllClose(logits, pim_logits, atol=1e-3)
+            result = np.testing.assert_array_almost_equal(logits, pim_logits, decimal=5)
+        #    tf.test.TestCase.assertAllClose(logits, pim_logits, atol=1e-3)
 
         if args.profile == True :
             print(" Dense input shape {}".format(bn_out.shape))
@@ -483,7 +484,7 @@ def profile_ds2(dtype):
     model = DeepSpeech2(NUM_RNN_LAYERS, RNN_HIDDEN_SIZE, OUTPUT_SIZE, use_bias, dtype)
 
     # Input shape
-    x = tf.random.uniform(shape=(args.batch_size, INPUT_HEIGHT, INPUT_WIDTH, 1), dtype=dtype)
+    x = tf.random.uniform(shape=(args.batch_size, INPUT_HEIGHT, INPUT_WIDTH, 1), dtype=dtype, minval=0, maxval=0.05)
 
     if args.profile:
         # For initialization of GPU and PIM preloading
