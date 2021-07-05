@@ -70,7 +70,7 @@ int PimExecutor::initialize(void)
 
     hipMalloc((void**)&d_srf_bin_buffer_, max_srf_size);
     hipMalloc((void**)&zero_buffer_, 32);
-    std::fill_n(zero_buffer_, 32, 0);
+    hipMemset(zero_buffer_, 0, 32);
 
 #ifdef EMULATOR
     int reserved_fmtd_size = max_fmtd_size_ * sizeof(PimMemTraceData);
