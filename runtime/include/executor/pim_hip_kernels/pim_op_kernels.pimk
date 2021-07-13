@@ -175,7 +175,6 @@ __device__ void _B_CMD(int type)
             __syncthreads();
             break;
         case 1:
-            __threadfence();
             asm volatile("s_waitcnt vmcnt(0) lgkmcnt(0)");
             break;
         case 2:
