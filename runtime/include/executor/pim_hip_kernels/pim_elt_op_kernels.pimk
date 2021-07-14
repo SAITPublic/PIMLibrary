@@ -87,14 +87,12 @@ __global__ void elt_op_pim(volatile uint8_t* __restrict__ operand0, volatile uin
             unsigned int col = loc % num_col;
 
             addr = addr_gen(hipBlockIdx_x, 0, 0, 0, row, col);
+
             addr_even = addr + offset;
             addr_odd = addr_even + 0x2000;
 
             R_CMD(&operand0[addr_even]);
-            B_CMD(1);
-
             R_CMD(&operand1[addr_even]);
-            B_CMD(1);
 
             W_CMD(&output[addr_even]);
             W_CMD(&output[addr_even]);
@@ -102,10 +100,7 @@ __global__ void elt_op_pim(volatile uint8_t* __restrict__ operand0, volatile uin
             B_CMD(1);
 
             R_CMD(&operand0[addr_odd]);
-            B_CMD(1);
-
             R_CMD(&operand1[addr_odd]);
-            B_CMD(1);
 
             W_CMD(&output[addr_odd]);
             W_CMD(&output[addr_odd]);
