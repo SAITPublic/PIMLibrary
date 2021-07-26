@@ -73,7 +73,7 @@ int PimDeinitialize(void)
     return ret;
 }
 
-PimBo* PimCreateBo(int w, int h, int c, int n, PimPrecision precision, PimMemType mem_type)
+PimBo* PimCreateBo(int w, int h, int c, int n, PimPrecision precision, PimMemType mem_type, void* user_ptr)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     PIM_PROFILE_TICK(CreateBo);
@@ -95,12 +95,19 @@ PimBo* PimCreateBo(int w, int h, int c, int n, PimPrecision precision, PimMemTyp
     pim_bo->mem_type = mem_type;
     pim_bo->precision = precision;
 
-    ret = pim_runtime->alloc_memory(pim_bo);
-    if (ret != 0) {
-        DLOG(ERROR) << "Fail to alloc memory";
-        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
-        return nullptr;
+    if (!user_ptr) {
+        ret = pim_runtime->alloc_memory(pim_bo);
+        if (ret != 0) {
+            DLOG(ERROR) << "Fail to alloc memory";
+            DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+            return nullptr;
+        }
+        pim_bo->use_user_ptr = false;
+    } else {
+        pim_bo->data = user_ptr;
+        pim_bo->use_user_ptr = true;
     }
+
     PIM_PROFILE_TOCK(CreateBo);
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
