@@ -11,6 +11,8 @@
 #ifndef _PIM_RUNTIME_H_
 #define _PIM_RUNTIME_H_
 
+#pragma GCC diagnostic ignored "-Wunused-private-field"
+
 #include <unordered_map>
 #include "executor/PimExecutor.h"
 #include "manager/PimManager.h"

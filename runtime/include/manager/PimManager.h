@@ -11,6 +11,8 @@
 #ifndef _PIM_MANAGER_H_
 #define _PIM_MANAGER_H_
 
+#pragma GCC diagnostic ignored "-Wunused-private-field"
+
 #include "manager/PimControlManager.h"
 #include "manager/PimCrfBinGen.h"
 #include "manager/PimDevice.h"

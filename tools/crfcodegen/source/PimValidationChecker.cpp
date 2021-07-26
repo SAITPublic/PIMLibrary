@@ -18,7 +18,7 @@ PimValidationChecker::~PimValidationChecker() {}
 
 PimCmdPairType PimValidationChecker::change_cmd_type(PimCmdType cmd_type) const
 {
-    PimCmdPairType changed_cmd_type;
+    PimCmdPairType changed_cmd_type{}; 
     switch (cmd_type) {
         case PimCmdType::MUL:
             changed_cmd_type = PimCmdPairType::MUL;
@@ -48,7 +48,7 @@ PimCmdPairType PimValidationChecker::change_cmd_type(PimCmdType cmd_type) const
 
 PimOpdPairType PimValidationChecker::change_opd_type(PimOpdType opd_type) const
 {
-    PimOpdPairType changed_opd_type;
+    PimOpdPairType changed_opd_type{}; // made a change here. added {} to initialize the enum class.
     switch (opd_type) {
         case PimOpdType::EVEN_BANK:
             changed_opd_type = PimOpdPairType::EVEN_BANK;
@@ -81,7 +81,7 @@ int PimValidationChecker::check_cmd_validation(std::vector<PimCommand>& cmds)
 {
     int ret = 1;
 
-    for (int i = 0; i < cmds.size(); i++) {
+    for (int i = 0; i < (int)cmds.size(); i++) {
         ret = check_validate_pair(cmds[i]);
         if (0 == ret) return ret;
     }
@@ -99,10 +99,10 @@ int PimValidationChecker::check_validate_pair(PimCommand& pim_cmd)
     if (cmd_type != PimCmdPairType::ETC) {
         PimOpdPairType src0 = change_opd_type(pim_cmd.src0_);
         PimOpdPairType src1 = change_opd_type(pim_cmd.src1_);
-        PimOpdPairType src2 = change_opd_type(pim_cmd.src2_);
+        //PimOpdPairType src2 = change_opd_type(pim_cmd.src2_);
         int i_src0 = static_cast<int>(src0);
         int i_src1 = static_cast<int>(src1);
-        int i_src2 = static_cast<int>(src2);
+        //int i_src2 = static_cast<int>(src2);
 
         if (src_pair_table[i_src0][i_src1][i_cmd] == static_cast<int>(PimCamType::NOP)) {
             std::cout << "Invalid in ISA 1.0  ( " << pim_cmd.to_str()
@@ -163,7 +163,7 @@ int PimValidationChecker::check_isa_restriction(std::vector<PimCommand>& cmds)
         is_valid = 0;
     }
 
-    for (int i = 0; i < cmds.size(); i++) {
+    for (int i = 0; i < (int)cmds.size(); i++) {
         if (cmds[i].type_ == PimCmdType::JUMP) {
             if (cmds[i].loop_counter_ == 0) {
                 std::cerr << "ISA Validation error :  JUMP loop index cannot be zero." << std::endl;
@@ -206,7 +206,7 @@ int PimValidationChecker::check_isa_restriction(std::vector<PimCommand>& cmds)
 
 int PimValidationChecker::find_next_op(std::vector<PimCommand>& cmds, int cur_idx, int* next_idx, int* num_nop)
 {
-    for (int i = cur_idx + 1; i < cmds.size(); i++) {
+    for (int i = cur_idx + 1; i < (int)cmds.size(); i++) {
         int op_idx = get_hazard_table_idx(cmds[i]);
 
         if (cmds[i].type_ == PimCmdType::NOP) {
@@ -234,7 +234,7 @@ int PimValidationChecker::check_hazard(std::vector<PimCommand>& cmds)
     int num_nop = 0;
     int num_hazard = 0;
 
-    for (int i = 0; i < cmds.size(); i++) {
+    for (int i = 0; i < (int)cmds.size(); i++) {
         num_nop = 0;
         next_idx = 0;
         cur_op = get_hazard_table_idx(cmds[i]);
@@ -302,7 +302,7 @@ int PimValidationChecker::detect_data_hazard(std::vector<PimCommand>& cmds, int 
     int is_read_reg = is_read_register(cmds[cur_idx]);
     int num_required_nop = data_hazard_table[is_read_reg][opcode_idx];
 
-    int max_idx = ((int64_t)cur_idx + num_required_nop + 1) < cmds.size() ? ((int64_t)cur_idx + num_required_nop + 1)
+    int max_idx = ((int64_t)cur_idx + num_required_nop + 1) < (int64_t)cmds.size() ? ((int64_t)cur_idx + num_required_nop + 1)
                                                                           : (cmds.size());
     int is_hazard = 0;
 

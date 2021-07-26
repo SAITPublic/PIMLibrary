@@ -20,7 +20,7 @@ int ConvertToBinary(std::vector<PimCommand>& pim_cmd_vec, uint32_t* crf_binary)
 {
     int ret = 0;
 
-    if (ret = vc.validation_check(pim_cmd_vec)) {
+    if ((ret = vc.validation_check(pim_cmd_vec))) {
         pim_gen.convert_to_binary(pim_cmd_vec, crf_binary);
 
         return ret;
@@ -33,7 +33,7 @@ int ConvertToBinary(PimCommand pim_cmd, uint32_t* crf_binary)
 {
     int ret = 0;
 
-    if (ret = vc.check_validate_pair(pim_cmd)) {
+    if ((ret = vc.check_validate_pair(pim_cmd))) {
         pim_gen.convert_to_binary(pim_cmd, crf_binary);
         return ret;
     }

@@ -11,6 +11,8 @@
 #ifndef _PIM_DEVICE_H_
 #define _PIM_DEVICE_H_
 
+#pragma GCC diagnostic ignored "-Wunused-private-field"
+
 #include "pim_data_types.h"
 
 namespace pim

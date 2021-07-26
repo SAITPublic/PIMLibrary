@@ -19,7 +19,7 @@ void PimCrfBinGen::convert_to_binary(std::vector<PimCommand>& pim_cmd_vec, uint3
 {
     //*crf_size = pim_cmd_vec.size();
 
-    for (int i = 0; i < pim_cmd_vec.size(); i++) {
+    for (int i = 0; i < (int)pim_cmd_vec.size(); i++) {
         crf_binary[i] = pim_cmd_vec[i].to_int();
     }
 }

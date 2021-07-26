@@ -11,6 +11,8 @@
 #ifndef _PIM_MEMORY_MANAGER_H_
 #define _PIM_MEMORY_MANAGER_H_
 
+#pragma GCC diagnostic ignored "-Wunused-private-field"
+
 #include "internal/simple_heap.hpp"
 #include "manager/PimInfo.h"
 #include "manager/PimManager.h"

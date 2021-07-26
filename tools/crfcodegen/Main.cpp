@@ -14,7 +14,7 @@
 int main(void)
 {
     std::cout << "crf generator" << std::endl;
-    int crf_size = 0;
+   // int crf_size = 0;
     uint32_t buffer[128] = {
         0,
     };
