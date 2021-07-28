@@ -36,7 +36,7 @@ PimExecutor::PimExecutor(PimRuntimeType rt_type, PimPrecision precision) : rt_ty
     max_block_size_ = fbi_.num_pim_chan;
     max_fmtd_size_ = fmtd_size_per_ch_ * max_block_size_;
 #endif
-    is_gemv_tile_tree_ = true;
+    is_gemv_tile_tree_ = false;
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
 }
 

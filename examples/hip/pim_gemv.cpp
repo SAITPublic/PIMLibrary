@@ -31,7 +31,7 @@
 
 using half_float::half;
 
-#define EPSILON (0.05)
+#define EPSILON (1.0)
 
 int pim_gemv_batch(bool block)
 {
