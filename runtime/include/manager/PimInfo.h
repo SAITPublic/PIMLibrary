@@ -62,6 +62,12 @@ typedef enum __PimMode {
     HAB_PIM_MODE,
 } PimMode;
 
+typedef enum __PimGemvType {
+    TILE_ACCUM,
+    TILE_TREE,
+    NEXT_PIM,
+} PimGemvType;
+
 #ifdef EMULATOR
 typedef struct __PimMemTracer {
     uint64_t g_fba;
