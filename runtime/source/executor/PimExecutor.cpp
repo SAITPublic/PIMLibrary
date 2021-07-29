@@ -292,14 +292,25 @@ int PimExecutor::execute_gemv_tile_accum(PimBo* output, PimBo* operand0, PimBo* 
     PIM_PROFILE_TOCK(CreateCRFBin);
 
     PIM_PROFILE_TICK(RunGemvKernel);
-    hipLaunchKernelGGL(
-        gemv_pim_64cu_64th_fp16, dim3(blocks), dim3(threads_per_block), 0, stream, (uint8_t*)g_pim_base_addr,
-        (uint8_t*)weight->data, (uint8_t*)pim_gemv_tmp_buffer_, (uint8_t*)input->data, (uint8_t*)output->data, n_batch,
-        n_memory_tile, n_compute_tile, n_out_tile, real_out_size,
+    if (n_compute_tile == 8) {
+        hipLaunchKernelGGL(
+            gemv_pim_64cu_64th_8tile_fp16, dim3(blocks), dim3(threads_per_block), 0, stream, (uint8_t*)g_pim_base_addr,
+            (uint8_t*)weight->data, (uint8_t*)pim_gemv_tmp_buffer_, (uint8_t*)input->data, (uint8_t*)output->data,
+            n_batch, n_memory_tile, n_compute_tile, n_out_tile, real_out_size,
 #ifdef EMULATOR
-        (PimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_, (PimMemTracer*)d_emulator_trace_,
+            (PimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_, (PimMemTracer*)d_emulator_trace_,
 #endif
-        (uint8_t*)crf_bin, crf_size, is_gemv_add);
+            (uint8_t*)crf_bin, crf_size, is_gemv_add);
+    } else {
+        hipLaunchKernelGGL(
+            gemv_pim_64cu_64th_fp16, dim3(blocks), dim3(threads_per_block), 0, stream, (uint8_t*)g_pim_base_addr,
+            (uint8_t*)weight->data, (uint8_t*)pim_gemv_tmp_buffer_, (uint8_t*)input->data, (uint8_t*)output->data,
+            n_batch, n_memory_tile, n_compute_tile, n_out_tile, real_out_size,
+#ifdef EMULATOR
+            (PimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_, (PimMemTracer*)d_emulator_trace_,
+#endif
+            (uint8_t*)crf_bin, crf_size, is_gemv_add);
+    }
 #ifndef EMULATOR
     if (block) hipStreamSynchronize(stream);
     PIM_PROFILE_TOCK(RunGemvKernel);
