@@ -64,7 +64,8 @@ __PIM_API__ int PimDeinitialize(void);
  *
  * @return Pointer to buffer object.
  */
-__PIM_API__ PimBo* PimCreateBo(int w, int h, int c, int n, PimPrecision precision, PimMemType mem_type, void* user_ptr = nullptr);
+__PIM_API__ PimBo* PimCreateBo(int w, int h, int c, int n, PimPrecision precision, PimMemType mem_type,
+                               void* user_ptr = nullptr);
 
 /**
  * @brief Create PIM buffer object with pim descriptor

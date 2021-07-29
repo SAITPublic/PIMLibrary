@@ -55,7 +55,7 @@ int PimDevice::request_ioctl(void)
     int ret = 0;
 
     /* ioctl by pim command */
-    //ret = request_ioctl();
+    // ret = request_ioctl();
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;

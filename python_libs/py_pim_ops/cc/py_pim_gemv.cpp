@@ -28,7 +28,7 @@ void KernelLauncher(const void* i_data, const void* w_data, const int num_batch,
                       DEVICE_TO_HOST);
     }
 
-     // Old ver. PimCopyMemory from tensor weight to Pimbo structure
+    // Old ver. PimCopyMemory from tensor weight to Pimbo structure
     // PimCopyMemory((void*)host_weight->data, (void*)w_data, sizeof(half) * IN_LENGTH * OUT_LENGTH, HOST_TO_HOST);
 
     // Transpose the weight matrix for PIM spec.

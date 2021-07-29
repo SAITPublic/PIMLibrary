@@ -44,7 +44,6 @@ void KernelLauncher(const void* inp_data, const int N, const int DIMS, const voi
     PimDestroyBo(host_gamma);
     PimDestroyBo(pim_input);
     PimDestroyBo(device_output);
-
 }
 
 torch::Tensor py_pim_bn(torch::Tensor input, torch::Tensor mean, torch::Tensor var, torch::Tensor offset,

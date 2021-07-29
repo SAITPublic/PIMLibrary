@@ -70,10 +70,10 @@ torch::Tensor py_pim_dense(torch::Tensor input, torch::Tensor weights, torch::Te
     has_bias = bias_flag.item<int>();
     ;
 
-    DLOG(INFO) << "Input Dims :" << num_dims ;
-    DLOG(INFO) << "Input Num batches : " << num_batch ;
-    DLOG(INFO)<< "Weight Num inputs : " << num_rows ;
-    DLOG(INFO) << "Weight Num outputs : " << num_cols ;
+    DLOG(INFO) << "Input Dims :" << num_dims;
+    DLOG(INFO) << "Input Num batches : " << num_batch;
+    DLOG(INFO) << "Weight Num inputs : " << num_rows;
+    DLOG(INFO) << "Weight Num outputs : " << num_cols;
 
     if (num_dims == 3) {
         num_iters = input.sizes()[1];

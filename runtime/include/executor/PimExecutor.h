@@ -79,9 +79,12 @@ class PimExecutor
     int max_block_size_;
     int max_fmtd_size_;
 #endif
-    int execute_gemv_next_pim(PimBo* output, PimBo* operand0, PimBo* operand1, int is_gemv_add, hipStream_t stream, bool block);
-    int execute_gemv_tile_accum(PimBo* output, PimBo* operand0, PimBo* operand1, int is_gemv_add, hipStream_t stream, bool block);
-    int execute_gemv_tile_tree(PimBo* output, PimBo* operand0, PimBo* operand1, int is_gemv_add, hipStream_t stream, bool block);
+    int execute_gemv_next_pim(PimBo* output, PimBo* operand0, PimBo* operand1, int is_gemv_add, hipStream_t stream,
+                              bool block);
+    int execute_gemv_tile_accum(PimBo* output, PimBo* operand0, PimBo* operand1, int is_gemv_add, hipStream_t stream,
+                                bool block);
+    int execute_gemv_tile_tree(PimBo* output, PimBo* operand0, PimBo* operand1, int is_gemv_add, hipStream_t stream,
+                               bool block);
 };
 
 } /* namespace executor */

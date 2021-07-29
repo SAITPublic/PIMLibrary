@@ -541,16 +541,16 @@ __global__ void gemv_tree_pim_64cu_64th_fp16(
 }
 
 __global__ void gemv_next_pim_64cu_64th_fp16(volatile uint8_t* __restrict__ pim_ctr,
-                                            volatile uint8_t* __restrict__ pim_weight,
-                                            volatile uint8_t* __restrict__ pim_gemv_tmp_buffer,
-                                            volatile uint8_t* __restrict__ pim_input, volatile uint8_t* __restrict__ output,
-                                            int batch_dim, int n_memory_tile, int n_compute_tile, int n_out_tile,
-                                            int output_dim,
+                                             volatile uint8_t* __restrict__ pim_weight,
+                                             volatile uint8_t* __restrict__ pim_gemv_tmp_buffer,
+                                             volatile uint8_t* __restrict__ pim_input,
+                                             volatile uint8_t* __restrict__ output, int batch_dim, int n_memory_tile,
+                                             int n_compute_tile, int n_out_tile, int output_dim,
 #ifdef EMULATOR
-                                            PimMemTraceData* fmtd16, int* frd_size, int mt_width,
-                                            PimMemTracer* emulator_trace,
+                                             PimMemTraceData* fmtd16, int* frd_size, int mt_width,
+                                             PimMemTracer* emulator_trace,
 #endif
-                                            uint8_t* crf_binary, int crf_size, int is_gemv_add)
+                                             uint8_t* crf_binary, int crf_size, int is_gemv_add)
 {
 #ifdef EMULATOR
     emulator_trace->g_fba = (uint64_t)pim_ctr;
@@ -656,7 +656,6 @@ __global__ void gemv_next_pim_64cu_64th_fp16(volatile uint8_t* __restrict__ pim_
 
     for (int bi = 0; bi < batch_dim; bi++) {
         for (int oi = 0; oi < n_out_tile; oi++) {
-
             out_idx = oi * out_per_tile + t_idx;
             if (out_idx < output_dim) {
                 li = bi * n_out_tile + oi;

@@ -18,7 +18,7 @@ PimValidationChecker::~PimValidationChecker() {}
 
 PimCmdPairType PimValidationChecker::change_cmd_type(PimCmdType cmd_type) const
 {
-    PimCmdPairType changed_cmd_type{}; 
+    PimCmdPairType changed_cmd_type{};
     switch (cmd_type) {
         case PimCmdType::MUL:
             changed_cmd_type = PimCmdPairType::MUL;
@@ -48,7 +48,7 @@ PimCmdPairType PimValidationChecker::change_cmd_type(PimCmdType cmd_type) const
 
 PimOpdPairType PimValidationChecker::change_opd_type(PimOpdType opd_type) const
 {
-    PimOpdPairType changed_opd_type{}; // made a change here. added {} to initialize the enum class.
+    PimOpdPairType changed_opd_type{};  // made a change here. added {} to initialize the enum class.
     switch (opd_type) {
         case PimOpdType::EVEN_BANK:
             changed_opd_type = PimOpdPairType::EVEN_BANK;
@@ -99,10 +99,10 @@ int PimValidationChecker::check_validate_pair(PimCommand& pim_cmd)
     if (cmd_type != PimCmdPairType::ETC) {
         PimOpdPairType src0 = change_opd_type(pim_cmd.src0_);
         PimOpdPairType src1 = change_opd_type(pim_cmd.src1_);
-        //PimOpdPairType src2 = change_opd_type(pim_cmd.src2_);
+        // PimOpdPairType src2 = change_opd_type(pim_cmd.src2_);
         int i_src0 = static_cast<int>(src0);
         int i_src1 = static_cast<int>(src1);
-        //int i_src2 = static_cast<int>(src2);
+        // int i_src2 = static_cast<int>(src2);
 
         if (src_pair_table[i_src0][i_src1][i_cmd] == static_cast<int>(PimCamType::NOP)) {
             std::cout << "Invalid in ISA 1.0  ( " << pim_cmd.to_str()
@@ -302,8 +302,9 @@ int PimValidationChecker::detect_data_hazard(std::vector<PimCommand>& cmds, int 
     int is_read_reg = is_read_register(cmds[cur_idx]);
     int num_required_nop = data_hazard_table[is_read_reg][opcode_idx];
 
-    int max_idx = ((int64_t)cur_idx + num_required_nop + 1) < (int64_t)cmds.size() ? ((int64_t)cur_idx + num_required_nop + 1)
-                                                                          : (cmds.size());
+    int max_idx = ((int64_t)cur_idx + num_required_nop + 1) < (int64_t)cmds.size()
+                      ? ((int64_t)cur_idx + num_required_nop + 1)
+                      : (cmds.size());
     int is_hazard = 0;
 
     for (int i = next_idx; i < max_idx; i++) {
