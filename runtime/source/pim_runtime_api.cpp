@@ -95,19 +95,12 @@ PimBo* PimCreateBo(int w, int h, int c, int n, PimPrecision precision, PimMemTyp
     pim_bo->mem_type = mem_type;
     pim_bo->precision = precision;
 
-    if (!user_ptr) {
-        ret = pim_runtime->alloc_memory(pim_bo);
-        if (ret != 0) {
-            DLOG(ERROR) << "Fail to alloc memory";
-            DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
-            return nullptr;
-        }
-        pim_bo->use_user_ptr = false;
-    } else {
-        pim_bo->data = user_ptr;
-        pim_bo->use_user_ptr = true;
+    ret = pim_runtime->alloc_memory(pim_bo, user_ptr);
+    if (ret != 0) {
+        DLOG(ERROR) << "Fail to alloc memory";
+        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+        return nullptr;
     }
-
     PIM_PROFILE_TOCK(CreateBo);
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
@@ -135,21 +128,12 @@ PimBo* PimCreateBo(PimDesc* pim_desc, PimMemType mem_type, PimMemFlag mem_flag, 
     pim_bo->mem_type = mem_type;
     pim_bo->precision = pim_desc->precision;
 
-    if (!user_ptr) {
-        ret = pim_runtime->alloc_memory(pim_bo);
-        if (ret != 0) {
-            DLOG(ERROR) << "Fail to alloc memory";
-
-            DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
-            return nullptr;
-        }
-
-        pim_bo->use_user_ptr = false;
-    } else {
-        pim_bo->data = user_ptr;
-        pim_bo->use_user_ptr = true;
+    ret = pim_runtime->alloc_memory(pim_bo, user_ptr);
+    if (ret != 0) {
+        DLOG(ERROR) << "Fail to alloc memory";
+        LOG(INFO) << "[END] " << __FUNCTION__ << " called";
+        return nullptr;
     }
-
 #ifdef EMULATOR
     pad_data(pim_bo->data, pim_desc, mem_type, mem_flag);
 #endif
@@ -193,14 +177,13 @@ int PimDestroyBo(PimBo* pim_bo)
         return -1;
     }
 
-    if (!pim_bo->use_user_ptr) {
-        ret = pim_runtime->free_memory(pim_bo);
-        if (ret != 0) {
-            DLOG(ERROR) << "Fail to Destroy Bo";
-            DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
-            return -1;
-        }
+    ret = pim_runtime->free_memory(pim_bo);
+    if (ret != 0) {
+        DLOG(ERROR) << "Fail to Destroy Bo";
+        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+        return -1;
     }
+
     delete pim_bo;
     PIM_PROFILE_TOCK(DestroyBo);
 

@@ -72,12 +72,23 @@ int PimRuntime::alloc_memory(void** ptr, size_t size, PimMemType mem_type)
     return ret;
 }
 
-int PimRuntime::alloc_memory(PimBo* pim_bo)
+int PimRuntime::alloc_memory(PimBo* pim_bo, void* user_ptr)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
 
-    ret = pim_manager_->alloc_memory(pim_bo);
+    if (!user_ptr) {
+        ret = pim_manager_->alloc_memory(pim_bo);
+        if (ret != 0) {
+            DLOG(ERROR) << "Fail to alloc memory";
+            DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+            ret = -1;
+        }
+        pim_bo->use_user_ptr = false;
+    } else {
+        pim_bo->data = user_ptr;
+        pim_bo->use_user_ptr = true;
+    }
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
@@ -99,7 +110,14 @@ int PimRuntime::free_memory(PimBo* pim_bo)
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
 
-    ret = pim_manager_->free_memory(pim_bo);
+    if (!pim_bo->use_user_ptr) {
+        ret = pim_manager_->free_memory(pim_bo);
+        if (ret != 0) {
+            DLOG(ERROR) << "Fail to free PIM buffer object";
+            DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+            return -1;
+        }
+    }
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;

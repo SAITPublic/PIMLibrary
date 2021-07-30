@@ -30,7 +30,7 @@ class PimRuntime
     int initialize(void);
     int deinitialize(void);
     int alloc_memory(void** ptr, size_t size, PimMemType mem_type);
-    int alloc_memory(PimBo* pimBo);
+    int alloc_memory(PimBo* pimBo, void* user_ptr = nullptr);
     int free_memory(void* ptr, PimMemType mem_type);
     int free_memory(PimBo* pimBo);
     int convert_data_layout(void* dst, void* src, size_t size, PimOpType op_type);
