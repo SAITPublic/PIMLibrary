@@ -38,6 +38,13 @@ PimExecutor::PimExecutor(PimRuntimeType rt_type, PimPrecision precision) : rt_ty
 #endif
     pim_gemv_type_ = TILE_ACCUM;
 
+    const char *env_p = std::getenv("ENABLE_NEXT_PIM");
+    if (env_p != nullptr) {
+        if (env_p[0] == '1') {
+            pim_gemv_type_ = NEXT_PIM;
+            std::cout << "NEXT_PIM(GEMV) is enabled" << std::endl;
+        }
+    }
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
 }
 
