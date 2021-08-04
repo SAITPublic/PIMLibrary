@@ -96,7 +96,7 @@ void PimCrfBinGen::create_pim_cmd(PimOpType op_type, int lc)
         cmds_.assign(tmp_cmds.begin(), tmp_cmds.end());
     }
 
-    if (lc != 0 && is_gemv_tile_tree_ == true || op_type != OP_GEMV) {
+    if ((lc != 0 && is_gemv_tile_tree_) == true || op_type != OP_GEMV) {
         cmds_.push_back(PimCommand(PimCmdType::JUMP, lc, cmds_.size() + 1));
     }
 

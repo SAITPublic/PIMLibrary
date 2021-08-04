@@ -99,10 +99,8 @@ int PimValidationChecker::check_validate_pair(PimCommand& pim_cmd)
     if (cmd_type != PimCmdPairType::ETC) {
         PimOpdPairType src0 = change_opd_type(pim_cmd.src0_);
         PimOpdPairType src1 = change_opd_type(pim_cmd.src1_);
-        // PimOpdPairType src2 = change_opd_type(pim_cmd.src2_);
         int i_src0 = static_cast<int>(src0);
         int i_src1 = static_cast<int>(src1);
-        // int i_src2 = static_cast<int>(src2);
 
         if (src_pair_table[i_src0][i_src1][i_cmd] == static_cast<int>(PimCamType::NOP)) {
             std::cout << "Invalid in ISA 1.0  ( " << pim_cmd.to_str()

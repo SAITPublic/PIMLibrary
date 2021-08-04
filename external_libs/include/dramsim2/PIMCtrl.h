@@ -61,18 +61,18 @@ class PIMController
    public:
     PIMController(shared_ptr<MultiChannelMemorySystem> mem, PIMMode mode, int num_chan, int num_rank, int num_bankgroup,
                   int num_bank, int num_row, int num_col, int num_pim_chan, int num_pim_rank)
-        : mem_(mem),
-          mode_(mode),
-          num_rank_(num_rank),
-          num_row_(num_row),
-          num_col_(num_col),
+        : num_transaction_(0),
           num_chan_(num_chan),
-          num_bank_(num_bank),
+          num_rank_(num_rank),
           num_bankgroup_(num_bankgroup),
-          num_pim_chan_(num_pim_chan),
+          num_bank_(num_bank),
+	  num_row_(num_row),
+	  num_col_(num_col),
+	  num_pim_chan_(num_pim_chan),
           num_pim_rank_(num_pim_rank),
-          num_transaction_(0),
-          cycle_(0)
+          cycle_(0),
+	  mode_(mode),
+	  mem_(mem)
     {
         num_bankgroup_bit_ = dramsim_log2(num_bankgroup);
         num_bank_bit_ = dramsim_log2(num_bank) - dramsim_log2(num_bankgroup);

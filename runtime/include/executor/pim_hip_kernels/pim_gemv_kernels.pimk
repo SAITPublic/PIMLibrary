@@ -44,7 +44,6 @@ __global__ void gemv_pim_64cu_64th_fp16(volatile uint8_t* __restrict__ pim_ctr,
 
 #ifdef PREPARE_KERNEL
     int num_grf = 8;
-    int num_bg = 4;
     int num_ba = 4;
     int num_col = 32;
     int trans_size = 32;
@@ -278,7 +277,6 @@ __global__ void gemv_pim_64cu_64th_8tile_fp16(volatile uint8_t* __restrict__ pim
 
 #ifdef PREPARE_KERNEL
     int num_grf = 8;
-    int num_bg = 4;
     int num_ba = 4;
     int num_col = 32;
     int trans_size = 32;
@@ -512,7 +510,6 @@ __global__ void gemv_tree_pim_64cu_64th_fp16(
 
 #ifdef PREPARE_KERNEL
     int num_grf = 8;
-    int num_bg = 4;
     int num_ba = 4;
     int num_col = 32;
     int trans_size = 32;
@@ -798,8 +795,6 @@ __global__ void gemv_next_pim_64cu_64th_fp16(volatile uint8_t* __restrict__ pim_
 
 #ifdef PREPARE_KERNEL
     int num_grf = 8;
-    int num_bg = 4;
-    int num_ba = 4;
     int num_col = 32;
     int trans_size = 32;
     int even_row, odd_row, row, col, loc;

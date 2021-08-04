@@ -41,7 +41,6 @@ __global__ void reduce_sum(void* out, void* in, int out_size, int reduce_size)
 
 int gpu_reduce_sum(void)
 {
-    int ret = -1;
     int in_size = 16 * 4096;
     int out_size = 4096;
     int reduce_size = 16;

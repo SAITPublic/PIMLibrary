@@ -38,7 +38,6 @@ int pim_bn_nr1(bool block)
     const int CH = 1;
     const int WIDTH = 131072;
     const int HEIGHT = 1;
-    const int PARAMS = 4;
 
     /* __PIM_API__ call : Initialize PimRuntime */
     PimInitialize(RT_TYPE_HIP, PIM_FP16);
@@ -125,7 +124,6 @@ int pim_bn_nr2(bool block)
     const int CH = 1;
     const int WIDTH = 131072 * 2;
     const int HEIGHT = 1;
-    const int PARAMS = 4;
 
     /* __PIM_API__ call : Initialize PimRuntime */
     PimInitialize(RT_TYPE_HIP, PIM_FP16);
@@ -215,7 +213,6 @@ int pim_bn_nr3(bool block)
     const int CH = 1;
     const int WIDTH = 131072 * 4;
     const int HEIGHT = 1;
-    const int PARAMS = 4;
 
     /* __PIM_API__ call : Initialize PimRuntime */
     PimInitialize(RT_TYPE_HIP, PIM_FP16);
@@ -304,7 +301,6 @@ int pim_bn_nr4(bool block)
     const int CH = 1;
     const int WIDTH = 131072 * 8;
     const int HEIGHT = 1;
-    const int PARAMS = 4;
 
     /* __PIM_API__ call : Initialize PimRuntime */
     PimInitialize(RT_TYPE_HIP, PIM_FP16);
@@ -393,7 +389,6 @@ int pim_bn_nr5(bool block)
     const int CH = 1;
     const int WIDTH = 131072 * 16;
     const int HEIGHT = 1;
-    const int PARAMS = 4;
 
     /* __PIM_API__ call : Initialize PimRuntime */
     PimInitialize(RT_TYPE_HIP, PIM_FP16);
@@ -482,7 +477,6 @@ int pim_bn_nr6(bool block)
     const int CH = 1;
     const int WIDTH = 131072 * 32;
     const int HEIGHT = 1;
-    const int PARAMS = 4;
 
     /* __PIM_API__ call : Initialize PimRuntime */
     PimInitialize(RT_TYPE_HIP, PIM_FP16);
@@ -571,7 +565,6 @@ int pim_bn_nr7(bool block)
     const int CH = 1;
     const int WIDTH = 131072 * 64;
     const int HEIGHT = 1;
-    const int PARAMS = 4;
 
     /* __PIM_API__ call : Initialize PimRuntime */
     PimInitialize(RT_TYPE_HIP, PIM_FP16);
@@ -650,8 +643,8 @@ int pim_bn_nr7(bool block)
     PimDeinitialize();
 
     return ret;
-}
 
+}
 int pim_bn_nr8(bool block)
 {
     int ret = 0;
@@ -660,7 +653,6 @@ int pim_bn_nr8(bool block)
     const int CH = 1;
     const int WIDTH = 131072 * 128;
     const int HEIGHT = 1;
-    const int PARAMS = 4;
 
     /* __PIM_API__ call : Initialize PimRuntime */
     PimInitialize(RT_TYPE_HIP, PIM_FP16);
@@ -758,4 +750,4 @@ TEST(HIPIntegrationTest, PimNRBN7Sync) { EXPECT_TRUE(pim_bn_nr7(true) == 0); }
 TEST(HIPIntegrationTest, PimNRBN7Async) { EXPECT_TRUE(pim_bn_nr7(false) == 0); }
 TEST(HIPIntegrationTest, PimNRBN8Sync) { EXPECT_TRUE(pim_bn_nr8(true) == 0); }
 TEST(HIPIntegrationTest, PimNRBN8Async) { EXPECT_TRUE(pim_bn_nr8(false) == 0); }
-#endif
+#endif	

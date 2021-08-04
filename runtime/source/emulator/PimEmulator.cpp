@@ -163,7 +163,7 @@ int PimEmulator::execute_gemv_add_tile_accum(PimBo* output, PimBo* pim_data, Pim
                         rocm_path + "/include/dramsim2/ini/system_hbm_vega20.ini", 256 * 64 * 2, 64, 1);
     uint64_t tmp_data_addr = reinterpret_cast<uint64_t>(temp_buf);
     uint64_t pim_data_addr = reinterpret_cast<uint64_t>(pim_data->data);
-    uint64_t output_addr = reinterpret_cast<uint64_t>(output->data);
+
 
     pim_sim_.preload_data_with_addr(pim_data_addr - pim_base_addr, pim_data->data, pim_data->size);
     pim_sim_.execute_kernel((void*)fmtd32, fmtd32_size);
@@ -200,7 +200,7 @@ int PimEmulator::execute_bn(PimBo* output, PimBo* pim_data, PimMemTraceData* fmt
     std::string rocm_path = ROCM_PATH;
     pim_sim_.initialize(rocm_path + "/include/dramsim2/ini/HBM2_samsung_2M_16B_x64.ini",
                         rocm_path + "/include/dramsim2/ini/system_hbm_vega20.ini", 256 * 64 * 2, 64, 1);
-    uint64_t tmp_data_addr = reinterpret_cast<uint64_t>(temp_buf);
+
     uint64_t pim_data_addr = reinterpret_cast<uint64_t>(pim_data->data);
     uint64_t output_addr = reinterpret_cast<uint64_t>(output->data);
 

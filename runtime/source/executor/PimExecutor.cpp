@@ -485,7 +485,7 @@ int PimExecutor::execute_gemv_next_pim(PimBo* output, PimBo* operand0, PimBo* op
     }
     PIM_PROFILE_TOCK(CreateCRFBin);
 
-    PIM_PROFILE_TICK(RunGemvKernel);
+    //PIM_PROFILE_TICK(RunGemvKernel);
     hipLaunchKernelGGL(
         gemv_next_pim_64cu_64th_fp16, dim3(blocks), dim3(threads_per_block), 0, stream, (uint8_t*)g_pim_base_addr,
         (uint8_t*)weight->data, (uint8_t*)pim_gemv_tmp_buffer_, (uint8_t*)input->data, (uint8_t*)output->data, n_batch,
@@ -634,7 +634,6 @@ uint8_t* PimExecutor::find_crf(PimOpType op_type, int data_size)
 uint8_t* PimExecutor::make_crf_bin(PimOpType op_type, int data_size)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
-    int ret = 0;
     uint8_t* h_crf = new uint8_t[max_crf_size_];
     uint8_t* d_crf;
     int crf_size;

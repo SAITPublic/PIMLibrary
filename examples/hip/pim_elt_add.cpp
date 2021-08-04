@@ -94,13 +94,13 @@ int pim_elt_add_2(bool block)
 {
     int ret = 0;
 
-    PimBo host_input0 = {.size = LENGTH * sizeof(half), .mem_type = MEM_TYPE_HOST};
-    PimBo host_input1 = {.size = LENGTH * sizeof(half), .mem_type = MEM_TYPE_HOST};
-    PimBo host_output = {.size = LENGTH * sizeof(half), .mem_type = MEM_TYPE_HOST};
-    PimBo golden_output = {.size = LENGTH * sizeof(half), .mem_type = MEM_TYPE_HOST};
-    PimBo pim_input1 = {.size = LENGTH * sizeof(half), .mem_type = MEM_TYPE_PIM};
-    PimBo pim_input0 = {.size = LENGTH * sizeof(half), .mem_type = MEM_TYPE_PIM};
-    PimBo device_output = {.size = LENGTH * sizeof(half), .mem_type = MEM_TYPE_PIM};
+    PimBo host_input0 = {.mem_type = MEM_TYPE_HOST, .size = LENGTH * sizeof(half)};
+    PimBo host_input1 = {.mem_type = MEM_TYPE_HOST, .size = LENGTH * sizeof(half)};
+    PimBo host_output = {.mem_type = MEM_TYPE_HOST, .size = LENGTH * sizeof(half)};
+    PimBo golden_output = {.mem_type = MEM_TYPE_HOST, .size = LENGTH * sizeof(half)};
+    PimBo pim_input1 = {.mem_type = MEM_TYPE_PIM, .size = LENGTH * sizeof(half)};
+    PimBo pim_input0 = {.mem_type = MEM_TYPE_PIM, .size = LENGTH * sizeof(half)};
+    PimBo device_output = {.mem_type = MEM_TYPE_PIM, .size = LENGTH * sizeof(half)};
 
     /* __PIM_API__ call : Initialize PimRuntime */
     PimInitialize(RT_TYPE_HIP, PIM_FP16);
@@ -312,7 +312,7 @@ int pim_elt_add_profile(bool block, int len)
     hipEvent_t start, stop;
     hipEventCreate(&start);
     hipEventCreate(&stop);
-    float eventMs = 0.0f;
+    
     hipDeviceSynchronize();
 
     hipEventRecord(start, nullptr);
