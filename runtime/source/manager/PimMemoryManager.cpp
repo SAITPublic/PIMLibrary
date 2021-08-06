@@ -16,7 +16,14 @@
 #include "hip/hip_runtime.h"
 #include "utility/pim_util.h"
 
-extern "C" uint64_t fmm_map_pim(uint32_t, uint32_t, uint64_t);
+#ifdef __cplusplus
+extern "C" {
+#endif
+uint64_t fmm_map_pim(uint32_t, uint32_t, uint64_t);
+#ifdef __cplusplus
+}
+#endif
+
 extern bool pim_alloc_done;
 extern uint64_t g_pim_base_addr;
 namespace pim
@@ -62,9 +69,13 @@ int PimMemoryManager::alloc_memory(void** ptr, size_t size, PimMemType mem_type)
             return -1;
         }
     } else if (mem_type == MEM_TYPE_HOST) {
+#ifdef ROCM3
+        *ptr = (void*)malloc(size);
+#else
         if (hipHostMalloc((void**)ptr, size) != hipSuccess) {
             return -1;
         }
+#endif
     } else if (mem_type == MEM_TYPE_PIM) {
         *ptr = fragment_allocator_.alloc(size);
     }
@@ -84,10 +95,14 @@ int PimMemoryManager::alloc_memory(PimBo* pim_bo)
             return -1;
         }
     } else if (pim_bo->mem_type == MEM_TYPE_HOST) {
+#ifdef ROCM3
+        pim_bo->data = (void*)malloc(pim_bo->size);
+#else
         if (hipHostMalloc((void**)&pim_bo->data, pim_bo->size) != hipSuccess) {
             DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
             return -1;
         }
+#endif
     } else if (pim_bo->mem_type == MEM_TYPE_PIM) {
         pim_bo->data = fragment_allocator_.alloc(pim_bo->size);
     }
@@ -107,7 +122,12 @@ int PimMemoryManager::free_memory(void* ptr, PimMemType mem_type)
             return -1;
         }
     } else if (mem_type == MEM_TYPE_HOST) {
+#ifdef ROCM3
+        if (nullptr != ptr) free(ptr);
+        ptr = nullptr;
+#else
         hipHostFree(ptr);
+#endif
     } else if (mem_type == MEM_TYPE_PIM) {
         return fragment_allocator_.free(ptr);
     }
@@ -127,7 +147,13 @@ int PimMemoryManager::free_memory(PimBo* pim_bo)
             return -1;
         }
     } else if (pim_bo->mem_type == MEM_TYPE_HOST) {
+#ifdef ROCM3
+        if (nullptr != pim_bo->data) free(pim_bo->data);
+        pim_bo->data = nullptr;
+#else
         hipHostFree(pim_bo->data);
+        pim_bo->data = nullptr;
+#endif
     } else if (pim_bo->mem_type == MEM_TYPE_PIM) {
         if (fragment_allocator_.free(pim_bo->data)) return 0;
         DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
@@ -265,17 +291,25 @@ int PimMemoryManager::convert_data_layout_for_gemv_weight(PimBo* dst, PimBo* src
     if (src->bshape.w != src->bshape_r.w || src->bshape.h != src->bshape_r.h) {
         src_temp = (char*)calloc(src->size / sizeof(half), sizeof(half));
         for (int i = 0; i < src->bshape_r.h; i++) {
+#ifdef ROCM3
+            memcpy((half*)src_temp + i * src->bshape.w, (half*)src_data + i * src->bshape_r.w,
+                   src->bshape_r.w * sizeof(half));
+#else
             if (hipMemcpy((half*)src_temp + i * src->bshape.w, (half*)src_data + i * src->bshape_r.w,
                           src->bshape_r.w * sizeof(half), hipMemcpyDeviceToHost) != hipSuccess) {
                 DLOG(INFO) << "[END] " << __FUNCTION__ << " Failed to copy";
                 return -1;
             }
+#endif
         }
-
+#if ROCM3
+        memcpy(src_data, src_temp, src->size);
+#else
         if (hipMemcpy(src_data, src_temp, src->size, hipMemcpyHostToDevice) != hipSuccess) {
             DLOG(INFO) << "[END] " << __FUNCTION__ << " Failed to copy";
             return -1;
         }
+#endif
         free(src_temp);
     }
 
@@ -294,11 +328,15 @@ int PimMemoryManager::convert_data_layout_for_gemv_weight(PimBo* dst, PimBo* src
 #else
                             int d_idx = (y + tiled_y + grfb_idx) * in_cnt + x + grfa_idx;
 #endif
+#if ROCM3
+                            memcpy(dst_data + addr, src_data + d_idx * trans_size, trans_size);
+#else
                             if (hipMemcpy(dst_data + addr, src_data + d_idx * trans_size, trans_size,
                                           hipMemcpyDeviceToDevice) != hipSuccess) {
                                 DLOG(INFO) << "[END] " << __FUNCTION__ << " Failed to copy";
                                 return -1;
                             }
+#endif
                             col++;
                         }
                     }
@@ -339,11 +377,15 @@ int PimMemoryManager::convert_data_layout_for_gemv_weight(PimBo* dst, PimBo* src
 #else
                             int d_idx = (y + tiled_y + grfb_idx) * in_cnt + x + grfa_idx;
 #endif
+#if ROCM3
+                            memcpy(dst_data + addr, src_data + d_idx * trans_size, trans_size);
+#else
                             if (hipMemcpy(dst_data + addr, src_data + d_idx * trans_size, trans_size,
                                           hipMemcpyDeviceToDevice) != hipSuccess) {
                                 DLOG(INFO) << "[END] " << __FUNCTION__ << " Failed to copy";
                                 return -1;
                             }
+#endif
                             col++;
                         }
                     }
@@ -442,9 +484,12 @@ uint64_t PimMemoryManager::PimBlockAllocator::allocate_pim_block(size_t bsize) c
         if (ret) {
             pim_alloc_done = true;
             g_pim_base_addr = ret;
+#ifndef ROCM3
             hipHostRegister((void*)g_pim_base_addr, bsize, hipRegisterExternalSvm);
-        } else
-            std::cout << "fmm_map_pim failed!" << std::endl;
+#endif
+        } else {
+            std::cout << "fmm_map_pim failed! " << ret << std::endl;
+        }
     }
 
     return ret;

@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 #include <torch/script.h>
 #include <torch/torch.h>
 #include <iostream>

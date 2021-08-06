@@ -20,6 +20,7 @@ option(TF_BUILD "Enable tf custom operations build" OFF)
 option(TARGET "Enable TARGET apps build" OFF)
 option(RADEON7 "Enable TARGET:RADEON7 apps build" OFF)
 option(MI50 "Enable TARGET:MI50 apps build" OFF)
+option(ROCM3 "Enable Rocm3 execution" OFF)
 
 # Set Default build type to "Debug"
 if((NOT CMAKE_BUILD_TYPE) OR (CMAKE_BUILD_TYPE) STREQUAL None)
@@ -30,7 +31,7 @@ message(STATUS "Build Type is ${CMAKE_BUILD_TYPE}")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BUILD_DIR})
 
 # Set CMake Flags
-set(CMAKE_CXX_FLAGS "-std=c++14 -Wall -Wno-unused-command-line-argument")
+set(CMAKE_CXX_FLAGS "-std=c++14 -Wall -Wno-unused-command-line-argument -Wno-invalid-constexpr")
 set(CMAKE_C_FLAGS "-std=c14")
 
 if("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
@@ -52,8 +53,8 @@ include_directories("${PROJECT_SOURCE_DIR}/runtime/include"
 link_directories("${ROCM_PATH}/hip/lib" "${ROCM_PATH}/hsa/lib" "${ROCM_PATH}/libhsakmt/lib" "${ROCM_PATH}/lib" "${PROJECT_SOURCE_DIR}/external_libs")
 
 #for test vectors default data path
-add_definitions(-DTEST_VECTORS_DATA="${PROJECT_SOURCE_DIR}/test_vectors/")
-add_definitions(-DROCM_PATH="${ROCM_PATH}")
+add_definitions(-DTEST_VECTORS_DATA=\\"${PROJECT_SOURCE_DIR}/test_vectors/\\")
+add_definitions(-DROCM_PATH=\\"${ROCM_PATH}/\\")
 
 if(TARGET)
     add_definitions(-DTARGET=1)
@@ -65,6 +66,9 @@ if(RADEON7)
 endif()
 if(MI50)
     add_definitions(-DMI50=1)
+endif()
+if(ROCM3)
+	add_definitions(-DROCM3=1)
 endif()
 
 add_subdirectory(runtime)
