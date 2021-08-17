@@ -53,8 +53,13 @@ include_directories("${PROJECT_SOURCE_DIR}/runtime/include"
 link_directories("${ROCM_PATH}/hip/lib" "${ROCM_PATH}/hsa/lib" "${ROCM_PATH}/libhsakmt/lib" "${ROCM_PATH}/lib" "${PROJECT_SOURCE_DIR}/external_libs")
 
 #for test vectors default data path
-add_definitions(-DTEST_VECTORS_DATA=\\"${PROJECT_SOURCE_DIR}/test_vectors/\\")
-add_definitions(-DROCM_PATH=\\"${ROCM_PATH}/\\")
+if(ROCM3)
+    add_definitions(-DTEST_VECTORS_DATA=\\"${PROJECT_SOURCE_DIR}/test_vectors/\\")
+    add_definitions(-DROCM_PATH=\\"${ROCM_PATH}/\\")
+else()
+    add_definitions(-DTEST_VECTORS_DATA="${PROJECT_SOURCE_DIR}/test_vectors/")
+    add_definitions(-DROCM_PATH="${ROCM_PATH}")
+endif()
 
 if(TARGET)
     add_definitions(-DTARGET=1)
