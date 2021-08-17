@@ -328,6 +328,7 @@ int pim_elt_add_profile(bool block, int len)
     //    if (!block) PimSynchronize();
     //    PIM_PROFILE_TOCK(ELT_ADD_1);
     //    printf("[ %d execution time ]\n", iter);
+    float eventMs = 0.0f;
 
     hipEventRecord(stop, nullptr);
     hipEventSynchronize(stop);

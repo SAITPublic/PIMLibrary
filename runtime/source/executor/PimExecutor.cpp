@@ -485,7 +485,7 @@ int PimExecutor::execute_gemv_next_pim(PimBo* output, PimBo* operand0, PimBo* op
     }
     PIM_PROFILE_TOCK(CreateCRFBin);
 
-    //PIM_PROFILE_TICK(RunGemvKernel);
+    PIM_PROFILE_TICK(RunGemvKernel);
     hipLaunchKernelGGL(
         gemv_next_pim_64cu_64th_fp16, dim3(blocks), dim3(threads_per_block), 0, stream, (uint8_t*)g_pim_base_addr,
         (uint8_t*)weight->data, (uint8_t*)pim_gemv_tmp_buffer_, (uint8_t*)input->data, (uint8_t*)output->data, n_batch,
