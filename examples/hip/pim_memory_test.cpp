@@ -14,187 +14,31 @@
 #include <stdlib.h>
 #include <algorithm>
 #include <iostream>
+#include <random>
 #include "hip/hip_fp16.h"
 #include "pim_runtime_api.h"
 #include "utility/pim_dump.hpp"
 #include "utility/pim_util.h"
 
-#define LENGTH (1024)
+#define IN_LENGTH 1024
+#define BATCH_DIM 1
 
 using namespace std;
 
-bool pim_memcpy_host_to_host_test(void)
+template <class T>
+void fill_uniform_random_values(void* data, uint32_t count, T start, T end)
 {
-    size_t size = 5 * 2;
-    char* data_a;
-    char* data_b;
-    int ret = 0;
+    std::random_device rd;
+    std::mt19937 mt(rd());
 
-    PimInitialize();
+    std::uniform_real_distribution<double> dist(start, end);
 
-    PimAllocMemory((void**)&data_a, size, MEM_TYPE_HOST);
-    PimAllocMemory((void**)&data_b, size, MEM_TYPE_HOST);
-
-    for (int i = 0; i < size; i++) {
-        data_a[i] = 'C';
-        data_b[i] = 'D';
-    }
-
-    PimCopyMemory((void*)data_b, (void*)data_a, size, HOST_TO_HOST);
-
-    ret = compare_data(data_a, data_b, size);
-    if (ret != 0) {
-        std::cout << "data is different" << std::endl;
-        return false;
-    }
-
-    PimFreeMemory(data_a, MEM_TYPE_HOST);
-    PimFreeMemory(data_b, MEM_TYPE_HOST);
-
-    PimDeinitialize();
-
-    return true;
+    for (int i = 0; i < count; i++) ((T*)data)[i] = dist(mt);
 }
-
-bool pim_memcpy_device_to_host_test(void)
-{
-    size_t size = 5 * 2;
-    char* data_a;
-    char* data_b;
-    int ret = 0;
-
-    PimInitialize();
-
-    PimAllocMemory((void**)&data_a, size, MEM_TYPE_DEVICE);
-    PimAllocMemory((void**)&data_b, size, MEM_TYPE_HOST);
-
-    for (int i = 0; i < size; i++) {
-        data_a[i] = 'C';
-        data_b[i] = 'D';
-    }
-
-    PimCopyMemory((void*)data_b, (void*)data_a, size, DEVICE_TO_HOST);
-
-    ret = compare_data(data_a, data_b, size);
-    if (ret != 0) {
-        std::cout << "data is different" << std::endl;
-        return false;
-    }
-
-    PimFreeMemory(data_a, MEM_TYPE_DEVICE);
-    PimFreeMemory(data_b, MEM_TYPE_HOST);
-
-    PimDeinitialize();
-
-    return true;
-}
-
-bool pim_memcpy_device_to_device_test(void)
-{
-    size_t size = 5 * 2;
-    char* data_a;
-    char* data_b;
-    int ret = 0;
-
-    PimInitialize();
-
-    PimAllocMemory((void**)&data_a, size, MEM_TYPE_DEVICE);
-    PimAllocMemory((void**)&data_b, size, MEM_TYPE_DEVICE);
-
-    for (int i = 0; i < size; i++) {
-        data_a[i] = 'C';
-        data_b[i] = 'D';
-    }
-
-    PimCopyMemory((void*)data_b, (void*)data_a, size, DEVICE_TO_DEVICE);
-
-    ret = compare_data(data_a, data_b, size);
-    if (ret != 0) {
-        std::cout << "data is different" << std::endl;
-        return false;
-    }
-
-    PimFreeMemory(data_a, MEM_TYPE_DEVICE);
-    PimFreeMemory(data_b, MEM_TYPE_DEVICE);
-
-    PimDeinitialize();
-
-    return true;
-}
-
-
-bool pim_memcpy_host_to_pim_test(void)
-{
-    size_t size = 5 * 2;
-    char* data_a;
-    char* data_b;
-    int ret = 0;
-
-    PimInitialize();
-
-    PimAllocMemory((void**)&data_a, size, MEM_TYPE_HOST);
-    PimAllocMemory((void**)&data_b, size, MEM_TYPE_PIM);
-
-    for (int i = 0; i < size; i++) {
-        data_a[i] = 'C';
-        data_b[i] = 'D';
-    }
-
-    PimCopyMemory((void*)data_b, (void*)data_a, size, HOST_TO_PIM);
-
-    ret = compare_data(data_a, data_b, size);
-    if (ret != 0) {
-        std::cout << "data is different" << std::endl;
-        return false;
-    }
-
-    PimFreeMemory(data_a, MEM_TYPE_HOST);
-    PimFreeMemory(data_b, MEM_TYPE_PIM);
-
-    PimDeinitialize();
-
-    return true;
-}
-
-bool pim_memcpy_device_to_pim_test(void)
-{
-    size_t size = 5 * 2;
-    char* data_a;
-    char* data_b;
-    int ret = 0;
-
-    PimInitialize();
-
-    PimAllocMemory((void**)&data_a, size, MEM_TYPE_DEVICE);
-    PimAllocMemory((void**)&data_b, size, MEM_TYPE_PIM);
-
-    for (int i = 0; i < size; i++) {
-        data_a[i] = 'C';
-        data_b[i] = 'D';
-    }
-
-    PimCopyMemory((void*)data_b, (void*)data_a, size, DEVICE_TO_PIM);
-
-    ret = compare_data(data_a, data_b, size);
-    if (ret != 0) {
-        std::cout << "data is different" << std::endl;
-        return false;
-    }
-
-    PimFreeMemory(data_a, MEM_TYPE_DEVICE);
-    PimFreeMemory(data_b, MEM_TYPE_PIM);
-
-    PimDeinitialize();
-
-    return true;
-}
-
-
-
 
 bool simple_pim_alloc_free()
 {
-    PimBo pim_weight = {.mem_type = MEM_TYPE_PIM, .size = LENGTH * sizeof(half)};
+    PimBo pim_weight = {.mem_type = MEM_TYPE_PIM, .size = IN_LENGTH * sizeof(half)};
 
     PimInitialize(RT_TYPE_HIP, PIM_FP16);
 
@@ -211,7 +55,7 @@ bool simple_pim_alloc_free()
 
 bool pim_repeat_allocate_free(void)
 {
-    PimBo pim_weight = {.mem_type = MEM_TYPE_PIM, .size = LENGTH * sizeof(half)};
+    PimBo pim_weight = {.mem_type = MEM_TYPE_PIM, .size = IN_LENGTH * sizeof(half)};
 
     PimInitialize(RT_TYPE_HIP, PIM_FP16);
 
@@ -237,7 +81,7 @@ bool pim_allocate_exceed_blocksize(void)
 
     int ret;
     while (true) {
-        PimBo pim_weight = {.mem_type = MEM_TYPE_PIM, .size = LENGTH * sizeof(half) * 1024 * 1024};
+        PimBo pim_weight = {.mem_type = MEM_TYPE_PIM, .size = IN_LENGTH * sizeof(half) * 1024 * 1024};
         ret = PimAllocMemory(&pim_weight);
         if (ret) break;
         pimObjPtr.push_back(pim_weight);
@@ -252,11 +96,108 @@ bool pim_allocate_exceed_blocksize(void)
     return true;
 }
 
-TEST(UnitTest, PimMemCopyHostToHostTest) { EXPECT_TRUE(pim_memcpy_host_to_host_test()); }
-TEST(UnitTest, PimMemCopyDeviceToHostTest) { EXPECT_TRUE(pim_memcpy_device_to_host_test()); }
-TEST(UnitTest, PimMemCopyDeviceToDeviceTest) { EXPECT_TRUE(pim_memcpy_device_to_device_test()); }
-TEST(UnitTest, PimMemCopyDeviceToPimTest) { EXPECT_TRUE(pim_memcpy_device_to_pim_test()); }
-TEST(UnitTest, PimMemCopyHostToPimTest) { EXPECT_TRUE(pim_memcpy_host_to_pim_test()); }
+bool test_memcpy_bw_host_device()
+{
+    int ret = 0;
+
+    /* __PIM_API__ call : Initialize PimRuntime */
+    PimInitialize(RT_TYPE_HIP, PIM_FP16);
+
+    /* __PIM_API__ call : Create PIM Buffer Object */
+    PimBo* host_input = PimCreateBo(IN_LENGTH, 1, 1, BATCH_DIM, PIM_FP16, MEM_TYPE_HOST);
+    PimBo* device_input = PimCreateBo(IN_LENGTH, 1, 1, BATCH_DIM, PIM_FP16, MEM_TYPE_DEVICE);
+    PimBo* host_output = PimCreateBo(IN_LENGTH, 1, 1, BATCH_DIM, PIM_FP16, MEM_TYPE_HOST);
+
+    fill_uniform_random_values<half_float::half>(host_input->data, IN_LENGTH, (half_float::half)0.0,
+                                                 (half_float::half)0.5);
+    PimCopyMemory(device_input, host_input, HOST_TO_DEVICE);
+    PimCopyMemory(host_output, device_input, DEVICE_TO_HOST);
+
+    ret = compare_half_relative((half_float::half*)host_input->data, (half_float::half*)host_output->data, IN_LENGTH);
+    if (ret != 0) {
+        std::cout << "data is different" << std::endl;
+        return false;
+    }
+
+    PimFreeMemory(host_input);
+    PimFreeMemory(device_input);
+    PimFreeMemory(host_output);
+
+    PimDeinitialize();
+
+    return true;
+}
+
+bool test_memcpy_bw_host_pim()
+{
+    int ret = 0;
+
+    /* __PIM_API__ call : Initialize PimRuntime */
+    PimInitialize(RT_TYPE_HIP, PIM_FP16);
+
+    /* __PIM_API__ call : Create PIM Buffer Object */
+    PimBo* host_input = PimCreateBo(IN_LENGTH, 1, 1, BATCH_DIM, PIM_FP16, MEM_TYPE_HOST);
+    PimBo* device_input = PimCreateBo(IN_LENGTH, 1, 1, BATCH_DIM, PIM_FP16, MEM_TYPE_PIM);
+    PimBo* host_output = PimCreateBo(IN_LENGTH, 1, 1, BATCH_DIM, PIM_FP16, MEM_TYPE_HOST);
+
+    fill_uniform_random_values<half_float::half>(host_input->data, IN_LENGTH, (half_float::half)0.0,
+                                                 (half_float::half)0.5);
+    PimCopyMemory(device_input, host_input, HOST_TO_PIM);
+    PimCopyMemory(host_output, device_input, PIM_TO_HOST);
+
+    ret = compare_half_relative((half_float::half*)host_input->data, (half_float::half*)host_output->data, IN_LENGTH);
+    if (ret != 0) {
+        std::cout << "data is different" << std::endl;
+        return false;
+    }
+
+    PimFreeMemory(host_input);
+    PimFreeMemory(device_input);
+    PimFreeMemory(host_output);
+
+    PimDeinitialize();
+
+    return true;
+}
+
+bool test_memcpy_bw_device_pim()
+{
+    int ret = 0;
+
+    /* __PIM_API__ call : Initialize PimRuntime */
+    PimInitialize(RT_TYPE_HIP, PIM_FP16);
+
+    /* __PIM_API__ call : Create PIM Buffer Object */
+    PimBo* host_input = PimCreateBo(IN_LENGTH, 1, 1, BATCH_DIM, PIM_FP16, MEM_TYPE_HOST);
+    PimBo* device_input = PimCreateBo(IN_LENGTH, 1, 1, BATCH_DIM, PIM_FP16, MEM_TYPE_DEVICE);
+    PimBo* pim_input = PimCreateBo(IN_LENGTH, 1, 1, BATCH_DIM, PIM_FP16, MEM_TYPE_PIM);
+    PimBo* host_output = PimCreateBo(IN_LENGTH, 1, 1, BATCH_DIM, PIM_FP16, MEM_TYPE_HOST);
+
+    fill_uniform_random_values<half_float::half>(host_input->data, IN_LENGTH, (half_float::half)0.0,
+                                                 (half_float::half)0.5);
+    PimCopyMemory(device_input, host_input, HOST_TO_DEVICE);
+    PimCopyMemory(pim_input, device_input, DEVICE_TO_PIM);
+    PimCopyMemory(host_output, pim_input, PIM_TO_HOST);
+
+    ret = compare_half_relative((half_float::half*)host_input->data, (half_float::half*)host_output->data, IN_LENGTH);
+    if (ret != 0) {
+        std::cout << "data is different" << std::endl;
+        return false;
+    }
+
+    PimFreeMemory(host_input);
+    PimFreeMemory(device_input);
+    PimFreeMemory(pim_input);
+    PimFreeMemory(host_output);
+
+    PimDeinitialize();
+
+    return true;
+}
+
+TEST(UnitTest, PimMemCopyHostAndDeviceTest) { EXPECT_TRUE(test_memcpy_bw_host_device()); }
+TEST(UnitTest, PimMemCopyHostAndPimTest) { EXPECT_TRUE(test_memcpy_bw_host_pim()); }
+TEST(UnitTest, PimMemCopyDeviceAndPimTest) { EXPECT_TRUE(test_memcpy_bw_device_pim()); }
 TEST(UnitTest, simplePimAllocFree) { EXPECT_TRUE(simple_pim_alloc_free()); }
 TEST(UnitTest, PimRepeatAllocateFree) { EXPECT_TRUE(pim_repeat_allocate_free()); }
 TEST(UnitTest, PimAllocateExceedBlocksize) { EXPECT_FALSE(pim_allocate_exceed_blocksize()); }
