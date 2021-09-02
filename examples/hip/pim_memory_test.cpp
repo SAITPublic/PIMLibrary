@@ -23,7 +23,7 @@
 
 using namespace std;
 
-bool pim_memcpy_test(void)
+bool pim_memcpy_host_to_host_test(void)
 {
     size_t size = 5 * 2;
     char* data_a;
@@ -55,6 +55,142 @@ bool pim_memcpy_test(void)
 
     return true;
 }
+
+bool pim_memcpy_device_to_host_test(void)
+{
+    size_t size = 5 * 2;
+    char* data_a;
+    char* data_b;
+    int ret = 0;
+
+    PimInitialize();
+
+    PimAllocMemory((void**)&data_a, size, MEM_TYPE_DEVICE);
+    PimAllocMemory((void**)&data_b, size, MEM_TYPE_HOST);
+
+    for (int i = 0; i < size; i++) {
+        data_a[i] = 'C';
+        data_b[i] = 'D';
+    }
+
+    PimCopyMemory((void*)data_b, (void*)data_a, size, DEVICE_TO_HOST);
+
+    ret = compare_data(data_a, data_b, size);
+    if (ret != 0) {
+        std::cout << "data is different" << std::endl;
+        return false;
+    }
+
+    PimFreeMemory(data_a, MEM_TYPE_DEVICE);
+    PimFreeMemory(data_b, MEM_TYPE_HOST);
+
+    PimDeinitialize();
+
+    return true;
+}
+
+bool pim_memcpy_device_to_device_test(void)
+{
+    size_t size = 5 * 2;
+    char* data_a;
+    char* data_b;
+    int ret = 0;
+
+    PimInitialize();
+
+    PimAllocMemory((void**)&data_a, size, MEM_TYPE_DEVICE);
+    PimAllocMemory((void**)&data_b, size, MEM_TYPE_DEVICE);
+
+    for (int i = 0; i < size; i++) {
+        data_a[i] = 'C';
+        data_b[i] = 'D';
+    }
+
+    PimCopyMemory((void*)data_b, (void*)data_a, size, DEVICE_TO_DEVICE);
+
+    ret = compare_data(data_a, data_b, size);
+    if (ret != 0) {
+        std::cout << "data is different" << std::endl;
+        return false;
+    }
+
+    PimFreeMemory(data_a, MEM_TYPE_DEVICE);
+    PimFreeMemory(data_b, MEM_TYPE_DEVICE);
+
+    PimDeinitialize();
+
+    return true;
+}
+
+
+bool pim_memcpy_host_to_pim_test(void)
+{
+    size_t size = 5 * 2;
+    char* data_a;
+    char* data_b;
+    int ret = 0;
+
+    PimInitialize();
+
+    PimAllocMemory((void**)&data_a, size, MEM_TYPE_HOST);
+    PimAllocMemory((void**)&data_b, size, MEM_TYPE_PIM);
+
+    for (int i = 0; i < size; i++) {
+        data_a[i] = 'C';
+        data_b[i] = 'D';
+    }
+
+    PimCopyMemory((void*)data_b, (void*)data_a, size, HOST_TO_PIM);
+
+    ret = compare_data(data_a, data_b, size);
+    if (ret != 0) {
+        std::cout << "data is different" << std::endl;
+        return false;
+    }
+
+    PimFreeMemory(data_a, MEM_TYPE_HOST);
+    PimFreeMemory(data_b, MEM_TYPE_PIM);
+
+    PimDeinitialize();
+
+    return true;
+}
+
+bool pim_memcpy_device_to_pim_test(void)
+{
+    size_t size = 5 * 2;
+    char* data_a;
+    char* data_b;
+    int ret = 0;
+
+    PimInitialize();
+
+    PimAllocMemory((void**)&data_a, size, MEM_TYPE_DEVICE);
+    PimAllocMemory((void**)&data_b, size, MEM_TYPE_PIM);
+
+    for (int i = 0; i < size; i++) {
+        data_a[i] = 'C';
+        data_b[i] = 'D';
+    }
+
+    PimCopyMemory((void*)data_b, (void*)data_a, size, DEVICE_TO_PIM);
+
+    ret = compare_data(data_a, data_b, size);
+    if (ret != 0) {
+        std::cout << "data is different" << std::endl;
+        return false;
+    }
+
+    PimFreeMemory(data_a, MEM_TYPE_DEVICE);
+    PimFreeMemory(data_b, MEM_TYPE_PIM);
+
+    PimDeinitialize();
+
+    return true;
+}
+
+
+
 
 bool simple_pim_alloc_free()
 {
@@ -116,7 +252,11 @@ bool pim_allocate_exceed_blocksize(void)
     return true;
 }
 
-TEST(UnitTest, PimMemCopyTest) { EXPECT_TRUE(pim_memcpy_test()); }
+TEST(UnitTest, PimMemCopyHostToHostTest) { EXPECT_TRUE(pim_memcpy_host_to_host_test()); }
+TEST(UnitTest, PimMemCopyDeviceToHostTest) { EXPECT_TRUE(pim_memcpy_device_to_host_test()); }
+TEST(UnitTest, PimMemCopyDeviceToDeviceTest) { EXPECT_TRUE(pim_memcpy_device_to_device_test()); }
+TEST(UnitTest, PimMemCopyDeviceToPimTest) { EXPECT_TRUE(pim_memcpy_device_to_pim_test()); }
+TEST(UnitTest, PimMemCopyHostToPimTest) { EXPECT_TRUE(pim_memcpy_host_to_pim_test()); }
 TEST(UnitTest, simplePimAllocFree) { EXPECT_TRUE(simple_pim_alloc_free()); }
 TEST(UnitTest, PimRepeatAllocateFree) { EXPECT_TRUE(pim_repeat_allocate_free()); }
 TEST(UnitTest, PimAllocateExceedBlocksize) { EXPECT_FALSE(pim_allocate_exceed_blocksize()); }
