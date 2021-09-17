@@ -290,6 +290,26 @@ int PimExecutor::execute_gemv_tile_accum(PimBo* output, PimBo* operand0, PimBo* 
 
     PIM_PROFILE_TICK(CreateCRFBin);
 
+#ifdef ROCM3
+    gemv_kernel = gemv_pim_64cu_64th_fp16;
+#else
+    void (*gemv_kernel)(volatile uint8_t* __restrict__, volatile uint8_t* __restrict__,
+               volatile uint8_t* __restrict__, volatile uint8_t* __restrict__,
+               volatile uint8_t* __restrict__, int, int, int, int, int,
+#ifdef EMULATOR
+               PimMemTraceData*, int*, int, PimMemTracer*,
+#endif
+               uint8_t*, int, int);
+    switch (n_compute_tile) {
+	case 8:
+	    gemv_kernel = gemv_pim_64cu_64th_8tile_fp16;
+	    break;
+	default:
+	    gemv_kernel = gemv_pim_64cu_64th_fp16;
+	    break;
+    }
+#endif
+
     /* TODO: check tile_accum crf bin */
     uint8_t* crf_bin = find_crf(OP_GEMV, compute_size * sizeof(uint16_t));
     int crf_size = 32;
@@ -300,7 +320,7 @@ int PimExecutor::execute_gemv_tile_accum(PimBo* output, PimBo* operand0, PimBo* 
 
     PIM_PROFILE_TICK(RunGemvKernel);
     hipLaunchKernelGGL(
-        gemv_pim_64cu_64th_fp16, dim3(blocks), dim3(threads_per_block), 0, stream, (uint8_t*)g_pim_base_addr,
+        gemv_kernel, dim3(blocks), dim3(threads_per_block), 0, stream, (uint8_t*)g_pim_base_addr,
         (uint8_t*)weight->data, (uint8_t*)pim_gemv_tmp_buffer_, (uint8_t*)input->data, (uint8_t*)output->data,
         n_batch, n_memory_tile, n_compute_tile, n_out_tile, real_out_size,
 #ifdef EMULATOR
