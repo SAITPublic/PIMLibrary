@@ -290,9 +290,6 @@ int PimExecutor::execute_gemv_tile_accum(PimBo* output, PimBo* operand0, PimBo* 
 
     PIM_PROFILE_TICK(CreateCRFBin);
 
-#ifdef ROCM3
-    gemv_kernel = gemv_pim_64cu_64th_fp16;
-#else
     void (*gemv_kernel)(volatile uint8_t* __restrict__, volatile uint8_t* __restrict__,
                volatile uint8_t* __restrict__, volatile uint8_t* __restrict__,
                volatile uint8_t* __restrict__, int, int, int, int, int,
@@ -300,6 +297,10 @@ int PimExecutor::execute_gemv_tile_accum(PimBo* output, PimBo* operand0, PimBo* 
                PimMemTraceData*, int*, int, PimMemTracer*,
 #endif
                uint8_t*, int, int);
+
+#ifdef ROCM3
+    gemv_kernel = gemv_pim_64cu_64th_fp16;
+#else
     switch (n_compute_tile) {
 	case 8:
 	    gemv_kernel = gemv_pim_64cu_64th_8tile_fp16;
