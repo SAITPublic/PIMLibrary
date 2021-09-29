@@ -16,6 +16,7 @@
 #include "utility/pim_log.h"
 #include "utility/pim_profile.h"
 #include "utility/pim_util.h"
+#include "executor/gpu_hip_kernels/gpu_custom_ops.h"
 
 using namespace pim::runtime;
 
@@ -467,10 +468,24 @@ int PimExecuteGemv(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream
         return -1;
     }
 
-    PimGemvBundle* bundle = PimGetGemvBundle(operand1, operand0, output);
-    operand1 = bundle->wei;
+    if (output->bshape_r.n == 1 && operand1->bshape_r.h < 4096) {
+        uint32_t m = operand1->bshape_r.h;
+        uint32_t k = operand1->bshape_r.w;
+        uint32_t n = operand1->bshape_r.c;
 
-    ret = pim_runtime->execute_gemv(output, operand0, operand1, stream, block);
+        void* A_ptr = operand0->data;
+        void* B_ptr = operand1->data;
+        void* C_ptr = output->data;
+
+        float alpha = 1.0f;
+        float beta = 0.0f;
+
+        rocblas_gemv_fp16_Axy(B_ptr, A_ptr, C_ptr, m, n, k, alpha, beta);
+    } else {
+        PimGemvBundle* bundle = PimGetGemvBundle(operand1, operand0, output);
+        operand1 = bundle->wei;
+        ret = pim_runtime->execute_gemv(output, operand0, operand1, stream, block);
+    }
     PIM_PROFILE_TOCK(ExecuteGEMV);
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
