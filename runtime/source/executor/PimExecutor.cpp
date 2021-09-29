@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <iostream>
 #include "executor/gpu_hip_kernels/gpu_custom_ops.h"
+#include "executor/PimCompilerDriver.h"
 #include "executor/pim_hip_kernels/pim_op_kernels.pimk"
 #include "hip/hip_runtime.h"
 #include "utility/pim_dump.hpp"
@@ -150,6 +151,7 @@ int PimExecutor::execute_add(PimBo* output, PimBo* operand0, PimBo* operand1, hi
 {
     DLOG(INFO) << "called";
     int ret = 0;
+#ifndef PIM_ENABLE_COMPILER
     int output_size = output->size;
 
     uint8_t* crf_bin = find_crf(OP_ELT_ADD, output_size);
@@ -185,7 +187,27 @@ int PimExecutor::execute_add(PimBo* output, PimBo* operand0, PimBo* operand1, hi
 #else
     if (block) hipStreamSynchronize(stream);
 #endif
+#else
+    pimc_driver::PimCDriver elt_op_execute;
 
+    std::vector<uint32_t> dims{output->bshape.n, output->bshape.c, output->bshape.h, output->bshape.w};
+    pimc_driver::Tensor<half_float::half> input0_t(elt_op_execute.create_tensor_desc(dims),
+                                                   (half_float::half*)operand0->data);
+    pimc_driver::Tensor<half_float::half> input1_t(elt_op_execute.create_tensor_desc(dims),
+                                                   (half_float::half*)operand1->data);
+    pimc_driver::Tensor<half_float::half> output_t(elt_op_execute.create_tensor_desc(dims),
+                                                   (half_float::half*)output->data);
+
+    std::vector<pimc::TensorDesc> inputs{input0_t.get_desc(), input1_t.get_desc()};
+    std::vector<pimc::TensorDesc> outputs{output_t.get_desc()};
+
+    auto pim_op = elt_op_execute.generate_code(OP_ELT_ADD, inputs, outputs);
+    auto kernel = elt_op_execute.compile_code();
+
+    pimc_driver::EltArgs<half_float::half> kargs(&input0_t, &input1_t, &output_t, pim_op->get_crf_binary(), kernel);
+
+    elt_op_execute.execute_code(&kargs);
+#endif
     return ret;
 }
 
@@ -259,7 +281,7 @@ int PimExecutor::execute_gemv_add(PimBo* output, PimBo* operand0, PimBo* operand
             ret = execute_gemv_next_pim(output, operand0, operand1, is_gemv_add, stream, block);
             break;
         case TILE_TREE:
-            /* TODO : add tile tree function */
+        /* TODO : add tile tree function */
         case TILE_ACCUM:
         default:
             ret = execute_gemv_tile_accum(output, operand0, operand1, is_gemv_add, stream, block);
@@ -514,7 +536,7 @@ int PimExecutor::execute_gemv_next_pim(PimBo* output, PimBo* operand0, PimBo* op
     PIM_PROFILE_TOCK(RunGemvKernel);
 #endif
 #ifdef EMULATOR
-    /* TODO:verify Emulator Path */
+/* TODO:verify Emulator Path */
 #endif
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;

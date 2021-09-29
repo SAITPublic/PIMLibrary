@@ -11,6 +11,7 @@
 #ifndef _PIM_DUMP_HPP_
 #define _PIM_DUMP_HPP_
 
+#include <iostream>
 #include "half.hpp"
 #include "manager/PimInfo.h"
 #include "pim_data_types.h"
