@@ -215,6 +215,7 @@ int PimExecutor::execute_mul(PimBo* output, PimBo* operand0, PimBo* operand1, hi
 {
     DLOG(INFO) << "called";
     int ret = 0;
+#ifndef PIM_ENABLE_COMPILER
     int output_size = output->size;
 
     uint8_t* crf_bin = find_crf(OP_ELT_MUL, output->size);
@@ -249,6 +250,27 @@ int PimExecutor::execute_mul(PimBo* output, PimBo* operand0, PimBo* operand1, hi
     pim_emulator_->execute_elt_op(output, operand0, operand1, h_fmtd32_, h_fmtd32_size_[0], g_pim_base_addr);
 #else
     if (block) hipStreamSynchronize(stream);
+#endif
+#else
+    pimc_driver::PimCDriver elt_op_execute;
+
+    std::vector<uint32_t> dims{output->bshape.n, output->bshape.c, output->bshape.h, output->bshape.w};
+    pimc_driver::Tensor<half_float::half> input0_t(elt_op_execute.create_tensor_desc(dims),
+                                                   (half_float::half*)operand0->data);
+    pimc_driver::Tensor<half_float::half> input1_t(elt_op_execute.create_tensor_desc(dims),
+                                                   (half_float::half*)operand1->data);
+    pimc_driver::Tensor<half_float::half> output_t(elt_op_execute.create_tensor_desc(dims),
+                                                   (half_float::half*)output->data);
+
+    std::vector<pimc::TensorDesc> inputs{input0_t.get_desc(), input1_t.get_desc()};
+    std::vector<pimc::TensorDesc> outputs{output_t.get_desc()};
+
+    auto pim_op = elt_op_execute.generate_code(OP_ELT_MUL, inputs, outputs);
+    auto kernel = elt_op_execute.compile_code();
+
+    pimc_driver::EltArgs<half_float::half> kargs(&input0_t, &input1_t, &output_t, pim_op->get_crf_binary(), kernel);
+
+    elt_op_execute.execute_code(&kargs);
 #endif
     return ret;
 }
@@ -311,6 +333,7 @@ int PimExecutor::execute_gemv_tile_accum(PimBo* output, PimBo* operand0, PimBo* 
     int n_memory_tile = memory_size * sizeof(uint16_t) / fbi_.trans_size / fbi_.num_grf_A;
     int n_out_tile = out_size / (fbi_.num_pim_chan * fbi_.num_pim_blocks * fbi_.num_grf_B);
 
+#ifndef PIM_ENABLE_COMPILER
     PIM_PROFILE_TICK(CreateCRFBin);
 
     void (*gemv_kernel)(volatile uint8_t * __restrict__, volatile uint8_t * __restrict__,
@@ -383,7 +406,34 @@ int PimExecutor::execute_gemv_tile_accum(PimBo* output, PimBo* operand0, PimBo* 
 
     PIM_PROFILE_TOCK(RunGemvEmulation);
 #endif
+#else
+    pimc_driver::PimCDriver gemv_execute;
 
+    std::vector<uint32_t> in_dims{operand0->bshape.n, operand0->bshape.c, operand0->bshape.h, operand0->bshape.w};
+    std::vector<uint32_t> wt_dims{operand1->bshape.n, operand1->bshape.c, operand1->bshape.h, operand1->bshape.w};
+    std::vector<uint32_t> out_dims{output->bshape.n, output->bshape.c, output->bshape.h, output->bshape.w};
+    pimc_driver::Tensor<half_float::half> inputs_t(gemv_execute.create_tensor_desc(in_dims),
+                                                   (half_float::half*)operand0->data);
+    pimc_driver::Tensor<half_float::half> weights_t(gemv_execute.create_tensor_desc(wt_dims),
+                                                    (half_float::half*)operand1->data);
+    pimc_driver::Tensor<half_float::half> output_t(gemv_execute.create_tensor_desc(out_dims),
+                                                   (half_float::half*)output->data);
+
+    std::vector<pimc::TensorDesc> inputs{inputs_t.get_desc(), weights_t.get_desc()};
+    std::vector<pimc::TensorDesc> outputs{output_t.get_desc()};
+
+    auto pim_op = gemv_execute.generate_code(OP_GEMV, inputs, outputs);
+    auto kernel = gemv_execute.compile_code();
+
+    pimc_driver::GemvKArgs<half_float::half> kargs(&inputs_t, &output_t, &weights_t, pim_op->get_crf_binary(), kernel);
+    kargs.set_compute_tile(n_compute_tile);
+    kargs.set_memory_tile(n_memory_tile);
+    kargs.set_out_tile(n_out_tile);
+    kargs.set_gemv_add(is_gemv_add);
+    kargs.set_temp_buffer(pim_gemv_tmp_buffer_);
+
+    gemv_execute.execute_code(&kargs);
+#endif
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
@@ -456,7 +506,7 @@ int PimExecutor::execute_relu(PimBo* output, PimBo* pim_data, hipStream_t stream
 {
     DLOG(INFO) << "called";
     int ret = 0;
-
+#ifndef PIM_ENABLE_COMPILER
     uint8_t* crf_bin = find_crf(OP_RELU, output->size);
     int crf_size = 32;
     if (crf_bin == nullptr) {
@@ -487,7 +537,28 @@ int PimExecutor::execute_relu(PimBo* output, PimBo* pim_data, hipStream_t stream
 #else
     if (block) hipStreamSynchronize(stream);
 #endif
+#else
+    pimc_driver::PimCDriver relu_execute;
 
+    std::vector<uint32_t> dims{output->bshape.n, output->bshape.c, output->bshape.h, output->bshape.w};
+    pimc_driver::Tensor<half_float::half> input_t(relu_execute.create_tensor_desc(dims),
+                                                  (half_float::half*)pim_data->data);
+    pimc_driver::Tensor<half_float::half> output_t(relu_execute.create_tensor_desc(dims),
+                                                   (half_float::half*)output->data);
+
+    std::vector<pimc::TensorDesc> inputs{input_t.get_desc()};
+    std::vector<pimc::TensorDesc> outputs{output_t.get_desc()};
+
+    auto pim_op = relu_execute.generate_code(OP_RELU, inputs, outputs);
+    auto kernel = relu_execute.compile_code();
+
+    pimc_driver::ReluArgs<half_float::half> kargs(&input_t, &output_t, pim_op->get_crf_binary(), kernel);
+    auto out_dim = (output_t.get_desc().get_dim(3) * sizeof(half_float::half)) / 32;
+    uint32_t num_tile = out_dim / ((fbi_.num_pim_blocks * fbi_.num_pim_chan * fbi_.num_grf) / 2);
+    kargs.set_num_tile(num_tile);
+
+    relu_execute.execute_code(&kargs);
+#endif
     return ret;
 }
 

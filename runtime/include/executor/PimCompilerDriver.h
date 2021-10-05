@@ -25,6 +25,8 @@ namespace runtime
 {
 namespace pimc_driver
 {
+enum class DIMENSIONS { N, C, H, W };
+
 template <class T>
 class Tensor
 {
@@ -46,14 +48,35 @@ class Tensor
 class KernelArgs
 {
    public:
-    ~KernelArgs() = default;
-    KernelArgs() = default;
+    ~KernelArgs() { hipFree(crf_binary_device_); };
+    KernelArgs() = delete;
+    KernelArgs(void *args, size_t size) : size_(size)
+    {
+        config[1] = args;
+        hipMalloc((void **)&crf_binary_device_, 128);
+    }
+
+    KernelArgs(void *args, size_t size, std::string crf_binary_host, hipFunction_t kernel)
+        : size_(size), crf_binary_host_(crf_binary_host), kernel_(kernel)
+    {
+        config[1] = args;
+        hipMalloc((void **)&crf_binary_device_, 128);
+    }
     KernelArgs(KernelArgs &&) = default;
     KernelArgs(const KernelArgs &) = default;
     KernelArgs &operator=(KernelArgs &&) = default;
     KernelArgs &operator=(const KernelArgs &) = default;
 
-   private:
+    virtual void **get_kconfig() = 0;
+    hipFunction_t get_kernel() { return kernel_; }
+   protected:
+    size_t size_;
+    std::string crf_binary_host_;
+    hipFunction_t kernel_;
+
+    uint8_t *crf_binary_device_;
+    void *config[5] = {HIP_LAUNCH_PARAM_BUFFER_POINTER, nullptr, HIP_LAUNCH_PARAM_BUFFER_SIZE, &size_,
+                       HIP_LAUNCH_PARAM_END};
 };
 
 template <class T>
@@ -66,36 +89,78 @@ class GemvKArgs : public KernelArgs
     GemvKArgs &operator=(GemvKArgs &&) = default;
     GemvKArgs &operator=(const GemvKArgs &) = default;
 
-    GemvKArgs() {}
-    GemvKArgs(Tensor<T> *in, Tensor<T> *out, Tensor<T> *wt) : input_vector_(in), output_vector_(out), weights_(wt) {}
+    GemvKArgs() : KernelArgs(&args_, sizeof(args_)) {}
+    GemvKArgs(Tensor<T> *in, Tensor<T> *out, Tensor<T> *wt, std::string crf_binary, hipFunction_t kernel)
+        : KernelArgs(&args_, sizeof(args_), crf_binary, kernel), input_vector_(in), output_vector_(out), weights_(wt)
+    {
+    }
+
     void set_input_vector(Tensor<T> *input_vector) { input_vector_ = input_vector; }
     void set_output_vector(Tensor<T> *output_vector) { output_vector_ = output_vector; }
     void set_weights(Tensor<T> *weights) { weights_ = weights; }
+    void set_compute_tile(uint32_t compute_tile) { args_.n_compute_tile = compute_tile; }
+    void set_memory_tile(uint32_t memory_tile) { args_.n_memory_tile = memory_tile; }
+    void set_out_tile(uint32_t out_tile) { args_.n_out_tile = out_tile; }
+    void set_gemv_add(uint32_t gemv_add) { args_.is_gemv_add = gemv_add; }
+    void set_temp_buffer(uint8_t *buffer) { args_.pim_gemv_tmp_buffer = buffer; };
     Tensor<T> *get_input_vector() { return input_vector_; }
     Tensor<T> *get_output_vector() { return output_vector_; }
     Tensor<T> *get_weights() { return weights_; }
+    void **get_kconfig()
+    {
+        args_.pim_ctr = (uint8_t *)g_pim_base_addr;
+        args_.pim_weight = (uint8_t *)weights_->get_data();
+        args_.pim_input = (uint8_t *)input_vector_->get_data();
+        args_.output = (uint8_t *)output_vector_->get_data();
+        args_.batch_dim = input_vector_->get_desc().get_dim(uint32_t(DIMENSIONS::N));
+        args_.output_dim = output_vector_->get_desc().get_dim(uint32_t(DIMENSIONS::W));
+        hipMemcpy((void *)crf_binary_device_, (uint8_t *)(crf_binary_host_.c_str()), crf_binary_host_.size(),
+                  hipMemcpyHostToDevice);
+        args_.crf_binary = crf_binary_device_;
+
+        return reinterpret_cast<void **>(&config);
+    }
+
    private:
     Tensor<T> *input_vector_;
     Tensor<T> *weights_;
     Tensor<T> *output_vector_;
+
+    struct kArgs {
+        uint8_t *pim_ctr;
+        uint8_t *pim_weight;
+        uint8_t *pim_gemv_tmp_buffer;
+        uint8_t *pim_input;
+        uint8_t *output;
+        uint32_t batch_dim;
+        uint32_t n_memory_tile;
+        uint32_t n_compute_tile;
+        uint32_t n_out_tile;
+        uint32_t output_dim;
+        uint8_t *crf_binary;
+        uint32_t is_gemv_add;
+    };
+
+    kArgs args_;
 };
 
 template <class T>
 class EltArgs : public KernelArgs
 {
    public:
-    ~EltArgs() { hipFree(crf_binary_device_); };
+    ~EltArgs() = default;
     EltArgs(EltArgs &&) = default;
     EltArgs(const EltArgs &) = default;
     EltArgs &operator=(EltArgs &&) = default;
     EltArgs &operator=(const EltArgs &) = default;
 
-    EltArgs() { hipMalloc((void **)&crf_binary_device_, 128); }
+    EltArgs() : KernelArgs(&args_, sizeof(args_)) { hipMalloc((void **)&crf_binary_device_, 128); }
     EltArgs(Tensor<T> *in1, Tensor<T> *in2, Tensor<T> *out, std::string crf_binary, hipFunction_t kernel)
-        : input_vector0_(in1), input_vector1_(in2), output_vector_(out), crf_binary_host_(crf_binary), kernel_(kernel)
+        : KernelArgs(&args_, sizeof(args_), crf_binary, kernel),
+          input_vector0_(in1),
+          input_vector1_(in2),
+          output_vector_(out)
     {
-        size_ = sizeof(args_);
-        hipMalloc((void **)&crf_binary_device_, 128);
     }
 
     void set_input_vectors(Tensor<T> *input_vector0, Tensor<T> *input_vector1)
@@ -112,7 +177,6 @@ class EltArgs : public KernelArgs
     }
 
     Tensor<T> *get_output_vector() { return output_vector_; }
-    hipFunction_t get_kernel() { return kernel_; }
     void **get_kconfig()
     {
         args_.input0_ = (uint8_t *)input_vector0_->get_data();
@@ -121,7 +185,8 @@ class EltArgs : public KernelArgs
         args_.output_ = (uint8_t *)output_vector_->get_data();
         args_.num_tile_ = (output_vector_->get_desc().get_dim(3)) / (131072);
 
-        hipMemcpy((void *)crf_binary_device_, (uint8_t *)(crf_binary_host_.c_str()), 128, hipMemcpyHostToDevice);
+        hipMemcpy((void *)crf_binary_device_, (uint8_t *)(crf_binary_host_.c_str()), crf_binary_host_.size(),
+                  hipMemcpyHostToDevice);
         args_.crf_binary_ = crf_binary_device_;
         return reinterpret_cast<void **>(&config);
     }
@@ -130,10 +195,6 @@ class EltArgs : public KernelArgs
     Tensor<T> *input_vector0_;
     Tensor<T> *input_vector1_;
     Tensor<T> *output_vector_;
-    std::string crf_binary_host_;
-    uint8_t *crf_binary_device_;
-
-    hipFunction_t kernel_;
 
     struct kArgs {
         uint8_t *input0_;
@@ -144,12 +205,61 @@ class EltArgs : public KernelArgs
         uint8_t *crf_binary_;
     };
 
-    size_t size_;
     kArgs args_;
-    void *config[5] = {HIP_LAUNCH_PARAM_BUFFER_POINTER, &args_, HIP_LAUNCH_PARAM_BUFFER_SIZE, &size_,
-                       HIP_LAUNCH_PARAM_END};
 };
 
+template <class T>
+class ReluArgs : public KernelArgs
+{
+   public:
+    ~ReluArgs() = default;
+    ReluArgs(ReluArgs &&) = default;
+    ReluArgs(const ReluArgs &) = default;
+    ReluArgs &operator=(ReluArgs &&) = default;
+    ReluArgs &operator=(const ReluArgs &) = default;
+
+    ReluArgs() : KernelArgs(&args_, sizeof(args_)) {}
+    ReluArgs(Tensor<T> *in, Tensor<T> *out, std::string crf_binary, hipFunction_t kernel)
+        : KernelArgs(&args_, sizeof(args_), crf_binary, kernel), input_vector_(in), output_vector_(out)
+    {
+    }
+
+    void set_input_vectors(Tensor<T> *input_vector) { input_vector_ = input_vector; }
+    void set_output_vector(Tensor<T> *output_vector) { output_vector_ = output_vector; }
+    void set_num_tile(uint32_t num_tile) { args_.num_tile_ = num_tile; }
+    std::vector<Tensor<T> *> get_input_vectors()
+    {
+        std::vector<Tensor<T> *> ret{input_vector_};
+        return ret;
+    }
+
+    Tensor<T> *get_output_vector() { return output_vector_; }
+    void **get_kconfig()
+    {
+        args_.input_ = (uint8_t *)input_vector_->get_data();
+        args_.g_pim_base_addr_ = (uint8_t *)g_pim_base_addr;
+        args_.output_ = (uint8_t *)output_vector_->get_data();
+
+        hipMemcpy((void *)crf_binary_device_, (uint8_t *)(crf_binary_host_.c_str()), crf_binary_host_.size(),
+                  hipMemcpyHostToDevice);
+        args_.crf_binary_ = crf_binary_device_;
+        return reinterpret_cast<void **>(&config);
+    }
+
+   private:
+    Tensor<T> *input_vector_;
+    Tensor<T> *output_vector_;
+
+    struct kArgs {
+        uint8_t *input_;
+        uint8_t *g_pim_base_addr_;
+        uint8_t *output_;
+        uint32_t num_tile_;
+        uint8_t *crf_binary_;
+    };
+
+    kArgs args_;
+};
 /**
  * @brief Base class for Executors
  */
