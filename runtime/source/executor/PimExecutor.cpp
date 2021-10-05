@@ -548,7 +548,6 @@ int PimExecutor::execute_relu(PimBo* output, PimBo* pim_data, hipStream_t stream
 
     std::vector<pimc::TensorDesc> inputs{input_t.get_desc()};
     std::vector<pimc::TensorDesc> outputs{output_t.get_desc()};
-
     auto pim_op = relu_execute.generate_code(OP_RELU, inputs, outputs);
     auto kernel = relu_execute.compile_code();
 
