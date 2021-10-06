@@ -469,9 +469,9 @@ int PimExecuteGemv(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream
     }
 
     if (output->bshape_r.n == 1 && operand1->bshape_r.h < 4096) {
-        uint32_t m = operand1->bshape_r.h;
+        uint32_t m = 1;
         uint32_t k = operand1->bshape_r.w;
-        uint32_t n = operand1->bshape_r.c;
+        uint32_t n = operand1->bshape_r.h;
 
         void* A_ptr = operand0->data;
         void* B_ptr = operand1->data;
@@ -480,7 +480,7 @@ int PimExecuteGemv(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream
         float alpha = 1.0f;
         float beta = 0.0f;
 
-        rocblas_gemv_fp16_Axy(B_ptr, A_ptr, C_ptr, m, n, k, alpha, beta);
+        rocblas_gemv_fp16_xAy(A_ptr, B_ptr, C_ptr, m, n, k, alpha, beta);
     } else {
         PimGemvBundle* bundle = PimGetGemvBundle(operand1, operand0, output);
         operand1 = bundle->wei;
