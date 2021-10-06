@@ -312,7 +312,7 @@ int pim_elt_add_profile(bool block, int len)
     hipEvent_t start, stop;
     hipEventCreate(&start);
     hipEventCreate(&stop);
-    
+
     hipDeviceSynchronize();
 
     hipEventRecord(start, nullptr);

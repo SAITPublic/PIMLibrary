@@ -66,13 +66,13 @@ class PIMController
           num_rank_(num_rank),
           num_bankgroup_(num_bankgroup),
           num_bank_(num_bank),
-	  num_row_(num_row),
-	  num_col_(num_col),
-	  num_pim_chan_(num_pim_chan),
+          num_row_(num_row),
+          num_col_(num_col),
+          num_pim_chan_(num_pim_chan),
           num_pim_rank_(num_pim_rank),
           cycle_(0),
-	  mode_(mode),
-	  mem_(mem)
+          mode_(mode),
+          mem_(mem)
     {
         num_bankgroup_bit_ = dramsim_log2(num_bankgroup);
         num_bank_bit_ = dramsim_log2(num_bank) - dramsim_log2(num_bankgroup);

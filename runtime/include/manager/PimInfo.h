@@ -11,7 +11,7 @@
 #ifndef _PIM_INFO_H_
 #define _PIM_INFO_H_
 
-#include<stdint.h>
+#include <stdint.h>
 
 typedef enum __PimAddrMap {
     AMDGPU_VEGA20,

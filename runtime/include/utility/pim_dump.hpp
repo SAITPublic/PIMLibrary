@@ -217,7 +217,7 @@ inline int compare_half_relative(half_float::half* data_a, half_float::half* dat
 inline void addressMapping(uint64_t physicalAddress, unsigned& newTransactionChan, unsigned& newTransactionRank,
                            unsigned& newTransactionBank, unsigned& newTransactionRow, unsigned& newTransactionColumn)
 {
-    uint64_t tempA, tempB; 
+    uint64_t tempA, tempB;
     uint64_t channelBitWidth = 6;
     uint64_t rankBitWidth = 1;
     uint64_t bankBitWidth = 2;

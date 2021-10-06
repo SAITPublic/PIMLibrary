@@ -1,9 +1,9 @@
-#include <iostream>
-#include "pim_runtime_api.h"
-#include "hip/hip_runtime.h"
 #include <torch/script.h>
 #include <torch/torch.h>
+#include <iostream>
 #include "hip/hip_fp16.h"
+#include "hip/hip_runtime.h"
+#include "pim_runtime_api.h"
 
 void KernelLauncher(const void* inp_data, const int N, void* out_data)
 {

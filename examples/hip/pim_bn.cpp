@@ -643,7 +643,6 @@ int pim_bn_nr7(bool block)
     PimDeinitialize();
 
     return ret;
-
 }
 int pim_bn_nr8(bool block)
 {
@@ -750,4 +749,4 @@ TEST(HIPIntegrationTest, PimNRBN7Sync) { EXPECT_TRUE(pim_bn_nr7(true) == 0); }
 TEST(HIPIntegrationTest, PimNRBN7Async) { EXPECT_TRUE(pim_bn_nr7(false) == 0); }
 TEST(HIPIntegrationTest, PimNRBN8Sync) { EXPECT_TRUE(pim_bn_nr8(true) == 0); }
 TEST(HIPIntegrationTest, PimNRBN8Async) { EXPECT_TRUE(pim_bn_nr8(false) == 0); }
-#endif	
+#endif

@@ -1,8 +1,8 @@
-#include <stdexcept>
-#include "pim_runtime_api.h"
-#include "hip/hip_runtime.h"
 #include <torch/script.h>
 #include <torch/torch.h>
+#include <stdexcept>
+#include "hip/hip_runtime.h"
+#include "pim_runtime_api.h"
 
 void KernelLauncher(void* inp0_data, void* inp1_data, int N, int is_scalar, void* out_data, int op)
 {

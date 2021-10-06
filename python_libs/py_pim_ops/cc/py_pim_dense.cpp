@@ -1,9 +1,9 @@
-#include "hip/hip_runtime.h"
 #include <torch/script.h>
 #include <torch/torch.h>
 #include <iostream>
 #include <stdexcept>
 #include "hip/hip_fp16.h"
+#include "hip/hip_runtime.h"
 #include "pim_runtime_api.h"
 #include "utility/pim_log.h"
 

@@ -164,7 +164,6 @@ int PimEmulator::execute_gemv_add_tile_accum(PimBo* output, PimBo* pim_data, Pim
     uint64_t tmp_data_addr = reinterpret_cast<uint64_t>(temp_buf);
     uint64_t pim_data_addr = reinterpret_cast<uint64_t>(pim_data->data);
 
-
     pim_sim_.preload_data_with_addr(pim_data_addr - pim_base_addr, pim_data->data, pim_data->size);
     pim_sim_.execute_kernel((void*)fmtd32, fmtd32_size);
     pim_sim_.read_result_gemv(sim_output, tmp_data_addr - pim_base_addr, out_dim);
