@@ -52,4 +52,5 @@ size_t get_aligned_size(PimDesc* pim_desc, PimMemFlag mem_flag, PimBo* pim_bo);
 void pad_data(void* input, int in_size, int in_nsize, int batch_size, PimMemFlag mem_flag);
 void pad_data(void* input, PimDesc* pim_desc, PimMemType mem_type, PimMemFlag mem_flag);
 void align_shape(PimDesc* pim_desc, PimOpType op_type);
+bool is_pim_gemv(PimBo* bo);
 #endif /* _PIM_UTIL_H_ */

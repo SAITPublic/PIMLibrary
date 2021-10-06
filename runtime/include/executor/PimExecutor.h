@@ -47,6 +47,8 @@ class PimExecutor
                    double epsilon, hipStream_t stream, bool block);
     int execute_gemv(PimBo* output, PimBo* operand0, PimBo* operand1, hipStream_t stream, bool block);
     int execute_gemv_add(PimBo* output, PimBo* operand0, PimBo* operand1, hipStream_t stream, bool block);
+    int execute_custom_gemv(PimBo* output, PimBo* operand0, PimBo* operand1, bool is_gemv_add, hipStream_t stream,
+                            bool block);
     int execute_sync(hipStream_t stream);
     int execute_dummy(void);
 

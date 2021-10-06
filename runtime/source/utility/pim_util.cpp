@@ -87,3 +87,12 @@ void pad_data(void* input, int in_size, int in_nsize, int batch_size, PimMemFlag
         }
     }
 }
+
+bool is_pim_gemv(PimBo* bo)
+{
+    /* TODO: find optimal shape to execute PIM ops */
+    if (bo->bshape_r.h >= 3200 || bo->bshape_r.n > 1)
+        return true;
+    else
+        return false;
+}

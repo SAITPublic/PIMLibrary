@@ -15,6 +15,7 @@
 #include <iostream>
 #include "executor/PimExecutor.h"
 #include "utility/pim_log.h"
+#include "utility/pim_util.h"
 
 namespace pim
 {
@@ -190,7 +191,11 @@ int PimRuntime::execute_gemv(PimBo* output, PimBo* operand0, PimBo* operand1, vo
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
 
-    ret = pim_executor_->execute_gemv(output, operand0, operand1, (hipStream_t)stream, block);
+    if (is_pim_gemv(output)) {
+        ret = pim_executor_->execute_gemv(output, operand0, operand1, (hipStream_t)stream, block);
+    } else {
+        ret = pim_executor_->execute_custom_gemv(output, operand0, operand1, false, (hipStream_t)stream, block);
+    }
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
@@ -201,7 +206,11 @@ int PimRuntime::execute_gemv_add(PimBo* output, PimBo* operand0, PimBo* operand1
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
 
-    ret = pim_executor_->execute_gemv_add(output, operand0, operand1, (hipStream_t)stream, block);
+    if (is_pim_gemv(output)) {
+        ret = pim_executor_->execute_gemv_add(output, operand0, operand1, (hipStream_t)stream, block);
+    } else {
+        ret = pim_executor_->execute_custom_gemv(output, operand0, operand1, true, (hipStream_t)stream, block);
+    }
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;

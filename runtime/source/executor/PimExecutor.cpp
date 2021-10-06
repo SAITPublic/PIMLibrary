@@ -12,6 +12,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <iostream>
+#include "executor/gpu_hip_kernels/gpu_custom_ops.h"
 #include "executor/pim_hip_kernels/pim_op_kernels.pimk"
 #include "hip/hip_runtime.h"
 #include "utility/pim_dump.hpp"
@@ -611,6 +612,32 @@ int PimExecutor::execute_bn(PimBo* output, PimBo* pim_data, PimBo* beta, PimBo* 
     delete[] srf_binary;
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+    return ret;
+}
+
+int PimExecutor::execute_custom_gemv(PimBo* output, PimBo* operand0, PimBo* operand1, bool is_gemv_add,
+                                     hipStream_t stream, bool block)
+{
+    int ret = 0;
+
+    if (operand0->bshape_r.n != 1) {
+        std::cout << "[Error] " << __FUNCTION__ << ": GEMM is not supported" << std::endl;
+        return 1;
+    }
+
+    uint32_t m = 1;
+    uint32_t k = operand1->bshape_r.w;
+    uint32_t n = operand1->bshape_r.h;
+
+    void* vec = operand0->data;
+    void* mat = operand1->data;
+    void* out = output->data;
+
+    float alpha = 1.0f;
+    float beta = is_gemv_add ? 1.0f : 0.0f;
+
+    /* TODO: transpose vector/matrix and execute rocblas_gemv_fp16_Axy() */
+    rocblas_gemv_fp16_xAy(vec, mat, out, m, n, k, alpha, beta);
     return ret;
 }
 
