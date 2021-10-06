@@ -77,10 +77,5 @@ typedef struct __PimDescriptor {
     PimPrecision precision;
     PimOpType op_type;
 } PimDesc;
-typedef struct __PimGemvBundle {
-    PimBo* in;
-    PimBo* wei;
-    PimBo* out;
-} PimGemvBundle;
 
 #endif /* _PIM_DATA_TYPE_H_ */

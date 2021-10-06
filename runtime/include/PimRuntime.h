@@ -22,6 +22,12 @@ namespace pim
 {
 namespace runtime
 {
+typedef struct __PimGemvBundle {
+    PimBo* in;
+    PimBo* wei;
+    PimBo* out;
+} PimGemvBundle;
+
 class PimRuntime
 {
    public:
@@ -50,6 +56,7 @@ class PimRuntime
     int execute_dummy(void);
     int insert_gemv_bundle(uint64_t w_addr, PimGemvBundle* bundle);
     PimGemvBundle* find_gemv_bundle(uint64_t w_addr);
+    PimGemvBundle* get_gemv_bundle(PimBo* weight, PimBo* dev_in, PimBo* dev_out);
 
    private:
     pim::runtime::manager::PimManager* pim_manager_;
