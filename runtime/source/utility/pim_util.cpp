@@ -88,6 +88,21 @@ void pad_data(void* input, int in_size, int in_nsize, int batch_size, PimMemFlag
     }
 }
 
+bool is_pim_available(PimBo* out, PimBo* op0, PimBo* op1, PimOpType op_type)
+{
+    bool ret = true;
+
+    switch (op_type) {
+        case OP_GEMV:
+            ret = is_pim_gemv(out);
+            break;
+        default:
+            ret = true;
+    }
+
+    return ret;
+}
+
 bool is_pim_gemv(PimBo* bo)
 {
     /* TODO: find optimal shape to execute PIM ops */
