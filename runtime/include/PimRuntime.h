@@ -15,6 +15,7 @@
 
 #include <unordered_map>
 #include "executor/PimExecutor.h"
+#include "manager/PimInfo.h"
 #include "manager/PimManager.h"
 #include "pim_data_types.h"
 
@@ -64,6 +65,7 @@ class PimRuntime
     PimRuntimeType rt_type_;
     PimPrecision precision_;
     std::unordered_map<uint64_t, PimGemvBundle*> weight_map_;
+    GemvKernelType gemv_kernel_type_;
 };
 
 } /* namespace runtime */
