@@ -618,16 +618,15 @@ int PimExecutor::execute_bn(PimBo* output, PimBo* pim_data, PimBo* beta, PimBo* 
 int PimExecutor::execute_custom_gemv(PimBo* output, PimBo* operand0, PimBo* operand1, bool is_gemv_add,
                                      hipStream_t stream, bool block)
 {
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
+
+    uint32_t m, n, k;
 
     if (operand0->bshape_r.n != 1) {
         std::cout << "[Error] " << __FUNCTION__ << ": GEMM is not supported" << std::endl;
         return 1;
     }
-
-    uint32_t m = 1;
-    uint32_t k = operand1->bshape_r.w;
-    uint32_t n = operand1->bshape_r.h;
 
     void* vec = operand0->data;
     void* mat = operand1->data;
@@ -636,8 +635,19 @@ int PimExecutor::execute_custom_gemv(PimBo* output, PimBo* operand0, PimBo* oper
     float alpha = 1.0f;
     float beta = is_gemv_add ? 1.0f : 0.0f;
 
-    /* TODO: transpose vector/matrix and execute rocblas_gemv_fp16_Axy() */
-    rocblas_gemv_fp16_xAy(vec, mat, out, m, n, k, alpha, beta);
+    if (is_transposed(operand1)) {
+        m = operand1->bshape_r.h;
+        k = operand1->bshape_r.w;
+        n = 1;
+        rocblas_gemv_fp16_Axy(mat, vec, out, m, n, k, alpha, beta);
+    } else {
+        m = 1;
+        k = operand1->bshape_r.w;
+        n = operand1->bshape_r.h;
+        rocblas_gemv_fp16_xAy(vec, mat, out, m, n, k, alpha, beta);
+    }
+
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
 

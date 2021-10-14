@@ -10,28 +10,30 @@
 
 #include "utility/pim_util.h"
 
+#define DIM_OUT_PIM (3200)
+
 __host__ void get_pim_block_info(PimBlockInfo* fbi) { memcpy(fbi, &vega20_fbi, sizeof(PimBlockInfo)); }
 
 size_t get_aligned_size(PimDesc* pim_desc, PimMemFlag mem_flag, PimBo* pim_bo)
 {
     size_t size;
 
-    int n = pim_desc->bshape.n;
-    int c = pim_desc->bshape.c;
-    int h = pim_desc->bshape.h;
-    int w = pim_desc->bshape.w;
+    PimBShape bs = pim_desc->bshape;
 
     if (mem_flag == GEMV_INPUT) {
-        h = 1;
+        bs.h = 1;
     } else if (mem_flag == GEMV_WEIGHT) {
-        n = 1;
+        bs.n = 1;
+    } else if (mem_flag == GEMV_WEIGHT_T) {
+        bs.n = 1;
+        bs.t = 1;
     } else if (mem_flag == GEMV_OUTPUT) {
-        w = 1;
+        bs.w = 1;
     }
     pim_bo->bshape_r = pim_desc->bshape_r;
-    pim_bo->bshape = {(uint32_t)w, (uint32_t)h, (uint32_t)c, (uint32_t)n};
+    pim_bo->bshape = {bs.w, bs.h, bs.c, bs.n, bs.t};
 
-    size = n * c * h * w;
+    size = bs.n * bs.c * bs.h * bs.w;
 
     return size;
 }
@@ -94,7 +96,7 @@ bool is_pim_available(PimBo* out, PimBo* op0, PimBo* op1, PimOpType op_type)
 
     switch (op_type) {
         case OP_GEMV:
-            ret = is_pim_gemv(out);
+            ret = is_pim_gemv(op1);
             break;
         default:
             ret = false;
@@ -106,7 +108,15 @@ bool is_pim_available(PimBo* out, PimBo* op0, PimBo* op1, PimOpType op_type)
 bool is_pim_gemv(PimBo* bo)
 {
     /* TODO: find optimal shape to execute PIM ops */
-    if (bo->bshape_r.w >= 3200 || bo->bshape_r.h >= 3200 || bo->bshape_r.n > 1)
+    if ((bo->bshape_r.h >= DIM_OUT_PIM || bo->bshape_r.n > 1) && !is_transposed(bo))
+        return true;
+    else
+        return false;
+}
+
+bool is_transposed(PimBo* bo)
+{
+    if (bo->bshape.t == 1)
         return true;
     else
         return false;

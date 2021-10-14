@@ -54,4 +54,5 @@ void pad_data(void* input, PimDesc* pim_desc, PimMemType mem_type, PimMemFlag me
 void align_shape(PimDesc* pim_desc, PimOpType op_type);
 bool is_pim_available(PimBo* out, PimBo* op0, PimBo* op1, PimOpType op_type);
 bool is_pim_gemv(PimBo* bo);
+bool is_transposed(PimBo* bo);
 #endif /* _PIM_UTIL_H_ */

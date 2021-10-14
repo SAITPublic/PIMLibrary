@@ -26,7 +26,7 @@ typedef enum __PimMemType {
     MEM_TYPE_PIM,
 } PimMemType;
 
-typedef enum __PimMemFlag { ELT_OP, GEMV_INPUT, GEMV_WEIGHT, GEMV_OUTPUT } PimMemFlag;
+typedef enum __PimMemFlag { ELT_OP, GEMV_INPUT, GEMV_WEIGHT, GEMV_OUTPUT, GEMV_WEIGHT_T } PimMemFlag;
 
 typedef enum __PimMemCpyType {
     HOST_TO_HOST,
@@ -59,6 +59,7 @@ typedef struct __PimBShape {
     uint32_t h;
     uint32_t c;
     uint32_t n;
+    uint32_t t;
 } PimBShape;
 
 typedef struct __PimBufferObject {

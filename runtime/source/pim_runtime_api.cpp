@@ -90,8 +90,8 @@ PimBo* PimCreateBo(int w, int h, int c, int n, PimPrecision precision, PimMemTyp
     size_t size = w * h * c * n * type_size;
 
     pim_bo->size = size;
-    pim_bo->bshape = {(uint32_t)w, (uint32_t)h, (uint32_t)c, (uint32_t)n};
-    pim_bo->bshape_r = {(uint32_t)w, (uint32_t)h, (uint32_t)c, (uint32_t)n};
+    pim_bo->bshape = {(uint32_t)w, (uint32_t)h, (uint32_t)c, (uint32_t)n, 0};
+    pim_bo->bshape_r = {(uint32_t)w, (uint32_t)h, (uint32_t)c, (uint32_t)n, 0};
     pim_bo->mem_type = mem_type;
     pim_bo->precision = precision;
 
@@ -157,7 +157,7 @@ PimDesc* PimCreateDesc(int n, int c, int h, int w, PimPrecision precision, PimOp
     PimDesc* pim_desc = new PimDesc;
 
     pim_desc->precision = precision;
-    pim_desc->bshape_r = {(uint32_t)w, (uint32_t)h, (uint32_t)c, (uint32_t)n};
+    pim_desc->bshape_r = {(uint32_t)w, (uint32_t)h, (uint32_t)c, (uint32_t)n, 0};
     align_shape(pim_desc, op_type);
 
     PIM_PROFILE_TOCK(CreateDesc);

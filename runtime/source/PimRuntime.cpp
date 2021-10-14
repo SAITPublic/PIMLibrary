@@ -208,7 +208,7 @@ int PimRuntime::execute_gemv(PimBo* output, PimBo* operand0, PimBo* operand1, vo
 
     if (gemv_kernel_type_ == CUSTOM_GEMV) {
         ret = pim_executor_->execute_custom_gemv(output, operand0, operand1, false, (hipStream_t)stream, block);
-    } else if (gemv_kernel_type_ == PIM_GEMV) {
+    } else if (gemv_kernel_type_ == PIM_GEMV && !is_transposed(operand1)) {
         PimGemvBundle* bundle = get_gemv_bundle(operand1, operand0, output);
         operand1 = bundle->wei;
         ret = pim_executor_->execute_gemv(output, operand0, operand1, (hipStream_t)stream, block);
@@ -233,7 +233,7 @@ int PimRuntime::execute_gemv_add(PimBo* output, PimBo* operand0, PimBo* operand1
 
     if (gemv_kernel_type_ == CUSTOM_GEMV) {
         ret = pim_executor_->execute_custom_gemv(output, operand0, operand1, true, (hipStream_t)stream, block);
-    } else if (gemv_kernel_type_ == PIM_GEMV) {
+    } else if (gemv_kernel_type_ == PIM_GEMV && !is_transposed(operand1)) {
         PimGemvBundle* bundle = get_gemv_bundle(operand1, operand0, output);
         operand1 = bundle->wei;
         ret = pim_executor_->execute_gemv_add(output, operand0, operand1, (hipStream_t)stream, block);
