@@ -114,7 +114,4 @@ bool is_pim_gemv(PimBo* bo)
         return false;
 }
 
-bool is_transposed(PimBo* bo)
-{
-    return bo->bshape.t;
-}
+bool is_transposed(PimBo* bo) { return bo->bshape.t; }

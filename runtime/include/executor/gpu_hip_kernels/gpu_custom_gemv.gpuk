@@ -1,5 +1,5 @@
-#include <iostream>
-#include "hip/hip_runtime.h"
+#ifndef _GPU_CUSTOM_GEMV_KERN_
+#define _GPU_CUSTOM_GEMV_KERN_
 
 template <typename U, typename V, typename W>
 void rocblas_gemv_template_Axy(hipStream_t p_stream, const V *A, const V *x, W *y, int m, int n, int k, U alpha,
@@ -7,10 +7,6 @@ void rocblas_gemv_template_Axy(hipStream_t p_stream, const V *A, const V *x, W *
 
 template <typename U, typename V, typename W>
 void rocblas_gemv_template_xAy(hipStream_t p_stream, const V *x, const V *A, W *y, int m, int n, int k, U alpha,
-                               U beta);
-
-template <typename U, typename V, typename W>
-void rocblas_gemv_template_Axy(hipStream_t p_stream, const V *A, const V *x, W *y, int m, int n, int k, U alpha,
                                U beta);
 
 void rocblas_gemv_fp16_xAy(void *x, void *A, void *y, int m, int n, int k, float alpha, float beta)
@@ -27,47 +23,6 @@ void rocblas_gemv_fp16_Axy(void *A, void *x, void *y, int m, int n, int k, float
     // hipStreamCreate(&p_stream);
     rocblas_gemv_template_Axy(nullptr, reinterpret_cast<_Float16 *>(A), reinterpret_cast<_Float16 *>(x),
                               reinterpret_cast<_Float16 *>(y), m, n, k, alpha, beta);
-}
-
-struct rocblas_reduce_sum {
-    template <typename T>
-    __forceinline__ __device__ void operator()(T &__restrict__ a, const T &__restrict__ b)
-    {
-        a += b;
-    }
-};
-
-template <int k, typename REDUCE, typename T>
-struct rocblas_reduction_s {
-    __forceinline__ __device__ void operator()(int tx, T *x)
-    {
-        // Reduce the lower half with the upper half
-        if (tx < k) REDUCE{}(x[tx], x[tx + k]);
-        __syncthreads();
-
-        // Recurse down with k / 2
-        rocblas_reduction_s<k / 2, REDUCE, T>{}(tx, x);
-    }
-};
-
-// leaf node for terminating recursion
-template <typename REDUCE, typename T>
-struct rocblas_reduction_s<0, REDUCE, T> {
-    __forceinline__ __device__ void operator()(int tx, T *x) {}
-};
-
-template <int NB, typename REDUCE, typename T>
-__attribute__((flatten)) __device__ void rocblas_reduction(int tx, T *x)
-{
-    static_assert(NB > 1 && !(NB & (NB - 1)), "NB must be a power of 2");
-    __syncthreads();
-    rocblas_reduction_s<NB / 2, REDUCE, T>{}(tx, x);
-}
-
-template <int NB, typename T>
-__attribute__((flatten)) __device__ void rocblas_sum_reduce(int tx, T *x)
-{
-    rocblas_reduction<NB, rocblas_reduce_sum>(tx, x);
 }
 
 template <int NB_X, typename T, typename U>
@@ -131,7 +86,6 @@ template <typename U, typename V, typename W>
 void rocblas_gemv_template_xAy(hipStream_t p_stream, const V *x, const V *A, W *y, int m, int n, int k, U alpha, U beta)
 {
     if (m != 1) {
-        std::cout << "its' gemm" << std::endl;
         return;
     }
     static constexpr int NB = 256;
@@ -206,7 +160,6 @@ template <typename U, typename V, typename W>
 void rocblas_gemv_template_Axy(hipStream_t p_stream, const V *A, const V *x, W *y, int m, int n, int k, U alpha, U beta)
 {
     if (n != 1) {
-        std::cout << "[Error] GEMM operation" << std::endl;
         return;
     }
     static constexpr int NB = 256;
@@ -219,3 +172,5 @@ void rocblas_gemv_template_Axy(hipStream_t p_stream, const V *A, const V *x, W *
                        x,  // kxn
                        n, beta, y);
 }
+
+#endif /* _GPU_CUSTOM_GEMV_KERN_ */
