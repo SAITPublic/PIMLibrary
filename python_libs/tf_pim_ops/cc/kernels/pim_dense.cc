@@ -30,9 +30,18 @@ void KernelLauncher(const void* i_data, const void* w_data, const int num_batch,
 
     uint64_t weight_key = reinterpret_cast<uint64_t>(w_data);
     PimDesc* pim_desc = PimCreateDesc(num_batch, 1, OUT_LENGTH, IN_LENGTH, PIM_FP16, OP_GEMV);
-    PimBo* dev_weight = PimCreateBo(pim_desc, MEM_TYPE_DEVICE, GEMV_WEIGHT, const_cast<void*>(w_data));
+    PimBo* dev_weight = PimCreateBo(pim_desc, MEM_TYPE_DEVICE, GEMV_WEIGHT);
     dev_in = PimCreateBo(pim_desc, MEM_TYPE_DEVICE, GEMV_INPUT);
     dev_out = PimCreateBo(pim_desc, MEM_TYPE_DEVICE, GEMV_OUTPUT);
+
+
+    for (int i = 0; i < IN_LENGTH; i++) {
+        for (int j = 0; j < OUT_LENGTH; j++) {
+            PimCopyMemory((void*)(static_cast<half*>(dev_weight->data) + (j * IN_LENGTH + i)),
+                          (void*)(static_cast<const half*>(w_data) + (i * OUT_LENGTH + j)), sizeof(half),
+                           DEVICE_TO_DEVICE);
+           }
+    }
 
     void* dev_data_ptr = dev_in->data;
     if (num_batch > 1) {
@@ -86,7 +95,7 @@ class PimDenseOp : public OpKernel
 
         int has_bias = 0;
         const Tensor& input_tensor3 = context->input(3);
-        //        has_bias = input_tensor3.flat<int32>().data()[0];
+        has_bias = input_tensor3.flat<int32>().data()[0];
 
         DLOG(INFO) << "Input Dims :" << num_dims;
         DLOG(INFO) << "Input Num batches : " << num_batch;
