@@ -65,7 +65,7 @@ class PimRuntime
     PimRuntimeType rt_type_;
     PimPrecision precision_;
     std::unordered_map<uint64_t, PimGemvBundle*> weight_map_;
-    GemvKernelType gemv_kernel_type_;
+    PimKrnlType kernel_type_;
 };
 
 } /* namespace runtime */

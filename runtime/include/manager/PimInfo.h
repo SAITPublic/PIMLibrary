@@ -70,11 +70,11 @@ typedef enum __PimGemvType {
     NEXT_PIM,
 } PimGemvType;
 
-typedef enum __GemvKernelType {
+typedef enum __PimKrnlType {
     OPTIMAL,
-    PIM_GEMV,
-    CUSTOM_GEMV,
-} GemvKernelType;
+    PIM,
+    CUSTOM_GPU,
+} PimKrnlType;
 
 #ifdef EMULATOR
 typedef struct __PimMemTracer {

@@ -29,17 +29,17 @@ PimRuntime::PimRuntime(PimRuntimeType rt_type, PimPrecision precision) : rt_type
     pim_manager_ = pim::runtime::manager::PimManager::get_instance(rt_type, precision);
     pim_executor_ = pim::runtime::executor::PimExecutor::get_instance(rt_type, precision);
 
-    const char* env_g = std::getenv("GEMV_KERNEL_TYPE");
-    if (env_g != nullptr) {
-        switch (*env_g) {
+    const char* env_k = std::getenv("KERNEL_TYPE");
+    if (env_k != nullptr) {
+        switch (*env_k) {
             case '1':
-                gemv_kernel_type_ = PIM_GEMV;
+                kernel_type_ = PIM;
                 break;
             case '2':
-                gemv_kernel_type_ = CUSTOM_GEMV;
+                kernel_type_ = CUSTOM_GPU;
                 break;
             default:
-                gemv_kernel_type_ = OPTIMAL;
+                kernel_type_ = OPTIMAL;
         }
     }
 
@@ -206,9 +206,9 @@ int PimRuntime::execute_gemv(PimBo* output, PimBo* operand0, PimBo* operand1, vo
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
 
-    if (gemv_kernel_type_ == CUSTOM_GEMV) {
+    if (kernel_type_ == CUSTOM_GPU) {
         ret = pim_executor_->execute_custom_gemv(output, operand0, operand1, false, (hipStream_t)stream, block);
-    } else if (gemv_kernel_type_ == PIM_GEMV && !is_transposed(operand1)) {
+    } else if (kernel_type_ == PIM && !is_transposed(operand1)) {
         PimGemvBundle* bundle = get_gemv_bundle(operand1, operand0, output);
         operand1 = bundle->wei;
         ret = pim_executor_->execute_gemv(output, operand0, operand1, (hipStream_t)stream, block);
@@ -231,9 +231,9 @@ int PimRuntime::execute_gemv_add(PimBo* output, PimBo* operand0, PimBo* operand1
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
 
-    if (gemv_kernel_type_ == CUSTOM_GEMV) {
+    if (kernel_type_ == CUSTOM_GPU) {
         ret = pim_executor_->execute_custom_gemv(output, operand0, operand1, true, (hipStream_t)stream, block);
-    } else if (gemv_kernel_type_ == PIM_GEMV && !is_transposed(operand1)) {
+    } else if (kernel_type_ == PIM && !is_transposed(operand1)) {
         PimGemvBundle* bundle = get_gemv_bundle(operand1, operand0, output);
         operand1 = bundle->wei;
         ret = pim_executor_->execute_gemv_add(output, operand0, operand1, (hipStream_t)stream, block);

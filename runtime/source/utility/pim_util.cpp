@@ -26,7 +26,7 @@ size_t get_aligned_size(PimDesc* pim_desc, PimMemFlag mem_flag, PimBo* pim_bo)
         bs.n = 1;
     } else if (mem_flag == GEMV_WEIGHT_T) {
         bs.n = 1;
-        bs.t = 1;
+        bs.t = true;
     } else if (mem_flag == GEMV_OUTPUT) {
         bs.w = 1;
     }
@@ -116,8 +116,5 @@ bool is_pim_gemv(PimBo* bo)
 
 bool is_transposed(PimBo* bo)
 {
-    if (bo->bshape.t == 1)
-        return true;
-    else
-        return false;
+    return bo->bshape.t;
 }

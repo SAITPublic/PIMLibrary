@@ -59,7 +59,7 @@ typedef struct __PimBShape {
     uint32_t h;
     uint32_t c;
     uint32_t n;
-    uint32_t t;
+    bool t;
 } PimBShape;
 
 typedef struct __PimBufferObject {
