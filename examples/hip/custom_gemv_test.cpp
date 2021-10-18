@@ -76,7 +76,7 @@ int custom_gemv_Axy(bool block)
     hipMemcpy(input0_d, input0_h, in_bytes, hipMemcpyHostToDevice);
     hipMemcpy(input1_d, input1_h_t, wei_bytes, hipMemcpyHostToDevice);
 
-    rocblas_gemv_fp16_Axy(input1_d, input0_d, output_d, out_size, 1, in_size, alpha, beta);
+    rocblas_gemv_fp16_Axy(input1_d, input0_d, output_d, out_size, 1, in_size, alpha, beta, 0);
 
     hipMemcpy(output1_h, output_d, out_bytes, hipMemcpyDeviceToHost);
 
@@ -135,7 +135,7 @@ int custom_gemv_xAy(bool block)
     hipMemcpy(input0_d, input0_h, in_bytes, hipMemcpyHostToDevice);
     hipMemcpy(input1_d, input1_h, wei_bytes, hipMemcpyHostToDevice);
 
-    rocblas_gemv_fp16_xAy(input0_d, input1_d, output_d, 1, out_size, in_size, alpha, beta);
+    rocblas_gemv_fp16_xAy(input0_d, input1_d, output_d, 1, out_size, in_size, alpha, beta, 0);
 
     hipMemcpy(output1_h, output_d, out_bytes, hipMemcpyDeviceToHost);
 
@@ -215,7 +215,7 @@ int custom_addmv_Axy(bool relu)
     hipMemcpy(input1_d, input1_h_t, wei_bytes, hipMemcpyHostToDevice);
     hipMemcpy(input2_d, input2_h, out_bytes, hipMemcpyHostToDevice);
 
-    rocblas_addmv_fp16_Axy(input2_d, input1_d, input0_d, output_d, out_size, 1, in_size, alpha, beta, relu);
+    rocblas_addmv_fp16_Axy(input2_d, input1_d, input0_d, output_d, out_size, 1, in_size, alpha, beta, relu, 0);
 
     hipMemcpy(output1_h, output_d, out_bytes, hipMemcpyDeviceToHost);
 
@@ -295,7 +295,7 @@ int custom_addmv_xAy(bool relu)
     hipMemcpy(input1_d, input1_h, wei_bytes, hipMemcpyHostToDevice);
     hipMemcpy(input2_d, input2_h, out_bytes, hipMemcpyHostToDevice);
 
-    rocblas_addmv_fp16_xAy(input2_d, input0_d, input1_d, output_d, 1, out_size, in_size, alpha, beta, relu);
+    rocblas_addmv_fp16_xAy(input2_d, input0_d, input1_d, output_d, 1, out_size, in_size, alpha, beta, relu, 0);
 
     hipMemcpy(output1_h, output_d, out_bytes, hipMemcpyDeviceToHost);
 

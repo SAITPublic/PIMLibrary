@@ -29,7 +29,7 @@ PimRuntime::PimRuntime(PimRuntimeType rt_type, PimPrecision precision) : rt_type
     pim_manager_ = pim::runtime::manager::PimManager::get_instance(rt_type, precision);
     pim_executor_ = pim::runtime::executor::PimExecutor::get_instance(rt_type, precision);
 
-    const char* env_k = std::getenv("KERNEL_TYPE");
+    const char* env_k = std::getenv("PIM_KERNEL_TYPE");
     if (env_k != nullptr) {
         switch (*env_k) {
             case '1':
@@ -246,6 +246,18 @@ int PimRuntime::execute_gemv_add(PimBo* output, PimBo* operand0, PimBo* operand1
             ret = pim_executor_->execute_custom_gemv(output, operand0, operand1, true, (hipStream_t)stream, block);
         }
     }
+
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+    return ret;
+}
+
+int PimRuntime::execute_gemv_add(PimBo* output, PimBo* input, PimBo* operand0, PimBo* operand1, bool relu, void* stream,
+                                 bool block)
+{
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
+    int ret = 0;
+
+    ret = pim_executor_->execute_custom_gemv_add(output, input, operand0, operand1, relu, (hipStream_t)stream, block);
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;

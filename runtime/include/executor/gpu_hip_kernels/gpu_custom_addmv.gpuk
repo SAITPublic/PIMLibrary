@@ -9,15 +9,15 @@ template <typename U, typename V, typename W>
 void rocblas_addmv_template_Axy(hipStream_t p_stream, const V *b, const V *A, const V *x, W *y, int m, int n, int k,
                                 U alpha, U beta, bool relu);
 
-void rocblas_addmv_fp16_xAy(void *b, void* x, void* A, void* y, int m, int n, int k, float alpha, float beta, bool relu)
+void rocblas_addmv_fp16_xAy(void *b, void* x, void* A, void* y, int m, int n, int k, float alpha, float beta, bool relu, hipStream_t stream)
 {
-    rocblas_addmv_template_xAy(nullptr, reinterpret_cast<_Float16 *>(b), reinterpret_cast<_Float16 *>(x), reinterpret_cast<_Float16 *>(A),
+    rocblas_addmv_template_xAy(stream, reinterpret_cast<_Float16 *>(b), reinterpret_cast<_Float16 *>(x), reinterpret_cast<_Float16 *>(A),
                                reinterpret_cast<_Float16 *>(y), m, n, k, alpha, beta, relu);
 }
 
-void rocblas_addmv_fp16_Axy(void *b, void* A, void* x, void* y, int m, int n, int k, float alpha, float beta, bool relu)
+void rocblas_addmv_fp16_Axy(void *b, void* A, void* x, void* y, int m, int n, int k, float alpha, float beta, bool relu, hipStream_t stream)
 {
-    rocblas_addmv_template_Axy(nullptr, reinterpret_cast<_Float16 *>(b), reinterpret_cast<_Float16 *>(A), reinterpret_cast<_Float16 *>(x),
+    rocblas_addmv_template_Axy(stream, reinterpret_cast<_Float16 *>(b), reinterpret_cast<_Float16 *>(A), reinterpret_cast<_Float16 *>(x),
                                reinterpret_cast<_Float16 *>(y), m, n, k, alpha, beta, relu);
 }
 

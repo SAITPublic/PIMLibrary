@@ -50,6 +50,8 @@ class PimRuntime
     int execute_relu(PimBo* output, PimBo* pim_data, void* stream, bool block = false);
     int execute_gemv(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream, bool block = false);
     int execute_gemv_add(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream, bool block = false);
+    int execute_gemv_add(PimBo* output, PimBo* input, PimBo* operand0, PimBo* operand1, bool relu, void* stream,
+                         bool block = false);
     int execute_bn(PimBo* output, PimBo* pim_data, PimBo* beta, PimBo* gamma, PimBo* mean, PimBo* variance,
                    double epsilon, void* stream, bool block = false);
     int execute_sync(void* stream);

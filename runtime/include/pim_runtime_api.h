@@ -251,8 +251,8 @@ __PIM_API__ int PimExecuteRelu(PimBo* output, PimBo* pim_data, void* stream = nu
  * Ouptu values are placed in PIM area and need to be transfered to GPU or HOST memory as per requirements
  *
  * @param output output buffer object of gemv
- * @param operand0 input operand 0 ( weights). Should be of PIM Area
- * @param operand1 vector input
+ * @param operand0 input operand0(vector).
+ * @param operand1 input opernad1(matrix). Should be of PIM Area.
  * @param stream void pointer to stream identifier. default=nullptr
  * @param block enable/disable synchronization. default=false
 
@@ -270,13 +270,30 @@ __PIM_API__ int PimExecuteGemv(PimBo* output, PimBo* operand0, PimBo* operand1 =
  * It performs output = output + pim_gemv_result
  *
  * @param output output buffer object of gemv
- * @param operand0 input operand 0 ( weights). Should be of PIM Area
- * @param operand1 vector input
+ * @param operand0 input operand0(vector).
+ * @param operand1 input operand1(matrix). Should be of PIM Area
  *
  * @return success or failure
  */
 __PIM_API__ int PimExecuteGemvAdd(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream = nullptr,
                                   bool block = false);
+
+/**
+ * @brief Executes PIM GEMV + Add operation
+ *
+ * This API provides interface for PIM GEMV + Add operation.
+ * It performs output = output + pim_gemv_result
+ *
+ * @param output output buffer object
+ * @param input vector to be added
+ * @param operand0 input operand0(vector).
+ * @param operand1 input operand1(matrix).
+ * @param relu fuse ReLU if comes after the operation.
+ *
+ * @return success or failure
+ */
+__PIM_API__ int PimExecuteGemvAdd(PimBo* output, PimBo* input, PimBo* operand0, PimBo* operand1, bool relu,
+                                  void* stream = nullptr, bool block = false);
 
 /**
  * @brief Executes Batch normalization operation.
