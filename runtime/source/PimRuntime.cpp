@@ -251,13 +251,14 @@ int PimRuntime::execute_gemv_add(PimBo* output, PimBo* operand0, PimBo* operand1
     return ret;
 }
 
-int PimRuntime::execute_gemv_add(PimBo* output, PimBo* input, PimBo* operand0, PimBo* operand1, bool relu, void* stream,
-                                 bool block)
+int PimRuntime::execute_gemv_add(PimBo* output, PimBo* operand0, PimBo* operand1, PimBo* operand2, bool relu,
+                                 void* stream, bool block)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
 
-    ret = pim_executor_->execute_custom_gemv_add(output, input, operand0, operand1, relu, (hipStream_t)stream, block);
+    ret =
+        pim_executor_->execute_custom_gemv_add(output, operand0, operand1, operand2, relu, (hipStream_t)stream, block);
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;

@@ -11,6 +11,7 @@
 #ifndef _PIM_UTIL_H_
 #define _PIM_UTIL_H_
 
+#include <iostream>
 #include "hip/hip_fp16.h"
 #include "hip/hip_runtime.h"
 #include "manager/PimInfo.h"

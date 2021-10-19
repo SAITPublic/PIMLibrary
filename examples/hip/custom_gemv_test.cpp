@@ -3,8 +3,8 @@
 #include <random>
 #include "executor/gpu_hip_kernels/gpu_custom_ops.h"
 #include "half.hpp"
-#include "utility/pim_dump.hpp"
 #include "pim_runtime_api.h"
+#include "utility/pim_dump.hpp"
 
 #define EPSILON (1.0)
 
@@ -464,13 +464,13 @@ int custom_addmv_Axy_api(bool relu)
 
     /* __PIM_API__ call : Create PIM Buffer Object */
     PimDesc* pim_desc = PimCreateDesc(1, 1, out_size, in_size, PIM_FP16, OP_GEMV);
-    PimBo* device_in = PimCreateBo(pim_desc, MEM_TYPE_DEVICE, GEMV_INPUT, input2_d);
     PimBo* device_vec = PimCreateBo(pim_desc, MEM_TYPE_DEVICE, GEMV_INPUT, input0_d);
     PimBo* device_mat = PimCreateBo(pim_desc, MEM_TYPE_DEVICE, GEMV_WEIGHT_T, input1_d);
+    PimBo* device_in = PimCreateBo(pim_desc, MEM_TYPE_DEVICE, GEMV_INPUT, input2_d);
     PimBo* device_out = PimCreateBo(pim_desc, MEM_TYPE_DEVICE, GEMV_OUTPUT, output_d);
 
     /* __PIM_API__ call : Execute GEMV ADD*/
-    PimExecuteGemvAdd(device_out, device_in, device_vec, device_mat, relu, nullptr, false);
+    PimExecuteGemvAdd(device_out, device_vec, device_mat, device_in, relu, nullptr, false);
 
     hipMemcpy(output1_h, device_out->data, out_bytes, hipMemcpyDeviceToHost);
 
@@ -499,7 +499,6 @@ int custom_addmv_Axy_api(bool relu)
 
     return ret;
 }
-
 
 TEST(HIPIntegrationTest, CustomGemvAxyTest) { EXPECT_TRUE(custom_gemv_Axy(true) == 0); }
 TEST(HIPIntegrationTest, CustomGemvxAyTest) { EXPECT_TRUE(custom_gemv_xAy(true) == 0); }

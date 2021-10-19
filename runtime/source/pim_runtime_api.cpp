@@ -432,10 +432,10 @@ int PimExecuteGemvAdd(PimBo* output, PimBo* operand0, PimBo* operand1, void* str
     return ret;
 }
 
-int PimExecuteGemvAdd(PimBo* output, PimBo* input, PimBo* operand0, PimBo* operand1, bool relu, void* stream,
+int PimExecuteGemvAdd(PimBo* output, PimBo* operand0, PimBo* operand1, PimBo* operand2, bool relu, void* stream,
                       bool block)
 {
-    // Assuming operand1 is always weight, operand0 is always input
+    // Assuming operand1 is always weight, operand0 is always input for GEMV
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     PIM_PROFILE_TICK(ExecuteGEMVAdd);
     int ret = 0;
@@ -445,7 +445,7 @@ int PimExecuteGemvAdd(PimBo* output, PimBo* input, PimBo* operand0, PimBo* opera
         return -1;
     }
 
-    ret = pim_runtime->execute_gemv_add(output, input, operand0, operand1, relu, stream, block);
+    ret = pim_runtime->execute_gemv_add(output, operand0, operand1, operand2, relu, stream, block);
     PIM_PROFILE_TOCK(ExecuteGEMVAdd);
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";

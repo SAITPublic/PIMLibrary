@@ -651,7 +651,7 @@ int PimExecutor::execute_custom_gemv(PimBo* output, PimBo* operand0, PimBo* oper
     return ret;
 }
 
-int PimExecutor::execute_custom_gemv_add(PimBo* output, PimBo* input, PimBo* operand0, PimBo* operand1, bool relu,
+int PimExecutor::execute_custom_gemv_add(PimBo* output, PimBo* operand0, PimBo* operand1, PimBo* operand2, bool relu,
                                          hipStream_t stream, bool block)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
@@ -664,9 +664,9 @@ int PimExecutor::execute_custom_gemv_add(PimBo* output, PimBo* input, PimBo* ope
         return 1;
     }
 
-    void* in = input->data;
     void* vec = operand0->data;
     void* mat = operand1->data;
+    void* in = operand2->data;
     void* out = output->data;
 
     float alpha = 1.0f;

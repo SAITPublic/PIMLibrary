@@ -252,7 +252,7 @@ __PIM_API__ int PimExecuteRelu(PimBo* output, PimBo* pim_data, void* stream = nu
  *
  * @param output output buffer object of gemv
  * @param operand0 input operand0(vector).
- * @param operand1 input opernad1(matrix). Should be of PIM Area.
+ * @param operand1 input opernad1(matrix).
  * @param stream void pointer to stream identifier. default=nullptr
  * @param block enable/disable synchronization. default=false
 
@@ -271,7 +271,7 @@ __PIM_API__ int PimExecuteGemv(PimBo* output, PimBo* operand0, PimBo* operand1 =
  *
  * @param output output buffer object of gemv
  * @param operand0 input operand0(vector).
- * @param operand1 input operand1(matrix). Should be of PIM Area
+ * @param operand1 input operand1(matrix).
  *
  * @return success or failure
  */
@@ -285,14 +285,14 @@ __PIM_API__ int PimExecuteGemvAdd(PimBo* output, PimBo* operand0, PimBo* operand
  * It performs output = output + pim_gemv_result
  *
  * @param output output buffer object
- * @param input vector to be added
  * @param operand0 input operand0(vector).
  * @param operand1 input operand1(matrix).
+ * @param operand2 input vector to be added
  * @param relu fuse ReLU if comes after the operation.
  *
  * @return success or failure
  */
-__PIM_API__ int PimExecuteGemvAdd(PimBo* output, PimBo* input, PimBo* operand0, PimBo* operand1, bool relu,
+__PIM_API__ int PimExecuteGemvAdd(PimBo* output, PimBo* operand0, PimBo* operand1, PimBo* operand2, bool relu,
                                   void* stream = nullptr, bool block = false);
 
 /**
