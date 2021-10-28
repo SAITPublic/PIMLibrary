@@ -57,8 +57,8 @@ class PimRuntime
     int execute_sync(void* stream);
 
     int execute_dummy(void);
-    int insert_gemv_bundle(uint64_t w_addr, PimGemvBundle* bundle);
-    PimGemvBundle* find_gemv_bundle(uint64_t w_addr);
+    int insert_gemv_bundle(PimBo* weight, PimGemvBundle* bundle);
+    PimGemvBundle* find_gemv_bundle(PimBo* weight);
     PimGemvBundle* get_gemv_bundle(PimBo* weight, PimBo* dev_in, PimBo* dev_out);
 
    private:
@@ -66,7 +66,7 @@ class PimRuntime
     pim::runtime::executor::PimExecutor* pim_executor_;
     PimRuntimeType rt_type_;
     PimPrecision precision_;
-    std::unordered_map<uint64_t, PimGemvBundle*> weight_map_;
+    std::unordered_map<uint32_t, PimGemvBundle*> weight_map_;
     PimKrnlType kernel_type_;
 };
 
