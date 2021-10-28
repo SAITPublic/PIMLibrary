@@ -362,7 +362,7 @@ PimGemvBundle* PimRuntime::get_gemv_bundle(PimBo* weight, PimBo* dev_in, PimBo* 
     // TODO: change the key from uint64_t to (keybo*, size): pull_req: 456)?
     uint64_t w_addr = reinterpret_cast<uint64_t>(weight->data);
     PimGemvBundle* bundle = nullptr;
-    bundle = find_gemv_bundle(w_addr);
+    bundle = find_gemv_bundle(weight);
 
     if (bundle == nullptr) {
         PimDesc* pim_desc =
@@ -392,7 +392,7 @@ PimGemvBundle* PimRuntime::get_gemv_bundle(PimBo* weight, PimBo* dev_in, PimBo* 
         bundle->wei = pre_wei;
         bundle->out = dev_out;
 
-        insert_gemv_bundle(w_addr, bundle);
+        insert_gemv_bundle(weight, bundle);
 
         PimDestroyDesc(pim_desc);
         PimDestroyBo(host_reordered_weight);
