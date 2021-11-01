@@ -1,18 +1,11 @@
-/*
- * Copyright (C) 2021 Samsung Electronics Co. LTD
- *
- * This software is a property of Samsung Electronics.
- * No part of this software, either material or conceptual may be copied or distributed, transmitted,
- * transcribed, stored in a retrieval system or translated into any human or computer language in any form by any means,
- * electronic, mechanical, manual or otherwise, or disclosed
- * to third parties without the express written permission of Samsung Electronics.
- */
-
 #include <stdio.h>
 #include <iostream>
+#include <string>
 #include "half.hpp"
 #include "hip/hip_fp16.h"
 #include "hip/hip_runtime.h"
+
+using namespace half_float::literal;
 
 #define SLT_TEST 1
 
@@ -49,7 +42,7 @@ __host__ int compareOut(uint64_t* golden, uint64_t* out)
         half_float::half b = ((half_float::half*)out)[i];
         if (a != b) {
             printf("[compare_out] failed!\n");
-            //            PrintHalf(out);
+            //            printHalf(out);
             return 1;
         }
     }
@@ -147,7 +140,7 @@ __host__ __device__ uint64_t addr_gen(unsigned int ch, unsigned int rank, unsign
 
     addr <<= num_offset_bit_;
 
-#if 1
+#if 0
     uint64_t mask = TARGET_MASK;
     addr &= mask;
 #endif
@@ -155,170 +148,174 @@ __host__ __device__ uint64_t addr_gen(unsigned int ch, unsigned int rank, unsign
     return addr;
 }
 
-__global__ void jump_test(uint8_t* pim_ctr, uint8_t* pim_data, uint8_t* pim_out0, uint8_t* pim_out1,
-                          uint8_t* crf_binary, uint8_t* hab_to_pim, uint8_t* pim_to_hab, uint8_t* test_input1, int chan)
+__global__ void grf_test(volatile uint8_t* pim_ctr, volatile uint8_t* pim_data, volatile uint8_t* output,
+                         volatile uint8_t* crf_binary, volatile uint8_t* hab_to_pim, volatile uint8_t* pim_to_hab,
+                         volatile uint8_t* test_input1, volatile uint8_t* test_input2, int chan)
 {
     uint64_t offset = hipThreadIdx_x * 0x10;
     uint64_t addr;
     int ch = chan;
     int park_row = (1 << 13);
+    int park_col = 0;
 
-    /* write data to even banks */
+    //    long long int start;
+    //    start = clock64();
+    //    while (clock64() < (start + 10000000));
+
     addr = addr_gen(ch, 0, 0, 0, 0, 0);
-    W_CMD_R(&pim_data[addr + offset], test_input1 + hipThreadIdx_x * 16);
+    W_CMD_R(&output[addr + offset], test_input1 + hipThreadIdx_x * 16);
     addr = addr_gen(ch, 0, 0, 2, 0, 0);
-    W_CMD_R(&pim_data[addr + offset], test_input1 + hipThreadIdx_x * 16);
+    W_CMD_R(&output[addr + offset], test_input1 + hipThreadIdx_x * 16);
     addr = addr_gen(ch, 0, 1, 0, 0, 0);
-    W_CMD_R(&pim_data[addr + offset], test_input1 + hipThreadIdx_x * 16);
+    W_CMD_R(&output[addr + offset], test_input1 + hipThreadIdx_x * 16);
     addr = addr_gen(ch, 0, 1, 2, 0, 0);
-    W_CMD_R(&pim_data[addr + offset], test_input1 + hipThreadIdx_x * 16);
+    W_CMD_R(&output[addr + offset], test_input1 + hipThreadIdx_x * 16);
     addr = addr_gen(ch, 0, 2, 0, 0, 0);
-    W_CMD_R(&pim_data[addr + offset], test_input1 + hipThreadIdx_x * 16);
+    W_CMD_R(&output[addr + offset], test_input1 + hipThreadIdx_x * 16);
     addr = addr_gen(ch, 0, 2, 2, 0, 0);
-    W_CMD_R(&pim_data[addr + offset], test_input1 + hipThreadIdx_x * 16);
+    W_CMD_R(&output[addr + offset], test_input1 + hipThreadIdx_x * 16);
     addr = addr_gen(ch, 0, 3, 0, 0, 0);
-    W_CMD_R(&pim_data[addr + offset], test_input1 + hipThreadIdx_x * 16);
+    W_CMD_R(&output[addr + offset], test_input1 + hipThreadIdx_x * 16);
     addr = addr_gen(ch, 0, 3, 2, 0, 0);
-    W_CMD_R(&pim_data[addr + offset], test_input1 + hipThreadIdx_x * 16);
+    W_CMD_R(&output[addr + offset], test_input1 + hipThreadIdx_x * 16);
     B_CMD(1);
-
+#if 1
     /* park in */
-    addr = addr_gen(ch, 0, 0, 0, park_row, 0);
+    addr = addr_gen(ch, 0, 0, 0, park_row, park_col);
     R_CMD(&pim_ctr[addr + offset]);
-    addr = addr_gen(ch, 0, 0, 1, park_row, 0);
+    addr = addr_gen(ch, 0, 0, 1, park_row, park_col);
     R_CMD(&pim_ctr[addr + offset]);
-    addr = addr_gen(ch, 0, 0, 2, park_row, 0);
+    addr = addr_gen(ch, 0, 0, 2, park_row, park_col);
     R_CMD(&pim_ctr[addr + offset]);
-    addr = addr_gen(ch, 0, 0, 3, park_row, 0);
+    addr = addr_gen(ch, 0, 0, 3, park_row, park_col);
     R_CMD(&pim_ctr[addr + offset]);
-    addr = addr_gen(ch, 0, 1, 0, park_row, 0);
+    addr = addr_gen(ch, 0, 1, 0, park_row, park_col);
     R_CMD(&pim_ctr[addr + offset]);
-    addr = addr_gen(ch, 0, 1, 1, park_row, 0);
+    addr = addr_gen(ch, 0, 1, 1, park_row, park_col);
     R_CMD(&pim_ctr[addr + offset]);
-    addr = addr_gen(ch, 0, 1, 2, park_row, 0);
+    addr = addr_gen(ch, 0, 1, 2, park_row, park_col);
     R_CMD(&pim_ctr[addr + offset]);
-    addr = addr_gen(ch, 0, 1, 3, park_row, 0);
+    addr = addr_gen(ch, 0, 1, 3, park_row, park_col);
     R_CMD(&pim_ctr[addr + offset]);
-    addr = addr_gen(ch, 0, 2, 0, park_row, 0);
+    addr = addr_gen(ch, 0, 2, 0, park_row, park_col);
     R_CMD(&pim_ctr[addr + offset]);
-    addr = addr_gen(ch, 0, 2, 1, park_row, 0);
+    addr = addr_gen(ch, 0, 2, 1, park_row, park_col);
     R_CMD(&pim_ctr[addr + offset]);
-    addr = addr_gen(ch, 0, 2, 2, park_row, 0);
+    addr = addr_gen(ch, 0, 2, 2, park_row, park_col);
     R_CMD(&pim_ctr[addr + offset]);
-    addr = addr_gen(ch, 0, 2, 3, park_row, 0);
+    addr = addr_gen(ch, 0, 2, 3, park_row, park_col);
     R_CMD(&pim_ctr[addr + offset]);
-    addr = addr_gen(ch, 0, 3, 0, park_row, 0);
+    addr = addr_gen(ch, 0, 3, 0, park_row, park_col);
     R_CMD(&pim_ctr[addr + offset]);
-    addr = addr_gen(ch, 0, 3, 1, park_row, 0);
+    addr = addr_gen(ch, 0, 3, 1, park_row, park_col);
     R_CMD(&pim_ctr[addr + offset]);
-    addr = addr_gen(ch, 0, 3, 2, park_row, 0);
+    addr = addr_gen(ch, 0, 3, 2, park_row, park_col);
     R_CMD(&pim_ctr[addr + offset]);
-    addr = addr_gen(ch, 0, 3, 3, park_row, 0);
+    addr = addr_gen(ch, 0, 3, 3, park_row, park_col);
     R_CMD(&pim_ctr[addr + offset]);
     B_CMD(1);
-
+#endif
+#if 1
+    //    long long int start;
+    //    start = clock64();
+    //    while(clock64() < (start + 10000000));
     /* change SB mode to HAB mode */
     addr = addr_gen(ch, 0, 2, 0, 0x27ff, 0x1f);
     W_CMD(&pim_ctr[addr + offset]);
     B_CMD(1);
+    //    start = clock64();
+    //    while(clock64() < (start + 10000000));
     addr = addr_gen(ch, 0, 2, 1, 0x27ff, 0x1f);
     W_CMD(&pim_ctr[addr + offset]);
     B_CMD(1);
+    //    start = clock64();
+    //    while(clock64() < (start + 10000000));
     addr = addr_gen(ch, 0, 0, 0, 0x27ff, 0x1f);
     W_CMD(&pim_ctr[addr + offset]);
     B_CMD(1);
+    //    start = clock64();
+    //    while(clock64() < (start + 10000000));
     addr = addr_gen(ch, 0, 0, 1, 0x27ff, 0x1f);
     W_CMD(&pim_ctr[addr + offset]);
     B_CMD(1);
-
-    /* set crf binary */
-    addr = addr_gen(ch, 0, 0, 1, 0x3fff, 0x4);
-    W_CMD_R(&pim_ctr[addr + offset], crf_binary + hipThreadIdx_x * 16);
+//    start = clock64();
+//    while(clock64() < (start + 10000000));
+#endif
+#if 1
+    addr = addr_gen(ch, 0, 0, 0, 0x3fff, 0x8);
+    W_CMD_R(&pim_ctr[addr + offset], test_input2 + hipThreadIdx_x * 16);  // write to grf_A
     B_CMD(1);
 
-    /* change HAB mode to HAB_PIM mode */
-    addr = addr_gen(ch, 0, 0, 0, 0x3fff, 0x0);
-    W_CMD_R(&pim_ctr[addr + offset], hab_to_pim + hipThreadIdx_x * 16);
-    B_CMD(1);
-
-    /* jump */
     addr = addr_gen(ch, 0, 0, 0, 0, 0);
-    R_CMD(&pim_data[addr + offset]);  // MOV
+    W_CMD(&output[addr + offset]);  // NOP
     B_CMD(1);
-    addr = addr_gen(ch, 0, 0, 0, 0, 0);
-    W_CMD(&pim_out0[addr + offset]);  // NOP
-    B_CMD(1);
-    addr = addr_gen(ch, 0, 0, 0, 0, 0);
-    R_CMD(&pim_data[addr + offset]);  // MOV
-    B_CMD(1);
-    addr = addr_gen(ch, 0, 0, 0, 0, 0);
-    W_CMD(&pim_out1[addr + offset]);  // NOP
-    B_CMD(1);
-
-    /* change HAB_PIM mode to HAB mode */
-    addr = addr_gen(ch, 0, 0, 0, 0x3fff, 0x0);
-    W_CMD_R(&pim_ctr[addr + offset], pim_to_hab + hipThreadIdx_x * 16);
-    B_CMD(1);
-
+#endif
+#if 1
     /* change HAB mode to SB mode */
     addr = addr_gen(ch, 0, 0, 0, 0x2fff, 0x1f);
     W_CMD(&pim_ctr[addr + offset]);
+    B_CMD(1);
     addr = addr_gen(ch, 0, 0, 1, 0x2fff, 0x1f);
     W_CMD(&pim_ctr[addr + offset]);
     B_CMD(1);
-
+#endif
+#if 1
     /* park out */
-    addr = addr_gen(ch, 0, 0, 0, park_row, 0);
+    addr = addr_gen(ch, 0, 0, 0, park_row, park_col);
     R_CMD(&pim_ctr[addr + offset]);
-    addr = addr_gen(ch, 0, 0, 1, park_row, 0);
+    addr = addr_gen(ch, 0, 0, 1, park_row, park_col);
     R_CMD(&pim_ctr[addr + offset]);
-    addr = addr_gen(ch, 0, 0, 2, park_row, 0);
+    addr = addr_gen(ch, 0, 0, 2, park_row, park_col);
     R_CMD(&pim_ctr[addr + offset]);
-    addr = addr_gen(ch, 0, 0, 3, park_row, 0);
+    addr = addr_gen(ch, 0, 0, 3, park_row, park_col);
     R_CMD(&pim_ctr[addr + offset]);
-    addr = addr_gen(ch, 0, 1, 0, park_row, 0);
+    addr = addr_gen(ch, 0, 1, 0, park_row, park_col);
     R_CMD(&pim_ctr[addr + offset]);
-    addr = addr_gen(ch, 0, 1, 1, park_row, 0);
+    addr = addr_gen(ch, 0, 1, 1, park_row, park_col);
     R_CMD(&pim_ctr[addr + offset]);
-    addr = addr_gen(ch, 0, 1, 2, park_row, 0);
+    addr = addr_gen(ch, 0, 1, 2, park_row, park_col);
     R_CMD(&pim_ctr[addr + offset]);
-    addr = addr_gen(ch, 0, 1, 3, park_row, 0);
+    addr = addr_gen(ch, 0, 1, 3, park_row, park_col);
     R_CMD(&pim_ctr[addr + offset]);
-    addr = addr_gen(ch, 0, 2, 0, park_row, 0);
+    addr = addr_gen(ch, 0, 2, 0, park_row, park_col);
     R_CMD(&pim_ctr[addr + offset]);
-    addr = addr_gen(ch, 0, 2, 1, park_row, 0);
+    addr = addr_gen(ch, 0, 2, 1, park_row, park_col);
     R_CMD(&pim_ctr[addr + offset]);
-    addr = addr_gen(ch, 0, 2, 2, park_row, 0);
+    addr = addr_gen(ch, 0, 2, 2, park_row, park_col);
     R_CMD(&pim_ctr[addr + offset]);
-    addr = addr_gen(ch, 0, 2, 3, park_row, 0);
+    addr = addr_gen(ch, 0, 2, 3, park_row, park_col);
     R_CMD(&pim_ctr[addr + offset]);
-    addr = addr_gen(ch, 0, 3, 0, park_row, 0);
+    addr = addr_gen(ch, 0, 3, 0, park_row, park_col);
     R_CMD(&pim_ctr[addr + offset]);
-    addr = addr_gen(ch, 0, 3, 1, park_row, 0);
+    addr = addr_gen(ch, 0, 3, 1, park_row, park_col);
     R_CMD(&pim_ctr[addr + offset]);
-    addr = addr_gen(ch, 0, 3, 2, park_row, 0);
+    addr = addr_gen(ch, 0, 3, 2, park_row, park_col);
     R_CMD(&pim_ctr[addr + offset]);
-    addr = addr_gen(ch, 0, 3, 3, park_row, 0);
+    addr = addr_gen(ch, 0, 3, 3, park_row, park_col);
     R_CMD(&pim_ctr[addr + offset]);
-
     B_CMD(1);
+#endif
+    //    long long int start;
+    //    start = clock64();
+    //    while(clock64() < (start + 10000000));
 }
 
 int main(int argc, char* argv[])
 {
-    uint64_t pim_base, pim_data, pim_out0, pim_out1;
-    uint64_t *mode1_d, *mode2_d, *crf_bin_d, *test1_d;
-    uint64_t *mode1_h, *mode2_h, *crf_bin_h, *test1_h;
+    uint64_t pim_base, pim_out;
+    uint64_t *mode1_d, *mode2_d, *crf_bin_d, *test1_d, *test2_d;
+    uint64_t *mode1_h, *mode2_h, *crf_bin_h, *test1_h, *test2_h;
     uint64_t* output;
     size_t N = 4;
     size_t Nbytes = N * sizeof(uint64_t);
     static int device = 0;
 
     if (argc != 2) {
-        printf("./jump_test <ch>\n");
+        printf("./grf_test <ch>\n");
         exit(1);
     }
-    int chan = std::stoi(argv[1]);
+
+    int ch = std::stoi(argv[1]);
 
     CHECK(hipSetDevice(device));
     hipDeviceProp_t props;
@@ -358,12 +355,12 @@ int main(int argc, char* argv[])
     CHECK(mode2_h == 0 ? hipErrorOutOfMemory : hipSuccess);
     test1_h = (uint64_t*)malloc(Nbytes);
     CHECK(mode2_h == 0 ? hipErrorOutOfMemory : hipSuccess);
-    output = (uint64_t*)malloc(Nbytes);
+    test2_h = (uint64_t*)malloc(Nbytes);
     CHECK(mode2_h == 0 ? hipErrorOutOfMemory : hipSuccess);
 
-    crf_bin_h[0] = 0x8880010088800000;
-    crf_bin_h[1] = 0xe000080400000001;
-    crf_bin_h[2] = 0x00000000f0000000;
+    crf_bin_h[0] = 0x00000000f0000001;
+    crf_bin_h[1] = 0x0000000000000000;
+    crf_bin_h[2] = 0x0000000000000000;
     crf_bin_h[3] = 0x0000000000000000;
     mode1_h[0] = 0x0000000000000001;
     mode1_h[1] = 0x0000010000000000;
@@ -373,62 +370,65 @@ int main(int argc, char* argv[])
     mode2_h[1] = 0x0000000000000000;
     mode2_h[2] = 0x0000000000000000;
     mode2_h[3] = 0x0000000000000000;
-    test1_h[0] = 0x0000000000000002;
-    test1_h[1] = 0x0000000000000000;
-    test1_h[2] = 0x0000000000000000;
-    test1_h[3] = 0x0000000000000000;
+    test1_h[0] = 0x0000000000000001;
+    test1_h[1] = 0x0000000000000001;
+    test1_h[2] = 0x0000000000000001;
+    test1_h[3] = 0x0000000000000001;
+    test2_h[0] = 0x000000000000000a;
+    test2_h[1] = 0x000000000000000b;
+    test2_h[2] = 0x000000000000000c;
+    test2_h[3] = 0x000000000000000d;
 
     CHECK(hipMalloc(&crf_bin_d, Nbytes));
     CHECK(hipMalloc(&mode1_d, Nbytes));
     CHECK(hipMalloc(&mode2_d, Nbytes));
     CHECK(hipMalloc(&test1_d, Nbytes));
+    CHECK(hipMalloc(&test2_d, Nbytes));
 
     CHECK(hipMemcpy(crf_bin_d, crf_bin_h, Nbytes, hipMemcpyHostToDevice));
     CHECK(hipMemcpy(mode1_d, mode1_h, Nbytes, hipMemcpyHostToDevice));
     CHECK(hipMemcpy(mode2_d, mode2_h, Nbytes, hipMemcpyHostToDevice));
     CHECK(hipMemcpy(test1_d, test1_h, Nbytes, hipMemcpyHostToDevice));
+    CHECK(hipMemcpy(test2_d, test2_h, Nbytes, hipMemcpyHostToDevice));
 
-    pim_data = pim_base + addr_gen(0, 0, 0, 0, 0, 0);
-    pim_out0 = pim_base + addr_gen(0, 0, 0, 0, 1, 0);
-    pim_out1 = pim_base + addr_gen(0, 0, 0, 0, 2, 0);
+    int out_row = 0x40;
+    pim_out = pim_base + addr_gen(0, 0, 0, 0, out_row, 0);
 
     const unsigned blocks = 1;
-    const unsigned threadsPerBlock = 4;
+    const unsigned threadsPerBlock = 2;
+    int fail_cnt = 0;
 
-    hipLaunchKernelGGL(jump_test, dim3(blocks), dim3(threadsPerBlock), 0, 0, (uint8_t*)pim_base, (uint8_t*)pim_data,
-                       (uint8_t*)pim_out0, (uint8_t*)pim_out1, (uint8_t*)crf_bin_d, (uint8_t*)mode1_d,
-                       (uint8_t*)mode2_d, (uint8_t*)test1_d, chan);
-
-    hipDeviceSynchronize();
-
-    int failed = 0;
     uint64_t addr_offset;
+    for (int i = 0; i < 100; i++) {
+        hipLaunchKernelGGL(grf_test, dim3(blocks), dim3(threadsPerBlock), 0, 0, (uint8_t*)pim_base, (uint8_t*)pim_base,
+                           (uint8_t*)pim_out, (uint8_t*)crf_bin_d, (uint8_t*)mode1_d, (uint8_t*)mode2_d,
+                           (uint8_t*)test1_d, (uint8_t*)test2_d, ch);
+        hipDeviceSynchronize();
 
-    for (int bg = 0; bg < 4; bg++) {
-        for (int ba = 0; ba < 4; ba+=2) {
-            for (int row = 1; row <= 2; row++) {
-                addr_offset = addr_gen(chan, 0, bg, ba, row, 0);
+		for (int bg = 0; bg < 4; bg++) {
+            for (int ba = 0; ba < 4; ba+=2) {
+                addr_offset = addr_gen(ch, 0, bg, ba, out_row, 0);
                 output = (uint64_t*)((uint8_t*)pim_base + addr_offset);
-                if (compareOut(test1_h, output)) {
+                if (compareOut(test2_h, output)) {
+                    printf("failed idx: %d\n", i);
                     printf("%#018lx %#018lx %#018lx %#018lx\n", output[3], output[2], output[1], output[0]);
-	                failed = 1;
+                    fail_cnt++;
                 }
             }
         }
     }
 
-    if (failed)
-		printf("FAIL\n");
-    else
-        printf("PASS\n");
+    printf("ch: %d fail_cnt: %d\n", ch, fail_cnt);
 
     free(mode1_h);
     free(mode2_h);
     free(crf_bin_h);
     free(test1_h);
+    free(test2_h);
 
     hipFree(mode1_d);
     hipFree(mode2_d);
     hipFree(crf_bin_d);
     hipFree(test1_d);
+    hipFree(test2_d);
 }

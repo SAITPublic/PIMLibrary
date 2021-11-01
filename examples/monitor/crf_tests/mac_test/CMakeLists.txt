@@ -1,15 +1,31 @@
 set(CMAKE_CXX_COMPILER "/opt/rocm/bin/hipcc")
-set(HCC_CXX_FLAGS  "-hc -DHCC_ENABLE_ACCELERATOR_PRINTF -lhc_am --amdgpu-target=gfx900 --amdgpu-target=gfx906 --amdgpu-target=gfx908 ")
+set(HCC_CXX_FLAGS  " --amdgpu-target=gfx906")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HCC_CXX_FLAGS}")
 
-set(SOURCE mac_test.cpp)
+set(SOURCE0 mac_test.cpp)
+set(SOURCE1 multi_cu_4th.cpp)
+set(SOURCE2 multi_cu_64th.cpp)
+set(SOURCE3 1cu_64th.cpp)
+set(SOURCE4 multi_64th.cpp)
+set(SOURCE5 gemv_test.cpp)
+file(GLOB CRF_GEN_SOURCES ../../../../tools/crfcodegen/source/*.cpp)
 
 cmake_minimum_required(VERSION 3.5.1)
 
 include_directories(/opt/rocm/include)
-#link_directories(/usr/local/lib)
+include_directories(../../../../tools/crfcodegen/include)
+link_directories(/opt/rocm/lib)
 
-add_executable(mac_test.out ${SOURCE})
+add_executable(mac_test.out ${SOURCE0})
+add_executable(4th.out ${SOURCE1})
+add_executable(64th.out ${SOURCE2} ${CRF_GEN_SOURCES})
+add_executable(1cu64th.out ${SOURCE3} ${CRF_GEN_SOURCES})
+add_executable(multi64th.out ${SOURCE4} ${CRF_GEN_SOURCES})
+add_executable(gemv_test.out ${SOURCE5} ${CRF_GEN_SOURCES})
 
 target_link_libraries(mac_test.out hsakmt)
-
+target_link_libraries(4th.out hsakmt)
+target_link_libraries(64th.out hsakmt)
+target_link_libraries(1cu64th.out hsakmt)
+target_link_libraries(multi64th.out hsakmt)
+target_link_libraries(gemv_test.out hsakmt)

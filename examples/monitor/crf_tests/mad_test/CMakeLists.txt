@@ -1,5 +1,5 @@
 set(CMAKE_CXX_COMPILER "/opt/rocm/bin/hipcc")
-set(HCC_CXX_FLAGS  "-hc -DHCC_ENABLE_ACCELERATOR_PRINTF -lhc_am --amdgpu-target=gfx900 --amdgpu-target=gfx906 --amdgpu-target=gfx908 ")
+set(HCC_CXX_FLAGS  "--amdgpu-target=gfx906")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HCC_CXX_FLAGS}")
 
 set(SOURCE mad_test.cpp)
@@ -7,7 +7,7 @@ set(SOURCE mad_test.cpp)
 cmake_minimum_required(VERSION 3.5.1)
 
 include_directories(/opt/rocm/include)
-#link_directories(/usr/local/lib)
+link_directories(/opt/rocm/lib)
 
 add_executable(mad_test.out ${SOURCE})
 
