@@ -70,6 +70,12 @@ int custom_gemv_Axy(bool block)
     for (int i = 0; i < in_size * out_size; i++) {
         input1_h[i] = half(dis(gen));
     }
+
+    for (int i = 0; i < out_size; i++) {
+        output0_h[i] = half(0.0);
+        output1_h[i] = half(0.0);
+    }
+
     matmulCPU(input0_h, input1_h, output0_h, 1, out_size, in_size, half(alpha), half(beta));
 
     transposeCPU(input1_h, input1_h_t, in_size, out_size);
@@ -131,6 +137,12 @@ int custom_gemv_xAy(bool block)
     for (int i = 0; i < in_size * out_size; i++) {
         input1_h[i] = half(dis(gen));
     }
+
+    for (int i = 0; i < out_size; i++) {
+        output0_h[i] = half(0.0);
+        output1_h[i] = half(0.0);
+    }
+
     matmulCPU(input0_h, input1_h, output0_h, 1, out_size, in_size, half(alpha), half(beta));
 
     hipMemcpy(input0_d, input0_h, in_bytes, hipMemcpyHostToDevice);
@@ -196,6 +208,11 @@ int custom_addmv_Axy(bool relu)
 
     for (int i = 0; i < out_size; i++) {
         input2_h[i] = half(dis(gen));
+    }
+
+    for (int i = 0; i < out_size; i++) {
+        output0_h[i] = half(0.0);
+        output1_h[i] = half(0.0);
     }
 
     matmulCPU(input0_h, input1_h, output0_h, 1, out_size, in_size, half(alpha), half(beta));
@@ -280,6 +297,11 @@ int custom_addmv_xAy(bool relu)
         input2_h[i] = half(dis(gen));
     }
 
+    for (int i = 0; i < out_size; i++) {
+        output0_h[i] = half(0.0);
+        output1_h[i] = half(0.0);
+    }
+
     matmulCPU(input0_h, input1_h, output0_h, 1, out_size, in_size, half(alpha), half(beta));
 
     for (int i = 0; i < out_size; i++) {
@@ -352,6 +374,12 @@ int custom_gemv_Axy_api(bool block)
     for (int i = 0; i < in_size * out_size; i++) {
         input1_h[i] = half(dis(gen));
     }
+
+    for (int i = 0; i < out_size; i++) {
+        output0_h[i] = half(0.0);
+        output1_h[i] = half(0.0);
+    }
+
     matmulCPU(input0_h, input1_h, output0_h, 1, out_size, in_size, half(alpha), half(beta));
 
     transposeCPU(input1_h, input1_h_t, in_size, out_size);
@@ -439,6 +467,11 @@ int custom_addmv_Axy_api(bool relu)
 
     for (int i = 0; i < out_size; i++) {
         input2_h[i] = half(dis(gen));
+    }
+
+    for (int i = 0; i < out_size; i++) {
+        output0_h[i] = half(0.0);
+        output1_h[i] = half(0.0);
     }
 
     matmulCPU(input0_h, input1_h, output0_h, 1, out_size, in_size, half(alpha), half(beta));
