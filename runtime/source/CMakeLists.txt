@@ -7,7 +7,7 @@ endif()
 aux_source_directory(utility  runtime_source)
 
 set(CMAKE_CXX_COMPILER "${ROCM_PATH}/bin/hipcc")
-set(HIPCC_FLAGS "--amdgpu-target=gfx906")
+set(HIPCC_FLAGS "--amdgpu-target=gfx906 --amdgpu-target=gfx908")
 set(CXX_FLAGS "-std=c++11")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HIPCC_FLAGS}")
