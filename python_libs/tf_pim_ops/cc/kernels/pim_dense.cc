@@ -25,43 +25,17 @@ void KernelLauncher(const void* i_data, const void* w_data, const int num_batch,
     PimBo* dev_in = nullptr;
     PimBo* pre_wei = nullptr;
     PimBo* dev_out = nullptr;
-    PimBo t_dev_in;
-    PimBo t_dev_out;
 
-    uint64_t weight_key = reinterpret_cast<uint64_t>(w_data);
     PimDesc* pim_desc = PimCreateDesc(num_batch, 1, OUT_LENGTH, IN_LENGTH, PIM_FP16, OP_GEMV);
-    PimBo* dev_weight = PimCreateBo(pim_desc, MEM_TYPE_DEVICE, GEMV_WEIGHT);
-    dev_in = PimCreateBo(pim_desc, MEM_TYPE_DEVICE, GEMV_INPUT);
-    dev_out = PimCreateBo(pim_desc, MEM_TYPE_DEVICE, GEMV_OUTPUT);
+    PimBo* dev_weight = PimCreateBo(pim_desc, MEM_TYPE_DEVICE, GEMV_WEIGHT,const_cast<void*>(w_data));
+    dev_in = PimCreateBo(pim_desc, MEM_TYPE_DEVICE, GEMV_INPUT,  const_cast<void*>(i_data));
+    dev_out = PimCreateBo(pim_desc, MEM_TYPE_DEVICE, GEMV_OUTPUT, const_cast<void*>(o_data));
 
-    for (int i = 0; i < IN_LENGTH; i++) {
-        for (int j = 0; j < OUT_LENGTH; j++) {
-            PimCopyMemory((void*)(static_cast<half*>(dev_weight->data) + (j * IN_LENGTH + i)),
-                          (void*)(static_cast<const half*>(w_data) + (i * OUT_LENGTH + j)), sizeof(half),
-                          DEVICE_TO_DEVICE);
-        }
-    }
-
-    void* dev_data_ptr = dev_in->data;
-    if (num_batch > 1) {
-        for (int i = 0; i < num_batch; i++) {
-            PimCopyMemory((void*)(static_cast<half*>(dev_in->data) + i * dev_in->bshape.w),
-                          (void*)(static_cast<const half*>(i_data) + i * IN_LENGTH), sizeof(half) * IN_LENGTH,
-                          DEVICE_TO_DEVICE);
-        }
-    } else {
-        dev_in->data = (void*)i_data;
-    }
-
-    t_dev_out = *dev_out;
-    t_dev_out.data = o_data;
-
-    PimExecuteGemv(&t_dev_out, dev_in, dev_weight);
-
-    // Not setting this causes a crash in pim_deinit()
-    dev_in->data = dev_data_ptr;
+    PimExecuteGemv(dev_out, dev_in, dev_weight);
 
     PimDestroyBo(dev_weight);
+    PimDestroyBo(dev_in);
+    PimDestroyBo(dev_out);
     PimDestroyDesc(pim_desc);
 }
 
