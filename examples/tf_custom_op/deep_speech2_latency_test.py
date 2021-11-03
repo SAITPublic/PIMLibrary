@@ -429,7 +429,7 @@ class DeepSpeech2(tf.keras.Model):
 
             os.environ['ENABLE_PIM'] = orig_env
 
-            result = np.testing.assert_array_almost_equal(reshape_out_pim, reshape_out_gpu, decimal=5)
+            result = np.testing.assert_array_almost_equal(reshape_out_pim, reshape_out_gpu, decimal=1)
             print("Functional Verification : {}".format(result))
 
             if orig_env == 1:
@@ -457,7 +457,7 @@ class DeepSpeech2(tf.keras.Model):
             if self.use_bias == True:
                     bias = weights[1]
             pim_logits = tf_pim_ops.pim_dense(bn_out, weights[0], bias, self.use_bias_int, self.reorder)
-            result = np.testing.assert_array_almost_equal(logits, pim_logits, decimal=5)
+            result = np.testing.assert_array_almost_equal(logits, pim_logits, decimal=1)
         #    tf.test.TestCase.assertAllClose(logits, pim_logits, atol=1e-3)
 
         if args.profile == True :
