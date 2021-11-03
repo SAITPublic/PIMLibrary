@@ -34,13 +34,12 @@ void KernelLauncher(const void* i_data, const void* w_data, const int num_batch,
     dev_in = PimCreateBo(pim_desc, MEM_TYPE_DEVICE, GEMV_INPUT);
     dev_out = PimCreateBo(pim_desc, MEM_TYPE_DEVICE, GEMV_OUTPUT);
 
-
     for (int i = 0; i < IN_LENGTH; i++) {
         for (int j = 0; j < OUT_LENGTH; j++) {
             PimCopyMemory((void*)(static_cast<half*>(dev_weight->data) + (j * IN_LENGTH + i)),
                           (void*)(static_cast<const half*>(w_data) + (i * OUT_LENGTH + j)), sizeof(half),
-                           DEVICE_TO_DEVICE);
-           }
+                          DEVICE_TO_DEVICE);
+        }
     }
 
     void* dev_data_ptr = dev_in->data;

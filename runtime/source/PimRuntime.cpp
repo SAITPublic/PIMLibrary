@@ -316,22 +316,23 @@ PimGemvBundle* PimRuntime::find_gemv_bundle(PimBo* weight)
 
     if (weight->mem_type == MEM_TYPE_DEVICE || weight->mem_type == MEM_TYPE_PIM) {
         /* GPU cache should be flushed before CPU access to the area */
-       int cache_flush;
-       hipMemcpy(&cache_flush, weight->data, sizeof(int), hipMemcpyDeviceToHost);
+        int cache_flush;
+        hipMemcpy(&cache_flush, weight->data, sizeof(int), hipMemcpyDeviceToHost);
     }
 
     uint32_t w_key = 0;
-    uint32_t *w_addr_ptr = reinterpret_cast<uint32_t*>(weight->data);
+    uint32_t* w_addr_ptr = reinterpret_cast<uint32_t*>(weight->data);
     int step = weight->size >> 3;
 
-    for (int i = 0; i < weight->size/sizeof(uint32_t); i+=step) {
+    for (int i = 0; i < weight->size / sizeof(uint32_t); i += step) {
         w_key ^= w_addr_ptr[i];
     }
     std::unordered_map<uint32_t, PimGemvBundle*>::const_iterator found = weight_map_.find(w_key);
     if (found != weight_map_.end()) {
         addr = found->second;
     } else {
-        printf("[%s] not found\tw_addr:%p, w_key:%X, weight_map_size:%d\n", __func__, weight->data, w_key, weight_map_.size());
+        printf("[%s] not found\tw_addr:%p, w_key:%X, weight_map_size:%d\n", __func__, weight->data, w_key,
+               weight_map_.size());
     }
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
@@ -344,13 +345,14 @@ int PimRuntime::insert_gemv_bundle(PimBo* weight, PimGemvBundle* bundle)
     int ret = 0;
 
     uint32_t w_key = 0;
-    uint32_t *w_addr_ptr = reinterpret_cast<uint32_t*>(weight->data);
+    uint32_t* w_addr_ptr = reinterpret_cast<uint32_t*>(weight->data);
     int step = weight->size >> 3;
-    for (int i = 0; i < weight->size/sizeof(uint32_t); i+=step) {
+    for (int i = 0; i < weight->size / sizeof(uint32_t); i += step) {
         w_key ^= w_addr_ptr[i];
     }
     weight_map_.insert(std::make_pair(w_key, bundle));
-    printf("[%s] insert\tw_addr:%p, w_key:%X, weight_map_size:%d\n\n", __func__, weight->data, w_key, weight_map_.size());
+    printf("[%s] insert\tw_addr:%p, w_key:%X, weight_map_size:%d\n\n", __func__, weight->data, w_key,
+           weight_map_.size());
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;

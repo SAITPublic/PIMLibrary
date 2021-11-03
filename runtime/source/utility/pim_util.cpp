@@ -22,25 +22,25 @@ size_t get_aligned_size(PimDesc* pim_desc, PimMemFlag mem_flag, PimBo* pim_bo)
     bs.t = false;
 
     switch (mem_flag) {
-	case ELT_OP:
-	    break;
-	case GEMV_INPUT:
-	    bs.h = 1;
-	    break;
-	case GEMV_WEIGHT:
-	    bs.n = 1;
-	    break;
-	case GEMV_OUTPUT:
-	    bs.w = bs.h;
-	    bs.h = 1;
-	    break;
-	case GEMV_WEIGHT_T:
-	    bs.n = 1;
-	    bs.t = true;
-	    break;
-	default:
-	    std::cout << "[Error] " << __FUNCTION__ << ": wrong mem_flag" << std::endl;
-	    return 0;
+        case ELT_OP:
+            break;
+        case GEMV_INPUT:
+            bs.h = 1;
+            break;
+        case GEMV_WEIGHT:
+            bs.n = 1;
+            break;
+        case GEMV_OUTPUT:
+            bs.w = bs.h;
+            bs.h = 1;
+            break;
+        case GEMV_WEIGHT_T:
+            bs.n = 1;
+            bs.t = true;
+            break;
+        default:
+            std::cout << "[Error] " << __FUNCTION__ << ": wrong mem_flag" << std::endl;
+            return 0;
     }
 
     pim_bo->bshape_r = pim_desc->bshape_r;

@@ -18,8 +18,6 @@
 #include "pim_runtime_api.h"
 #include "utility/pim_dump.hpp"
 
-#define LENGTH (128 * 1024)
-
 #ifdef DEBUG_PIM
 #define NUM_ITER (100)
 #else
@@ -29,19 +27,21 @@
 using namespace std;
 using half_float::half;
 
-int pim_relu_1(bool block)
+int pim_relu_up_to_256KB(bool block, uint32_t input_len)
 {
     int ret = 0;
 
     /* __PIM_API__ call : Initialize PimRuntime */
     PimInitialize(RT_TYPE_HIP, PIM_FP16);
 
+    PimDesc* pim_desc = PimCreateDesc(1, 1, 1, input_len, PIM_FP16);
+
     /* __PIM_API__ call : Create PIM Buffer Object */
-    PimBo* host_input = PimCreateBo(LENGTH, 1, 1, 1, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* host_output = PimCreateBo(LENGTH, 1, 1, 1, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* golden_output = PimCreateBo(LENGTH, 1, 1, 1, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* pim_input = PimCreateBo(LENGTH, 1, 1, 1, PIM_FP16, MEM_TYPE_PIM);
-    PimBo* device_output = PimCreateBo(LENGTH, 1, 1, 1, PIM_FP16, MEM_TYPE_PIM);
+    PimBo* host_input = PimCreateBo(pim_desc, MEM_TYPE_HOST);
+    PimBo* host_output = PimCreateBo(pim_desc, MEM_TYPE_HOST);
+    PimBo* golden_output = PimCreateBo(pim_desc, MEM_TYPE_HOST);
+    PimBo* pim_input = PimCreateBo(pim_desc, MEM_TYPE_PIM);
+    PimBo* device_output = PimCreateBo(pim_desc, MEM_TYPE_PIM);
 
     /* Initialize the input, output data */
     std::string test_vector_data = TEST_VECTORS_DATA;
@@ -62,8 +62,7 @@ int pim_relu_1(bool block)
 
         PimCopyMemory(host_output, device_output, PIM_TO_HOST);
 
-        ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data,
-                                    host_output->size / sizeof(half));
+        ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data, input_len);
     }
     //    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
 
@@ -80,5 +79,7 @@ int pim_relu_1(bool block)
     return ret;
 }
 
-TEST(HIPIntegrationTest, PimRelu1Sync) { EXPECT_TRUE(pim_relu_1(true) == 0); }
-TEST(HIPIntegrationTest, PimRelu1Async) { EXPECT_TRUE(pim_relu_1(false) == 0); }
+TEST(HIPIntegrationTest, PimRelu1Sync) { EXPECT_TRUE(pim_relu_up_to_256KB(true, 128 * 1024) == 0); }
+TEST(HIPIntegrationTest, PimRelu1Async) { EXPECT_TRUE(pim_relu_up_to_256KB(false, 128 * 1024) == 0); }
+TEST(HIPIntegrationTest, PimRelu2Sync) { EXPECT_TRUE(pim_relu_up_to_256KB(true, 1 * 1024) == 0); }
+TEST(HIPIntegrationTest, PimRelu2Async) { EXPECT_TRUE(pim_relu_up_to_256KB(false, 1 * 1024) == 0); }

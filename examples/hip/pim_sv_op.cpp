@@ -23,20 +23,22 @@
 using namespace std;
 using half_float::half;
 
-int pim_sv_add_1(void)
+int pim_sv_add_up_to_256KB(uint32_t input_len)
 {
     int ret = 0;
 
     /* __PIM_API__ call : Initialize PimRuntime */
     PimInitialize(RT_TYPE_HIP, PIM_FP16);
 
+    PimDesc* pim_desc = PimCreateDesc(1, 1, 1, input_len, PIM_FP16);
+
     /* __PIM_API__ call : Create PIM Buffer Object */
     PimBo* host_scalar = PimCreateBo(1, 1, 1, 1, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* host_vector = PimCreateBo(LENGTH, 1, 1, 1, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* host_output = PimCreateBo(LENGTH, 1, 1, 1, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* golden_output = PimCreateBo(LENGTH, 1, 1, 1, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* pim_vector = PimCreateBo(LENGTH, 1, 1, 1, PIM_FP16, MEM_TYPE_PIM);
-    PimBo* device_output = PimCreateBo(LENGTH, 1, 1, 1, PIM_FP16, MEM_TYPE_PIM);
+    PimBo* host_vector = PimCreateBo(pim_desc, MEM_TYPE_HOST);
+    PimBo* host_output = PimCreateBo(pim_desc, MEM_TYPE_HOST);
+    PimBo* golden_output = PimCreateBo(pim_desc, MEM_TYPE_HOST);
+    PimBo* pim_vector = PimCreateBo(pim_desc, MEM_TYPE_PIM);
+    PimBo* device_output = PimCreateBo(pim_desc, MEM_TYPE_PIM);
 
     std::string test_vector_data = TEST_VECTORS_DATA;
 
@@ -56,7 +58,7 @@ int pim_sv_add_1(void)
 
     PimCopyMemory(host_output, device_output, PIM_TO_HOST);
 
-    ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data, host_output->size / sizeof(half));
+    ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data, input_len);
     //    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
 
     /* __PIM_API__ call : Free memory */
@@ -73,20 +75,22 @@ int pim_sv_add_1(void)
     return ret;
 }
 
-int pim_sv_mul_1(void)
+int pim_sv_mul_up_to_256KB(uint32_t input_len)
 {
     int ret = 0;
 
     /* __PIM_API__ call : Initialize PimRuntime */
     PimInitialize(RT_TYPE_HIP, PIM_FP16);
 
+    PimDesc* pim_desc = PimCreateDesc(1, 1, 1, input_len, PIM_FP16);
+
     /* __PIM_API__ call : Create PIM Buffer Object */
     PimBo* host_scalar = PimCreateBo(1, 1, 1, 1, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* host_vector = PimCreateBo(LENGTH, 1, 1, 1, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* host_output = PimCreateBo(LENGTH, 1, 1, 1, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* golden_output = PimCreateBo(LENGTH, 1, 1, 1, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* pim_vector = PimCreateBo(LENGTH, 1, 1, 1, PIM_FP16, MEM_TYPE_PIM);
-    PimBo* device_output = PimCreateBo(LENGTH, 1, 1, 1, PIM_FP16, MEM_TYPE_PIM);
+    PimBo* host_vector = PimCreateBo(pim_desc, MEM_TYPE_HOST);
+    PimBo* host_output = PimCreateBo(pim_desc, MEM_TYPE_HOST);
+    PimBo* golden_output = PimCreateBo(pim_desc, MEM_TYPE_HOST);
+    PimBo* pim_vector = PimCreateBo(pim_desc, MEM_TYPE_PIM);
+    PimBo* device_output = PimCreateBo(pim_desc, MEM_TYPE_PIM);
 
     std::string test_vector_data = TEST_VECTORS_DATA;
 
@@ -107,7 +111,7 @@ int pim_sv_mul_1(void)
 
     PimCopyMemory(host_output, device_output, PIM_TO_HOST);
 
-    ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data, host_output->size / sizeof(half));
+    ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data, input_len);
     //    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
 
     /* __PIM_API__ call : Free memory */
@@ -123,5 +127,11 @@ int pim_sv_mul_1(void)
 
     return ret;
 }
-TEST(HIPIntegrationTest, PimSVAdd1) { EXPECT_TRUE(pim_sv_add_1() == 0); }
-TEST(HIPIntegrationTest, PimSVMul1) { EXPECT_TRUE(pim_sv_mul_1() == 0); }
+
+TEST(HIPIntegrationTest, PimSVAdd1) { EXPECT_TRUE(pim_sv_add_up_to_256KB(1 * 1024) == 0); }
+TEST(HIPIntegrationTest, PimSVAdd2) { EXPECT_TRUE(pim_sv_add_up_to_256KB(10 * 1024) == 0); }
+TEST(HIPIntegrationTest, PimSVAdd4) { EXPECT_TRUE(pim_sv_add_up_to_256KB(128 * 1024) == 0); }
+
+TEST(HIPIntegrationTest, PimSVMul1) { EXPECT_TRUE(pim_sv_mul_up_to_256KB(1 * 1024) == 0); }
+TEST(HIPIntegrationTest, PimSVMul2) { EXPECT_TRUE(pim_sv_mul_up_to_256KB(10 * 1024) == 0); }
+TEST(HIPIntegrationTest, PimSVMul4) { EXPECT_TRUE(pim_sv_mul_up_to_256KB(128 * 1024) == 0); }
