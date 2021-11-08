@@ -134,9 +134,6 @@ PimBo* PimCreateBo(PimDesc* pim_desc, PimMemType mem_type, PimMemFlag mem_flag, 
         LOG(INFO) << "[END] " << __FUNCTION__ << " called";
         return nullptr;
     }
-#ifdef EMULATOR
-    pad_data(pim_bo->data, pim_desc, mem_type, mem_flag);
-#endif
 
     PIM_PROFILE_TOCK(CreateBo);
 
@@ -158,6 +155,8 @@ PimDesc* PimCreateDesc(int n, int c, int h, int w, PimPrecision precision, PimOp
 
     pim_desc->precision = precision;
     pim_desc->bshape_r = {(uint32_t)w, (uint32_t)h, (uint32_t)c, (uint32_t)n, false};
+    pim_desc->op_type = op_type;
+
     align_shape(pim_desc, op_type);
 
     PIM_PROFILE_TOCK(CreateDesc);

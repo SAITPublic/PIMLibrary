@@ -58,15 +58,19 @@ bool HIPCodegen::execute(PimOpType op, pimc::PimDeviceConfig device_config)
 void HIPCompiler::execute(pimc::PimCCompiled *pim_op)
 {
     std::string hip_kernel = pim_op->get_gpu_kernel();
-#ifdef SAVE_GENERATED
-    std::ofstream hip_file("output_hip_kernel.txt");
-    hip_file << hip_kernel;
-    hip_file.close();
 
-    std::ofstream crf_file("output_crf_binary.txt");
-    crf_file << pim_op->get_crf_binary();
-    crf_file.close();
-#endif
+    if (const char *env_p = std::getenv("SAVE_GENERATED_KERNEL")) {
+        int value = *((int *)env_p);
+        if (value == 1) {
+            std::ofstream hip_file("output_hip_kernel.txt");
+            hip_file << hip_kernel;
+            hip_file.close();
+
+            std::ofstream crf_file("output_crf_binary.txt");
+            crf_file << pim_op->get_crf_binary();
+            crf_file.close();
+        }
+    }
     std::string compile_opts = "-O3 --gpu-architecture=gfx906";
     const char *options[] = {compile_opts.c_str()};
 

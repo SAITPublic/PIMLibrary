@@ -113,11 +113,10 @@ class GemvKArgs : public KernelArgs
         args_.pim_input = (uint8_t *)input_vector_->get_data();
         args_.output = (uint8_t *)output_vector_->get_data();
         args_.batch_dim = input_vector_->get_desc().get_dim(uint32_t(DIMENSIONS::N));
-        args_.output_dim = output_vector_->get_desc().get_dim(uint32_t(DIMENSIONS::W));
+        args_.output_dim = weights_->get_desc().get_dim(uint32_t(DIMENSIONS::H));
         hipMemcpy((void *)crf_binary_device_, (uint8_t *)(crf_binary_host_.c_str()), crf_binary_host_.size(),
                   hipMemcpyHostToDevice);
         args_.crf_binary = crf_binary_device_;
-
         return reinterpret_cast<void **>(&config);
     }
 
