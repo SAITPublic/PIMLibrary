@@ -33,6 +33,7 @@ RUN apt-get update
 
 RUN apt-get --yes --allow-unauthenticated install openssl
 
+
 RUN apt-get update
 
 # Build Requirements
@@ -44,8 +45,8 @@ RUN apt-get --yes --allow-unauthenticated install kmod
 RUN apt-get --yes --allow-unauthenticated install libbz2-dev
 
 # Add rocm apt repository
-RUN wget -qO - http://repo.radeon.com/rocm/apt/4.0/rocm.gpg.key | sudo apt-key add -
-RUN echo 'deb [arch=amd64] http://repo.radeon.com/rocm/apt/4.0/ xenial main' | sudo tee /etc/apt/sources.list.d/rocm.list
+RUN wget -qO - http://repo.radeon.com/rocm/rocm.gpg.key | apt-key add -
+RUN echo 'deb [arch=amd64] https://repo.radeon.com/rocm/apt/4.0/ xenial main' | sudo tee /etc/apt/sources.list.d/rocm.list
 
 RUN apt-get update
 # Instal hipcc 
