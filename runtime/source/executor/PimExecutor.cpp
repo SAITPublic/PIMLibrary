@@ -306,6 +306,9 @@ int PimExecutor::execute_gemv_tile_accum(PimBo* output, PimBo* operand0, PimBo* 
         case 8:
             gemv_kernel = gemv_pim_64cu_64th_8tile_fp16;
             break;
+        case 16:
+            gemv_kernel = gemv_pim_64cu_64th_16tile_fp16;
+            break;
         default:
             gemv_kernel = gemv_pim_64cu_64th_fp16;
             break;

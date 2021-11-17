@@ -322,7 +322,7 @@ PimGemvBundle* PimRuntime::find_gemv_bundle(PimBo* weight)
 
     uint32_t w_key = 0;
     uint32_t* w_addr_ptr = reinterpret_cast<uint32_t*>(weight->data);
-    int step = weight->size >> 3;
+    int step = weight->size >> 1;
 
     for (int i = 0; i < weight->size / sizeof(uint32_t); i += step) {
         w_key ^= w_addr_ptr[i];
@@ -331,8 +331,7 @@ PimGemvBundle* PimRuntime::find_gemv_bundle(PimBo* weight)
     if (found != weight_map_.end()) {
         addr = found->second;
     } else {
-        printf("[%s] not found\tw_addr:%p, w_key:%X, weight_map_size:%d\n", __func__, weight->data, w_key,
-               weight_map_.size());
+        DLOG(INFO) << "[%s] not found\tw_addr:%p, w_key:%X, weight_map_size:%d\n" << __func__ << weight->data << w_key << weight_map_.size();
     }
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
@@ -346,12 +345,12 @@ int PimRuntime::insert_gemv_bundle(PimBo* weight, PimGemvBundle* bundle)
 
     uint32_t w_key = 0;
     uint32_t* w_addr_ptr = reinterpret_cast<uint32_t*>(weight->data);
-    int step = weight->size >> 3;
+    int step = weight->size >> 1;
     for (int i = 0; i < weight->size / sizeof(uint32_t); i += step) {
         w_key ^= w_addr_ptr[i];
     }
     weight_map_.insert(std::make_pair(w_key, bundle));
-    printf("[%s] insert\tw_addr:%p, w_key:%X, weight_map_size:%d\n\n", __func__, weight->data, w_key,
+    printf("[%s] insert\tw_addr:%p, w_key:%X, weight_map_size:%d\n", __func__, weight->data, w_key,
            weight_map_.size());
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
