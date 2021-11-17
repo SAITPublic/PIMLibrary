@@ -314,11 +314,13 @@ PimGemvBundle* PimRuntime::find_gemv_bundle(PimBo* weight)
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     PimGemvBundle* addr = nullptr;
 
+#if 0
     if (weight->mem_type == MEM_TYPE_DEVICE || weight->mem_type == MEM_TYPE_PIM) {
         /* GPU cache should be flushed before CPU access to the area */
         int cache_flush;
         hipMemcpy(&cache_flush, weight->data, sizeof(int), hipMemcpyDeviceToHost);
     }
+#endif
 
     uint32_t w_key = 0;
     uint32_t* w_addr_ptr = reinterpret_cast<uint32_t*>(weight->data);
