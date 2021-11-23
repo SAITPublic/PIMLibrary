@@ -43,12 +43,11 @@ __global__ void gemv_pim_64cu_64th_fp16(volatile uint8_t* __restrict__ pim_ctr,
 #endif
 
 #ifdef PREPARE_KERNEL
-    int num_grf = 8;
     int grf_shift = 3;
     int num_ba = 4;
     int ba_shift = 2;
     int num_col = 32;
-    int trans_size = 32;
+    int col_shift = 5;
     int trans_shift = 5;
     int even_row, odd_row, row, col, loc;
     int ch = hipBlockIdx_x;
@@ -59,7 +58,6 @@ __global__ void gemv_pim_64cu_64th_fp16(volatile uint8_t* __restrict__ pim_ctr,
 #endif
 
 #if PARK_IN
-    /* park */
     if (hipThreadIdx_x < 32) {
         addr = addr_gen(ch, 0, (gidx >> ba_shift), gidx % num_ba, (1 << 13), 0);
         W_CMD(&pim_ctr[addr + offset]);
@@ -180,7 +178,7 @@ __global__ void gemv_pim_64cu_64th_fp16(volatile uint8_t* __restrict__ pim_ctr,
                     B_CMD(1);
                 }
                 loc = (b_idx * n_out_tile << grf_shift) + (o_idx << grf_shift) + gidx;
-                row = loc / num_col;
+                row = loc >> col_shift;
                 col = loc % num_col;
 
                 // pipeline delay
@@ -211,7 +209,6 @@ __global__ void gemv_pim_64cu_64th_fp16(volatile uint8_t* __restrict__ pim_ctr,
 #endif
 
 #if PARK_OUT
-    /* park */
     if (hipThreadIdx_x < 32) {
         addr = addr_gen(ch, 0, gidx >> ba_shift, gidx % num_ba, (1 << 13), 0);
         W_CMD(&pim_ctr[addr + offset]);
@@ -280,12 +277,11 @@ __global__ void gemv_pim_64cu_64th_16tile_fp16(volatile uint8_t* __restrict__ pi
 #endif
 
 #ifdef PREPARE_KERNEL
-    int num_grf = 8;
     int grf_shift = 3;
     int num_ba = 4;
     int ba_shift = 2;
     int num_col = 32;
-    int trans_size = 32;
+    int col_shift = 5;
     int trans_shift = 5;
     int even_row, odd_row, row, col, loc;
     int ch = hipBlockIdx_x;
@@ -296,7 +292,6 @@ __global__ void gemv_pim_64cu_64th_16tile_fp16(volatile uint8_t* __restrict__ pi
 #endif
 
 #if PARK_IN
-    /* park */
     if (hipThreadIdx_x < 32) {
         addr = addr_gen(ch, 0, (gidx >> ba_shift), gidx % num_ba, (1 << 13), 0);
         W_CMD(&pim_ctr[addr + offset]);
@@ -418,7 +413,7 @@ __global__ void gemv_pim_64cu_64th_16tile_fp16(volatile uint8_t* __restrict__ pi
                     B_CMD(1);
                 }
                 loc = (b_idx * n_out_tile << grf_shift) + (o_idx << grf_shift) + gidx;
-                row = loc / num_col;
+                row = loc >> col_shift;
                 col = loc % num_col;
 
                 // pipeline delay
@@ -449,7 +444,6 @@ __global__ void gemv_pim_64cu_64th_16tile_fp16(volatile uint8_t* __restrict__ pi
 #endif
 
 #if PARK_OUT
-    /* park */
     if (hipThreadIdx_x < 32) {
         addr = addr_gen(ch, 0, gidx >> ba_shift, gidx % num_ba, (1 << 13), 0);
         W_CMD(&pim_ctr[addr + offset]);
@@ -518,12 +512,11 @@ __global__ void gemv_pim_64cu_64th_8tile_fp16(volatile uint8_t* __restrict__ pim
 #endif
 
 #ifdef PREPARE_KERNEL
-    int num_grf = 8;
     int grf_shift = 3;
     int num_ba = 4;
     int ba_shift = 2;
     int num_col = 32;
-    int trans_size = 32;
+    int col_shift = 5;
     int trans_shift = 5;
     int even_row, odd_row, row, col, loc;
     int ch = hipBlockIdx_x;
@@ -656,7 +649,7 @@ __global__ void gemv_pim_64cu_64th_8tile_fp16(volatile uint8_t* __restrict__ pim
                     B_CMD(1);
                 }
                 loc = (b_idx * n_out_tile << grf_shift) + (o_idx << grf_shift) + gidx;
-                row = loc / num_col;
+                row = loc >> col_shift;
                 col = loc % num_col;
 
                 // pipeline delay
@@ -687,7 +680,6 @@ __global__ void gemv_pim_64cu_64th_8tile_fp16(volatile uint8_t* __restrict__ pim
 #endif
 
 #if PARK_OUT
-    /* park */
     if (hipThreadIdx_x < 32) {
         addr = addr_gen(ch, 0, gidx >> ba_shift, gidx % num_ba, (1 << 13), 0);
         W_CMD(&pim_ctr[addr + offset]);
@@ -767,7 +759,6 @@ __global__ void gemv_tree_pim_64cu_64th_fp16(
 #endif
 
 #if PARK_IN
-    /* park */
     if (hipThreadIdx_x < 32) {
         addr = addr_gen(ch, 0, gidx / num_ba, gidx % num_ba, (1 << 13), 0);
         W_CMD(&pim_ctr[addr + offset]);
@@ -936,7 +927,6 @@ __global__ void gemv_tree_pim_64cu_64th_fp16(
 #endif
 
 #if PARK_OUT
-    /* park */
     if (hipThreadIdx_x < 32) {
         addr = addr_gen(ch, 0, gidx / num_ba, gidx % num_ba, (1 << 13), 0);
         W_CMD(&pim_ctr[addr + offset]);

@@ -314,13 +314,22 @@ PimGemvBundle* PimRuntime::find_gemv_bundle(PimBo* weight)
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     PimGemvBundle* addr = nullptr;
 
-#if 0
-    if (weight->mem_type == MEM_TYPE_DEVICE || weight->mem_type == MEM_TYPE_PIM) {
+    char env_p, *ptr;
+    bool need_flush = false;
+    if (std::getenv("ENABLE_MIOPEN_PYTORCH")) {
+      ptr = std::getenv("ENABLE_MIOPEN_PYTORCH");
+      env_p = *ptr;
+    } else {
+      env_p = '0';
+    }
+    if (env_p == '1')
+      need_flush = true;
+
+    if (need_flush && (weight->mem_type == MEM_TYPE_DEVICE || weight->mem_type == MEM_TYPE_PIM)) {
         /* GPU cache should be flushed before CPU access to the area */
         int cache_flush;
         hipMemcpy(&cache_flush, weight->data, sizeof(int), hipMemcpyDeviceToHost);
     }
-#endif
 
     uint32_t w_key = 0;
     uint32_t* w_addr_ptr = reinterpret_cast<uint32_t*>(weight->data);

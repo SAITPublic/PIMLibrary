@@ -19,7 +19,7 @@
 __host__ __device__ uint32_t mask_by_bit(uint32_t value, uint32_t start, uint32_t end)
 {
     int length = start - end + 1;
-    value = value >> end;
+    value >>= end;
     return value & ((1 << length) - 1);
 }
 
