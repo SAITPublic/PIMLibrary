@@ -314,6 +314,7 @@ PimGemvBundle* PimRuntime::find_gemv_bundle(PimBo* weight)
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     PimGemvBundle* addr = nullptr;
 
+#if 0
     char env_p, *ptr;
     bool need_flush = false;
     if (std::getenv("ENABLE_MIOPEN_PYTORCH")) {
@@ -330,6 +331,7 @@ PimGemvBundle* PimRuntime::find_gemv_bundle(PimBo* weight)
         int cache_flush;
         hipMemcpy(&cache_flush, weight->data, sizeof(int), hipMemcpyDeviceToHost);
     }
+#endif
 
     uint32_t w_key = 0;
     uint32_t* w_addr_ptr = reinterpret_cast<uint32_t*>(weight->data);
