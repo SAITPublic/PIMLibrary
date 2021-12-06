@@ -679,7 +679,12 @@ int PimExecutor::execute_custom_gemv_add(PimBo* output, PimBo* operand0, PimBo* 
         m = operand1->bshape_r.h;
         k = operand1->bshape_r.w;
         n = 1;
-        rocblas_addmv_fp16_Axy(in, mat, vec, out, m, n, k, alpha, beta, relu, stream);
+        if (m == 32317) {
+            rocblas_addmv_fp16_Axy_large(in, mat, vec, out, m, n, k, alpha, beta, relu, stream);
+        }
+        else {
+            rocblas_addmv_fp16_Axy(in, mat, vec, out, m, n, k, alpha, beta, relu, stream);
+        }
     } else {
         m = 1;
         k = operand1->bshape_r.w;

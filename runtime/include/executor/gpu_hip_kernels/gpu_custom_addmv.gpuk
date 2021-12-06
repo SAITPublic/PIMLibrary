@@ -9,6 +9,10 @@ template <typename U, typename V, typename W>
 void rocblas_addmv_template_Axy(hipStream_t p_stream, const V *b, const V *A, const V *x, W *y, int m, int n, int k,
                                 U alpha, U beta, bool relu);
 
+template <typename U, typename V, typename W>
+void rocblas_addmv_template_Axy_large(hipStream_t p_stream, const V *b, const V *A, const V *x, W *y, int m, int n, int k,
+                                U alpha, U beta, bool relu);
+
 void rocblas_addmv_fp16_xAy(void *b, void* x, void* A, void* y, int m, int n, int k, float alpha, float beta, bool relu, hipStream_t stream)
 {
     rocblas_addmv_template_xAy(stream, reinterpret_cast<_Float16 *>(b), reinterpret_cast<_Float16 *>(x), reinterpret_cast<_Float16 *>(A),
@@ -18,6 +22,12 @@ void rocblas_addmv_fp16_xAy(void *b, void* x, void* A, void* y, int m, int n, in
 void rocblas_addmv_fp16_Axy(void *b, void* A, void* x, void* y, int m, int n, int k, float alpha, float beta, bool relu, hipStream_t stream)
 {
     rocblas_addmv_template_Axy(stream, reinterpret_cast<_Float16 *>(b), reinterpret_cast<_Float16 *>(A), reinterpret_cast<_Float16 *>(x),
+                               reinterpret_cast<_Float16 *>(y), m, n, k, alpha, beta, relu);
+}
+
+void rocblas_addmv_fp16_Axy_large(void *b, void* A, void* x, void* y, int m, int n, int k, float alpha, float beta, bool relu, hipStream_t stream)
+{
+    rocblas_addmv_template_Axy_large(stream, reinterpret_cast<_Float16 *>(b), reinterpret_cast<_Float16 *>(A), reinterpret_cast<_Float16 *>(x),
                                reinterpret_cast<_Float16 *>(y), m, n, k, alpha, beta, relu);
 }
 
@@ -180,6 +190,106 @@ void rocblas_addmv_template_Axy(hipStream_t p_stream, const V *b, const V *A, co
     dim3 addmv_threads(NB);
 
     hipLaunchKernelGGL((addmv_kernel_Axy<NB>), addmv_grid, addmv_threads, 0, p_stream, m, k, alpha, b,
+                       A,  // k
+                       k,
+                       x,  // kxn
+                       n, beta, y, relu);
+}
+
+template <int NB_X, int NB_Y, int NB_N, typename T, typename U>
+__device__ void addmv_kernel_calc_Axy_large(int m, int n, U alpha, const T *b, const T *A, int lda, const T *x, int incx,
+                                      U beta, T *y)
+{
+    int tx = hipThreadIdx_x;
+    int ty = hipThreadIdx_y;
+    if (tx < n) A += tx;
+
+    U res;
+    res = 0.0;
+
+    int col = 0;
+    __shared__ U sdata[NB_Y][NB_X];
+
+    // partial sums
+    int n_full = (n / (NB_X * NB_N)) * (NB_X * NB_N);
+    int m_align = (m + NB_Y - 1) / NB_Y * NB_Y;
+
+    for (int i = 0; i < n_full; i += NB_X * NB_N) {
+        for (int j = 0; j < NB_N; ++j) {
+            res += A[i * m_align + j * NB_X] * x[(tx + i + j * NB_X) * incx];
+        }
+    }
+
+    if (tx + n_full < n) {
+        for (int j = 0; j < NB_N && tx + n_full + j * NB_X < n; ++j) {
+            res += A[n_full * m_align + j * NB_X] * x[(tx + n_full + j * NB_X) * incx];
+        }
+    }
+
+    sdata[ty][tx] = res;
+
+    // tree reduction of partial sums,
+    if (NB_X > 16) {
+        rocblas_sum_reduce<NB_X>(tx, sdata[ty]);
+    } else {
+        __syncthreads();
+
+        if (tx == 0) {
+            for (int i = 1; i < n && i < NB_X; i++) sdata[ty][0] += sdata[ty][i];
+        }
+
+        __syncthreads();
+    }
+
+    if (tx == 0) {
+        if (beta != 0) {
+            y[col] = alpha * sdata[ty][0] + beta * y[col] + b[col];
+        } else {
+            y[col] = alpha * sdata[ty][0] + b[col];
+        }
+    }
+}
+
+template <int NB_X, int NB_Y, int NB_N, typename U, typename V, typename W>
+__global__ void addmv_kernel_Axy_large(int m, int n, U alpha_device_host, const V *ba, const V *Aa, int lda, const V *xa,
+                                 int incx, U beta_device_host, W *ya, bool relu)
+{
+    int y_index = hipBlockIdx_y * NB_Y + hipThreadIdx_y;
+    if (y_index >= m) {
+        return;
+    }
+    const V *b = ba + y_index;
+    const V *A = Aa + y_index * NB_X * NB_N;
+    const V *x = xa;
+    W *y = ya + y_index;
+
+    auto alpha = alpha_device_host;
+    auto beta = beta_device_host;
+    addmv_kernel_calc_Axy_large<NB_X, NB_Y, NB_N>(m, n, alpha, b, A, lda, x, incx, beta, y);
+
+    if (relu) {
+        if (hipThreadIdx_x == 0) {
+            y[0] = y[0] > 0.f ? y[0] : 0.f;
+        }
+    }
+}
+
+template <typename U, typename V, typename W>
+void rocblas_addmv_template_Axy_large(hipStream_t p_stream, const V *b, const V *A, const V *x, W *y, int m, int n, int k,
+                                U alpha, U beta, bool relu)
+{
+    if (n != 1) {
+        return;
+    }
+    static constexpr int NB = 8;
+    static constexpr int NC = 32;
+    static constexpr int ND = 8;
+    int y_block = (m + NC - 1) / NC;
+
+    dim3 addmv_grid(1, y_block);
+    dim3 addmv_threads(NB, NC);
+
+    hipLaunchKernelGGL((addmv_kernel_Axy_large<NB, NC, ND>), addmv_grid, addmv_threads, 0, p_stream, m, k, alpha, b,
                        A,  // k
                        k,
                        x,  // kxn
