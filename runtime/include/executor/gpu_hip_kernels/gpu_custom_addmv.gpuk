@@ -283,7 +283,7 @@ void rocblas_addmv_template_Axy_large(hipStream_t p_stream, const V *b, const V 
     }
     static constexpr int NB = 8;
     static constexpr int NC = 32;
-    static constexpr int ND = 8;
+    static constexpr int ND = 2;
     int y_block = (m + NC - 1) / NC;
 
     dim3 addmv_grid(1, y_block);
