@@ -14,8 +14,6 @@ set(PREFIX ${CMAKE_INSTALL_PREFIX})
 set(EXEC_PREFIX "${PREFIX}/bin")
 set(ROCM_PATH $ENV{ROCM_PATH})
 
-option(PYTORCH_BUILD "Enable pytorch custom operations build" OFF)
-option(TF_BUILD "Enable tf custom operations build" OFF)
 option(TARGET "Enable TARGET apps build" OFF)
 option(RADEON7 "Enable TARGET:RADEON7 apps build" OFF)
 option(MI50 "Enable TARGET:MI50 apps build" OFF)
@@ -49,7 +47,6 @@ include_directories("${PROJECT_SOURCE_DIR}/runtime/include"
                     "${PROJECT_SOURCE_DIR}/tools/crfcodegen/include"
                     "${PROJECT_SOURCE_DIR}/tools/profiler/include"
                     "${ROCM_PATH}/include")
-#link_directories("${ROCM_PATH}/hsa/lib" "${ROCM_PATH}/libhsakmt/lib" "${ROCM_PATH}/lib" "${PROJECT_SOURCE_DIR}/external_libs")
 link_directories("${ROCM_PATH}/hip/lib" "${ROCM_PATH}/hsa/lib" "${ROCM_PATH}/libhsakmt/lib" "${ROCM_PATH}/lib" "${PROJECT_SOURCE_DIR}/external_libs")
 
 #for test vectors default data path
@@ -85,4 +82,3 @@ add_subdirectory(runtime)
 add_subdirectory(examples)
 add_subdirectory(tools)
 add_subdirectory(external_libs)
-add_subdirectory(python_libs)
