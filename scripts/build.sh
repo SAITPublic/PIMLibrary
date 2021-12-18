@@ -12,8 +12,8 @@ if [[ ${PIPESTATUS[0]} -ne 4 ]]; then
 fi
 
 
-OPTIONS=do:mt:vepfrc
-LONGOPTS=debug,output:,miopen,target:,verbose,emulator,pytorch,tensorflow,rocm3,compiler
+OPTIONS=do:t:vepfrc
+LONGOPTS=debug,output:,target:,verbose,emulator,pytorch,tensorflow,rocm3,compiler
 
 # -regarding ! and PIPESTATUS see above
 # -temporarily store output to be able to check for errors
@@ -28,7 +28,7 @@ fi
 # read getopt’s output this way to handle the quoting right:
 eval set -- "$PARSED"
 
-d=n v=n proj_cmake_dir=- miopen=n target_device="mi50" emulator=n pytorch_enable=n tf_enable=n rocm3_enable=n pim_compiler=n
+d=n v=n proj_cmake_dir=- target_device="mi50" emulator=n pytorch_enable=n tf_enable=n rocm3_enable=n pim_compiler=n
 
 # now enjoy the options in order and nicely split until we see --
 while true; do
@@ -40,10 +40,6 @@ while true; do
             ;;
         -v|--verbose)
             v=y
-            shift
-            ;;
-        -m|--miopen)
-            miopen=y
             shift
             ;;
         -o|--output)
@@ -91,7 +87,7 @@ if [[ $# -ne 1 ]]; then
     exit 4
 fi
 
-echo "verbose: $v, debug: $d, option: $1, out: $proj_cmake_dir miopen:$miopen target:$target_device"
+echo "verbose: $v, debug: $d, option: $1, out: $proj_cmake_dir target:$target_device"
 
 cmake_build_options=""
 
@@ -99,12 +95,6 @@ if [ $d = "y" ]; then
     cmake_build_options="${cmake_build_options} -DCMAKE_BUILD_TYPE=Debug"
 else
     cmake_build_options="${cmake_build_options} -DCMAKE_BUILD_TYPE=Release"
-fi
-
-if [ $miopen = "y" ]; then
-    cmake_build_options="${cmake_build_options} -DMIOPEN_APPS=ON"
-else
-    cmake_build_options="${cmake_build_options} -DMIOPEN_APPS=OFF"
 fi
 
 if [ $pytorch_enable = "y" ]; then

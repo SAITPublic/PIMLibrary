@@ -14,7 +14,6 @@ set(PREFIX ${CMAKE_INSTALL_PREFIX})
 set(EXEC_PREFIX "${PREFIX}/bin")
 set(ROCM_PATH $ENV{ROCM_PATH})
 
-option(MIOPEN_APPS "Enable MIOpens apps build" OFF)
 option(PYTORCH_BUILD "Enable pytorch custom operations build" OFF)
 option(TF_BUILD "Enable tf custom operations build" OFF)
 option(TARGET "Enable TARGET apps build" OFF)
