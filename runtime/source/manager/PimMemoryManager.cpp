@@ -458,7 +458,7 @@ uint64_t PimMemoryManager::PimBlockAllocator::allocate_pim_block(size_t bsize) c
     FILE* fd;
     char path[256];
     uint32_t gpu_id;
-    int max_topology = 3;
+    int max_topology = 10;
     int node_id = 0;
 
     for (int i = 0; i < max_topology; i++) {
