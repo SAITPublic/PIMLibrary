@@ -6,4 +6,4 @@ include_directories(${ROCM_PATH}/include)
 file(GLOB HIP_SOURCES hip/*.cpp)
 
 add_executable(PimIntegrationTests ${HIP_SOURCES})
-target_link_libraries(PimIntegrationTests gtest_main gtest PimRuntime)
+target_link_libraries(PimIntegrationTests gtest PimRuntime)
