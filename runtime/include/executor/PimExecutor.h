@@ -21,6 +21,8 @@
 #include "manager/PimManager.h"
 #include "pim_data_types.h"
 
+#define MAX_NUM_GPUS 10
+
 namespace pim
 {
 namespace runtime

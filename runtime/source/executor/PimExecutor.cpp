@@ -21,7 +21,7 @@
 #include "utility/pim_profile.h"
 #include "utility/pim_util.h"
 
-extern uint64_t g_pim_base_addr;
+extern uint64_t g_pim_base_addr[MAX_NUM_GPUS];
 namespace pim
 {
 namespace runtime
@@ -67,7 +67,8 @@ int PimExecutor::initialize(void)
 
     int ret = 0;
     int device_id = 0;
-    hipGetDeviceProperties(&dev_prop_, 0);
+    hipGetDevice(&device_id);
+    hipGetDeviceProperties(&dev_prop_, device_id);
     DLOG(INFO) << " System minor " << dev_prop_.minor << std::endl;
     DLOG(INFO) << " System major " << dev_prop_.major << std::endl;
     DLOG(INFO) << " agent prop name " << dev_prop_.name << std::endl;
@@ -188,13 +189,15 @@ int PimExecutor::execute_add(PimBo* output, PimBo* operand0, PimBo* operand1, hi
 
         unsigned blocks = 64;
         unsigned threads_per_block = 32;
-        hipLaunchKernelGGL(elt_op_pim, dim3(blocks), dim3(threads_per_block), 0, stream, (uint8_t*)operand0->data,
-                           (uint8_t*)operand1->data, (uint8_t*)g_pim_base_addr, (uint8_t*)output->data, num_tile,
+        int device_id;
+        hipGetDevice(&device_id);
+        hipLaunchKernelGGL(
+            elt_op_pim, dim3(blocks), dim3(threads_per_block), 0, stream, (uint8_t*)operand0->data,
+            (uint8_t*)operand1->data, (uint8_t*)(g_pim_base_addr[device_id]), (uint8_t*)output->data, num_tile,
 #ifdef EMULATOR
-                           (PimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_,
-                           (PimMemTracer*)d_emulator_trace_,
+            (PimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_, (PimMemTracer*)d_emulator_trace_,
 #endif
-                           (uint8_t*)crf_bin, crf_size);
+            (uint8_t*)crf_bin, crf_size);
 #ifdef EMULATOR
         hipStreamSynchronize(stream);
         hipMemcpy((void*)h_fmtd16_size_, (void*)d_fmtd16_size_, sizeof(int), hipMemcpyDeviceToHost);
@@ -207,7 +210,8 @@ int PimExecutor::execute_add(PimBo* output, PimBo* operand0, PimBo* operand1, hi
         h_fmtd16_size_[0] *= blocks;
         pim_emulator_->convert_mem_trace_from_16B_to_32B(h_fmtd32_, h_fmtd32_size_, h_fmtd16_, h_fmtd16_size_[0],
                                                          OP_ELT_ADD);
-        pim_emulator_->execute_elt_op(output, operand0, operand1, h_fmtd32_, h_fmtd32_size_[0], g_pim_base_addr);
+        pim_emulator_->execute_elt_op(output, operand0, operand1, h_fmtd32_, h_fmtd32_size_[0],
+                                      g_pim_base_addr[device_id]);
 #else
         if (block) hipStreamSynchronize(stream);
 #endif
@@ -254,13 +258,15 @@ int PimExecutor::execute_mul(PimBo* output, PimBo* operand0, PimBo* operand1, hi
 
         unsigned blocks = 64;
         unsigned threads_per_block = 32;
-        hipLaunchKernelGGL(elt_op_pim, dim3(blocks), dim3(threads_per_block), 0, stream, (uint8_t*)operand0->data,
-                           (uint8_t*)operand1->data, (uint8_t*)g_pim_base_addr, (uint8_t*)output->data, num_tile,
+        int device_id;
+        hipGetDevice(&device_id);
+        hipLaunchKernelGGL(
+            elt_op_pim, dim3(blocks), dim3(threads_per_block), 0, stream, (uint8_t*)operand0->data,
+            (uint8_t*)operand1->data, (uint8_t*)(g_pim_base_addr[device_id]), (uint8_t*)output->data, num_tile,
 #ifdef EMULATOR
-                           (PimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_,
-                           (PimMemTracer*)d_emulator_trace_,
+            (PimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_, (PimMemTracer*)d_emulator_trace_,
 #endif
-                           (uint8_t*)crf_bin, crf_size);
+            (uint8_t*)crf_bin, crf_size);
 #ifdef EMULATOR
         hipStreamSynchronize(stream);
         hipMemcpy((void*)h_fmtd16_size_, (void*)d_fmtd16_size_, sizeof(int), hipMemcpyDeviceToHost);
@@ -273,7 +279,8 @@ int PimExecutor::execute_mul(PimBo* output, PimBo* operand0, PimBo* operand1, hi
         h_fmtd16_size_[0] *= blocks;
         pim_emulator_->convert_mem_trace_from_16B_to_32B(h_fmtd32_, h_fmtd32_size_, h_fmtd16_, h_fmtd16_size_[0],
                                                          OP_ELT_MUL);
-        pim_emulator_->execute_elt_op(output, operand0, operand1, h_fmtd32_, h_fmtd32_size_[0], g_pim_base_addr);
+        pim_emulator_->execute_elt_op(output, operand0, operand1, h_fmtd32_, h_fmtd32_size_[0],
+                                      g_pim_base_addr[device_id]);
 #else
         if (block) hipStreamSynchronize(stream);
 #endif
@@ -403,14 +410,16 @@ int PimExecutor::execute_gemv_tile_accum(PimBo* output, PimBo* operand0, PimBo* 
         PIM_PROFILE_TOCK(CreateCRFBin);
 
         PIM_PROFILE_TICK(RunGemvKernel);
-        hipLaunchKernelGGL(gemv_kernel, dim3(blocks), dim3(threads_per_block), 0, stream, (uint8_t*)g_pim_base_addr,
-                           (uint8_t*)weight->data, (uint8_t*)pim_gemv_tmp_buffer_, (uint8_t*)input->data,
-                           (uint8_t*)output->data, n_batch, n_memory_tile, n_compute_tile, n_out_tile, real_out_size,
+        int device_id;
+        hipGetDevice(&device_id);
+        hipLaunchKernelGGL(
+            gemv_kernel, dim3(blocks), dim3(threads_per_block), 0, stream, (uint8_t*)(g_pim_base_addr[device_id]),
+            (uint8_t*)weight->data, (uint8_t*)pim_gemv_tmp_buffer_, (uint8_t*)input->data, (uint8_t*)output->data,
+            n_batch, n_memory_tile, n_compute_tile, n_out_tile, real_out_size,
 #ifdef EMULATOR
-                           (PimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_,
-                           (PimMemTracer*)d_emulator_trace_,
+            (PimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_, (PimMemTracer*)d_emulator_trace_,
 #endif
-                           (uint8_t*)crf_bin, crf_size, is_gemv_add);
+            (uint8_t*)crf_bin, crf_size, is_gemv_add);
 #ifndef EMULATOR
         if (block) hipStreamSynchronize(stream);
         PIM_PROFILE_TOCK(RunGemvKernel);
@@ -434,10 +443,10 @@ int PimExecutor::execute_gemv_tile_accum(PimBo* output, PimBo* operand0, PimBo* 
                                                          OP_GEMV);
         if (is_gemv_add)
             pim_emulator_->execute_gemv_add_tile_accum(output, weight, h_fmtd32_, h_fmtd32_size_[0], OP_GEMV,
-                                                       g_pim_base_addr, pim_gemv_tmp_buffer_);
+                                                       g_pim_base_addr[device_id], pim_gemv_tmp_buffer_);
         else
             pim_emulator_->execute_gemv_tile_accum(output, weight, h_fmtd32_, h_fmtd32_size_[0], OP_GEMV,
-                                                   g_pim_base_addr, pim_gemv_tmp_buffer_);
+                                                   g_pim_base_addr[device_id], pim_gemv_tmp_buffer_);
 
         PIM_PROFILE_TOCK(RunGemvEmulation);
 #endif
@@ -474,14 +483,17 @@ int PimExecutor::execute_gemv_tile_tree(PimBo* output, PimBo* operand0, PimBo* o
     PIM_PROFILE_TOCK(CreateCRFBin);
 
     PIM_PROFILE_TICK(RunGemvKernel);
-    hipLaunchKernelGGL(
-        gemv_tree_pim_64cu_64th_fp16, dim3(blocks), dim3(threads_per_block), 0, stream, (uint8_t*)g_pim_base_addr,
-        (uint8_t*)weight->data, (uint8_t*)pim_gemv_tmp_buffer_, (uint8_t*)zero_buffer_, (uint8_t*)input->data,
-        (uint8_t*)output->data, n_batch, n_memory_tile, n_memory_tile, n_out_tile, real_out_size,
+    int device_id;
+    hipGetDevice(&device_id);
+    hipLaunchKernelGGL(gemv_tree_pim_64cu_64th_fp16, dim3(blocks), dim3(threads_per_block), 0, stream,
+                       (uint8_t*)g_pim_base_addr[device_id], (uint8_t*)weight->data, (uint8_t*)pim_gemv_tmp_buffer_,
+                       (uint8_t*)zero_buffer_, (uint8_t*)input->data, (uint8_t*)output->data, n_batch, n_memory_tile,
+                       n_memory_tile, n_out_tile, real_out_size,
 #ifdef EMULATOR
-        (PimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_, (PimMemTracer*)d_emulator_trace_,
+                       (PimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_,
+                       (PimMemTracer*)d_emulator_trace_,
 #endif
-        (uint8_t*)crf_bin, crf_size, is_gemv_add);
+                       (uint8_t*)crf_bin, crf_size, is_gemv_add);
 #ifndef EMULATOR
     if (block) hipStreamSynchronize(stream);
     PIM_PROFILE_TOCK(RunGemvKernel);
@@ -501,8 +513,8 @@ int PimExecutor::execute_gemv_tile_tree(PimBo* output, PimBo* operand0, PimBo* o
     h_fmtd16_size_[0] *= blocks;
 
     pim_emulator_->convert_mem_trace_from_16B_to_32B(h_fmtd32_, h_fmtd32_size_, h_fmtd16_, h_fmtd16_size_[0], OP_GEMV);
-    pim_emulator_->execute_gemv_tile_tree(output, weight, h_fmtd32_, h_fmtd32_size_[0], OP_GEMV, g_pim_base_addr,
-                                          pim_gemv_tmp_buffer_);
+    pim_emulator_->execute_gemv_tile_tree(output, weight, h_fmtd32_, h_fmtd32_size_[0], OP_GEMV,
+                                          g_pim_base_addr[device_id], pim_gemv_tmp_buffer_);
     PIM_PROFILE_TOCK(RunGemvEmulation);
 #endif
 
@@ -547,14 +559,17 @@ int PimExecutor::execute_gemv_list(PimBo* output, PimBo* input, PimBo* weight, h
     }
     PIM_PROFILE_TOCK(CreateCRFBin);
     PIM_PROFILE_TICK(RunGemvListKernel);
-    hipLaunchKernelGGL(gemv_kernel, dim3(blocks), dim3(threads_per_block), 0, stream, (uint8_t*)g_pim_base_addr,
-                       (uint8_t*)weight->data, (uint8_t*)pim_gemv_tmp_buffer_, (uint8_t*)input->data,
-                       (uint8_t*)output->data, 1, input_size, output_size, n_in_tile, n_out_tile, list_size,
+
+    int device_id;
+    hipGetDevice(&device_id);
+    hipLaunchKernelGGL(
+        gemv_kernel, dim3(blocks), dim3(threads_per_block), 0, stream, (uint8_t*)g_pim_base_addr[device_id],
+        (uint8_t*)weight->data, (uint8_t*)pim_gemv_tmp_buffer_, (uint8_t*)input->data, (uint8_t*)output->data, 1,
+        input_size, output_size, n_in_tile, n_out_tile, list_size,
 #ifdef EMULATOR
-                       (PimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_,
-                       (PimMemTracer*)d_emulator_trace_,
+        (PimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_, (PimMemTracer*)d_emulator_trace_,
 #endif
-                       (uint8_t*)crf_bin, crf_size, is_gemv_add);
+        (uint8_t*)crf_bin, crf_size, is_gemv_add);
 
 #ifndef EMULATOR
     if (block) hipStreamSynchronize(stream);
@@ -575,14 +590,13 @@ int PimExecutor::execute_gemv_list(PimBo* output, PimBo* input, PimBo* weight, h
     }
     h_fmtd16_size_[0] *= blocks;
 
-    pim_emulator_->convert_mem_trace_from_16B_to_32B(h_fmtd32_, h_fmtd32_size_, h_fmtd16_, h_fmtd16_size_[0],
-                                                     OP_GEMV);
+    pim_emulator_->convert_mem_trace_from_16B_to_32B(h_fmtd32_, h_fmtd32_size_, h_fmtd16_, h_fmtd16_size_[0], OP_GEMV);
     if (is_gemv_add)
         pim_emulator_->execute_gemv_add_tile_accum(output, weight, h_fmtd32_, h_fmtd32_size_[0], OP_GEMV,
-                                                   g_pim_base_addr, pim_gemv_tmp_buffer_);
+                                                   g_pim_base_addr[device_id], pim_gemv_tmp_buffer_);
     else
         pim_emulator_->execute_gemv_tile_accum(output, weight, h_fmtd32_, h_fmtd32_size_[0], OP_GEMV,
-                                               g_pim_base_addr, pim_gemv_tmp_buffer_);
+                                               g_pim_base_addr[device_id], pim_gemv_tmp_buffer_);
 
     PIM_PROFILE_TOCK(RunGemvListEmulation);
 #endif
@@ -627,8 +641,10 @@ int PimExecutor::execute_relu(PimBo* output, PimBo* pim_data, hipStream_t stream
 
         unsigned blocks = fbi_.num_pim_chan;
         unsigned threads_per_block = 32;
+        int device_id;
+        hipGetDevice(&device_id);
         hipLaunchKernelGGL(relu_pim, dim3(blocks), dim3(threads_per_block), 0, stream, (uint8_t*)pim_data->data,
-                           (uint8_t*)g_pim_base_addr, (uint8_t*)output->data, (int)output->size,
+                           (uint8_t*)(g_pim_base_addr[device_id]), (uint8_t*)output->data, (int)output->size,
 #ifdef EMULATOR
                            (PimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_,
                            (PimMemTracer*)d_emulator_trace_,
@@ -646,7 +662,7 @@ int PimExecutor::execute_relu(PimBo* output, PimBo* pim_data, hipStream_t stream
         h_fmtd16_size_[0] *= blocks;
         pim_emulator_->convert_mem_trace_from_16B_to_32B(h_fmtd32_, h_fmtd32_size_, h_fmtd16_, h_fmtd16_size_[0],
                                                          OP_RELU);
-        pim_emulator_->execute_relu(output, pim_data, h_fmtd32_, h_fmtd32_size_[0], g_pim_base_addr);
+        pim_emulator_->execute_relu(output, pim_data, h_fmtd32_, h_fmtd32_size_[0], g_pim_base_addr[device_id]);
 #else
         if (block) hipStreamSynchronize(stream);
 #endif
@@ -670,8 +686,11 @@ int PimExecutor::execute_copy(PimBo* output, PimBo* pim_data, hipStream_t stream
 
         unsigned blocks = fbi_.num_pim_chan;
         unsigned threads_per_block = 32;
+
+        int device_id;
+        hipGetDevice(&device_id);
         hipLaunchKernelGGL(copy_pim, dim3(blocks), dim3(threads_per_block), 0, stream, (uint8_t*)pim_data->data,
-                           (uint8_t*)g_pim_base_addr, (uint8_t*)output->data, (int)output->size,
+                           (uint8_t*)g_pim_base_addr[device_id], (uint8_t*)output->data, (int)output->size,
 #ifdef EMULATOR
                            (PimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_,
                            (PimMemTracer*)d_emulator_trace_,
@@ -689,7 +708,7 @@ int PimExecutor::execute_copy(PimBo* output, PimBo* pim_data, hipStream_t stream
         h_fmtd16_size_[0] *= blocks;
         pim_emulator_->convert_mem_trace_from_16B_to_32B(h_fmtd32_, h_fmtd32_size_, h_fmtd16_, h_fmtd16_size_[0],
                                                          OP_RELU);
-        pim_emulator_->execute_copy(output, pim_data, h_fmtd32_, h_fmtd32_size_[0], g_pim_base_addr);
+        pim_emulator_->execute_copy(output, pim_data, h_fmtd32_, h_fmtd32_size_[0], g_pim_base_addr[device_id]);
 #else
         if (block) hipStreamSynchronize(stream);
 #endif
@@ -729,14 +748,17 @@ int PimExecutor::execute_gemv_next_pim(PimBo* output, PimBo* operand0, PimBo* op
     PIM_PROFILE_TOCK(CreateCRFBin);
 
     PIM_PROFILE_TICK(RunGemvKernel);
-    hipLaunchKernelGGL(
-        gemv_next_pim_64cu_64th_fp16, dim3(blocks), dim3(threads_per_block), 0, stream, (uint8_t*)g_pim_base_addr,
-        (uint8_t*)weight->data, (uint8_t*)pim_gemv_tmp_buffer_, (uint8_t*)input->data, (uint8_t*)output->data, n_batch,
-        n_memory_tile, n_compute_tile, n_out_tile, real_out_size,
+    int device_id;
+    hipGetDevice(&device_id);
+    hipLaunchKernelGGL(gemv_next_pim_64cu_64th_fp16, dim3(blocks), dim3(threads_per_block), 0, stream,
+                       (uint8_t*)g_pim_base_addr[device_id], (uint8_t*)weight->data, (uint8_t*)pim_gemv_tmp_buffer_,
+                       (uint8_t*)input->data, (uint8_t*)output->data, n_batch, n_memory_tile, n_compute_tile,
+                       n_out_tile, real_out_size,
 #ifdef EMULATOR
-        (PimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_, (PimMemTracer*)d_emulator_trace_,
+                       (PimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_,
+                       (PimMemTracer*)d_emulator_trace_,
 #endif
-        (uint8_t*)crf_bin, crf_size, is_gemv_add);
+                       (uint8_t*)crf_bin, crf_size, is_gemv_add);
 #ifndef EMULATOR
     if (block) hipStreamSynchronize(stream);
     PIM_PROFILE_TOCK(RunGemvKernel);
@@ -816,9 +838,11 @@ int PimExecutor::execute_bn(PimBo* output, PimBo* pim_data, PimBo* beta, PimBo* 
     // printf("bshaped(%d,%d,%d,%d)\n", output->bshape.w, output->bshape.h, output->bshape.c, output->bshape.n);
     unsigned blocks = 64;
     unsigned threads_per_block = 32;
+    int device_id;
+    hipGetDevice(&device_id);
     hipLaunchKernelGGL(bn_pim_nr_sip, dim3(blocks), dim3(threads_per_block), 0, stream, (uint8_t*)pim_data->data,
-                       (uint8_t*)g_pim_base_addr, (uint8_t*)pim_gemv_tmp_buffer_, (uint8_t*)output->data, (int)num_tile,
-                       output->bshape.n, output->bshape.c, output->bshape.w,
+                       (uint8_t*)g_pim_base_addr[device_id], (uint8_t*)pim_gemv_tmp_buffer_, (uint8_t*)output->data,
+                       (int)num_tile, output->bshape.n, output->bshape.c, output->bshape.w,
 #ifdef EMULATOR
                        (PimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_,
                        (PimMemTracer*)d_emulator_trace_,
@@ -836,7 +860,8 @@ int PimExecutor::execute_bn(PimBo* output, PimBo* pim_data, PimBo* beta, PimBo* 
     }
     h_fmtd16_size_[0] *= blocks;
     pim_emulator_->convert_mem_trace_from_16B_to_32B(h_fmtd32_, h_fmtd32_size_, h_fmtd16_, h_fmtd16_size_[0], OP_BN);
-    pim_emulator_->execute_bn(output, pim_data, h_fmtd32_, h_fmtd32_size_[0], g_pim_base_addr, pim_gemv_tmp_buffer_);
+    pim_emulator_->execute_bn(output, pim_data, h_fmtd32_, h_fmtd32_size_[0], g_pim_base_addr[device_id],
+                              pim_gemv_tmp_buffer_);
 #else
     if (block) hipStreamSynchronize(stream);
 #endif

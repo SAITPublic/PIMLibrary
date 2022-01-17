@@ -17,7 +17,8 @@
 #include <pim_compiler.h>
 #include <pim_runtime_api.h>
 #include <vector>
-extern uint64_t g_pim_base_addr;
+#include "executor/PimExecutor.h"
+extern uint64_t g_pim_base_addr[MAX_NUM_GPUS];
 
 namespace pim
 {
@@ -40,7 +41,6 @@ class Tensor
     Tensor(pimc::TensorDesc desc, T *data) : desc_(desc), data_(data) {}
     T *get_data() { return data_; }
     pimc::TensorDesc get_desc() { return desc_; }
-
    private:
     pimc::TensorDesc desc_;
     T *data_;
@@ -70,7 +70,6 @@ class KernelArgs
 
     virtual void **get_kconfig() = 0;
     hipFunction_t get_kernel() { return kernel_; }
-
    protected:
     size_t size_;
     std::string crf_binary_host_;
@@ -182,7 +181,7 @@ class EltArgs : public KernelArgs
     {
         args_.input0_ = (uint8_t *)input_vector0_->get_data();
         args_.input1_ = (uint8_t *)input_vector1_->get_data();
-        args_.g_pim_base_addr_ = (uint8_t *)g_pim_base_addr;
+        args_.g_pim_base_addr_ = (uint8_t *)g_pim_base_addr[0];
         args_.output_ = (uint8_t *)output_vector_->get_data();
         args_.num_tile_ = (output_vector_->get_desc().get_dim(3)) / (131072);
 
@@ -319,7 +318,6 @@ class HIPCodegen
     pimc::PimCCompiled *get_pim_op() { return pim_op_; }
     void set_input_desc(std::vector<pimc::TensorDesc> input_list) { input_list_ = input_list; }
     void set_output_desc(std::vector<pimc::TensorDesc> output_list) { output_list_ = output_list; }
-
    private:
     HIPCodegen(HIPCodegen &&) = delete;
     HIPCodegen(const HIPCodegen &) = delete;
@@ -346,7 +344,6 @@ class HIPCompiler
     ~HIPCompiler() {}
     void execute(pimc::PimCCompiled *pim_op);
     hipFunction_t get_kernel_function() { return kernel_; }
-
    private:
     HIPCompiler(HIPCompiler &&) = delete;
     HIPCompiler(const HIPCompiler &) = delete;

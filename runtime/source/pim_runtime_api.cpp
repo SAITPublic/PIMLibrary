@@ -22,8 +22,8 @@ using namespace pim::runtime;
 PimRuntime* pim_runtime = nullptr;
 static bool log_initialized = false;
 static bool pim_initialized = false;
-bool pim_alloc_done = false;
-uint64_t g_pim_base_addr = 0x0;
+bool pim_alloc_done[10] = {false};
+uint64_t g_pim_base_addr[10] = {0x0};
 int PimInitialize(PimRuntimeType rt_type, PimPrecision precision)
 {
     int ret = 0;

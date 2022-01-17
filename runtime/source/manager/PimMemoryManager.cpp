@@ -9,6 +9,8 @@
  */
 
 #include "manager/PimMemoryManager.h"
+#include "executor/PimExecutor.h"
+
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
@@ -25,14 +27,15 @@ uint64_t fmm_map_pim(uint32_t, uint32_t, uint64_t);
 }
 #endif
 
-extern bool pim_alloc_done;
-extern uint64_t g_pim_base_addr;
+extern bool pim_alloc_done[MAX_NUM_GPUS];
+extern uint64_t g_pim_base_addr[MAX_NUM_GPUS];
 namespace pim
 {
 namespace runtime
 {
 namespace manager
 {
+std::map<uint32_t, gpuInfo*> gpu_devices;
 PimMemoryManager::PimMemoryManager(PimDevice* pim_device, PimRuntimeType rt_type, PimPrecision precision)
     : pim_device_(pim_device), rt_type_(rt_type), precision_(precision)
 {
@@ -46,7 +49,48 @@ int PimMemoryManager::initialize(void)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
+    int max_topology = 32;
+    FILE* fd;
+    char path[256];
+    uint32_t gpu_id;
+    int device_id = 0;
 
+    for (int id = 0; id < max_topology; id++) {
+        // Get GPU ID
+        snprintf(path, 256, "/sys/devices/virtual/kfd/kfd/topology/nodes/%d/gpu_id", id);
+        fd = fopen(path, "r");
+        if (!fd) continue;
+        if (fscanf(fd, "%ul", &gpu_id) != 1) {
+            fclose(fd);
+            continue;
+        }
+
+        fclose(fd);
+        if (gpu_id != 0) {
+            gpuInfo* device_info = new gpuInfo;
+            device_info->node_id = id;
+            device_info->gpu_id = gpu_id;
+            device_info->base_address = 0;
+            gpu_devices[device_id] = device_info;
+            device_id++;
+        }
+    }
+
+    if (device_id == 0) {
+        ret = -1;
+        DLOG(ERROR) << "GPU device not found " << __FUNCTION__ << " called";
+    }
+
+    hipGetDeviceCount(&num_gpu_devices_);
+
+    if (device_id != num_gpu_devices_) {
+        ret = -1;
+        DLOG(ERROR) << "Number of GPU Ids and Device Count doesn't match" << __FUNCTION__ << " called";
+    }
+
+    for (int device = 0; device < num_gpu_devices_; device++) {
+        fragment_allocator_.push_back(new SimpleHeap<PimBlockAllocator>);
+    }
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
@@ -78,7 +122,9 @@ int PimMemoryManager::alloc_memory(void** ptr, size_t size, PimMemType mem_type)
         }
 #endif
     } else if (mem_type == MEM_TYPE_PIM) {
-        *ptr = fragment_allocator_.alloc(size);
+        int device_id = 0;
+        hipGetDevice(&device_id);
+        *ptr = fragment_allocator_[device_id]->alloc(size);
     }
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
@@ -105,7 +151,9 @@ int PimMemoryManager::alloc_memory(PimBo* pim_bo)
         }
 #endif
     } else if (pim_bo->mem_type == MEM_TYPE_PIM) {
-        pim_bo->data = fragment_allocator_.alloc(pim_bo->size);
+        int device_id = 0;
+        hipGetDevice(&device_id);
+        pim_bo->data = fragment_allocator_[device_id]->alloc(pim_bo->size);
     }
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
@@ -130,7 +178,9 @@ int PimMemoryManager::free_memory(void* ptr, PimMemType mem_type)
         hipHostFree(ptr);
 #endif
     } else if (mem_type == MEM_TYPE_PIM) {
-        return fragment_allocator_.free(ptr);
+        int device_id = 0;
+        hipGetDevice(&device_id);
+        return fragment_allocator_[device_id]->free(ptr);
     }
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
@@ -156,7 +206,9 @@ int PimMemoryManager::free_memory(PimBo* pim_bo)
         pim_bo->data = nullptr;
 #endif
     } else if (pim_bo->mem_type == MEM_TYPE_PIM) {
-        if (fragment_allocator_.free(pim_bo->data)) return 0;
+        int device_id = 0;
+        hipGetDevice(&device_id);
+        if (fragment_allocator_[device_id]->free(pim_bo->data)) return 0;
         DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
         return -1;
     }
@@ -422,7 +474,7 @@ int PimMemoryManager::convert_data_layout_for_gemv_weight(PimBo* dst, PimBo* src
     return ret;
 }
 
-void* PimMemoryManager::PimBlockAllocator::alloc(size_t request_size, size_t& allocated_size) const
+void* PimBlockAllocator::alloc(size_t request_size, size_t& allocated_size) const
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     assert(request_size <= block_size() && "BlockAllocator alloc request exceeds block size.");
@@ -439,7 +491,7 @@ void* PimMemoryManager::PimBlockAllocator::alloc(size_t request_size, size_t& al
     return (void*)ret;
 }
 
-void PimMemoryManager::PimBlockAllocator::free(void* ptr, size_t length) const
+void PimBlockAllocator::free(void* ptr, size_t length) const
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     if (ptr == NULL || length == 0) {
@@ -451,48 +503,24 @@ void PimMemoryManager::PimBlockAllocator::free(void* ptr, size_t length) const
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
 }
 
-uint64_t PimMemoryManager::PimBlockAllocator::allocate_pim_block(size_t bsize) const
+uint64_t PimBlockAllocator::allocate_pim_block(size_t bsize) const
 {
-    if (pim_alloc_done == true) return 0;
-
-    // Get GPU ID
-    FILE* fd;
-    char path[256];
-    uint32_t gpu_id;
-    int max_topology = 10;
-    int node_id = 0;
-
-    for (int i = 0; i < max_topology; i++) {
-        snprintf(path, 256, "/sys/devices/virtual/kfd/kfd/topology/nodes/%d/gpu_id", i);
-        fd = fopen(path, "r");
-        if (!fd) return -1;
-        if (fscanf(fd, "%ul", &gpu_id) != 1) return -1;
-        fclose(fd);
-        if (gpu_id != 0) {
-            node_id = i;
-            break;
-        }
-    }
-
     uint64_t ret = 0;
-    /********************************************
-      ARG1 : node-id
-      ARG2 : gpu-id
-      ARG3 : block size
-    ********************************************/
-    if (!pim_alloc_done) {
-        ret = fmm_map_pim(node_id, gpu_id, bsize);
-        if (ret) {
-            pim_alloc_done = true;
-            g_pim_base_addr = ret;
-#ifndef ROCM3
-            hipHostRegister((void*)g_pim_base_addr, bsize, hipRegisterExternalSvm);
-#endif
-        } else {
-            std::cout << "fmm_map_pim failed! " << ret << std::endl;
-        }
-    }
+    int device_id = 0;
+    hipGetDevice(&device_id);
+    std::cout << "Device ID :" << device_id << std::endl;
+    if (pim_alloc_done[device_id] == true) return 0;
 
+    ret = fmm_map_pim(gpu_devices[device_id]->node_id, gpu_devices[device_id]->gpu_id, bsize);
+    if (ret) {
+        pim_alloc_done[device_id] = true;
+        g_pim_base_addr[device_id] = ret;
+#ifndef ROCM3
+        hipHostRegister((void*)g_pim_base_addr[device_id], bsize, hipRegisterExternalSvm);
+#endif
+    } else {
+        std::cout << "fmm_map_pim failed! " << ret << std::endl;
+    }
     return ret;
 }
 

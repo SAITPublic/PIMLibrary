@@ -12,6 +12,7 @@
 #define _PIM_MEMORY_MANAGER_H_
 
 #pragma GCC diagnostic ignored "-Wunused-private-field"
+#include <vector>
 
 #include "internal/simple_heap.hpp"
 #include "manager/PimInfo.h"
@@ -24,7 +25,29 @@ namespace runtime
 {
 namespace manager
 {
+struct gpuInfo {
+    uint32_t node_id;
+    uint32_t gpu_id;
+    uint32_t base_address;
+};
+
 class PimDevice;
+
+class PimBlockAllocator
+{
+   private:
+#if RADEON7
+    static const size_t block_size_ = 8589934592;  // 8GB Pim area
+#else
+    static const size_t block_size_ = 17179869184;  // 16GB Pim area
+#endif
+   public:
+    explicit PimBlockAllocator() {}
+    void* alloc(size_t request_size, size_t& allocated_size) const;
+    void free(void* ptr, size_t length) const;
+    uint64_t allocate_pim_block(size_t request_size) const;
+    size_t block_size() const { return block_size_; }
+};
 
 class PimMemoryManager
 {
@@ -51,6 +74,7 @@ class PimMemoryManager
     PimRuntimeType rt_type_;
     PimPrecision precision_;
     PimBlockInfo fbi_;
+    int num_gpu_devices_;
 
     /**
      * @brief PIM Block allocator of size 2MB
@@ -59,23 +83,7 @@ class PimMemoryManager
      *       It has to be modified to use PIM memory region for alloc and free.
      */
 
-    class PimBlockAllocator
-    {
-       private:
-#if RADEON7
-        static const size_t block_size_ = 8589934592;  // 8GB Pim area
-#else
-        static const size_t block_size_ = 17179869184;  // 16GB Pim area
-#endif
-       public:
-        explicit PimBlockAllocator() {}
-        void* alloc(size_t request_size, size_t& allocated_size) const;
-        void free(void* ptr, size_t length) const;
-        uint64_t allocate_pim_block(size_t request_size) const;
-        size_t block_size() const { return block_size_; }
-    };
-
-    SimpleHeap<PimBlockAllocator> fragment_allocator_;
+    std::vector<SimpleHeap<PimBlockAllocator>*> fragment_allocator_;
 };
 
 } /* namespace manager */
