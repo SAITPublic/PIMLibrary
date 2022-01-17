@@ -128,10 +128,10 @@ int pim_sv_mul_up_to_256KB(uint32_t input_len)
     return ret;
 }
 
-TEST(HIPIntegrationTest, PimSVAdd1) { EXPECT_TRUE(pim_sv_add_up_to_256KB(1 * 1024) == 0); }
-TEST(HIPIntegrationTest, PimSVAdd2) { EXPECT_TRUE(pim_sv_add_up_to_256KB(10 * 1024) == 0); }
-TEST(HIPIntegrationTest, PimSVAdd4) { EXPECT_TRUE(pim_sv_add_up_to_256KB(128 * 1024) == 0); }
+//TEST(HIPIntegrationTest, PimSVAdd1) { EXPECT_TRUE(pim_sv_add_up_to_256KB(1 * 1024) == 0); }
+//TEST(HIPIntegrationTest, PimSVAdd2) { EXPECT_TRUE(pim_sv_add_up_to_256KB(10 * 1024) == 0); }
+//TEST(HIPIntegrationTest, PimSVAdd4) { EXPECT_TRUE(pim_sv_add_up_to_256KB(128 * 1024) == 0); }
 
-TEST(HIPIntegrationTest, PimSVMul1) { EXPECT_TRUE(pim_sv_mul_up_to_256KB(1 * 1024) == 0); }
-TEST(HIPIntegrationTest, PimSVMul2) { EXPECT_TRUE(pim_sv_mul_up_to_256KB(10 * 1024) == 0); }
-TEST(HIPIntegrationTest, PimSVMul4) { EXPECT_TRUE(pim_sv_mul_up_to_256KB(128 * 1024) == 0); }
+//TEST(HIPIntegrationTest, PimSVMul1) { EXPECT_TRUE(pim_sv_mul_up_to_256KB(1 * 1024) == 0); }
+//TEST(HIPIntegrationTest, PimSVMul2) { EXPECT_TRUE(pim_sv_mul_up_to_256KB(10 * 1024) == 0); }
+//TEST(HIPIntegrationTest, PimSVMul4) { EXPECT_TRUE(pim_sv_mul_up_to_256KB(128 * 1024) == 0); }
