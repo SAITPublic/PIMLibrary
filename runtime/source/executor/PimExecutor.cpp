@@ -572,6 +572,49 @@ int PimExecutor::execute_relu(PimBo* output, PimBo* pim_data, hipStream_t stream
     return ret;
 }
 
+int PimExecutor::execute_copy(PimBo* output, PimBo* pim_data, hipStream_t stream, bool block)
+{
+    DLOG(INFO) << "called";
+    int ret = 0;
+
+    if (compiler_env_value == 1) {
+        DLOG(ERROR) << "PIM compiler path is not supported yet";
+    } else {
+        uint8_t* crf_bin = find_crf(OP_COPY, output->size);
+        int crf_size = 32;
+        if (crf_bin == nullptr) {
+            crf_bin = make_crf_bin(OP_COPY, output->size);
+        }
+
+        unsigned blocks = fbi_.num_pim_chan;
+        unsigned threads_per_block = 32;
+        hipLaunchKernelGGL(copy_pim, dim3(blocks), dim3(threads_per_block), 0, stream, (uint8_t*)pim_data->data,
+                           (uint8_t*)g_pim_base_addr, (uint8_t*)output->data, (int)output->size,
+#ifdef EMULATOR
+                           (PimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_,
+                           (PimMemTracer*)d_emulator_trace_,
+#endif
+                           (uint8_t*)crf_bin, crf_size);
+#ifdef EMULATOR
+        hipStreamSynchronize(stream);
+        hipMemcpy((void*)h_fmtd16_size_, (void*)d_fmtd16_size_, sizeof(int), hipMemcpyDeviceToHost);
+        hipMemcpy((void*)h_fmtd16_, (void*)d_fmtd16_, sizeof(PimMemTraceData) * max_fmtd_size_, hipMemcpyDeviceToHost);
+
+        for (size_t i = 1; i < blocks; i++) {
+            memcpy(&h_fmtd16_[i * h_fmtd16_size_[0]], &h_fmtd16_[i * fmtd_size_per_ch_],
+                   h_fmtd16_size_[0] * sizeof(PimMemTraceData));
+        }
+        h_fmtd16_size_[0] *= blocks;
+        pim_emulator_->convert_mem_trace_from_16B_to_32B(h_fmtd32_, h_fmtd32_size_, h_fmtd16_, h_fmtd16_size_[0],
+                                                         OP_RELU);
+        pim_emulator_->execute_copy(output, pim_data, h_fmtd32_, h_fmtd32_size_[0], g_pim_base_addr);
+#else
+        if (block) hipStreamSynchronize(stream);
+#endif
+    }
+    return ret;
+}
+
 int PimExecutor::execute_gemv_next_pim(PimBo* output, PimBo* operand0, PimBo* operand1, int is_gemv_add,
                                        hipStream_t stream, bool block)
 {

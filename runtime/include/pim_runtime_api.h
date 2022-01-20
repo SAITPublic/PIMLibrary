@@ -243,6 +243,7 @@ __PIM_API__ int PimExecuteMul(PimBo* output, void* scalar, PimBo* vector, void* 
  */
 __PIM_API__ int PimExecuteRelu(PimBo* output, PimBo* pim_data, void* stream = nullptr, bool block = false);
 
+
 /**
  * @brief Executes PIM GEMV operation
  *

@@ -46,6 +46,7 @@ typedef enum __PimOpType {
     OP_ELT_MUL,
     OP_RELU,
     OP_BN,
+    OP_COPY,
     OP_DUMMY,
 } PimOpType;
 

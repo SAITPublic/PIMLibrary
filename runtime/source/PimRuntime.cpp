@@ -165,7 +165,7 @@ int PimRuntime::copy_memory(void* dst, void* src, size_t size, PimMemCpyType cpy
     int ret = 0;
 
     ret = pim_manager_->copy_memory(dst, src, size, cpy_type);
-
+    
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
@@ -175,8 +175,12 @@ int PimRuntime::copy_memory(PimBo* dst, PimBo* src, PimMemCpyType cpy_type)
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
 
-    ret = pim_manager_->copy_memory(dst, src, cpy_type);
-
+    if (cpy_type == PIM_TO_PIM) {
+        ret = pim_executor_->execute_copy(dst, src, NULL, true);
+    } else {
+        ret = pim_manager_->copy_memory(dst, src, cpy_type);
+    }
+    
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }

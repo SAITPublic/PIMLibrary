@@ -202,6 +202,7 @@ __device__ void _B_CMD(int type)
 #include "pim_elt_op_kernels.pimk"
 #include "pim_gemv_kernels.pimk"
 #include "pim_relu_kernels.pimk"
+#include "pim_copy_kernels.pimk"
 
 __global__ void dummy_kernel(void) {}
 

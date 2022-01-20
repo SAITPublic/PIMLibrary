@@ -43,6 +43,7 @@ class PimExecutor
     int execute_add(PimBo* output, PimBo* operand0, PimBo* operand1, hipStream_t stream, bool block);
     int execute_mul(PimBo* output, PimBo* operand0, PimBo* operand1, hipStream_t stream, bool block);
     int execute_relu(PimBo* output, PimBo* pim_data, hipStream_t stream, bool block);
+    int execute_copy(PimBo* output, PimBo* pim_data, hipStream_t stream, bool block);
     int execute_bn(PimBo* output, PimBo* pim_data, PimBo* beta, PimBo* gamma, PimBo* mean, PimBo* variance,
                    double epsilon, hipStream_t stream, bool block);
     int execute_gemv(PimBo* output, PimBo* operand0, PimBo* operand1, hipStream_t stream, bool block);

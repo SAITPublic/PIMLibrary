@@ -37,6 +37,9 @@ inline const char* get_pim_op_string(PimOpType op_type)
         case OP_RELU:
             op_str = "relu";
             break;
+        case OP_COPY:
+            op_str = "copy";
+            break;
         case OP_DUMMY:
             op_str = "dummy";
             break;
