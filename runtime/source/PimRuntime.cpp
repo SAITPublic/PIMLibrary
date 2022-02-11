@@ -333,37 +333,6 @@ PimGemvBundle* PimRuntime::find_gemv_bundle(PimBo* weight)
     return addr;
 }
 
-#if 0
-PimGemvBundle* PimRuntime::find_gemv_bundle(PimBo* weight, size_t list_size)
-{
-    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
-    PimGemvBundle* addr = nullptr;
-
-    uint32_t w_key = 0;
-    uint32_t* w_addr_ptr = nullptr;
-    int step = 0;
-
-    for (int i = 0; i < list_size; i++) {
-        weight = wei_list[i];
-        w_addr_ptr = reinterpret_cast<uint32_t*>(weight->data);
-        step = weight->size >> 1;
-        for (int i = 0; i < weight->size / sizeof(uint32_t); i += step) {
-            w_key ^= w_addr_ptr[i];
-        }
-    }
-
-    std::unordered_map<uint32_t, PimGemvBundle*>::const_iterator found = weight_map_.find(w_key);
-    if (found != weight_map_.end()) {
-        addr = found->second;
-    } else {
-        DLOG(INFO) << "[%s] not found\tw_addr:%p, w_key:%X, weight_map_size:%d\n" << __func__ << wei_list[0] << w_key << weight_map_.size();
-    }
-
-    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
-    return addr;
-}
-#endif
-
 int PimRuntime::insert_gemv_bundle(PimBo* weight, PimGemvBundle* bundle)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
@@ -381,35 +350,6 @@ int PimRuntime::insert_gemv_bundle(PimBo* weight, PimGemvBundle* bundle)
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
-
-#if 0
-int PimRuntime::insert_gemv_bundle(PimBo* weight, size_t list_size, PimGemvBundle* bundle)
-{
-    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
-    int ret = 0;
-
-    uint32_t w_key = 0;
-    uint32_t* w_addr_ptr = nullptr;
-    int step = 0;
-    PimBo* weight = nullptr;
-
-    for (int i = 0; i < list_size; i++) {
-        weight = weight_list[i];
-        w_addr_ptr = reinterpret_cast<uint32_t*>(weight->data);
-        step = weight->size >> 1;
-        for (int i = 0; i < weight->size / sizeof(uint32_t); i += step) {
-            w_key ^= w_addr_ptr[i];
-        }
-    }
-
-    weight_map_.insert(std::make_pair(w_key, bundle));
-    printf("[%s] insert\tw_addr:%p, w_key:%X, weight_map_size:%d\n", __func__, weight->data, w_key,
-           weight_map_.size());
-
-    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
-    return ret;
-}
-#endif
 
 PimGemvBundle* PimRuntime::get_gemv_bundle(PimBo* dev_wei, size_t list_size)
 {
