@@ -40,6 +40,7 @@ class Tensor
     Tensor(pimc::TensorDesc desc, T *data) : desc_(desc), data_(data) {}
     T *get_data() { return data_; }
     pimc::TensorDesc get_desc() { return desc_; }
+
    private:
     pimc::TensorDesc desc_;
     T *data_;
@@ -69,6 +70,7 @@ class KernelArgs
 
     virtual void **get_kconfig() = 0;
     hipFunction_t get_kernel() { return kernel_; }
+
    protected:
     size_t size_;
     std::string crf_binary_host_;
@@ -317,6 +319,7 @@ class HIPCodegen
     pimc::PimCCompiled *get_pim_op() { return pim_op_; }
     void set_input_desc(std::vector<pimc::TensorDesc> input_list) { input_list_ = input_list; }
     void set_output_desc(std::vector<pimc::TensorDesc> output_list) { output_list_ = output_list; }
+
    private:
     HIPCodegen(HIPCodegen &&) = delete;
     HIPCodegen(const HIPCodegen &) = delete;
@@ -343,6 +346,7 @@ class HIPCompiler
     ~HIPCompiler() {}
     void execute(pimc::PimCCompiled *pim_op);
     hipFunction_t get_kernel_function() { return kernel_; }
+
    private:
     HIPCompiler(HIPCompiler &&) = delete;
     HIPCompiler(const HIPCompiler &) = delete;
@@ -389,7 +393,7 @@ class PimCDriver
     HIPExecutor executor_;
     PimOpType curr_op_type_;
 };
-}
-}
-}
+}  // namespace pimc_driver
+}  // namespace runtime
+}  // namespace pim
 #endif

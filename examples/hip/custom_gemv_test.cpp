@@ -4,34 +4,11 @@
 #include "executor/gpu_hip_kernels/gpu_custom_ops.h"
 #include "half.hpp"
 #include "pim_runtime_api.h"
-#include "utility/pim_dump.hpp"
+#include "utility/pim_debug.hpp"
 
 #define EPSILON (1.0)
 
 using half_float::half;
-
-void matmulCPU(half* input0, half* input1, half* output, int m, int n, int k, half alpha, half beta)
-{
-    for (int mi = 0; mi < m; mi++) {
-        for (int ni = 0; ni < n; ni++) {
-            float temp = 0;
-            for (int ki = 0; ki < k; ki++) {
-                temp += (input0[mi * k + ki] * input1[ki * n + ni]);
-            }
-            int out_idx = mi * n + ni;
-            output[out_idx] += alpha * temp + beta * output[out_idx];
-        }
-    }
-}
-
-void transposeCPU(half* in, half* out, int row, int col)
-{
-    for (int ri = 0; ri < row; ri++) {
-        for (int ci = 0; ci < col; ci++) {
-            out[ci * row + ri] = in[ri * col + ci];
-        }
-    }
-}
 
 int custom_gemv_Axy(bool block)
 {

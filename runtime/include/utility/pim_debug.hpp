@@ -8,14 +8,67 @@
  * to third parties without the express written permission of Samsung Electronics.
  */
 
-#ifndef _PIM_DUMP_HPP_
-#define _PIM_DUMP_HPP_
+#ifndef _PIM_DEBUG_HPP_
+#define _PIM_DEBUG_HPP_
 
 #include <iostream>
 #include "half.hpp"
 #include "manager/PimInfo.h"
 #include "pim_data_types.h"
 #include "stdio.h"
+
+inline void print_pimbo(PimBo* bo, const char* str = nullptr, const char* func = __func__, int line = __LINE__)
+{
+    if (bo == nullptr) {
+        printf("PimBo structure is null\n");
+        return;
+    }
+    printf("[%s][%d] %s\n", func, line, str);
+    printf("[%s][%d] mem_type:%d, precision:%d, size:%d, user_ptr:%d\n", func, line, bo->mem_type, bo->precision,
+           bo->size, bo->use_user_ptr);
+    printf("[%s][%d] bshape(w:%d, h:%d, c:%d, n:%d)\n", func, line, bo->bshape.w, bo->bshape.h, bo->bshape.c,
+           bo->bshape.n);
+    printf("[%s][%d] bshape_r(w:%d, h:%d, c:%d, n:%d)\n", func, line, bo->bshape_r.w, bo->bshape_r.h, bo->bshape_r.c,
+           bo->bshape_r.n);
+    printf("\n");
+}
+
+inline void print_fp16(half_float::half* buffer, size_t size, size_t step = 0)
+{
+    printf("\n");
+    for (int i = 0; i < size; i++) {
+        printf("[%d] %f ", i + 1, (float)buffer[i]);
+        if ((i + 1) % 8 == 0) printf("\n");
+        if (step != 0) {
+            if ((i + 1) % step == 0) printf("\n");
+        }
+    }
+    printf("\n");
+}
+
+inline void matmulCPU(half_float::half* input0, half_float::half* input1, half_float::half* output, int m, int n, int k,
+                      half_float::half alpha, half_float::half beta)
+{
+    for (int mi = 0; mi < m; mi++) {
+        for (int ni = 0; ni < n; ni++) {
+            float temp = 0;
+            for (int ki = 0; ki < k; ki++) {
+                temp += (input0[mi * k + ki] * input1[ki * n + ni]);
+            }
+            int out_idx = mi * n + ni;
+            output[out_idx] += alpha * temp + beta * output[out_idx];
+        }
+    }
+}
+
+inline void transposeCPU(half_float::half* in, half_float::half* out, int row, int col)
+{
+    for (int ri = 0; ri < row; ri++) {
+        for (int ci = 0; ci < col; ci++) {
+            out[ci * row + ri] = in[ri * col + ci];
+        }
+    }
+}
 
 inline const char* get_pim_op_string(PimOpType op_type)
 {
@@ -137,6 +190,15 @@ inline int compare_data(char* data_a, char* data_b, size_t size)
         }
     }
     return ret;
+}
+
+inline void set_half_data(half_float::half* buffer, half_float::half value, size_t size)
+{
+    int ret = 0;
+
+    for (int i = 0; i < size; i++) {
+        buffer[i] = value;
+    }
 }
 
 inline int compare_half_Ulps_and_absoulte(half_float::half data_a, half_float::half data_b, int allow_bit_cnt,
@@ -294,4 +356,4 @@ inline void addressMapping(uint64_t physicalAddress, unsigned& newTransactionCha
     newTransactionRank = tempA ^ tempB;
 }
 
-#endif /* _PIM_DUMP_HPP_ */
+#endif /* _PIM_DEBUG_HPP_ */

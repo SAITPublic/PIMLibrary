@@ -405,8 +405,8 @@ int main(int argc, char* argv[])
                            (uint8_t*)test1_d, (uint8_t*)test2_d, ch);
         hipDeviceSynchronize();
 
-		for (int bg = 0; bg < 4; bg++) {
-            for (int ba = 0; ba < 4; ba+=2) {
+        for (int bg = 0; bg < 4; bg++) {
+            for (int ba = 0; ba < 4; ba += 2) {
                 addr_offset = addr_gen(ch, 0, bg, ba, out_row, 0);
                 output = (uint64_t*)((uint8_t*)pim_base + addr_offset);
                 if (compareOut(test2_h, output)) {

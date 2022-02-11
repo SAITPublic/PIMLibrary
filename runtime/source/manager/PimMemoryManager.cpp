@@ -14,6 +14,7 @@
 #include <string.h>
 #include <iostream>
 #include "hip/hip_runtime.h"
+#include "utility/pim_debug.hpp"
 #include "utility/pim_util.h"
 
 #ifdef __cplusplus

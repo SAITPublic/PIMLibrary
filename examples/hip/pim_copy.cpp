@@ -16,7 +16,7 @@
 #include <iostream>
 #include "half.hpp"
 #include "pim_runtime_api.h"
-#include "utility/pim_dump.hpp"
+#include "utility/pim_debug.hpp"
 
 #ifdef DEBUG_PIM
 #define NUM_ITER (100)

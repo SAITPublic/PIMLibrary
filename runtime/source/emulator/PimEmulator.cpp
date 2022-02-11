@@ -14,7 +14,7 @@
 #include <iostream>
 #include "half.hpp"
 #include "hip/hip_runtime.h"
-#include "utility/pim_dump.hpp"
+#include "utility/pim_debug.hpp"
 #include "utility/pim_log.h"
 #include "utility/pim_util.h"
 
@@ -300,7 +300,6 @@ int PimEmulator::execute_copy(PimBo* output, PimBo* pim_data, PimMemTraceData* f
 
     return ret;
 }
-
 
 } /* namespace emulator */
 } /* namespace runtime */

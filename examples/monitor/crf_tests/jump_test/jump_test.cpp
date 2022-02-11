@@ -405,20 +405,20 @@ int main(int argc, char* argv[])
     uint64_t addr_offset;
 
     for (int bg = 0; bg < 4; bg++) {
-        for (int ba = 0; ba < 4; ba+=2) {
+        for (int ba = 0; ba < 4; ba += 2) {
             for (int row = 1; row <= 2; row++) {
                 addr_offset = addr_gen(chan, 0, bg, ba, row, 0);
                 output = (uint64_t*)((uint8_t*)pim_base + addr_offset);
                 if (compareOut(test1_h, output)) {
                     printf("%#018lx %#018lx %#018lx %#018lx\n", output[3], output[2], output[1], output[0]);
-	                failed = 1;
+                    failed = 1;
                 }
             }
         }
     }
 
     if (failed)
-		printf("FAIL\n");
+        printf("FAIL\n");
     else
         printf("PASS\n");
 

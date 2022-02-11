@@ -15,6 +15,7 @@
 #include <iostream>
 #include "executor/PimExecutor.h"
 #include "pim_runtime_api.h"
+#include "utility/pim_debug.hpp"
 #include "utility/pim_log.h"
 #include "utility/pim_util.h"
 
@@ -137,35 +138,13 @@ int PimRuntime::free_memory(PimBo* pim_bo)
     return ret;
 }
 
-int PimRuntime::convert_data_layout(void* dst, void* src, size_t size, PimOpType op_type)
-{
-    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
-    int ret = 0;
-
-    ret = pim_manager_->convert_data_layout(dst, src, size, op_type);
-
-    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
-    return ret;
-}
-
-int PimRuntime::convert_data_layout(PimBo* dst, PimBo* src, PimOpType op_type)
-{
-    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
-    int ret = 0;
-
-    ret = pim_manager_->convert_data_layout(dst, src, op_type);
-
-    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
-    return ret;
-}
-
 int PimRuntime::copy_memory(void* dst, void* src, size_t size, PimMemCpyType cpy_type)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
 
     ret = pim_manager_->copy_memory(dst, src, size, cpy_type);
-    
+
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
@@ -180,7 +159,7 @@ int PimRuntime::copy_memory(PimBo* dst, PimBo* src, PimMemCpyType cpy_type)
     } else {
         ret = pim_manager_->copy_memory(dst, src, cpy_type);
     }
-    
+
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
@@ -268,6 +247,23 @@ int PimRuntime::execute_gemv_add(PimBo* output, PimBo* operand0, PimBo* operand1
     return ret;
 }
 
+int PimRuntime::execute_gemv_list(PimBo* output, PimBo* vector, PimBo* matrix, void* stream, bool block)
+{
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
+    int ret = 0;
+
+    if (!is_pim_gemv_list_available(output, vector, matrix)) {
+        DLOG(ERROR) << "Invalid GEMV list dimension";
+        return -1;
+    }
+
+    PimGemvBundle* bundle = get_gemv_bundle(matrix, matrix->bshape.n);
+    ret = pim_executor_->execute_gemv_list(output, vector, bundle->wei, (hipStream_t)stream, block);
+
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+    return ret;
+}
+
 int PimRuntime::execute_relu(PimBo* output, PimBo* pim_data, void* stream, bool block)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
@@ -318,25 +314,6 @@ PimGemvBundle* PimRuntime::find_gemv_bundle(PimBo* weight)
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     PimGemvBundle* addr = nullptr;
 
-#if 0
-    char env_p, *ptr;
-    bool need_flush = false;
-    if (std::getenv("ENABLE_MIOPEN_PYTORCH")) {
-      ptr = std::getenv("ENABLE_MIOPEN_PYTORCH");
-      env_p = *ptr;
-    } else {
-      env_p = '0';
-    }
-    if (env_p == '1')
-      need_flush = true;
-
-    if (need_flush && (weight->mem_type == MEM_TYPE_DEVICE || weight->mem_type == MEM_TYPE_PIM)) {
-        /* GPU cache should be flushed before CPU access to the area */
-        int cache_flush;
-        hipMemcpy(&cache_flush, weight->data, sizeof(int), hipMemcpyDeviceToHost);
-    }
-#endif
-
     uint32_t w_key = 0;
     uint32_t* w_addr_ptr = reinterpret_cast<uint32_t*>(weight->data);
     int step = weight->size >> 1;
@@ -348,12 +325,44 @@ PimGemvBundle* PimRuntime::find_gemv_bundle(PimBo* weight)
     if (found != weight_map_.end()) {
         addr = found->second;
     } else {
-        DLOG(INFO) << "[%s] not found\tw_addr:%p, w_key:%X, weight_map_size:%d\n" << __func__ << weight->data << w_key << weight_map_.size();
+        DLOG(INFO) << "[%s] not found\tw_addr:%p, w_key:%X, weight_map_size:%d\n"
+                   << __func__ << weight->data << w_key << weight_map_.size();
     }
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return addr;
 }
+
+#if 0
+PimGemvBundle* PimRuntime::find_gemv_bundle(PimBo* weight, size_t list_size)
+{
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
+    PimGemvBundle* addr = nullptr;
+
+    uint32_t w_key = 0;
+    uint32_t* w_addr_ptr = nullptr;
+    int step = 0;
+
+    for (int i = 0; i < list_size; i++) {
+        weight = wei_list[i];
+        w_addr_ptr = reinterpret_cast<uint32_t*>(weight->data);
+        step = weight->size >> 1;
+        for (int i = 0; i < weight->size / sizeof(uint32_t); i += step) {
+            w_key ^= w_addr_ptr[i];
+        }
+    }
+
+    std::unordered_map<uint32_t, PimGemvBundle*>::const_iterator found = weight_map_.find(w_key);
+    if (found != weight_map_.end()) {
+        addr = found->second;
+    } else {
+        DLOG(INFO) << "[%s] not found\tw_addr:%p, w_key:%X, weight_map_size:%d\n" << __func__ << wei_list[0] << w_key << weight_map_.size();
+    }
+
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+    return addr;
+}
+#endif
 
 int PimRuntime::insert_gemv_bundle(PimBo* weight, PimGemvBundle* bundle)
 {
@@ -367,42 +376,99 @@ int PimRuntime::insert_gemv_bundle(PimBo* weight, PimGemvBundle* bundle)
         w_key ^= w_addr_ptr[i];
     }
     weight_map_.insert(std::make_pair(w_key, bundle));
+    printf("[%s] insert\tw_addr:%p, w_key:%X, weight_map_size:%d\n", __func__, weight->data, w_key, weight_map_.size());
+
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+    return ret;
+}
+
+#if 0
+int PimRuntime::insert_gemv_bundle(PimBo* weight, size_t list_size, PimGemvBundle* bundle)
+{
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
+    int ret = 0;
+
+    uint32_t w_key = 0;
+    uint32_t* w_addr_ptr = nullptr;
+    int step = 0;
+    PimBo* weight = nullptr;
+
+    for (int i = 0; i < list_size; i++) {
+        weight = weight_list[i];
+        w_addr_ptr = reinterpret_cast<uint32_t*>(weight->data);
+        step = weight->size >> 1;
+        for (int i = 0; i < weight->size / sizeof(uint32_t); i += step) {
+            w_key ^= w_addr_ptr[i];
+        }
+    }
+
+    weight_map_.insert(std::make_pair(w_key, bundle));
     printf("[%s] insert\tw_addr:%p, w_key:%X, weight_map_size:%d\n", __func__, weight->data, w_key,
            weight_map_.size());
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
+#endif
 
-PimGemvBundle* PimRuntime::get_gemv_bundle(PimBo* weight, PimBo* dev_in, PimBo* dev_out)
+PimGemvBundle* PimRuntime::get_gemv_bundle(PimBo* dev_wei, size_t list_size)
+{
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
+    PimGemvBundle* bundle = nullptr;
+    bundle = find_gemv_bundle(dev_wei);
+
+    if (bundle == nullptr) {
+        PimBo* host_reord_wei = PimCreateBo(dev_wei->bshape.w, dev_wei->bshape.h * list_size, dev_wei->bshape.c, 1,
+                                            PIM_FP16, MEM_TYPE_HOST);
+        PimBo* pre_wei =
+            PimCreateBo(dev_wei->bshape.w, dev_wei->bshape.h * list_size, dev_wei->bshape.c, 1, PIM_FP16, MEM_TYPE_PIM);
+        pim_manager_->convert_data_layout(host_reord_wei, dev_wei, OP_GEMV);
+        PimCopyMemory(pre_wei, host_reord_wei, HOST_TO_PIM);
+
+        bundle = new PimGemvBundle;
+        bundle->in = nullptr;
+        bundle->wei = pre_wei;
+        bundle->out = nullptr;
+
+        insert_gemv_bundle(dev_wei, bundle);
+
+        PimDestroyBo(host_reord_wei);
+    }
+
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+    return bundle;
+}
+
+PimGemvBundle* PimRuntime::get_gemv_bundle(PimBo* dev_wei, PimBo* dev_in, PimBo* dev_out)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     // TODO: change the key from uint64_t to (keybo*, size): pull_req: 456)?
-    uint64_t w_addr = reinterpret_cast<uint64_t>(weight->data);
+    uint64_t w_addr = reinterpret_cast<uint64_t>(dev_wei->data);
     PimGemvBundle* bundle = nullptr;
-    bundle = find_gemv_bundle(weight);
+    bundle = find_gemv_bundle(dev_wei);
 
     if (bundle == nullptr) {
         PimDesc* pim_desc =
-            PimCreateDesc(weight->bshape_r.n, 1, weight->bshape_r.h, weight->bshape_r.w, PIM_FP16, OP_GEMV);
+            PimCreateDesc(dev_wei->bshape_r.n, 1, dev_wei->bshape_r.h, dev_wei->bshape_r.w, PIM_FP16, OP_GEMV);
         PimBo* host_weight = nullptr;
 
-        if (weight->data == nullptr) {
-            DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+        if (dev_wei->data == nullptr) {
+            PimDestroyDesc(pim_desc);
+            DLOG(ERROR) << "[END] " << __FUNCTION__ << " called";
             return nullptr;
         }
-        if (weight->mem_type == MEM_TYPE_HOST) {
-            host_weight = weight;
-        } else if (weight->mem_type == MEM_TYPE_DEVICE || weight->mem_type == MEM_TYPE_PIM) {
-            uint32_t w_size = weight->bshape_r.h * weight->bshape_r.w;
+        if (dev_wei->mem_type == MEM_TYPE_HOST) {
+            host_weight = dev_wei;
+        } else if (dev_wei->mem_type == MEM_TYPE_DEVICE || dev_wei->mem_type == MEM_TYPE_PIM) {
+            uint32_t w_size = dev_wei->bshape_r.h * dev_wei->bshape_r.w;
             host_weight = PimCreateBo(pim_desc, MEM_TYPE_HOST, GEMV_WEIGHT);
-            hipMemcpy(host_weight->data, weight->data, w_size * sizeof(uint16_t), hipMemcpyDeviceToHost);
+            hipMemcpy(host_weight->data, dev_wei->data, w_size * sizeof(uint16_t), hipMemcpyDeviceToHost);
         }
 
         PimBo* host_reordered_weight = PimCreateBo(pim_desc, MEM_TYPE_HOST, GEMV_WEIGHT);
         PimBo* pre_wei = PimCreateBo(pim_desc, MEM_TYPE_PIM, GEMV_WEIGHT);
 
-        convert_data_layout(host_reordered_weight, host_weight, OP_GEMV);
+        pim_manager_->convert_data_layout(host_reordered_weight, host_weight, OP_GEMV);
         PimCopyMemory(pre_wei, host_reordered_weight, HOST_TO_PIM);
 
         bundle = new PimGemvBundle;
@@ -410,12 +476,12 @@ PimGemvBundle* PimRuntime::get_gemv_bundle(PimBo* weight, PimBo* dev_in, PimBo* 
         bundle->wei = pre_wei;
         bundle->out = dev_out;
 
-        insert_gemv_bundle(weight, bundle);
+        insert_gemv_bundle(dev_wei, bundle);
 
         PimDestroyDesc(pim_desc);
         PimDestroyBo(host_reordered_weight);
 
-        if (host_weight != weight) {
+        if (host_weight != dev_wei) {
             PimDestroyBo(host_weight);
         }
     }

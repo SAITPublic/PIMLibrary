@@ -40,8 +40,6 @@ class PimRuntime
     int alloc_memory(PimBo* pimBo, void* user_ptr = nullptr);
     int free_memory(void* ptr, PimMemType mem_type);
     int free_memory(PimBo* pimBo);
-    int convert_data_layout(void* dst, void* src, size_t size, PimOpType op_type);
-    int convert_data_layout(PimBo* dst, PimBo* src, PimOpType op_type);
     int copy_memory(void* dst, void* src, size_t size, PimMemCpyType cpy_type);
     int copy_memory(PimBo* dst, PimBo* src, PimMemCpyType cpy_type);
 
@@ -52,14 +50,15 @@ class PimRuntime
     int execute_gemv_add(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream, bool block = false);
     int execute_gemv_add(PimBo* output, PimBo* operand0, PimBo* operand1, PimBo* operand2, bool relu, void* stream,
                          bool block = false);
+    int execute_gemv_list(PimBo* output, PimBo* vector, PimBo* matrix, void* stream, bool block = false);
     int execute_bn(PimBo* output, PimBo* pim_data, PimBo* beta, PimBo* gamma, PimBo* mean, PimBo* variance,
                    double epsilon, void* stream, bool block = false);
     int execute_sync(void* stream);
-
     int execute_dummy(void);
     int insert_gemv_bundle(PimBo* weight, PimGemvBundle* bundle);
     PimGemvBundle* find_gemv_bundle(PimBo* weight);
-    PimGemvBundle* get_gemv_bundle(PimBo* weight, PimBo* dev_in, PimBo* dev_out);
+    PimGemvBundle* get_gemv_bundle(PimBo* dev_wei, PimBo* dev_in, PimBo* dev_out);
+    PimGemvBundle* get_gemv_bundle(PimBo* dev_wei, size_t list_size);
 
    private:
     pim::runtime::manager::PimManager* pim_manager_;

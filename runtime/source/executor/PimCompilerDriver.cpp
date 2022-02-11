@@ -4,7 +4,7 @@
 #include <vector>
 
 #include "executor/PimCompilerDriver.h"
-#include "utility/pim_dump.hpp"
+#include "utility/pim_debug.hpp"
 #include "utility/pim_log.h"
 #include "utility/pim_profile.h"
 #include "utility/pim_util.h"
@@ -167,6 +167,6 @@ bool PimCDriver::execute_code(KernelArgs *kargs)
     executor_.set_kernel_args(kargs);
     return executor_.execute(curr_op_type_);
 }
-}
-}
-}
+}  // namespace pimc_driver
+}  // namespace runtime
+}  // namespace pim

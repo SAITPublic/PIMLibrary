@@ -451,6 +451,24 @@ int PimExecuteGemvAdd(PimBo* output, PimBo* operand0, PimBo* operand1, PimBo* op
     return ret;
 }
 
+int PimExecuteGemvList(PimBo* output, PimBo* vector, PimBo* matrix, void* stream, bool block)
+{
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
+    PIM_PROFILE_TICK(ExecuteGemvList);
+    int ret = 0;
+
+    if (pim_runtime == nullptr) {
+        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+        return -1;
+    }
+
+    ret = pim_runtime->execute_gemv_list(output, vector, matrix, stream, block);
+    PIM_PROFILE_TOCK(ExecuteGemvList);
+
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+    return ret;
+}
+
 int PimExecuteRelu(PimBo* output, PimBo* pim_data, void* stream, bool block)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";

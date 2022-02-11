@@ -62,7 +62,7 @@ void PimCrfBinGen::create_pim_cmd(PimOpType op_type, int lc)
         std::vector<PimCommand> tmp_cmds{
             PimCommand(PimCmdType::FILL, PimOpdType::GRF_A, PimOpdType::EVEN_BANK, 1, 0, 0, 0, 0),
             PimCommand(PimCmdType::NOP, 15),
-            PimCommand(PimCmdType::FILL, PimOpdType::GRF_B, PimOpdType::ODD_BANK, 1, 0, 0, 0, 0 ),
+            PimCommand(PimCmdType::FILL, PimOpdType::GRF_B, PimOpdType::ODD_BANK, 1, 0, 0, 0, 0),
             PimCommand(PimCmdType::NOP, 15) /*, PimCommand(PimCmdType::NOP, 0)*/};
         cmds_.assign(tmp_cmds.begin(), tmp_cmds.end());
     } else if (op_type == OP_GEMV) {

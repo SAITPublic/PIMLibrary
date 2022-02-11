@@ -158,7 +158,7 @@ __PIM_API__ int PimFreeMemory(PimBo* pim_bo);
  * @param dst destination address of buffer
  * @param src source address of buffer
  * @param size size of buffer to be copied
- * @param cpy_type type of memory transfer ( HOST to GPU, GPU to HOST, GPU to PIM etc)
+ * @param cpy_type type of memory transfer (HOST to GPU, GPU to HOST, GPU to PIM etc)
  *
  * @return
  */
@@ -169,7 +169,7 @@ __PIM_API__ int PimCopyMemory(void* dst, void* src, size_t size, PimMemCpyType c
  *
  * @param dst destination buffer object
  * @param src source buffer object
- * @param cpy_type type of memory transfer ( HOST to GPU, GPU to HOST, GPU to PIM etc)
+ * @param cpy_type type of memory transfer (HOST to GPU, GPU to HOST, GPU to PIM etc)
  *
  * @return
  */
@@ -243,13 +243,12 @@ __PIM_API__ int PimExecuteMul(PimBo* output, void* scalar, PimBo* vector, void* 
  */
 __PIM_API__ int PimExecuteRelu(PimBo* output, PimBo* pim_data, void* stream = nullptr, bool block = false);
 
-
 /**
  * @brief Executes PIM GEMV operation
  *
  * This API provides interface for PIM GEMV operations.
  * For PIM GemV operations, weights(kernel values) need to be preprocessed with Convert Data PIM API
- * Ouptu values are placed in PIM area and need to be transfered to GPU or HOST memory as per requirements
+ * Output values are placed in PIM area and need to be transfered to GPU or HOST memory as per requirements
  *
  * @param output output buffer object of gemv
  * @param operand0 input operand0(vector).
@@ -261,7 +260,7 @@ __PIM_API__ int PimExecuteRelu(PimBo* output, PimBo* pim_data, void* stream = nu
  * @return success or failure
  */
 
-__PIM_API__ int PimExecuteGemv(PimBo* output, PimBo* operand0, PimBo* operand1 = nullptr, void* stream = nullptr,
+__PIM_API__ int PimExecuteGemv(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream = nullptr,
                                bool block = false);
 
 /**
@@ -295,6 +294,24 @@ __PIM_API__ int PimExecuteGemvAdd(PimBo* output, PimBo* operand0, PimBo* operand
  */
 __PIM_API__ int PimExecuteGemvAdd(PimBo* output, PimBo* operand0, PimBo* operand1, PimBo* operand2, bool relu,
                                   void* stream = nullptr, bool block = false);
+
+/**
+ * @brief Executes PIM GEMV list operation
+ *
+ * This API provides interface for PIM GEMV list operations.
+ * For PIM GemV list operations, weights(kernel values) need to be preprocessed with Convert Data PIM API
+ * Output values are placed in PIM area and need to be transfered to GPU or HOST memory as per requirements
+ *
+ * @param output output buffer object list of gemv
+ * @param vector input vector list.
+ * @param matrix input matrix list.
+ * @param stream void pointer to stream identifier. default=nullptr
+ * @param block enable/disable synchronization. default=false
+ *
+ * @return success or failure
+ */
+__PIM_API__ int PimExecuteGemvList(PimBo* output, PimBo* vector, PimBo* matrix, void* stream = nullptr,
+                                   bool block = false);
 
 /**
  * @brief Executes Batch normalization operation.

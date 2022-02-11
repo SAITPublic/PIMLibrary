@@ -17,7 +17,7 @@
 #include "half.hpp"
 #include "hip/hip_runtime.h"
 #include "pim_runtime_api.h"
-#include "utility/pim_dump.hpp"
+#include "utility/pim_debug.hpp"
 #include "utility/pim_profile.h"
 
 #ifdef DEBUG_PIM

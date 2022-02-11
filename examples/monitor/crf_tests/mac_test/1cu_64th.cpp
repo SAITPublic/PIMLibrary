@@ -3,10 +3,10 @@
 #include <iostream>
 #include <random>
 #include <string>
-#include "pim_crf_gen_api.h"
 #include "half.hpp"
 #include "hip/hip_fp16.h"
 #include "hip/hip_runtime.h"
+#include "pim_crf_gen_api.h"
 
 #define SLT_TEST 1
 #define BLOCKS 1
@@ -338,7 +338,7 @@ int main(int argc, char* argv[])
     uint64_t pim_base, pim_out, pim_data, pim_temp_output;
     uint64_t *mode1_d, *mode2_d, *crf_bin_d;
     uint64_t *mode1_h, *mode2_h, *crf_bin_h;
-    uint64_t *output;
+    uint64_t* output;
 
     uint64_t *input_host, *weight_host;
     uint64_t *input_device, *weight_device;

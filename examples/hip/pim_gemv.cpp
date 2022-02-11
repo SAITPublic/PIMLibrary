@@ -14,9 +14,10 @@
 #include <stdlib.h>
 #include <algorithm>
 #include <iostream>
+#include <random>
 #include "half.hpp"
 #include "pim_runtime_api.h"
-#include "utility/pim_dump.hpp"
+#include "utility/pim_debug.hpp"
 #include "utility/pim_profile.h"
 
 #define IN_LENGTH (256)
@@ -778,6 +779,76 @@ int pim_gemv_no_accum_desc(bool block)
     return ret;
 }
 
+int pim_gemv_moe(bool block)
+{
+    /* This test case is to accelerate Mixture of Expert */
+    int ret = 0;
+    int in_size = 256;
+    int out_size = 512;
+    int moe_cnt = 8;
+    float alpha = 1.0f;
+    float beta = 0.0f;
+    float epsilon = 0.1f;
+
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<> dis(-1.0, 1.0);
+
+    /* __PIM_API__ call : Initialize PimRuntime */
+    PimInitialize(RT_TYPE_HIP, PIM_FP16);
+
+    PimExecuteDummy();
+
+    /* __PIM_API__ call : Create PIM Buffer Object List */
+    PimBo* host_input = PimCreateBo(in_size, 1, 1, moe_cnt, PIM_FP16, MEM_TYPE_HOST);
+    PimBo* host_weight = PimCreateBo(in_size, out_size, 1, moe_cnt, PIM_FP16, MEM_TYPE_HOST);
+    PimBo* host_output = PimCreateBo(out_size, 1, 1, moe_cnt, PIM_FP16, MEM_TYPE_HOST);
+    PimBo* golden_output = PimCreateBo(out_size, 1, 1, moe_cnt, PIM_FP16, MEM_TYPE_HOST);
+    PimBo* device_input = PimCreateBo(in_size, 1, 1, moe_cnt, PIM_FP16, MEM_TYPE_DEVICE);
+    PimBo* device_weight = PimCreateBo(in_size, out_size, 1, moe_cnt, PIM_FP16, MEM_TYPE_DEVICE);
+    PimBo* device_output = PimCreateBo(out_size, 1, 1, moe_cnt, PIM_FP16, MEM_TYPE_DEVICE);
+
+    /* Initialize the input, weight, output data */
+    set_half_data((half*)golden_output->data, half(0.0), out_size * moe_cnt);
+    set_half_data((half*)host_output->data, half(0.0), out_size * moe_cnt);
+    for (int i = 0; i < moe_cnt; i++) {
+        set_half_data(((half*)host_input->data) + i * in_size, half(dis(gen)), in_size);
+        set_half_data(((half*)host_weight->data) + i * in_size * out_size, half(dis(gen)), in_size * out_size);
+        matmulCPU(((half*)host_input->data) + i * in_size, ((half*)host_weight->data) + i * in_size * out_size,
+                  ((half*)golden_output->data) + i * out_size, 1, out_size, in_size, half(alpha), half(beta));
+    }
+
+    PimCopyMemory(device_input, host_input, HOST_TO_DEVICE);
+    PimCopyMemory(device_weight, host_weight, HOST_TO_DEVICE);
+    PimCopyMemory(device_output, host_output, HOST_TO_DEVICE);
+
+    /* __PIM_API__ call : Execute PIM kernel (GEMV list) */
+    PimExecuteGemvList(device_output, device_input, device_weight, nullptr, block);
+    if (!block) PimSynchronize();
+
+    /* check output result */
+    PimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
+    for (int i = 0; i < moe_cnt; i++) {
+        ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data, out_size * moe_cnt, epsilon);
+        if (ret != 0) break;
+    }
+
+    /* __PIM_API__ call : Destroy PIM Buffer Object */
+    PimDestroyBo(host_input);
+    PimDestroyBo(host_weight);
+    PimDestroyBo(host_output);
+    PimDestroyBo(golden_output);
+    PimDestroyBo(device_input);
+    PimDestroyBo(device_weight);
+    PimDestroyBo(device_output);
+
+    /* __PIM_API__ call : Deinitialize PimRuntime */
+    PimDeinitialize();
+
+    return ret;
+}
+
+TEST(HIPIntegrationTest, PimGemvMoESync) { EXPECT_TRUE(pim_gemv_moe(true) == 0); }
 TEST(HIPIntegrationTest, PimGemvBatchSync) { EXPECT_TRUE(pim_gemv_batch(true) == 0); }
 TEST(HIPIntegrationTest, PimGemvBatchAsync) { EXPECT_TRUE(pim_gemv_batch(false) == 0); }
 TEST(HIPIntegrationTest, PimGemv256Sync) { EXPECT_TRUE(pim_gemv_256(true) == 0); }

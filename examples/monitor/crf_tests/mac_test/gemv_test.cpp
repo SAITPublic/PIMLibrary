@@ -2,10 +2,10 @@
 #include <iostream>
 #include <random>
 #include <string>
-#include "pim_crf_gen_api.h"
 #include "half.hpp"
 #include "hip/hip_fp16.h"
 #include "hip/hip_runtime.h"
+#include "pim_crf_gen_api.h"
 
 #define SLT_TEST 1
 #define BLOCKS 64
@@ -71,7 +71,10 @@ __device__ inline void W_CMD(volatile uint8_t* addr)
     asm volatile("global_store_dwordx4 %0, v[84:87], off, glc, slc\n\t" ::"v"(addr) : "v84", "v85", "v86", "v87");
 }
 
-__device__ inline void W_CMD_R(volatile uint8_t* addr, volatile uint8_t* src) { ((ulonglong2*)addr)[0] = ((ulonglong2*)src)[0]; }
+__device__ inline void W_CMD_R(volatile uint8_t* addr, volatile uint8_t* src)
+{
+    ((ulonglong2*)addr)[0] = ((ulonglong2*)src)[0];
+}
 
 __device__ inline void B_CMD(int type)
 {
@@ -141,9 +144,10 @@ __host__ __device__ uint64_t addr_gen(unsigned int ch, unsigned int rank, unsign
 }
 
 __global__ void gemv_test_64th(volatile uint8_t* pim_ctr, volatile uint8_t* pim_weight, volatile uint8_t* output,
-                               volatile uint8_t* temp_output, volatile uint8_t* crf_binary, volatile uint8_t* hab_to_pim,
-                               volatile uint8_t* pim_to_hab, volatile uint8_t* weight, volatile uint8_t* pim_input, int chan,
-                               int batch_dim, int n_memory_tile, int n_compute_tile, int n_out_tile, int output_dim, int is_gemv_add)
+                               volatile uint8_t* temp_output, volatile uint8_t* crf_binary,
+                               volatile uint8_t* hab_to_pim, volatile uint8_t* pim_to_hab, volatile uint8_t* weight,
+                               volatile uint8_t* pim_input, int chan, int batch_dim, int n_memory_tile,
+                               int n_compute_tile, int n_out_tile, int output_dim, int is_gemv_add)
 {
     int num_grf = 8;
     int num_bg = 4;
@@ -349,7 +353,7 @@ int main(int argc, char* argv[])
     uint64_t pim_base, pim_out, pim_data, pim_temp_output;
     uint64_t *mode1_d, *mode2_d, *crf_bin_d;
     uint64_t *mode1_h, *mode2_h, *crf_bin_h;
-    uint64_t *output;
+    uint64_t* output;
 
     uint64_t *input_host, *weight_host;
     uint64_t *input_device, *weight_device, *output_device;
@@ -653,8 +657,8 @@ int main(int argc, char* argv[])
         int total_cnt = 0;
         hipLaunchKernelGGL(gemv_test_64th, dim3(blocks), dim3(threadsPerBlock), 0, 0, (uint8_t*)pim_base,
                            (uint8_t*)pim_data, (uint8_t*)output_device, (uint8_t*)pim_temp_output, (uint8_t*)crf_bin_d,
-                           (uint8_t*)mode1_d, (uint8_t*)mode2_d, (uint8_t*)weight_device, (uint8_t*)input_device, ch,
-                           1, num_input_tile, num_input_tile, 1, num_output, 0);
+                           (uint8_t*)mode1_d, (uint8_t*)mode2_d, (uint8_t*)weight_device, (uint8_t*)input_device, ch, 1,
+                           num_input_tile, num_input_tile, 1, num_output, 0);
         hipDeviceSynchronize();
 
         if (t_i % 100 == 0) {
@@ -667,7 +671,8 @@ int main(int argc, char* argv[])
                 for (int ba = 1; ba < 4; ba += 2) {
                     for (int col = 0; col < 8; col++) {
                         addr_offset = addr_gen(chan, 0, bg, ba, temp_out_row, col);
-                        if (compare_out((uint64_t*)golden_out + (gi++) * 4, (uint64_t*)((uint8_t*)pim_base + addr_offset))) {
+                        if (compare_out((uint64_t*)golden_out + (gi++) * 4,
+                                        (uint64_t*)((uint8_t*)pim_base + addr_offset))) {
                             printf("<FAIL>  ch: %d bg: %d ba: %d row: %d\n", chan, bg, ba, temp_out_row);
                             ch_result[chan] = 1;
                             fail_cnt++;

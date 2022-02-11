@@ -11,6 +11,7 @@
 #include "utility/pim_util.h"
 
 #define DIM_OUT_PIM (3200)
+#define PIM_GEMV_OUT_ALIGN (4096)
 
 __host__ void get_pim_block_info(PimBlockInfo* fbi) { memcpy(fbi, &vega20_fbi, sizeof(PimBlockInfo)); }
 
@@ -57,7 +58,7 @@ void align_shape(PimDesc* pim_desc, PimOpType op_type)
 
     if (op_type == OP_GEMV) {
         bs.w = 256 * ceil((float)bs.w / 256);
-        bs.h = 4096 * ceil((float)bs.h / 4096);
+        bs.h = PIM_GEMV_OUT_ALIGN * ceil((float)bs.h / PIM_GEMV_OUT_ALIGN);
     } else {
         bs.w = (256 * 1024) * ceil((float)bs.w / (256 * 1024));
     }
@@ -109,7 +110,7 @@ bool is_pim_available(PimBo* out, PimBo* op0, PimBo* op1, PimOpType op_type)
 
     switch (op_type) {
         case OP_GEMV:
-            ret = is_pim_gemv(op1);
+            ret = is_pim_gemv_available(op1);
             break;
         default:
             ret = false;
@@ -118,13 +119,24 @@ bool is_pim_available(PimBo* out, PimBo* op0, PimBo* op1, PimOpType op_type)
     return ret;
 }
 
-bool is_pim_gemv(PimBo* bo)
+bool is_pim_gemv_available(PimBo* bo)
 {
     /* TODO: find optimal shape to execute PIM ops */
     if ((bo->bshape_r.h >= DIM_OUT_PIM || bo->bshape_r.n > 1) && !is_transposed(bo))
         return true;
     else
         return false;
+}
+
+bool is_pim_gemv_list_available(PimBo* output, PimBo* vector, PimBo* matrix)
+{
+    int out_dim = output->size;
+
+    if ((out_dim % PIM_GEMV_OUT_ALIGN) != 0) return false;
+    if (output->bshape.n == 1) return false;
+    if (output->bshape.n != vector->bshape.n || output->bshape.n != matrix->bshape.n) return false;
+
+    return true;
 }
 
 bool is_transposed(PimBo* bo) { return bo->bshape.t; }
