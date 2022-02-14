@@ -65,7 +65,7 @@ int PimRuntime::deinitialize(void)
     int ret = 0;
 
     for (auto it = weight_map_.begin(); it != weight_map_.end(); ++it) {
-        free_memory(it->second->wei);
+        free_memory(it->second);
         delete it->second;
     }
 
@@ -192,14 +192,12 @@ int PimRuntime::execute_gemv(PimBo* output, PimBo* operand0, PimBo* operand1, vo
     if (kernel_type_ == CUSTOM_GPU) {
         ret = pim_executor_->execute_custom_gemv(output, operand0, operand1, false, (hipStream_t)stream, block);
     } else if (kernel_type_ == PIM && !is_transposed(operand1)) {
-        PimGemvBundle* bundle = get_gemv_bundle(operand1, operand0, output);
-        operand1 = bundle->wei;
-        ret = pim_executor_->execute_gemv(output, operand0, operand1, (hipStream_t)stream, block);
+        PimBo* pim_wei = get_preloaded_pim_weight(operand1);
+        ret = pim_executor_->execute_gemv(output, operand0, pim_wei, (hipStream_t)stream, block);
     } else {
         if (is_pim_available(output, operand0, operand1, OP_GEMV)) {
-            PimGemvBundle* bundle = get_gemv_bundle(operand1, operand0, output);
-            operand1 = bundle->wei;
-            ret = pim_executor_->execute_gemv(output, operand0, operand1, (hipStream_t)stream, block);
+            PimBo* pim_wei = get_preloaded_pim_weight(operand1);
+            ret = pim_executor_->execute_gemv(output, operand0, pim_wei, (hipStream_t)stream, block);
         } else {
             ret = pim_executor_->execute_custom_gemv(output, operand0, operand1, false, (hipStream_t)stream, block);
         }
@@ -217,14 +215,12 @@ int PimRuntime::execute_gemv_add(PimBo* output, PimBo* operand0, PimBo* operand1
     if (kernel_type_ == CUSTOM_GPU) {
         ret = pim_executor_->execute_custom_gemv(output, operand0, operand1, true, (hipStream_t)stream, block);
     } else if (kernel_type_ == PIM && !is_transposed(operand1)) {
-        PimGemvBundle* bundle = get_gemv_bundle(operand1, operand0, output);
-        operand1 = bundle->wei;
-        ret = pim_executor_->execute_gemv_add(output, operand0, operand1, (hipStream_t)stream, block);
+        PimBo* pim_wei = get_preloaded_pim_weight(operand1);
+        ret = pim_executor_->execute_gemv_add(output, operand0, pim_wei, (hipStream_t)stream, block);
     } else {
         if (is_pim_available(output, operand0, operand1, OP_GEMV)) {
-            PimGemvBundle* bundle = get_gemv_bundle(operand1, operand0, output);
-            operand1 = bundle->wei;
-            ret = pim_executor_->execute_gemv_add(output, operand0, operand1, (hipStream_t)stream, block);
+            PimBo* pim_wei = get_preloaded_pim_weight(operand1);
+            ret = pim_executor_->execute_gemv_add(output, operand0, pim_wei, (hipStream_t)stream, block);
         } else {
             ret = pim_executor_->execute_custom_gemv(output, operand0, operand1, true, (hipStream_t)stream, block);
         }
@@ -257,8 +253,8 @@ int PimRuntime::execute_gemv_list(PimBo* output, PimBo* vector, PimBo* matrix, v
         return -1;
     }
 
-    PimGemvBundle* bundle = get_gemv_bundle(matrix, matrix->bshape.n);
-    ret = pim_executor_->execute_gemv_list(output, vector, bundle->wei, (hipStream_t)stream, block);
+    PimBo* pim_wei = get_preloaded_pim_weight(matrix, matrix->bshape.n);
+    ret = pim_executor_->execute_gemv_list(output, vector, pim_wei, (hipStream_t)stream, block);
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
@@ -309,10 +305,10 @@ int PimRuntime::execute_dummy(void)
     return ret;
 }
 
-PimGemvBundle* PimRuntime::find_gemv_bundle(PimBo* weight)
+PimBo* PimRuntime::find_preloaded_pim_weight(PimBo* weight)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
-    PimGemvBundle* addr = nullptr;
+    PimBo* addr = nullptr;
 
     uint32_t w_key = 0;
     uint32_t* w_addr_ptr = reinterpret_cast<uint32_t*>(weight->data);
@@ -321,7 +317,7 @@ PimGemvBundle* PimRuntime::find_gemv_bundle(PimBo* weight)
     for (int i = 0; i < weight->size / sizeof(uint32_t); i += step) {
         w_key ^= w_addr_ptr[i];
     }
-    std::unordered_map<uint32_t, PimGemvBundle*>::const_iterator found = weight_map_.find(w_key);
+    std::unordered_map<uint32_t, PimBo*>::const_iterator found = weight_map_.find(w_key);
     if (found != weight_map_.end()) {
         addr = found->second;
     } else {
@@ -333,61 +329,54 @@ PimGemvBundle* PimRuntime::find_gemv_bundle(PimBo* weight)
     return addr;
 }
 
-int PimRuntime::insert_gemv_bundle(PimBo* weight, PimGemvBundle* bundle)
+int PimRuntime::insert_preloaded_pim_weight(PimBo* dev_wei, PimBo* pim_wei)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
 
     uint32_t w_key = 0;
-    uint32_t* w_addr_ptr = reinterpret_cast<uint32_t*>(weight->data);
-    int step = weight->size >> 1;
-    for (int i = 0; i < weight->size / sizeof(uint32_t); i += step) {
+    uint32_t* w_addr_ptr = reinterpret_cast<uint32_t*>(dev_wei->data);
+    int step = dev_wei->size >> 1;
+    for (int i = 0; i < dev_wei->size / sizeof(uint32_t); i += step) {
         w_key ^= w_addr_ptr[i];
     }
-    weight_map_.insert(std::make_pair(w_key, bundle));
-    printf("[%s] insert\tw_addr:%p, w_key:%X, weight_map_size:%d\n", __func__, weight->data, w_key, weight_map_.size());
+    weight_map_.insert(std::make_pair(w_key, pim_wei));
+    printf("[%s] insert\tw_addr:%p, w_key:%X, weight_map_size:%d\n", __func__, dev_wei->data, w_key,
+           weight_map_.size());
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
 
-PimGemvBundle* PimRuntime::get_gemv_bundle(PimBo* dev_wei, size_t list_size)
+PimBo* PimRuntime::get_preloaded_pim_weight(PimBo* dev_wei, size_t list_size)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
-    PimGemvBundle* bundle = nullptr;
-    bundle = find_gemv_bundle(dev_wei);
+    PimBo* pre_wei = find_preloaded_pim_weight(dev_wei);
 
-    if (bundle == nullptr) {
+    if (pre_wei == nullptr) {
         PimBo* host_reord_wei = PimCreateBo(dev_wei->bshape.w, dev_wei->bshape.h * list_size, dev_wei->bshape.c, 1,
                                             PIM_FP16, MEM_TYPE_HOST);
-        PimBo* pre_wei =
+        pre_wei =
             PimCreateBo(dev_wei->bshape.w, dev_wei->bshape.h * list_size, dev_wei->bshape.c, 1, PIM_FP16, MEM_TYPE_PIM);
         pim_manager_->convert_data_layout(host_reord_wei, dev_wei, OP_GEMV);
         PimCopyMemory(pre_wei, host_reord_wei, HOST_TO_PIM);
 
-        bundle = new PimGemvBundle;
-        bundle->in = nullptr;
-        bundle->wei = pre_wei;
-        bundle->out = nullptr;
-
-        insert_gemv_bundle(dev_wei, bundle);
+        insert_preloaded_pim_weight(dev_wei, pre_wei);
 
         PimDestroyBo(host_reord_wei);
     }
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
-    return bundle;
+    return pre_wei;
 }
 
-PimGemvBundle* PimRuntime::get_gemv_bundle(PimBo* dev_wei, PimBo* dev_in, PimBo* dev_out)
+PimBo* PimRuntime::get_preloaded_pim_weight(PimBo* dev_wei)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
-    // TODO: change the key from uint64_t to (keybo*, size): pull_req: 456)?
     uint64_t w_addr = reinterpret_cast<uint64_t>(dev_wei->data);
-    PimGemvBundle* bundle = nullptr;
-    bundle = find_gemv_bundle(dev_wei);
+    PimBo* pre_wei = find_preloaded_pim_weight(dev_wei);
 
-    if (bundle == nullptr) {
+    if (pre_wei == nullptr) {
         PimDesc* pim_desc =
             PimCreateDesc(dev_wei->bshape_r.n, 1, dev_wei->bshape_r.h, dev_wei->bshape_r.w, PIM_FP16, OP_GEMV);
         PimBo* host_weight = nullptr;
@@ -406,17 +395,12 @@ PimGemvBundle* PimRuntime::get_gemv_bundle(PimBo* dev_wei, PimBo* dev_in, PimBo*
         }
 
         PimBo* host_reordered_weight = PimCreateBo(pim_desc, MEM_TYPE_HOST, GEMV_WEIGHT);
-        PimBo* pre_wei = PimCreateBo(pim_desc, MEM_TYPE_PIM, GEMV_WEIGHT);
+        pre_wei = PimCreateBo(pim_desc, MEM_TYPE_PIM, GEMV_WEIGHT);
 
         pim_manager_->convert_data_layout(host_reordered_weight, host_weight, OP_GEMV);
         PimCopyMemory(pre_wei, host_reordered_weight, HOST_TO_PIM);
 
-        bundle = new PimGemvBundle;
-        bundle->in = dev_in;
-        bundle->wei = pre_wei;
-        bundle->out = dev_out;
-
-        insert_gemv_bundle(dev_wei, bundle);
+        insert_preloaded_pim_weight(dev_wei, pre_wei);
 
         PimDestroyDesc(pim_desc);
         PimDestroyBo(host_reordered_weight);
@@ -427,7 +411,7 @@ PimGemvBundle* PimRuntime::get_gemv_bundle(PimBo* dev_wei, PimBo* dev_in, PimBo*
     }
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
-    return bundle;
+    return pre_wei;
 }
 
 } /* namespace runtime */

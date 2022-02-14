@@ -23,12 +23,6 @@ namespace pim
 {
 namespace runtime
 {
-typedef struct __PimGemvBundle {
-    PimBo* in;
-    PimBo* wei;
-    PimBo* out;
-} PimGemvBundle;
-
 class PimRuntime
 {
    public:
@@ -55,17 +49,17 @@ class PimRuntime
                    double epsilon, void* stream, bool block = false);
     int execute_sync(void* stream);
     int execute_dummy(void);
-    int insert_gemv_bundle(PimBo* weight, PimGemvBundle* bundle);
-    PimGemvBundle* find_gemv_bundle(PimBo* weight);
-    PimGemvBundle* get_gemv_bundle(PimBo* dev_wei, PimBo* dev_in, PimBo* dev_out);
-    PimGemvBundle* get_gemv_bundle(PimBo* dev_wei, size_t list_size);
+    int insert_preloaded_pim_weight(PimBo* dev_wei, PimBo* pim_wei);
+    PimBo* find_preloaded_pim_weight(PimBo* dev_wei);
+    PimBo* get_preloaded_pim_weight(PimBo* dev_wei);
+    PimBo* get_preloaded_pim_weight(PimBo* dev_wei, size_t list_size);
 
    private:
     pim::runtime::manager::PimManager* pim_manager_;
     pim::runtime::executor::PimExecutor* pim_executor_;
     PimRuntimeType rt_type_;
     PimPrecision precision_;
-    std::unordered_map<uint32_t, PimGemvBundle*> weight_map_;
+    std::unordered_map<uint32_t, PimBo*> weight_map_;
     PimKrnlType kernel_type_;
 };
 
