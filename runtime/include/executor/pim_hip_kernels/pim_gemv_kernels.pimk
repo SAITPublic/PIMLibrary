@@ -28,8 +28,20 @@ __global__ void gemv_list_pim_64cu_64th_fp16(volatile uint8_t* __restrict__ pim_
                                              volatile uint8_t* __restrict__ input,
                                              volatile uint8_t* __restrict__ output, int batch_size, int input_size,
                                              int output_size, int n_in_tile, int n_out_tile, int list_size,
+#ifdef EMULATOR
+                                             PimMemTraceData* fmtd16, int* frd_size, int mt_width,
+                                             PimMemTracer* emulator_trace,
+#endif
                                              uint8_t* crf_binary, int crf_size, int is_gemv_add)
 {
+#ifdef EMULATOR
+    emulator_trace->g_fba = (uint64_t)pim_ctr;
+    emulator_trace->g_fmtd16 = fmtd16;
+    emulator_trace->g_ridx[hipBlockIdx_x] = 0;
+    emulator_trace->m_width = mt_width;
+    __syncthreads();
+#endif
+
 #ifdef PREPARE_KERNEL
     int grf_shift = 3;
     int num_ba = 4;
@@ -204,6 +216,12 @@ __global__ void gemv_list_pim_64cu_64th_fp16(volatile uint8_t* __restrict__ pim_
         addr = addr_gen(ch, 0, gidx >> ba_shift, gidx % num_ba, (1 << 13), 0);
         W_CMD(&pim_ctr[addr + offset]);
         B_CMD(1);
+    }
+#endif
+
+#ifdef EMULATOR
+    if (hipBlockIdx_x == 0 && hipThreadIdx_x == 0) {
+        frd_size[0] = emulator_trace->g_ridx[0];
     }
 #endif
 

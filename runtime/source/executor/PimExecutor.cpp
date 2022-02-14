@@ -546,11 +546,46 @@ int PimExecutor::execute_gemv_list(PimBo* output, PimBo* input, PimBo* weight, h
         crf_bin = make_crf_bin(OP_GEMV, input_size * sizeof(uint16_t));
     }
     PIM_PROFILE_TOCK(CreateCRFBin);
-    PIM_PROFILE_TICK(RunGemvKernel);
+    PIM_PROFILE_TICK(RunGemvListKernel);
     hipLaunchKernelGGL(gemv_kernel, dim3(blocks), dim3(threads_per_block), 0, stream, (uint8_t*)g_pim_base_addr,
                        (uint8_t*)weight->data, (uint8_t*)pim_gemv_tmp_buffer_, (uint8_t*)input->data,
                        (uint8_t*)output->data, 1, input_size, output_size, n_in_tile, n_out_tile, list_size,
+#ifdef EMULATOR
+                       (PimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_,
+                       (PimMemTracer*)d_emulator_trace_,
+#endif
                        (uint8_t*)crf_bin, crf_size, is_gemv_add);
+
+#ifndef EMULATOR
+    if (block) hipStreamSynchronize(stream);
+    PIM_PROFILE_TOCK(RunGemvListKernel);
+#endif
+
+#ifdef EMULATOR
+    hipStreamSynchronize(stream);
+    PIM_PROFILE_TOCK(RunGemvListKernel);
+
+    PIM_PROFILE_TICK(RunGemvListEmulation);
+    hipMemcpy((void*)h_fmtd16_size_, (void*)d_fmtd16_size_, sizeof(int), hipMemcpyDeviceToHost);
+    hipMemcpy((void*)h_fmtd16_, (void*)d_fmtd16_, sizeof(PimMemTraceData) * max_fmtd_size_, hipMemcpyDeviceToHost);
+
+    for (size_t i = 1; i < blocks; i++) {
+        memcpy(&h_fmtd16_[i * h_fmtd16_size_[0]], &h_fmtd16_[i * fmtd_size_per_ch_],
+               h_fmtd16_size_[0] * sizeof(PimMemTraceData));
+    }
+    h_fmtd16_size_[0] *= blocks;
+
+    pim_emulator_->convert_mem_trace_from_16B_to_32B(h_fmtd32_, h_fmtd32_size_, h_fmtd16_, h_fmtd16_size_[0],
+                                                     OP_GEMV);
+    if (is_gemv_add)
+        pim_emulator_->execute_gemv_add_tile_accum(output, weight, h_fmtd32_, h_fmtd32_size_[0], OP_GEMV,
+                                                   g_pim_base_addr, pim_gemv_tmp_buffer_);
+    else
+        pim_emulator_->execute_gemv_tile_accum(output, weight, h_fmtd32_, h_fmtd32_size_[0], OP_GEMV,
+                                               g_pim_base_addr, pim_gemv_tmp_buffer_);
+
+    PIM_PROFILE_TOCK(RunGemvListEmulation);
+#endif
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
 
