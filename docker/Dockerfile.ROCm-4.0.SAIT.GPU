@@ -1,5 +1,5 @@
 FROM rocm/tensorflow:rocm4.0-tf2.3-dev
-MAINTAINER Shashidhar G <shashidhar.g@samsung.com>
+MAINTAINER Sudhakar M K <sudhakar.mk@samsung.com>
 
 # Default env setup to pass through damn proxy..
 USER root
@@ -28,11 +28,10 @@ RUN ls -al /etc/ssl/certs/SMRC.pem && \
     cat /etc/ca-certificates.conf | grep SMRC
 
 RUN curl https://bazel.build/bazel-release.pub.gpg | sudo apt-key add -
-
-RUN apt-get update
-
 RUN apt-get --yes --allow-unauthenticated install openssl
-
+# Add rocm apt repository
+RUN wget -qO - http://repo.radeon.com/rocm/rocm.gpg.key | apt-key add -
+RUN echo 'deb [arch=amd64] https://repo.radeon.com/rocm/apt/4.0/ xenial main' | sudo tee /etc/apt/sources.list.d/rocm.list
 
 RUN apt-get update
 
@@ -43,15 +42,6 @@ RUN apt-get --yes --allow-unauthenticated install sudo
 RUN apt-get --yes --allow-unauthenticated install wget
 RUN apt-get --yes --allow-unauthenticated install kmod
 RUN apt-get --yes --allow-unauthenticated install libbz2-dev
-
-# Add rocm apt repository
-RUN wget -qO - http://repo.radeon.com/rocm/rocm.gpg.key | apt-key add -
-RUN echo 'deb [arch=amd64] https://repo.radeon.com/rocm/apt/4.0/ xenial main' | sudo tee /etc/apt/sources.list.d/rocm.list
-
-RUN apt-get update
-# Instal hipcc 
-#RUN apt-get install --yes --allow-unauthenticated rocm-libs hipcub miopen-hip
-#RUN pip3 install --user tensorflow-rocm --upgrade
 
 # Developement Requirments
 RUN apt-get --yes --allow-unauthenticated install build-essential
