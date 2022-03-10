@@ -1,7 +1,14 @@
 #!/bin/bash
 
+declare -i gpus=0
 
-for id in {0..1}
+if [ $# -gt 0 ]; then
+        gpus=$1
+fi
+
+counter=$((gpus-1))
+
+for id in $(seq 0 $counter)
 do 
 	echo "Setting DPM MAX (MI100) setting for $id"
 	sudo ./tools/atitool/atitool -ppdpmforce=gfx,15 -i=$id
