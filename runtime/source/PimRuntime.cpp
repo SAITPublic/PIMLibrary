@@ -43,7 +43,15 @@ PimRuntime::PimRuntime(PimRuntimeType rt_type, PimPrecision precision) : rt_type
                 kernel_type_ = OPTIMAL;
         }
     }
-
+    const char* env_pim_device = std::getenv("PIM_DEVICE_ID");
+    if (env_pim_device != nullptr) {
+        std::cout << "Device ID Set to " << *env_pim_device << std::endl;
+        uint32_t device_id = (*env_pim_device) - '0';
+        hipError_t deviceSet = hipSetDevice(device_id);
+        if (hipSuccess != deviceSet) {
+            std::cout << "Failed to set device " << deviceSet << "Device ID: " << device_id << std::endl;
+        }
+    }
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
 }
 
