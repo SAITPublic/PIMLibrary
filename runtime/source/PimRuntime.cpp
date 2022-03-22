@@ -84,6 +84,19 @@ int PimRuntime::deinitialize(void)
     return ret;
 }
 
+int PimRuntime::set_device(uint32_t device_id)
+{
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
+    int ret = 0;
+    hipError_t deviceSet = hipSetDevice(device_id);
+    if (hipSuccess != deviceSet) {
+        DLOG(ERROR) << "Failed to set device " << deviceSet << "Device ID: " << device_id << std::endl;
+        ret = int(deviceSet);
+    }
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+    return ret;
+}
+
 int PimRuntime::alloc_memory(void** ptr, size_t size, PimMemType mem_type)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";

@@ -53,6 +53,14 @@ __PIM_API__ int PimInitialize(PimRuntimeType rt_type = RT_TYPE_HIP, PimPrecision
 __PIM_API__ int PimDeinitialize(void);
 
 /**
+ * @brief Set PimDevice for Execution
+ *
+ * This call set the current device for execution to device id
+ * @return Return success/failure
+ *
+ */
+__PIM_API__ int PimSetDevice(uint32_t device_id);
+/**
  * @brief Creates PIM buffer object of size w,h,c,n with precision (INT8/PIM16)
  *
  * @param w width of buffer object
