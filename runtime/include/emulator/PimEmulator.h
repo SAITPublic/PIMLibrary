@@ -50,7 +50,6 @@ class PimEmulator
    private:
     PimBlockInfo fbi_;
     PimSimulator pim_sim_;
-    char* rocm_path;
 };
 
 } /* namespace emulator */
