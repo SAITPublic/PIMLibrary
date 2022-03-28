@@ -82,7 +82,7 @@ bool test_memcpy_bw_host_device()
     PimBo* host_input = PimCreateBo(IN_LENGTH, 1, 1, BATCH_DIM, PIM_FP16, MEM_TYPE_HOST);
     PimBo* device_input = PimCreateBo(IN_LENGTH, 1, 1, BATCH_DIM, PIM_FP16, MEM_TYPE_DEVICE);
     PimBo* host_output = PimCreateBo(IN_LENGTH, 1, 1, BATCH_DIM, PIM_FP16, MEM_TYPE_HOST);
-
+    
     fill_uniform_random_values<half_float::half>(host_input->data, IN_LENGTH, (half_float::half)0.0,
                                                  (half_float::half)0.5);
 
@@ -116,7 +116,7 @@ bool test_memcpy_bw_device_device()
     PimBo* device_input = PimCreateBo(IN_LENGTH, 1, 1, BATCH_DIM, PIM_FP16, MEM_TYPE_DEVICE);
     PimBo* device_output = PimCreateBo(IN_LENGTH, 1, 1, BATCH_DIM, PIM_FP16, MEM_TYPE_DEVICE);
     PimBo* host_output = PimCreateBo(IN_LENGTH, 1, 1, BATCH_DIM, PIM_FP16, MEM_TYPE_HOST);
-
+    
     fill_uniform_random_values<half_float::half>(host_input->data, IN_LENGTH, (half_float::half)0.0,
                                                  (half_float::half)0.5);
 

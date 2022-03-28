@@ -12,6 +12,7 @@
 #define _PIM_MEMORY_MANAGER_H_
 
 #include <vector>
+#include "CL/opencl.h"
 #include "internal/simple_heap.hpp"
 #include "manager/PimBlockAllocator.h"
 #include "manager/PimInfo.h"
