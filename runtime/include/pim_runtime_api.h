@@ -196,6 +196,18 @@ __PIM_API__ int PimCopyMemory(void* dst, void* src, size_t size, PimMemCpyType c
 __PIM_API__ int PimCopyMemory(PimBo* dst, PimBo* src, PimMemCpyType cpy_type);
 
 /**
+ * @brief Creates a new stream/CommandQueue based on runtime type
+ *
+ * return a void* to a stream object of current runtime type
+ *
+ * @param rt_type runtime type
+ *
+ * @return void* stream object
+ */
+
+__PIM_API__ void* createStream(PimRuntimeType rt_type);
+
+/**
  * @brief Execute Add vector operation on PIM
  *
  * Executes add operations using PIM buffer objects
@@ -208,6 +220,7 @@ __PIM_API__ int PimCopyMemory(PimBo* dst, PimBo* src, PimMemCpyType cpy_type);
  *
  * @return success/failure
  */
+
 __PIM_API__ int PimExecuteAdd(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream = nullptr,
                               bool block = false);
 
@@ -275,7 +288,6 @@ __PIM_API__ int PimExecuteRelu(PimBo* output, PimBo* pim_data, void* stream = nu
  * @param operand1 input opernad1(matrix).
  * @param stream void pointer to stream identifier. default=nullptr
  * @param block enable/disable synchronization. default=false
-
  *
  * @return success or failure
  */

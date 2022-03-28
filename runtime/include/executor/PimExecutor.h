@@ -36,46 +36,44 @@ class PimExecutor
     virtual ~PimExecutor(void) {}
     static PimExecutor* get_instance(PimRuntimeType rt_type, PimPrecision precision);
 
-    int initialize(void);
-    int deinitialize(void);
+    virtual int initialize(void);
+    virtual int deinitialize(void);
     int get_loop_counter(PimOpType op_type, int input_size);
     uint8_t* make_crf_bin(PimOpType op_type, int data_size);
     uint8_t* find_crf(PimOpType op_type, int data_size);
+    virtual void* createStream() = 0;
 
-    int execute_add(PimBo* output, PimBo* operand0, PimBo* operand1, hipStream_t stream, bool block);
-    int execute_mul(PimBo* output, PimBo* operand0, PimBo* operand1, hipStream_t stream, bool block);
-    int execute_relu(PimBo* output, PimBo* pim_data, hipStream_t stream, bool block);
-    int execute_copy(PimBo* output, PimBo* pim_data, hipStream_t stream, bool block);
-    int execute_bn(PimBo* output, PimBo* pim_data, PimBo* beta, PimBo* gamma, PimBo* mean, PimBo* variance,
-                   double epsilon, hipStream_t stream, bool block);
-    int execute_gemv(PimBo* output, PimBo* operand0, PimBo* operand1, hipStream_t stream, bool block);
-    int execute_gemv_add(PimBo* output, PimBo* operand0, PimBo* operand1, hipStream_t stream, bool block);
-    int execute_gemv_list(PimBo* output, PimBo* input, PimBo* weight, hipStream_t stream, bool block);
-    int execute_gemv_list_normal(PimBo* output, PimBo* input, PimBo* weight, hipStream_t stream, bool block);
-    int execute_gemv_list_chwise(PimBo* output, PimBo* input, PimBo* weight, int ch_per_op, hipStream_t stream,
-                                 bool block);
-    int execute_custom_gemv(PimBo* output, PimBo* operand0, PimBo* operand1, bool is_gemv_add, hipStream_t stream,
-                            bool block);
-    int execute_custom_gemv_add(PimBo* output, PimBo* operand0, PimBo* operand1, PimBo* operand2, bool relu,
-                                hipStream_t stream, bool block);
-    int execute_sync(hipStream_t stream);
-    int execute_dummy(void);
+    virtual int execute_add(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream, bool block) = 0;
+    virtual int execute_mul(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream, bool block) = 0;
+    virtual int execute_relu(PimBo* output, PimBo* pim_data, void* stream, bool block) = 0;
+    virtual int execute_copy(PimBo* output, PimBo* pim_data, void* stream, bool block) = 0;
+    virtual int execute_bn(PimBo* output, PimBo* pim_data, PimBo* beta, PimBo* gamma, PimBo* mean, PimBo* variance,
+                           double epsilon, void* stream, bool block) = 0;
+    virtual int execute_gemv(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream, bool block) = 0;
+    virtual int execute_gemv_add(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream, bool block) = 0;
+    virtual int execute_gemv_list(PimBo* output, PimBo* input, PimBo* weight, void* stream, bool block) = 0;
+    virtual int execute_gemv_list_normal(PimBo* output, PimBo* input, PimBo* weight, void* stream, bool block) = 0;
+    virtual int execute_gemv_list_chwise(PimBo* output, PimBo* input, PimBo* weight, int ch_per_op, void* stream,
+                                         bool block) = 0;
+    virtual int execute_custom_gemv(PimBo* output, PimBo* operand0, PimBo* operand1, bool is_gemv_add, void* stream,
+                                    bool block) = 0;
+    virtual int execute_custom_gemv_add(PimBo* output, PimBo* operand0, PimBo* operand1, PimBo* operand2, bool relu,
+                                        void* stream, bool block) = 0;
+    virtual int execute_sync(void* stream) = 0;
+    virtual int execute_dummy(void) = 0;
 
     int preprocess_srf(PimBo* beta, PimBo* gamma, PimBo* mean, PimBo* variance, double epsilon, uint8_t* srf_binary);
 
-   private:
+   protected:
     int max_crf_size_;
     pim::runtime::manager::PimManager* pim_manager_;
     std::map<std::pair<PimOpType, int>, uint8_t*> crf_lut_;
-    uint8_t* d_srf_bin_buffer_;
 
     PimRuntimeType rt_type_;
     PimPrecision precision_;
-    hipDeviceProp_t dev_prop_;
-    uint8_t* pim_gemv_tmp_buffer_;
-    uint8_t* zero_buffer_;
     PimBlockInfo fbi_;
     PimGemvType pim_gemv_type_;
+    PimExecutor* pim_executor_;
 
 #ifdef EMULATOR
     PimMemTraceData* d_fmtd16_;
@@ -90,12 +88,6 @@ class PimExecutor
     int max_block_size_;
     int max_fmtd_size_;
 #endif
-    int execute_gemv_next_pim(PimBo* output, PimBo* operand0, PimBo* operand1, int is_gemv_add, hipStream_t stream,
-                              bool block);
-    int execute_gemv_tile_accum(PimBo* output, PimBo* operand0, PimBo* operand1, int is_gemv_add, hipStream_t stream,
-                                bool block);
-    int execute_gemv_tile_tree(PimBo* output, PimBo* operand0, PimBo* operand1, int is_gemv_add, hipStream_t stream,
-                               bool block);
 };
 
 } /* namespace executor */

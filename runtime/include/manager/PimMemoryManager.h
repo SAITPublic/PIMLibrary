@@ -45,9 +45,8 @@ class PimMemoryManager
     virtual int free_memory(PimBo* pim_bo) = 0;
     virtual int copy_memory(void* dst, void* src, size_t size, PimMemCpyType cpy_type) = 0;
     virtual int copy_memory(PimBo* dst, PimBo* src, PimMemCpyType cpy_type) = 0;
-    virtual int convert_data_layout(void* dst, void* src, size_t size, PimOpType op_type){};
-    virtual int convert_data_layout(PimBo* dst, PimBo* src, PimOpType op_type){};
-
+    virtual int convert_data_layout(void* dst, void* src, size_t size, PimOpType op_type) { return -1; };
+    virtual int convert_data_layout(PimBo* dst, PimBo* src, PimOpType op_type) { return -1; };
     PimRuntimeType rt_type_;
     std::vector<SimpleHeap<PimBlockAllocator>*> fragment_allocator_;
 

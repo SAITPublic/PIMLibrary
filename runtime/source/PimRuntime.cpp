@@ -101,6 +101,19 @@ int PimRuntime::get_device(uint32_t* device_id)
     return ret;
 }
 
+void* PimRuntime::createStream(PimRuntimeType rt_type)
+{
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
+    void* stream_obj = NULL;
+    if (rt_type == RT_TYPE_HIP) {
+        stream_obj = pim_executor_->createStream();
+    } else {
+        DLOG(ERROR) << __FUNCTION__ << " not implemented for runtime " << rt_type << " \n";
+    }
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+    return stream_obj;
+}
+
 int PimRuntime::alloc_memory(void** ptr, size_t size, PimMemType mem_type)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
@@ -194,7 +207,7 @@ int PimRuntime::execute_add(PimBo* output, PimBo* operand0, PimBo* operand1, voi
     DLOG(INFO) << "called";
     int ret = 0;
 
-    ret = pim_executor_->execute_add(output, operand0, operand1, (hipStream_t)stream, block);
+    ret = pim_executor_->execute_add(output, operand0, operand1, stream, block);
 
     return ret;
 }
@@ -204,7 +217,7 @@ int PimRuntime::execute_mul(PimBo* output, PimBo* operand0, PimBo* operand1, voi
     DLOG(INFO) << "called";
     int ret = 0;
 
-    ret = pim_executor_->execute_mul(output, operand0, operand1, (hipStream_t)stream, block);
+    ret = pim_executor_->execute_mul(output, operand0, operand1, stream, block);
 
     return ret;
 }
@@ -215,16 +228,16 @@ int PimRuntime::execute_gemv(PimBo* output, PimBo* operand0, PimBo* operand1, vo
     int ret = 0;
 
     if (kernel_type_ == CUSTOM_GPU) {
-        ret = pim_executor_->execute_custom_gemv(output, operand0, operand1, false, (hipStream_t)stream, block);
+        ret = pim_executor_->execute_custom_gemv(output, operand0, operand1, false, stream, block);
     } else if (kernel_type_ == PIM && !is_transposed(operand1)) {
         PimBo* pim_wei = get_preloaded_pim_weight(operand1);
-        ret = pim_executor_->execute_gemv(output, operand0, pim_wei, (hipStream_t)stream, block);
+        ret = pim_executor_->execute_gemv(output, operand0, pim_wei, stream, block);
     } else {
         if (is_pim_available(output, operand0, operand1, OP_GEMV)) {
             PimBo* pim_wei = get_preloaded_pim_weight(operand1);
-            ret = pim_executor_->execute_gemv(output, operand0, pim_wei, (hipStream_t)stream, block);
+            ret = pim_executor_->execute_gemv(output, operand0, pim_wei, stream, block);
         } else {
-            ret = pim_executor_->execute_custom_gemv(output, operand0, operand1, false, (hipStream_t)stream, block);
+            ret = pim_executor_->execute_custom_gemv(output, operand0, operand1, false, stream, block);
         }
     }
 
@@ -238,16 +251,16 @@ int PimRuntime::execute_gemv_add(PimBo* output, PimBo* operand0, PimBo* operand1
     int ret = 0;
 
     if (kernel_type_ == CUSTOM_GPU) {
-        ret = pim_executor_->execute_custom_gemv(output, operand0, operand1, true, (hipStream_t)stream, block);
+        ret = pim_executor_->execute_custom_gemv(output, operand0, operand1, true, stream, block);
     } else if (kernel_type_ == PIM && !is_transposed(operand1)) {
         PimBo* pim_wei = get_preloaded_pim_weight(operand1);
-        ret = pim_executor_->execute_gemv_add(output, operand0, pim_wei, (hipStream_t)stream, block);
+        ret = pim_executor_->execute_gemv_add(output, operand0, pim_wei, stream, block);
     } else {
         if (is_pim_available(output, operand0, operand1, OP_GEMV)) {
             PimBo* pim_wei = get_preloaded_pim_weight(operand1);
-            ret = pim_executor_->execute_gemv_add(output, operand0, pim_wei, (hipStream_t)stream, block);
+            ret = pim_executor_->execute_gemv_add(output, operand0, pim_wei, stream, block);
         } else {
-            ret = pim_executor_->execute_custom_gemv(output, operand0, operand1, true, (hipStream_t)stream, block);
+            ret = pim_executor_->execute_custom_gemv(output, operand0, operand1, true, stream, block);
         }
     }
 
@@ -261,8 +274,7 @@ int PimRuntime::execute_gemv_add(PimBo* output, PimBo* operand0, PimBo* operand1
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
 
-    ret =
-        pim_executor_->execute_custom_gemv_add(output, operand0, operand1, operand2, relu, (hipStream_t)stream, block);
+    ret = pim_executor_->execute_custom_gemv_add(output, operand0, operand1, operand2, relu, stream, block);
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
@@ -279,7 +291,7 @@ int PimRuntime::execute_gemv_list(PimBo* output, PimBo* vector, PimBo* matrix, v
     }
 
     PimBo* pim_wei = get_preloaded_pim_weight_for_list(matrix);
-    ret = pim_executor_->execute_gemv_list(output, vector, pim_wei, (hipStream_t)stream, block);
+    ret = pim_executor_->execute_gemv_list(output, vector, pim_wei, stream, block);
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
@@ -290,7 +302,7 @@ int PimRuntime::execute_relu(PimBo* output, PimBo* pim_data, void* stream, bool 
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
 
-    ret = pim_executor_->execute_relu(output, pim_data, (hipStream_t)stream, block);
+    ret = pim_executor_->execute_relu(output, pim_data, stream, block);
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
@@ -302,7 +314,7 @@ int PimRuntime::execute_bn(PimBo* output, PimBo* pim_data, PimBo* beta, PimBo* g
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
 
-    ret = pim_executor_->execute_bn(output, pim_data, beta, gamma, mean, variance, epsilon, (hipStream_t)stream, block);
+    ret = pim_executor_->execute_bn(output, pim_data, beta, gamma, mean, variance, epsilon, stream, block);
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
@@ -313,7 +325,7 @@ int PimRuntime::execute_sync(void* stream)
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
 
-    ret = pim_executor_->execute_sync((hipStream_t)stream);
+    ret = pim_executor_->execute_sync(stream);
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;

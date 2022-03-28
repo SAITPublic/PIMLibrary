@@ -90,6 +90,8 @@ int OpenCLMemManager::get_physical_id()
     return 2;
 }
 
+cl_context OpenCLMemManager::get_cl_context() { return this->context; }
+cl_command_queue OpenCLMemManager::get_cl_queue() { return this->queue; }
 int OpenCLMemManager::alloc_memory(void** ptr, size_t size, PimMemType mem_type)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";

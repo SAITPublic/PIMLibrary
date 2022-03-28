@@ -180,7 +180,6 @@ bool test_memcpy_bw_device_pim()
     PimBo* device_buffer = PimCreateBo(IN_LENGTH, 1, 1, BATCH_DIM, PIM_FP16, MEM_TYPE_DEVICE);
     PimBo* pim_buffer = PimCreateBo(IN_LENGTH, 1, 1, BATCH_DIM, PIM_FP16, MEM_TYPE_PIM);
     PimBo* host_output = PimCreateBo(IN_LENGTH, 1, 1, BATCH_DIM, PIM_FP16, MEM_TYPE_HOST);
-
     fill_uniform_random_values<half_float::half>(host_input->data, IN_LENGTH, (half_float::half)0.0,
                                                  (half_float::half)0.5);
 
@@ -217,7 +216,6 @@ bool test_memcpy_bw_host_pim_device_host()
     PimBo* device_buffer = PimCreateBo(IN_LENGTH, 1, 1, BATCH_DIM, PIM_FP16, MEM_TYPE_DEVICE);
     PimBo* pim_buffer = PimCreateBo(IN_LENGTH, 1, 1, BATCH_DIM, PIM_FP16, MEM_TYPE_PIM);
     PimBo* host_output = PimCreateBo(IN_LENGTH, 1, 1, BATCH_DIM, PIM_FP16, MEM_TYPE_HOST);
-
     fill_uniform_random_values<half_float::half>(host_input->data, IN_LENGTH, (half_float::half)0.0,
                                                  (half_float::half)0.5);
 
@@ -257,7 +255,6 @@ bool test_memcpy_exp()
     PimBo* pim_buffer = PimCreateBo(IN_LENGTH, 1, 1, BATCH_DIM, PIM_FP16, MEM_TYPE_PIM);
     PimBo* host_output_ind = PimCreateBo(IN_LENGTH, 1, 1, BATCH_DIM, PIM_FP16, MEM_TYPE_HOST);
     PimBo* host_output_pim = PimCreateBo(IN_LENGTH, 1, 1, BATCH_DIM, PIM_FP16, MEM_TYPE_HOST);
-
     fill_uniform_random_values<half_float::half>(host_input->data, IN_LENGTH, (half_float::half)0.0,
                                                  (half_float::half)0.5);
 

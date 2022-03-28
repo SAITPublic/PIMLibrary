@@ -361,6 +361,23 @@ int PimCopyMemory(PimBo* dst, PimBo* src, PimMemCpyType cpy_type)
     return ret;
 }
 
+void* createStream(PimRuntimeType rt_type)
+{
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
+
+    if (pim_runtime == nullptr) {
+        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+        return NULL;
+    }
+    void* new_stream = NULL;
+    new_stream = pim_runtime->createStream(rt_type);
+    if (new_stream == NULL) {
+        DLOG(ERROR) << "unable to create stream for runtime " << rt_type << "\n";
+    }
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+    return new_stream;
+}
+
 int PimExecuteAdd(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream, bool block)
 {
     DLOG(INFO) << "called";

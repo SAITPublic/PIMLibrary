@@ -38,12 +38,14 @@ class OpenCLMemManager : public PimMemoryManager
     int copy_memory(void* dst, void* src, size_t size, PimMemCpyType cpy_type);
     int copy_memory(PimBo* dst, PimBo* src, PimMemCpyType cpy_type);
     int get_physical_id();
+    cl_context get_cl_context();
+    cl_command_queue get_cl_queue();
+    cl_command_queue queue;  // command queue
+    cl_context context;      // context
 
    private:
     cl_platform_id cpPlatform;  // OpenCL platform
     cl_device_id device_id;     // device ID
-    cl_context context;         // context
-    cl_command_queue queue;     // command queue
     cl_uint num_gpu_devices;    // num gpu devices
     cl_int err;
 };

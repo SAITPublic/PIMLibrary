@@ -49,13 +49,12 @@ class PimManager
     uint8_t* get_crf_binary();
     int get_crf_size();
     PimCrfBinGen* pim_crf_generator_;
+    PimMemoryManager* pim_memory_manager_;
 
    private:
     PimManager(PimRuntimeType rt_type, PimPrecision precision);
-
     PimDevice* pim_device_;
     PimControlManager* pim_control_manager_;
-    PimMemoryManager* pim_memory_manager_;
 
     PimRuntimeType rt_type_;
     PimPrecision precision_;
