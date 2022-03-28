@@ -25,3 +25,9 @@
 
 #swap files
 *.swp
+
+#vscode 
+*.vscode
+
+#dat
+*.dat

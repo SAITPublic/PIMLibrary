@@ -23,9 +23,9 @@ message(STATUS "PIM Log level is " $ENV{PIM_LOG_LEVEL})
 add_library(PimRuntime SHARED ${runtime_source})
 
 if(TARGET)
-    target_link_libraries (PimRuntime PimC hsakmt glog gflags)
+	target_link_libraries (PimRuntime PimC hsakmt glog gflags)
 else()
-    target_link_libraries (PimRuntime PimC hsakmt dramsim2 glog gflags)
+	target_link_libraries (PimRuntime PimC hsakmt dramsim2 glog gflags)
 endif()
 
 install ( TARGETS PimRuntime LIBRARY DESTINATION ${ROCM_PATH}/lib/)

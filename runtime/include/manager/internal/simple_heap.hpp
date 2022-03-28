@@ -54,6 +54,7 @@
 #include <utility>
 
 #include "utility/pim_log.h"
+#include "pim_data_types.h"
 #include "utils.hpp"
 
 template <typename Allocator>
@@ -117,7 +118,7 @@ class SimpleHeap
     SimpleHeap& operator=(const SimpleHeap& rhs) = delete;
     SimpleHeap& operator=(SimpleHeap&& rhs) = delete;
 
-    void* alloc(size_t bytes)
+    void* alloc(size_t bytes, const int device_id, const PimRuntimeType rt_type = RT_TYPE_HIP)
     {
         size_t aligned_bytes = get_aligned_bytes(bytes);
 
@@ -166,7 +167,10 @@ class SimpleHeap
             block_cache_.pop_back();
             cache_size_ -= size;
         } else {  // Alloc new block
-            void* ptr = block_allocator_.alloc(aligned_bytes, size);
+            if(device_id < 0){
+                DLOG(ERROR)<<"device id for allocating PIM memory is invalid ";
+            }
+            void* ptr = block_allocator_.alloc(aligned_bytes, size , device_id , rt_type);
             base = reinterpret_cast<uintptr_t>(ptr);
             if (ptr == nullptr) return ptr;
         }

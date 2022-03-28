@@ -12,6 +12,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <iostream>
+#include "manager/HIPMemManager.h"
 #include "utility/pim_log.h"
 #include "utility/pim_util.h"
 
@@ -26,7 +27,11 @@ PimManager::PimManager(PimRuntimeType rt_type, PimPrecision precision) : rt_type
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     pim_device_ = new PimDevice(precision_);
     pim_control_manager_ = new PimControlManager(pim_device_, rt_type_, precision_);
-    pim_memory_manager_ = new PimMemoryManager(pim_device_, rt_type_, precision_);
+    if (rt_type_ == RT_TYPE_HIP) {
+        pim_memory_manager_ = new HIPMemManager(pim_device_, rt_type_, precision_);
+    } else {
+        DLOG(ERROR) << "Invalid runtime type for pim";
+    }
     pim_crf_generator_ = new PimCrfBinGen();
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
 }
@@ -146,9 +151,11 @@ int PimManager::convert_data_layout(void* dst, void* src, size_t size, PimOpType
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
-
-    ret = pim_memory_manager_->convert_data_layout(dst, src, size, op_type);
-
+    if (rt_type_ == RT_TYPE_HIP) {
+        ret = pim_memory_manager_->convert_data_layout(dst, src, size, op_type);
+    } else {
+        DLOG(ERROR) << "not yet implemented";
+    }
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
@@ -157,15 +164,14 @@ int PimManager::convert_data_layout(PimBo* dst, PimBo* src, PimOpType op_type)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
-
-    ret = pim_memory_manager_->convert_data_layout(dst, src, op_type);
-
+    if (rt_type_ == RT_TYPE_HIP) {
+        ret = pim_memory_manager_->convert_data_layout(dst, src, op_type);
+    } else {
+        DLOG(ERROR) << "not yet implemented";
+    }
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
-
-uint8_t* PimManager::get_crf_binary() { return h_binary_buffer_; }
-int PimManager::get_crf_size() { return crf_size_; }
 } /* namespace manager */
 } /* namespace runtime */
-} /* namespace pim */
+} /*namespace pim */

@@ -8,12 +8,11 @@
  * to third parties without the express written permission of Samsung Electronics.
  */
 
-#ifndef _PIM_MANAGER_H_
-#define _PIM_MANAGER_H_
+#ifndef _HIP_MEM_MANAGER_H_
+#define _HIP_MEM_MANAGER_H_
 
-#include "manager/PimControlManager.h"
-#include "manager/PimCrfBinGen.h"
-#include "manager/PimDevice.h"
+#include <vector>
+#include "internal/simple_heap.hpp"
 #include "manager/PimInfo.h"
 #include "manager/PimMemoryManager.h"
 #include "pim_data_types.h"
@@ -24,50 +23,30 @@ namespace runtime
 {
 namespace manager
 {
-class PimMemoryManager;
-class PimControlManager;
-class PimDevice;
-
-class PimManager
+class HIPMemManager : public PimMemoryManager
 {
    public:
-    virtual ~PimManager(void);
+    HIPMemManager(PimDevice* pim_device, PimRuntimeType rt_type, PimPrecision precision);
+    virtual ~HIPMemManager();
 
-    static PimManager* get_instance(PimRuntimeType rt_type, PimPrecision precision);
-
-    int initialize(void);
-    int deinitialize(void);
+    int initialize();
+    int deinitialize();
     int alloc_memory(void** ptr, size_t size, PimMemType mem_type);
     int alloc_memory(PimBo* pim_bo);
     int free_memory(void* ptr, PimMemType mem_type);
     int free_memory(PimBo* pim_bo);
     int copy_memory(void* dst, void* src, size_t size, PimMemCpyType cpy_type);
-    int copy_memory(PimBo* dst, PimBo* src, PimMemCpyType);
+    int copy_memory(PimBo* dst, PimBo* src, PimMemCpyType cpy_type);
     int convert_data_layout(void* dst, void* src, size_t size, PimOpType op_type);
     int convert_data_layout(PimBo* dst, PimBo* src, PimOpType op_type);
 
-    uint8_t* get_crf_binary();
-    int get_crf_size();
-    PimCrfBinGen* pim_crf_generator_;
-
    private:
-    PimManager(PimRuntimeType rt_type, PimPrecision precision);
-
-    PimDevice* pim_device_;
-    PimControlManager* pim_control_manager_;
-    PimMemoryManager* pim_memory_manager_;
-
-    PimRuntimeType rt_type_;
-    PimPrecision precision_;
-
-    uint8_t h_binary_buffer_[128] = {
-        0,
-    };
-    int crf_size_;
-    PimBlockInfo fbi_;
+    int convert_data_layout_for_gemv_weight(PimBo* dst, PimBo* src);
+    int num_gpu_devices_;
+    int device_id;
 };
-} /* namespace manager */
-} /* namespace runtime */
-} /* namespace pim */
+}
+}
+}
 
-#endif /* _PIM_MANAGER_H_ */
+#endif /*_HIP_MEM_MANAGER_H_*/
