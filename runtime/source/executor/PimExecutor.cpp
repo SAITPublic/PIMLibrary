@@ -185,7 +185,8 @@ int PimExecutor::execute_add(PimBo* output, PimBo* operand0, PimBo* operand1, hi
             crf_bin = make_crf_bin(OP_ELT_ADD, output_size);
         }
 
-        int num_tile = output_size / (131072 << 1);
+        int align_size = (131072<<1);
+        int num_tile = (output_size + align_size - 1) / align_size;
 
         unsigned blocks = 64;
         unsigned threads_per_block = 32;
