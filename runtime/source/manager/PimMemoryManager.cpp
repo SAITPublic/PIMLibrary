@@ -22,7 +22,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+#ifndef EMULATOR
 uint64_t fmm_map_pim(uint32_t, uint32_t, uint64_t);
+#endif
 #ifdef __cplusplus
 }
 #endif
@@ -511,12 +513,21 @@ uint64_t PimBlockAllocator::allocate_pim_block(size_t bsize) const
     std::cout << "Device ID :" << device_id << std::endl;
     if (pim_alloc_done[device_id] == true) return 0;
 
+#ifdef EMULATOR
+    if (hipMalloc((void**)&ret, bsize) != hipSuccess) {
+        std::cout << "fmm_map_pim failed! " << ret << std::endl;
+        return -1;
+    }
+#else
     ret = fmm_map_pim(gpu_devices[device_id]->node_id, gpu_devices[device_id]->gpu_id, bsize);
+#endif
     if (ret) {
         pim_alloc_done[device_id] = true;
         g_pim_base_addr[device_id] = ret;
 #ifndef ROCM3
+#ifndef EMULATOR
         hipHostRegister((void*)g_pim_base_addr[device_id], bsize, hipRegisterExternalSvm);
+#endif
 #endif
     } else {
         std::cout << "fmm_map_pim failed! " << ret << std::endl;

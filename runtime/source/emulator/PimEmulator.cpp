@@ -46,6 +46,7 @@ int PimEmulator::initialize(void)
     std::string rocm_path = ROCM_PATH;
     pim_sim_.initialize(rocm_path + "/include/dramsim2/ini/HBM2_samsung_2M_16B_x64.ini",
                         rocm_path + "/include/dramsim2/ini/system_hbm_vega20.ini", 256 * 64 * 2, 64, 1);
+
     return ret;
 }
 
@@ -61,13 +62,10 @@ int PimEmulator::convert_mem_trace_from_16B_to_32B(PimMemTraceData* fmtd32, int*
                                                    int fmtd16_size, PimOpType op_type)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
+    DLOG(INFO) << "fmtd16_size : " << fmtd16_size;
     int ret = 0;
-
     TraceParser trace_converter;
     trace_converter.coalesce_trace(fmtd32, fmtd32_size, fmtd16, fmtd16_size);
-
-    DLOG(INFO) << "fmtd16_size : " << fmtd16_size;
-
 #ifdef DEBUG_PIM
     const char* op_str = get_pim_op_string(op_type);
     const char* test_vector_path = TEST_VECTORS_DATA;
@@ -151,14 +149,14 @@ int PimEmulator::execute_gemv_add_tile_accum(PimBo* output, PimBo* pim_data, Pim
     sim_output = new uint16_t[out_dim];
     uint64_t tmp_data_addr = reinterpret_cast<uint64_t>(temp_buf);
     uint64_t pim_data_addr = reinterpret_cast<uint64_t>(pim_data->data);
+    int out_num_r = pim_data->bshape_r.h;
+    int out_size_r = out_num_r * num_batch * sizeof(uint16_t);
+    void* output_host = malloc(out_size_r);
 
     pim_sim_.preload_data_with_addr(pim_data_addr - pim_base_addr, pim_data->data, pim_data->size);
     pim_sim_.execute_kernel((void*)fmtd32, fmtd32_size);
     pim_sim_.read_result_gemv(sim_output, tmp_data_addr - pim_base_addr, out_dim);
 
-    int out_num_r = pim_data->bshape_r.h;
-    int out_size_r = out_num_r * num_batch * sizeof(uint16_t);
-    void* output_host = malloc(out_size_r);
     hipMemcpy(output_host, output->data, out_size_r, hipMemcpyDeviceToHost);
     for (int b = 0; b < num_batch; b++) {
         for (int i = 0; i < out_num_r; i++) {
@@ -215,6 +213,7 @@ int PimEmulator::execute_elt_op(PimBo* output, PimBo* operand0, PimBo* operand1,
     pim_sim_.preload_data_with_addr(input1_addr - pim_base_addr, operand1->data, operand1->size);
     pim_sim_.execute_kernel((void*)fmtd32, (size_t)fmtd32_size);
     pim_sim_.read_result(sim_output, output_addr - pim_base_addr, output->size);
+
     if (output->mem_type != MEM_TYPE_HOST)
         hipMemcpy((void*)output->data, (void*)sim_output, output->size, hipMemcpyHostToDevice);
 

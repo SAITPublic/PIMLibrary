@@ -97,9 +97,9 @@ int PimExecutor::initialize(void)
     h_fmtd16_size_ = (int*)malloc(sizeof(int));
     h_fmtd32_size_ = (int*)malloc(sizeof(int));
 #endif
+
     /* PIM HW can generate only gemv output without reduction sum */
     /* so PimExecutor needs to maintain intermediate output buffer for gemv op */
-
     pim_manager_->alloc_memory((void**)&pim_gemv_tmp_buffer_, 8 * 2 * 1024 * 1024, MEM_TYPE_PIM);
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
@@ -267,6 +267,7 @@ int PimExecutor::execute_mul(PimBo* output, PimBo* operand0, PimBo* operand1, hi
             (PimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_, (PimMemTracer*)d_emulator_trace_,
 #endif
             (uint8_t*)crf_bin, crf_size);
+
 #ifdef EMULATOR
         hipStreamSynchronize(stream);
         hipMemcpy((void*)h_fmtd16_size_, (void*)d_fmtd16_size_, sizeof(int), hipMemcpyDeviceToHost);

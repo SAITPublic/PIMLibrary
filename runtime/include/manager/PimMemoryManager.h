@@ -36,7 +36,9 @@ class PimDevice;
 class PimBlockAllocator
 {
    private:
-#if RADEON7
+#if EMULATOR
+    static const size_t block_size_ = 134217728; // 128M Pim area
+#elif RADEON7
     static const size_t block_size_ = 8589934592;  // 8GB Pim area
 #else
     static const size_t block_size_ = 17179869184;  // 16GB Pim area
