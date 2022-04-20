@@ -19,6 +19,7 @@
 #include "pim_runtime_api.h"
 #include "utility/pim_debug.hpp"
 #include "utility/pim_util.h"
+#include "utility/pim_profile.h"
 
 #define IN_LENGTH 1024
 #define BATCH_DIM 1
@@ -195,9 +196,61 @@ bool test_memcpy_bw_device_pim()
     return true;
 }
 
+bool test_memcpy_latency()
+{
+    int ret = 0;
+    int buffer_size = 100 * 1024 * 1024;
+
+    PimInitialize(RT_TYPE_HIP, PIM_FP16);
+    PimExecuteDummy();
+
+    PimBo* host = PimCreateBo(buffer_size, 1, 1, 1, PIM_FP16, MEM_TYPE_HOST);
+    PimBo* device = PimCreateBo(buffer_size, 1, 1, 1, PIM_FP16, MEM_TYPE_DEVICE);
+    PimBo* pim = PimCreateBo(buffer_size, 1, 1, 1, PIM_FP16, MEM_TYPE_PIM);
+
+    PimSynchronize();
+    PIM_PROFILE_TICK_A(host_to_device);
+    PimCopyMemory(device, host, HOST_TO_DEVICE);
+    PIM_PROFILE_TOCK_A(host_to_device);
+
+    PimSynchronize();
+    PIM_PROFILE_TICK_A(host_to_pim);
+    PimCopyMemory(pim, host, HOST_TO_PIM);
+    PIM_PROFILE_TOCK_A(host_to_pim);
+
+    PimSynchronize();
+    PIM_PROFILE_TICK_A(device_to_host);
+    PimCopyMemory(host, device, DEVICE_TO_HOST);
+    PIM_PROFILE_TOCK_A(device_to_host);
+
+    PimSynchronize();
+    PIM_PROFILE_TICK_A(device_to_pim);
+    PimCopyMemory(pim, device, DEVICE_TO_PIM);
+    PIM_PROFILE_TOCK_A(device_to_pim);
+
+    PimSynchronize();
+    PIM_PROFILE_TICK_A(pim_to_host);
+    PimCopyMemory(host, pim, PIM_TO_HOST);
+    PIM_PROFILE_TOCK_A(pim_to_host);
+
+    PimSynchronize();
+    PIM_PROFILE_TICK_A(pim_to_device);
+    PimCopyMemory(device, pim, PIM_TO_DEVICE);
+    PIM_PROFILE_TOCK_A(pim_to_device);
+
+    PimFreeMemory(device);
+    PimFreeMemory(pim);
+    PimFreeMemory(host);
+
+    PimDeinitialize();
+
+    return true;
+}
+
 TEST(UnitTest, PimMemCopyHostAndDeviceTest) { EXPECT_TRUE(test_memcpy_bw_host_device()); }
 TEST(UnitTest, PimMemCopyHostAndPimTest) { EXPECT_TRUE(test_memcpy_bw_host_pim()); }
 TEST(UnitTest, PimMemCopyDeviceAndPimTest) { EXPECT_TRUE(test_memcpy_bw_device_pim()); }
+TEST(UnitTest, PimMemCopyLatencyTest) { EXPECT_TRUE(test_memcpy_latency()); }
 TEST(UnitTest, simplePimAllocFree) { EXPECT_TRUE(simple_pim_alloc_free()); }
 TEST(UnitTest, PimRepeatAllocateFree) { EXPECT_TRUE(pim_repeat_allocate_free()); }
 TEST(UnitTest, PimAllocateExceedBlocksize) { EXPECT_FALSE(pim_allocate_exceed_blocksize()); }
