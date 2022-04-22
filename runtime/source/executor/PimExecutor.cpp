@@ -185,7 +185,7 @@ int PimExecutor::execute_add(PimBo* output, PimBo* operand0, PimBo* operand1, hi
             crf_bin = make_crf_bin(OP_ELT_ADD, output_size);
         }
 
-        int align_size = (131072<<1);
+        int align_size = (131072 << 1);
         int num_tile = (output_size + align_size - 1) / align_size;
 
         unsigned blocks = 64;
@@ -255,7 +255,8 @@ int PimExecutor::execute_mul(PimBo* output, PimBo* operand0, PimBo* operand1, hi
             crf_bin = make_crf_bin(OP_ELT_MUL, output->size);
         }
 
-        int num_tile = output_size / (131072 << 1);
+        int align_size = (131072 << 1);
+        int num_tile = (output_size + align_size - 1) / align_size;
 
         unsigned blocks = 64;
         unsigned threads_per_block = 32;
@@ -886,6 +887,16 @@ int PimExecutor::execute_custom_gemv(PimBo* output, PimBo* operand0, PimBo* oper
         return 1;
     }
 
+    // if operand1 is on HOST, copy it to DEVICE
+    bool copy_to_device = false;
+    if (operand1->mem_type == MEM_TYPE_HOST) {
+        copy_to_device = true;
+        PimBShape bs = operand1->bshape;
+        PimBo* operand1_device = PimCreateBo(bs.w, bs.h, bs.c, bs.n, PIM_FP16, MEM_TYPE_DEVICE, 0);
+        pim_manager_->copy_memory(operand1_device->data, operand1->data, operand1->size, HOST_TO_DEVICE);
+        operand1 = operand1_device;
+    }
+
     void* vec = operand0->data;
     void* mat = operand1->data;
     void* out = output->data;
@@ -903,6 +914,10 @@ int PimExecutor::execute_custom_gemv(PimBo* output, PimBo* operand0, PimBo* oper
         k = operand1->bshape_r.w;
         n = operand1->bshape_r.h;
         rocblas_gemv_fp16_xAy(vec, mat, out, m, n, k, alpha, beta, stream);
+    }
+
+    if (copy_to_device) {
+        PimDestroyBo(operand1);
     }
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
