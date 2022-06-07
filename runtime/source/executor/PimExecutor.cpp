@@ -762,11 +762,11 @@ int PimExecutor::execute_gemv_next_pim(PimBo* output, PimBo* operand0, PimBo* op
                        (uint8_t*)crf_bin, crf_size, is_gemv_add);
 #ifndef EMULATOR
     if (block) hipStreamSynchronize(stream);
-    PIM_PROFILE_TOCK(RunGemvKernel);
 #endif
 #ifdef EMULATOR
 /* TODO:verify Emulator Path */
 #endif
+    PIM_PROFILE_TOCK(RunGemvKernel);
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
