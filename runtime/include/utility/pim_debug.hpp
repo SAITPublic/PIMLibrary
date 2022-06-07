@@ -17,19 +17,23 @@
 #include "pim_data_types.h"
 #include "stdio.h"
 
-inline void print_pimbo(PimBo* bo, const char* str = nullptr, const char* func = __func__, int line = __LINE__)
+inline void print_pimbo(PimBo* bo, const char* str = nullptr, const char* func = nullptr, int line = 0)
 {
     if (bo == nullptr) {
         printf("PimBo structure is null\n");
         return;
     }
-    printf("[%s][%d] %s\n", func, line, str);
-    printf("[%s][%d] mem_type:%d, precision:%d, size:%d, user_ptr:%d\n", func, line, bo->mem_type, bo->precision,
-           bo->size, bo->use_user_ptr);
-    printf("[%s][%d] bshape(w:%d, h:%d, c:%d, n:%d)\n", func, line, bo->bshape.w, bo->bshape.h, bo->bshape.c,
-           bo->bshape.n);
-    printf("[%s][%d] bshape_r(w:%d, h:%d, c:%d, n:%d)\n", func, line, bo->bshape_r.w, bo->bshape_r.h, bo->bshape_r.c,
-           bo->bshape_r.n);
+
+    char prefix[1024] = {0, };
+    snprintf(prefix , sizeof(prefix), "[%s][%d] ", (func != nullptr ? func : __func__), (line > 0 ? line : __LINE__));
+
+    printf("%s %s\n", prefix, (str == nullptr ? "" : str));
+    printf("%s mem_type:%d, precision:%d, size:%lu, user_ptr:%d\n", prefix, bo->mem_type, bo->precision,
+            bo->size, bo->use_user_ptr);
+    printf("%s bshape(w:%d, h:%d, c:%d, n:%d)\n", prefix, bo->bshape.w, bo->bshape.h, bo->bshape.c,
+            bo->bshape.n);
+    printf("%s bshape_r(w:%d, h:%d, c:%d, n:%d)\n", prefix, bo->bshape_r.w, bo->bshape_r.h, bo->bshape_r.c,
+            bo->bshape_r.n);
     printf("\n");
 }
 
