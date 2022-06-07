@@ -198,7 +198,6 @@ bool test_memcpy_bw_device_pim()
 
 bool test_memcpy_latency()
 {
-    int ret = 0;
     int buffer_size = 100 * 1024 * 1024;
 
     PimInitialize(RT_TYPE_HIP, PIM_FP16);

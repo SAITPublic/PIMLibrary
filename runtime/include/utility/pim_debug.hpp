@@ -198,8 +198,6 @@ inline int compare_data(char* data_a, char* data_b, size_t size)
 
 inline void set_half_data(half_float::half* buffer, half_float::half value, size_t size)
 {
-    int ret = 0;
-
     for (int i = 0; i < size; i++) {
         buffer[i] = value;
     }

@@ -534,11 +534,9 @@ int PimExecutor::execute_gemv_list(PimBo* output, PimBo* input, PimBo* weight, h
     unsigned threads_per_block = 64;
     int list_size = output->bshape.n;
 
-    int memory_size = weight->bshape.w;
     int input_size = 128 * ceil((float)weight->bshape_r.w / 128);
     if (input_size < 256) input_size = 256;
     int output_size = weight->bshape.h;
-    int n_batch = 1;
     int n_in_tile = input_size * sizeof(uint16_t) / fbi_.trans_size / fbi_.num_grf_A;
     int n_out_tile = output_size / (fbi_.num_pim_chan * fbi_.num_pim_blocks * fbi_.num_grf_B);
     int is_gemv_add = 0;

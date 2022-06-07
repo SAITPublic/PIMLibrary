@@ -394,7 +394,6 @@ PimBo* PimRuntime::get_preloaded_pim_weight(PimBo* dev_wei, size_t list_size)
 PimBo* PimRuntime::get_preloaded_pim_weight(PimBo* dev_wei)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
-    uint64_t w_addr = reinterpret_cast<uint64_t>(dev_wei->data);
     PimBo* pre_wei = find_preloaded_pim_weight(dev_wei);
 
     if (pre_wei == nullptr) {
