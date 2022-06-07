@@ -334,10 +334,6 @@ int PimMemoryManager::convert_data_layout_for_gemv_weight(PimBo* dst, PimBo* src
     uint32_t col = 0;
     uint32_t row = 0;
     uint64_t addr;
-    uint32_t even_s_row = 0;  // starting_row;
-    uint32_t even_s_col = 0;  // starting_col;
-    uint32_t odd_s_row = 0;   // starting_row;
-    uint32_t odd_s_col = 0;   // starting_col;
 
     int type_size = (src->precision == PIM_FP16) ? 2 : 1;
     int out_cnt = src->bshape.h;
@@ -368,105 +364,59 @@ int PimMemoryManager::convert_data_layout_for_gemv_weight(PimBo* dst, PimBo* src
         free(src_temp);
     }
 
+    enum bank_parts { EVEN_BANK = 0, ODD_BANK = 1 };
+    uint32_t start_row[2] = {0, }; // starting row (0 : even bank, 1 : odd bank)
+    uint32_t start_col[2] = {0, }; // starting col (0 : even bank, 1 : odd bank)
+
     for (int y = 0; y < out_cnt; y += out_tile_size) {
         for (int x = 0; x < in_cnt; x += in_tile_size) {
-            if ((x / in_tile_size) % 2 == 0) {
-                for (int tiled_y = 0; tiled_y < out_tile_size; tiled_y += num_grf_B) {
-                    col = even_s_col;
-                    row = even_s_row;
+            auto partof_bank = (x / in_tile_size) % 2 == 0 ? EVEN_BANK : ODD_BANK;
+            for (int tiled_y = 0; tiled_y < out_tile_size; tiled_y += num_grf_B) {
+                col = start_col[partof_bank];
+                row = start_row[partof_bank];
 
-                    for (int grfb_idx = 0; grfb_idx < num_grf_B; grfb_idx++) {
-                        for (int grfa_idx = 0; grfa_idx < num_grf_A; grfa_idx++) {
-                            addr = addr_gen_safe(cidx, rank, bg, bank, row, col);
+                for (int grfb_idx = 0; grfb_idx < num_grf_B; grfb_idx++) {
+                    for (int grfa_idx = 0; grfa_idx < num_grf_A; grfa_idx++) {
+                        addr = addr_gen_safe(cidx, rank, bg, (bank + partof_bank), row, col);
 #ifdef EMULATOR
-                            int d_idx = (y + tiled_y + grfa_idx) * in_cnt + x + grfb_idx;
+                        int d_idx = (y + tiled_y + grfa_idx) * in_cnt + x + grfb_idx;
 #else
-                            int d_idx = (y + tiled_y + grfb_idx) * in_cnt + x + grfa_idx;
+                        int d_idx = (y + tiled_y + grfb_idx) * in_cnt + x + grfa_idx;
 #endif
 #if ROCM3
-                            memcpy(dst_data + addr, src_data + d_idx * trans_size, trans_size);
+                        memcpy(dst_data + addr, src_data + d_idx * trans_size, trans_size);
 #else
-                            if (hipMemcpy(dst_data + addr, src_data + d_idx * trans_size, trans_size,
-                                          hipMemcpyDeviceToDevice) != hipSuccess) {
-                                DLOG(INFO) << "[END] " << __FUNCTION__ << " Failed to copy";
-                                return -1;
-                            }
-#endif
-                            col++;
+                        if (hipMemcpy(dst_data + addr, src_data + d_idx * trans_size, trans_size,
+                                    hipMemcpyDeviceToDevice) != hipSuccess) {
+                            DLOG(INFO) << "[END] " << __FUNCTION__ << " Failed to copy";
+                            return -1;
                         }
-                    }
-
-                    bank += (num_banks / num_pim_blocks);
-
-                    if (bank >= (num_banks / num_bank_groups)) {
-                        bg++;
-                        bank = 0;
-                    }
-
-                    if (bg >= num_bank_groups) {
-                        bg = 0;
-                        rank++;
-                    }
-
-                    if (rank >= num_pim_rank) {
-                        rank = 0;
-                        cidx++;
-                    }
-
-                    if (cidx >= num_pim_chan) {
-                        cidx = 0;
-                        even_s_row = row;
-                        even_s_col = col;
+#endif
+                        col++;
                     }
                 }
-            } else if ((x / in_tile_size) % 2 == 1) {
-                for (int tiled_y = 0; tiled_y < out_tile_size; tiled_y += num_grf_B) {
-                    col = odd_s_col;
-                    row = odd_s_row;
 
-                    for (int grfb_idx = 0; grfb_idx < num_grf_B; grfb_idx++) {
-                        for (int grfa_idx = 0; grfa_idx < num_grf_A; grfa_idx++) {
-                            addr = addr_gen_safe(cidx, rank, bg, bank + 1, row, col);
-#ifdef EMULATOR
-                            int d_idx = (y + tiled_y + grfa_idx) * in_cnt + x + grfb_idx;
-#else
-                            int d_idx = (y + tiled_y + grfb_idx) * in_cnt + x + grfa_idx;
-#endif
-#if ROCM3
-                            memcpy(dst_data + addr, src_data + d_idx * trans_size, trans_size);
-#else
-                            if (hipMemcpy(dst_data + addr, src_data + d_idx * trans_size, trans_size,
-                                          hipMemcpyDeviceToDevice) != hipSuccess) {
-                                DLOG(INFO) << "[END] " << __FUNCTION__ << " Failed to copy";
-                                return -1;
-                            }
-#endif
-                            col++;
-                        }
-                    }
+                bank += (num_banks / num_pim_blocks);
 
-                    bank += (num_banks / num_pim_blocks);
+                if (bank >= (num_banks / num_bank_groups)) {
+                    bg++;
+                    bank = 0;
+                }
 
-                    if (bank >= (num_banks / num_bank_groups)) {
-                        bg++;
-                        bank = 0;
-                    }
+                if (bg >= num_bank_groups) {
+                    bg = 0;
+                    rank++;
+                }
 
-                    if (bg >= num_bank_groups) {
-                        bg = 0;
-                        rank++;
-                    }
+                if (rank >= num_pim_rank) {
+                    rank = 0;
+                    cidx++;
+                }
 
-                    if (rank >= num_pim_rank) {
-                        rank = 0;
-                        cidx++;
-                    }
-
-                    if (cidx >= num_pim_chan) {
-                        cidx = 0;
-                        odd_s_row = row;
-                        odd_s_col = col;
-                    }
+                if (cidx >= num_pim_chan) {
+                    cidx = 0;
+                    start_row[partof_bank] = row;
+                    start_col[partof_bank] = col;
                 }
             }
         }
