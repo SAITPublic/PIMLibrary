@@ -92,7 +92,7 @@ class GemvKArgs : public KernelArgs
 
     GemvKArgs() : KernelArgs(&args_, sizeof(args_)) {}
     GemvKArgs(Tensor<T> *in, Tensor<T> *out, Tensor<T> *wt, std::string crf_binary, hipFunction_t kernel)
-        : KernelArgs(&args_, sizeof(args_), crf_binary, kernel), input_vector_(in), output_vector_(out), weights_(wt)
+        : KernelArgs(&args_, sizeof(args_), crf_binary, kernel), input_vector_(in), weights_(wt), output_vector_(out)
     {
     }
 

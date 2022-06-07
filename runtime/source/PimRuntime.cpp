@@ -362,7 +362,7 @@ int PimRuntime::insert_preloaded_pim_weight(PimBo* dev_wei, PimBo* pim_wei)
         w_key ^= w_addr_ptr[i];
     }
     weight_map_.insert(std::make_pair(w_key, pim_wei));
-    printf("[%s] insert\tw_addr:%p, w_key:%X, weight_map_size:%d\n", __func__, dev_wei->data, w_key,
+    printf("[%s] insert\tw_addr:%p, w_key:%X, weight_map_size:%lu\n", __func__, dev_wei->data, w_key,
            weight_map_.size());
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
