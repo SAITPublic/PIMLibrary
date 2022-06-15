@@ -19,6 +19,7 @@ option(RADEON7 "Enable TARGET:RADEON7 apps build" OFF)
 option(MI50 "Enable TARGET:MI50 apps build" OFF)
 option(ROCM3 "Enable Rocm3 execution" OFF)
 option(PIM_COMPILER "Enable PIM Compiler" OFF)
+option(ENABLE_COVERAGE "Enable Test Coverage (lcov)" OFF)
 
 # Set Default build type to "Debug"
 if((NOT CMAKE_BUILD_TYPE) OR (CMAKE_BUILD_TYPE) STREQUAL None)
@@ -39,6 +40,13 @@ elseif("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG_PIM -DPROFILE -g")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DDEBUG_PIM -DPROFILE -g")
 endif()
+
+if(ENABLE_COVERAGE)
+	message("Test coverage option has been enabled")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-arcs -ftest-coverage")
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fprofile-arcs -ftest-coverage")
+endif()
+
 message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
 message(STATUS "CMAKE_C_FLAGS: ${CMAKE_C_FLAGS}")
 

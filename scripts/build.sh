@@ -12,8 +12,8 @@ if [[ ${PIPESTATUS[0]} -ne 4 ]]; then
 fi
 
 
-OPTIONS=do:t:verc
-LONGOPTS=debug,output:,target:,verbose,emulator,rocm3,compiler
+OPTIONS=do:t:vercl
+LONGOPTS=debug,output:,target:,verbose,emulator,rocm3,compiler,lcov
 
 # -regarding ! and PIPESTATUS see above
 # -temporarily store output to be able to check for errors
@@ -28,7 +28,7 @@ fi
 # read getopt’s output this way to handle the quoting right:
 eval set -- "$PARSED"
 
-d=n v=n proj_cmake_dir=- target_device="mi50" emulator=n rocm3_enable=n pim_compiler=n
+d=n v=n proj_cmake_dir=- target_device="mi50" emulator=n rocm3_enable=n pim_compiler=n lcov=n
 
 # now enjoy the options in order and nicely split until we see --
 while true; do
@@ -56,12 +56,16 @@ while true; do
             ;;
         -r|--rocm3)
             rocm3_enable=y
-	    shift
-	    ;;
+            shift
+            ;;
         -c|--compiler)
             pim_compiler=y
-	    shift
-	    ;;
+            shift
+            ;;
+        -l|--lcov)
+            lcov=y
+            shift
+            ;;
         --)
             shift
             break
@@ -106,6 +110,9 @@ if [ $rocm3_enable = "y" ]; then
 fi
 if [ $pim_compiler = "y" ]; then
     cmake_build_options="${cmake_build_options} -DPIM_COMPILER=ON"
+fi
+if [ $lcov = "y" ]; then
+    cmake_build_options="${cmake_build_options} -DENABLE_COVERAGE=ON"
 fi
 echo "${cmake_build_options}"
 
