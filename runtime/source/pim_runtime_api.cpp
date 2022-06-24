@@ -95,6 +95,30 @@ int PimSetDevice(uint32_t device_id)
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
+
+int PimGetDevice(uint32_t* device_id)
+{
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
+    PIM_PROFILE_TICK(PimGetDevice);
+    int ret = 0;
+
+    if (pim_runtime == nullptr) {
+        DLOG(ERROR) << "PimRuntime is not initialized";
+        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+        return -1;
+    }
+    ret = pim_runtime->get_device(device_id);
+    if (ret != 0) {
+        DLOG(ERROR) << "Fail to Set Device";
+        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+        return ret;
+    }
+
+    PIM_PROFILE_TOCK(PimGetDevice);
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+    return ret;
+}
+
 PimBo* PimCreateBo(int w, int h, int c, int n, PimPrecision precision, PimMemType mem_type, void* user_ptr)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";

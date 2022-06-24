@@ -37,8 +37,8 @@
  * This API initializes PIM System with either OpenCL/HIP runtime
  * Precision supported are FP16 and INT8
  *
- * @param rt_type       SDK runtime options ( RT_TYPE_HIP, RT_TYPE_OPENCL)
- * @param PimPrecision  Options to choose PIM operations precision ( PIM_FP16, PIM_INT8)
+ * @param rt_type       SDK runtime options (RT_TYPE_HIP, RT_TYPE_OPENCL)
+ * @param PimPrecision  Options to choose PIM operations precision (PIM_FP16, PIM_INT8)
  *
  * @return Return success/failure
  */
@@ -56,19 +56,31 @@ __PIM_API__ int PimDeinitialize(void);
  * @brief Set PimDevice for Execution
  *
  * This call set the current device for execution to device id
+ * @param device_id device id value to set
  * @return Return success/failure
  *
  */
 __PIM_API__ int PimSetDevice(uint32_t device_id);
+
 /**
- * @brief Creates PIM buffer object of size w,h,c,n with precision (INT8/PIM16)
+ * @brief Get PimDevice to check device id
+ *
+ * This call get the current device to check current working device id
+ * @param device_id device id variable to get
+ * @return Return success/failure
+ *
+ */
+__PIM_API__ int PimGetDevice(uint32_t* device_id);
+
+/**
+ * @brief Creates PIM buffer object of size w,h,c,n with precision (PIM_INT8, PIM_FP16)
  *
  * @param w width of buffer object
  * @param h height of buffer object
  * @param c number of channels in buffer object
  * @param n number of batches in buffer object
- * @param precision precision of buffer object (INT8/ PIM16)
- * @param mem_type  type of memory ( PIM/GPU/HOST)
+ * @param precision precision of buffer object (PIM_INT8, PIM_FP16)
+ * @param mem_type  type of memory (PIM/GPU/HOST)
  *
  * @return Pointer to buffer object.
  */
