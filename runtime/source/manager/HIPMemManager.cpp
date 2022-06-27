@@ -85,6 +85,7 @@ int HIPMemManager::alloc_memory(void** ptr, size_t size, PimMemType mem_type)
             return -1;
         }
     } else if (mem_type == MEM_TYPE_PIM) {
+        hipGetDevice(&device_id_);
         *ptr = fragment_allocator_[device_id_]->alloc(size, device_id_, rt_type_);
     }
 
@@ -108,6 +109,7 @@ int HIPMemManager::alloc_memory(PimBo* pim_bo)
             return -1;
         }
     } else if (pim_bo->mem_type == MEM_TYPE_PIM) {
+        hipGetDevice(&device_id_);
         pim_bo->data = fragment_allocator_[device_id_]->alloc(pim_bo->size, device_id_, rt_type_);
     }
 
@@ -128,6 +130,7 @@ int HIPMemManager::free_memory(void* ptr, PimMemType mem_type)
     } else if (mem_type == MEM_TYPE_HOST) {
         hipHostFree(ptr);
     } else if (mem_type == MEM_TYPE_PIM) {
+        hipGetDevice(&device_id_);
         return fragment_allocator_[device_id_]->free(ptr);
     }
 
@@ -149,6 +152,7 @@ int HIPMemManager::free_memory(PimBo* pim_bo)
         hipHostFree(pim_bo->data);
         pim_bo->data = nullptr;
     } else if (pim_bo->mem_type == MEM_TYPE_PIM) {
+        hipGetDevice(&device_id_);
         if (fragment_allocator_[device_id_]->free(pim_bo->data)) return 0;
         DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
         return -1;
@@ -173,7 +177,7 @@ int HIPMemManager::copy_memory(void* dst, void* src, size_t size, PimMemCpyType 
             DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
             return -1;
         }
-    } else if (cpy_type == DEVICE_TO_PIM || cpy_type == PIM_TO_DEVICE || cpy_type == DEVICE_TO_DEVICE) {
+    } else if (cpy_type == PIM_TO_PIM || cpy_type == DEVICE_TO_PIM || cpy_type == PIM_TO_DEVICE || cpy_type == DEVICE_TO_DEVICE) {
         if (hipMemcpy(dst, src, size, hipMemcpyDeviceToDevice) != hipSuccess) {
             DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
             return -1;

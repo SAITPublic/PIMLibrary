@@ -292,7 +292,6 @@ __global__ void gemv_list_pim_64cu_64th_fp16(volatile uint8_t* __restrict__ pim_
     int w_idx = hipThreadIdx_x % 2;
     int gidx = hipThreadIdx_x >> 1;
     int list_idx = hipBlockIdx_x / (64 / list_size);
-    // int out_tile_size = output_size / list_size;
     uint64_t offset = w_idx << 4;
     uint64_t addr = 0;
     input += list_idx * input_size * 2;
