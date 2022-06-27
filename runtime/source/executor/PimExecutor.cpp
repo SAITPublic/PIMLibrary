@@ -391,9 +391,6 @@ int PimExecutor::execute_gemv_tile_accum(PimBo* output, PimBo* operand0, PimBo* 
 #endif
                             uint8_t*, int, int);
 
-#ifdef ROCM3
-        gemv_kernel = gemv_pim_64cu_64th_fp16;
-#else
         switch (n_compute_tile) {
             case 8:
                 gemv_kernel = gemv_pim_64cu_64th_8tile_fp16;
@@ -402,7 +399,6 @@ int PimExecutor::execute_gemv_tile_accum(PimBo* output, PimBo* operand0, PimBo* 
                 gemv_kernel = gemv_pim_64cu_64th_fp16;
                 break;
         }
-#endif
 
         /* TODO: check tile_accum crf bin */
         uint8_t* crf_bin = find_crf(OP_GEMV, compute_size * sizeof(uint16_t));
