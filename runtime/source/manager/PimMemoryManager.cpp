@@ -16,6 +16,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <iostream>
+#include<list>
 #include "utility/pim_debug.hpp"
 #include "utility/pim_util.h"
 
@@ -37,6 +38,39 @@ namespace runtime
 {
 namespace manager
 {
+
+inline std::list<int> get_env(const char* key)
+{
+    std::list<int> hip_devices = {};
+    if (key == nullptr) {
+        return hip_devices;
+    }
+
+    if (*key == '\0') {
+        return hip_devices;
+    }
+
+    const char* ev_val = getenv(key);
+    if (ev_val == nullptr) {
+        return hip_devices;  // variable not defined
+    }
+
+    std::string env = getenv(key);
+    std::string delimiter = ",";
+    size_t pos = 0;
+    std::string token;
+    while ((pos = env.find(delimiter)) != std::string::npos) {
+        token = env.substr(0, pos);
+        int num = stoi((token));
+        hip_devices.push_back(num);
+        env.erase(0, pos + delimiter.length());
+    }
+    int num = stoi((env));
+    hip_devices.push_back(num);
+
+    return hip_devices;
+}	
+
 std::map<uint32_t, gpuInfo*> gpu_devices;
 PimMemoryManager::PimMemoryManager(PimDevice* pim_device, PimRuntimeType rt_type, PimPrecision precision)
     : pim_device_(pim_device), rt_type_(rt_type), precision_(precision)
@@ -45,6 +79,7 @@ PimMemoryManager::PimMemoryManager(PimDevice* pim_device, PimRuntimeType rt_type
     get_pim_block_info(&fbi_);
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
 }
+
 
 PimMemoryManager::~PimMemoryManager() { DLOG(INFO) << "[START] " << __FUNCTION__ << " called"; }
 int PimMemoryManager::initialize()
@@ -56,7 +91,18 @@ int PimMemoryManager::initialize()
     char path[256];
     uint32_t gpu_id;
     int device_id = 0;
+    int num_gpu_devices = 0;
+    std::list<int> hip_visible_devices = get_env("HIP_VISIBLE_DEVICES");
+    hipGetDeviceCount(&num_gpu_devices);
 
+    //if hip_device is not set , then assume all devices are visible
+    if (hip_visible_devices.empty()) {
+        for (int device = 0; device < num_gpu_devices; device++) {
+            hip_visible_devices.push_back(device);
+        }
+    }
+
+    int curr = 0;
     for (int id = 0; id < max_topology; id++) {
         // Get GPU ID
         snprintf(path, 256, "/sys/devices/virtual/kfd/kfd/topology/nodes/%d/gpu_id", id);
@@ -68,14 +114,19 @@ int PimMemoryManager::initialize()
         }
 
         fclose(fd);
-        if (gpu_id != 0) {
+	if (gpu_id == 0) continue;
+        if (gpu_id != 0 && curr == hip_visible_devices.front()) {
+            DLOG(INFO) << " adding device:" << id << " "
+                      << "gpu_id:" << gpu_id ;
             gpuInfo* device_info = new gpuInfo;
             device_info->node_id = id;
             device_info->gpu_id = gpu_id;
             device_info->base_address = 0;
             gpu_devices[device_id] = device_info;
             device_id++;
+            hip_visible_devices.pop_front();
         }
+        curr++;
     }
 
     if (device_id == 0) {

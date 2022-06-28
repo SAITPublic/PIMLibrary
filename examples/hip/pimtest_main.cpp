@@ -8,17 +8,25 @@ int main(int argc, char** argv)
     int numDevices = 1;
     int result = 0;
 
-    const char* env_pim_device = std::getenv("PIM_DEVICE_ID");
-    if (env_pim_device != nullptr) {
-        std::cout << "User Set Device to " << *env_pim_device << std::endl;
-        uint32_t device_id = (*env_pim_device) - '0';
-        hipError_t deviceSet = hipSetDevice(device_id);
-        if (hipSuccess != deviceSet) {
-            std::cout << "Failed to set device " << deviceSet << "Device ID: " << device_id << std::endl;
-            return result;
+    if (argc == 2) {
+        std::string device_str = (argv[1]);
+        std::string delimiter = "=";
+        size_t pos = 0;
+        std::string token;
+        if ((pos = device_str.find(delimiter)) != std::string::npos) {
+            token = device_str.substr(0, pos);
+            if (token == "--pim-device") {
+                std::string device = device_str.substr(pos + 1);
+                int device_id = stoi((device));
+                hipError_t deviceSet = hipSetDevice(device_id);
+                if (hipSuccess != deviceSet) {
+                    std::cout << "Failed to set device " << deviceSet << "Device ID: " << device_id << std::endl;
+                    return result;
+                }
+                std::cout << "Executing on Device" << device_id << std::endl;
+                result |= RUN_ALL_TESTS();
+            }  //--pim-device
         }
-        std::cout << "Executing on Device" << device_id << std::endl;
-        result |= RUN_ALL_TESTS();
     } else {
         hipGetDeviceCount(&numDevices);
         std::cout << "Running on Available GPU devices " << numDevices << std::endl;
