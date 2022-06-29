@@ -195,6 +195,12 @@ uint64_t PimBlockAllocator::allocate_pim_block(size_t bsize, int device_id, PimR
 #ifndef EMULATOR
         if (rt_type == RT_TYPE_HIP) {
             hipHostRegister((void*)g_pim_base_addr[device_id], bsize, hipRegisterExternalSvm);
+        } else if (rt_type == RT_TYPE_OPENCL) {
+            /*
+            this function is just a place holder to register the memory for pim , through opencl.
+            have to implement this function.
+            */
+            // clHostRegister((void*)g_pim_base_addr[device_id], bsize);
         }
 #endif
     } else {

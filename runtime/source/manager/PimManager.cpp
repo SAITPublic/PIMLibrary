@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <iostream>
 #include "manager/HIPMemManager.h"
+#include "manager/OpenCLMemManager.h"
 #include "utility/pim_log.h"
 #include "utility/pim_util.h"
 
@@ -29,6 +30,8 @@ PimManager::PimManager(PimRuntimeType rt_type, PimPrecision precision) : rt_type
     pim_control_manager_ = new PimControlManager(pim_device_, rt_type_, precision_);
     if (rt_type_ == RT_TYPE_HIP) {
         pim_memory_manager_ = new HIPMemManager(pim_device_, rt_type_, precision_);
+    } else if (rt_type_ == RT_TYPE_OPENCL) {
+        pim_memory_manager_ = new OpenCLMemManager(pim_device_, rt_type_, precision_);
     } else {
         DLOG(ERROR) << "Invalid runtime type for pim";
     }
