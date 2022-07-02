@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <iostream>
 #include "executor/HIPExecutor.h"
+#include "executor/OpenCLExecutor.h"
 #include "executor/PimCompilerDriver.h"
 #include "utility/pim_debug.hpp"
 #include "utility/pim_log.h"
@@ -57,6 +58,8 @@ PimExecutor* PimExecutor::get_instance(PimRuntimeType rt_type, PimPrecision prec
     static PimExecutor* instance_;
     if (rt_type == RT_TYPE_HIP) {
         instance_ = new HIPExecutor(rt_type, precision);
+    } else if (rt_type == RT_TYPE_OPENCL) {
+        instance_ = new OpenCLExecutor(rt_type, precision);
     } else {
         DLOG(ERROR) << "Executor for " << rt_type << " not implemented\n";
         return NULL;
@@ -146,13 +149,13 @@ int PimExecutor::get_loop_counter(PimOpType op_type, int input_size)
     return lc;
 }
 
-uint8_t* PimExecutor::make_crf_bin(PimOpType op_type, int data_size)
+void* PimExecutor::make_crf_bin(PimOpType op_type, int data_size)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     uint8_t* h_crf = new uint8_t[max_crf_size_];
     uint8_t* d_crf;
     int crf_size;
-    hipMalloc((void**)&d_crf, max_crf_size_);
+    pim_manager_->alloc_memory((void**)&d_crf, max_crf_size_, MEM_TYPE_DEVICE);
 
     int lc = get_loop_counter(op_type, data_size);
     pim_manager_->pim_crf_generator_->gen_binary_with_loop(op_type, lc, h_crf, &crf_size);
@@ -162,7 +165,7 @@ uint8_t* PimExecutor::make_crf_bin(PimOpType op_type, int data_size)
     free(h_crf);
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
-    return d_crf;
+    return (void*)d_crf;
 }
 
 uint8_t* PimExecutor::find_crf(PimOpType op_type, int data_size)

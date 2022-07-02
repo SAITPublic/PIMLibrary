@@ -40,12 +40,13 @@ class OpenCLMemManager : public PimMemoryManager
     int get_physical_id();
     cl_context get_cl_context();
     cl_command_queue get_cl_queue();
+    cl_device_id* get_cl_device();
     cl_command_queue queue;  // command queue
     cl_context context;      // context
+    cl_device_id device_id;     // device ID
 
    private:
     cl_platform_id cpPlatform;  // OpenCL platform
-    cl_device_id device_id;     // device ID
     cl_uint num_gpu_devices;    // num gpu devices
     cl_int err;
 };

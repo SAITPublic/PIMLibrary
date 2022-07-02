@@ -39,7 +39,7 @@ class PimExecutor
     virtual int initialize(void);
     virtual int deinitialize(void);
     int get_loop_counter(PimOpType op_type, int input_size);
-    uint8_t* make_crf_bin(PimOpType op_type, int data_size);
+    void* make_crf_bin(PimOpType op_type, int data_size);
     uint8_t* find_crf(PimOpType op_type, int data_size);
     virtual void* createStream() = 0;
 

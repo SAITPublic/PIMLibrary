@@ -136,7 +136,7 @@ int HIPExecutor::execute_add(PimBo* output, PimBo* operand0, PimBo* operand1, vo
         uint8_t* crf_bin = find_crf(OP_ELT_ADD, output_size);
         int crf_size = 32;
         if (crf_bin == nullptr) {
-            crf_bin = make_crf_bin(OP_ELT_ADD, output_size);
+            crf_bin = (uint8_t*)make_crf_bin(OP_ELT_ADD, output_size);
         }
 
         int align_size = (131072 << 1);
@@ -206,7 +206,7 @@ int HIPExecutor::execute_mul(PimBo* output, PimBo* operand0, PimBo* operand1, vo
         uint8_t* crf_bin = find_crf(OP_ELT_MUL, output->size);
         int crf_size = 32;
         if (crf_bin == nullptr) {
-            crf_bin = make_crf_bin(OP_ELT_MUL, output->size);
+            crf_bin = (uint8_t*)make_crf_bin(OP_ELT_MUL, output->size);
         }
 
         int align_size = (131072 << 1);
@@ -358,7 +358,7 @@ int HIPExecutor::execute_gemv_tile_accum(PimBo* output, PimBo* operand0, PimBo* 
         uint8_t* crf_bin = find_crf(OP_GEMV, compute_size * sizeof(uint16_t));
         int crf_size = 32;
         if (crf_bin == nullptr) {
-            crf_bin = make_crf_bin(OP_GEMV, compute_size * sizeof(uint16_t));
+            crf_bin = (uint8_t*)make_crf_bin(OP_GEMV, compute_size * sizeof(uint16_t));
         }
         PIM_PROFILE_TOCK(CreateCRFBin);
 
@@ -432,7 +432,7 @@ int HIPExecutor::execute_gemv_tile_tree(PimBo* output, PimBo* operand0, PimBo* o
     uint8_t* crf_bin = find_crf(OP_GEMV, memory_size * sizeof(uint16_t));
     int crf_size = 64;
     if (crf_bin == nullptr) {
-        crf_bin = make_crf_bin(OP_GEMV, memory_size * sizeof(uint16_t));
+        crf_bin = (uint8_t*)make_crf_bin(OP_GEMV, memory_size * sizeof(uint16_t));
     }
     PIM_PROFILE_TOCK(CreateCRFBin);
 
@@ -527,7 +527,7 @@ int HIPExecutor::execute_gemv_list_normal(PimBo* output, PimBo* input, PimBo* we
     uint8_t* crf_bin = find_crf(OP_GEMV, input_size * sizeof(uint16_t));
     int crf_size = 32;
     if (crf_bin == nullptr) {
-        crf_bin = make_crf_bin(OP_GEMV, input_size * sizeof(uint16_t));
+        crf_bin = (uint8_t*)make_crf_bin(OP_GEMV, input_size * sizeof(uint16_t));
     }
     PIM_PROFILE_TOCK(CreateCRFBin);
     PIM_PROFILE_TICK(RunGemvListKernel);
@@ -609,7 +609,7 @@ int HIPExecutor::execute_gemv_list_chwise(PimBo* output, PimBo* input, PimBo* we
     uint8_t* crf_bin = find_crf(OP_GEMV, input_size * sizeof(uint16_t));
     int crf_size = 32;
     if (crf_bin == nullptr) {
-        crf_bin = make_crf_bin(OP_GEMV, input_size * sizeof(uint16_t));
+        crf_bin = (uint8_t*)make_crf_bin(OP_GEMV, input_size * sizeof(uint16_t));
     }
     PIM_PROFILE_TOCK(CreateCRFBin);
     PIM_PROFILE_TICK(RunGemvListKernel);
@@ -690,7 +690,7 @@ int HIPExecutor::execute_relu(PimBo* output, PimBo* pim_data, void* stream, bool
         uint8_t* crf_bin = find_crf(OP_RELU, output->size);
         int crf_size = 32;
         if (crf_bin == nullptr) {
-            crf_bin = make_crf_bin(OP_RELU, output->size);
+            crf_bin = (uint8_t*)make_crf_bin(OP_RELU, output->size);
         }
 
         unsigned blocks = fbi_.num_pim_chan;
@@ -735,7 +735,7 @@ int HIPExecutor::execute_copy(PimBo* output, PimBo* pim_data, void* stream, bool
         uint8_t* crf_bin = find_crf(OP_COPY, output->size);
         int crf_size = 32;
         if (crf_bin == nullptr) {
-            crf_bin = make_crf_bin(OP_COPY, output->size);
+            crf_bin = (uint8_t*)make_crf_bin(OP_COPY, output->size);
         }
 
         unsigned blocks = fbi_.num_pim_chan;
@@ -797,7 +797,7 @@ int HIPExecutor::execute_gemv_next_pim(PimBo* output, PimBo* operand0, PimBo* op
     uint8_t* crf_bin = find_crf(OP_GEMV, compute_size * sizeof(uint16_t));
     int crf_size = 32;
     if (crf_bin == nullptr) {
-        crf_bin = make_crf_bin(OP_GEMV, compute_size * sizeof(uint16_t));
+        crf_bin = (uint8_t*)make_crf_bin(OP_GEMV, compute_size * sizeof(uint16_t));
     }
     PIM_PROFILE_TOCK(CreateCRFBin);
 
@@ -834,7 +834,7 @@ int HIPExecutor::execute_bn(PimBo* output, PimBo* pim_data, PimBo* beta, PimBo* 
     uint8_t* crf_bin = find_crf(OP_BN, output_size);
     int crf_size = 64;
     if (crf_bin == nullptr) {
-        crf_bin = make_crf_bin(OP_BN, output_size);
+        crf_bin = (uint8_t*)make_crf_bin(OP_BN, output_size);
     }
 
     uint8_t* srf_binary = new uint8_t[fbi_.num_pim_chan * fbi_.num_pim_rank * fbi_.trans_size];

@@ -38,8 +38,11 @@ class PimMemoryManager
     PimMemoryManager(PimDevice* pim_device, PimRuntimeType rt_type, PimPrecision precision);
     virtual ~PimMemoryManager(void);
 
-    virtual int initialize(void);
-    virtual int deinitialize(void);
+    virtual int initialize();
+    virtual int deinitialize();
+    virtual cl_command_queue get_cl_queue(){};
+    virtual cl_context get_cl_context(){};
+    virtual cl_device_id* get_cl_device(){};
     virtual int alloc_memory(void** ptr, size_t size, PimMemType mem_type) = 0;
     virtual int alloc_memory(PimBo* pim_bo) = 0;
     virtual int free_memory(void* ptr, PimMemType mem_type) = 0;

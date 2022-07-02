@@ -10,7 +10,7 @@ link_directories(${ROCM_PATH}/opencl/lib/x86_64/)
 file(GLOB HIP_SOURCES hip/*.cpp)
 file(GLOB OPENCL_SOURCES opencl/*.cpp)
 
-# add_subdirectory(monitor/opencl_sample)
+add_subdirectory(monitor/opencl_sample)
 add_executable(PimIntegrationTests ${HIP_SOURCES})
 add_executable(OpenCLPimIntegrationTests ${OPENCL_SOURCES})
 
