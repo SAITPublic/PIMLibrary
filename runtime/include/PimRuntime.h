@@ -54,7 +54,7 @@ class PimRuntime
     int insert_preloaded_pim_weight(PimBo* dev_wei, PimBo* pim_wei);
     PimBo* find_preloaded_pim_weight(PimBo* dev_wei);
     PimBo* get_preloaded_pim_weight(PimBo* dev_wei);
-    PimBo* get_preloaded_pim_weight(PimBo* dev_wei, size_t list_size);
+    PimBo* get_preloaded_pim_weight_for_list(PimBo* dev_wei);
 
    private:
     pim::runtime::manager::PimManager* pim_manager_;

@@ -51,6 +51,9 @@ class PimExecutor
     int execute_gemv(PimBo* output, PimBo* operand0, PimBo* operand1, hipStream_t stream, bool block);
     int execute_gemv_add(PimBo* output, PimBo* operand0, PimBo* operand1, hipStream_t stream, bool block);
     int execute_gemv_list(PimBo* output, PimBo* input, PimBo* weight, hipStream_t stream, bool block);
+    int execute_gemv_list_normal(PimBo* output, PimBo* input, PimBo* weight, hipStream_t stream, bool block);
+    int execute_gemv_list_chwise(PimBo* output, PimBo* input, PimBo* weight, int ch_per_op, hipStream_t stream,
+                                 bool block);
     int execute_custom_gemv(PimBo* output, PimBo* operand0, PimBo* operand1, bool is_gemv_add, hipStream_t stream,
                             bool block);
     int execute_custom_gemv_add(PimBo* output, PimBo* operand0, PimBo* operand1, PimBo* operand2, bool relu,

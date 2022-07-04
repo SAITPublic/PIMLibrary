@@ -29,8 +29,8 @@ class HIPMemManager : public PimMemoryManager
     HIPMemManager(PimDevice* pim_device, PimRuntimeType rt_type, PimPrecision precision);
     virtual ~HIPMemManager();
 
-    int initialize();
-    int deinitialize();
+    int initialize(void);
+    int deinitialize(void);
     int alloc_memory(void** ptr, size_t size, PimMemType mem_type);
     int alloc_memory(PimBo* pim_bo);
     int free_memory(void* ptr, PimMemType mem_type);
@@ -42,11 +42,12 @@ class HIPMemManager : public PimMemoryManager
 
    private:
     int convert_data_layout_for_gemv_weight(PimBo* dst, PimBo* src);
+    int convert_data_layout_for_gemv_weight(PimBo* dst, PimBo* src, int ch_per_op);
     int num_gpu_devices_;
-    int device_id;
+    int device_id_;
 };
-}
-}
-}
+}  // namespace manager
+}  // namespace runtime
+}  // namespace pim
 
 #endif /*_HIP_MEM_MANAGER_H_*/

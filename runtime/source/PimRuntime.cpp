@@ -278,7 +278,7 @@ int PimRuntime::execute_gemv_list(PimBo* output, PimBo* vector, PimBo* matrix, v
         return -1;
     }
 
-    PimBo* pim_wei = get_preloaded_pim_weight(matrix, matrix->bshape.n);
+    PimBo* pim_wei = get_preloaded_pim_weight_for_list(matrix);
     ret = pim_executor_->execute_gemv_list(output, vector, pim_wei, (hipStream_t)stream, block);
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
@@ -373,28 +373,6 @@ int PimRuntime::insert_preloaded_pim_weight(PimBo* dev_wei, PimBo* pim_wei)
     return ret;
 }
 
-PimBo* PimRuntime::get_preloaded_pim_weight(PimBo* dev_wei, size_t list_size)
-{
-    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
-    PimBo* pre_wei = find_preloaded_pim_weight(dev_wei);
-
-    if (pre_wei == nullptr) {
-        PimBo* host_reord_wei = PimCreateBo(dev_wei->bshape.w, dev_wei->bshape.h * list_size, dev_wei->bshape.c, 1,
-                                            PIM_FP16, MEM_TYPE_HOST);
-        pre_wei =
-            PimCreateBo(dev_wei->bshape.w, dev_wei->bshape.h * list_size, dev_wei->bshape.c, 1, PIM_FP16, MEM_TYPE_PIM);
-        pim_manager_->convert_data_layout(host_reord_wei, dev_wei, OP_GEMV);
-        PimCopyMemory(pre_wei, host_reord_wei, HOST_TO_PIM);
-
-        insert_preloaded_pim_weight(dev_wei, pre_wei);
-
-        PimDestroyBo(host_reord_wei);
-    }
-
-    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
-    return pre_wei;
-}
-
 PimBo* PimRuntime::get_preloaded_pim_weight(PimBo* dev_wei)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
@@ -432,6 +410,28 @@ PimBo* PimRuntime::get_preloaded_pim_weight(PimBo* dev_wei)
         if (host_weight != dev_wei) {
             PimDestroyBo(host_weight);
         }
+    }
+
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+    return pre_wei;
+}
+
+PimBo* PimRuntime::get_preloaded_pim_weight_for_list(PimBo* dev_wei)
+{
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
+    PimBo* pre_wei = find_preloaded_pim_weight(dev_wei);
+
+    if (pre_wei == nullptr) {
+        PimBo* host_reord_wei = PimCreateBo(dev_wei->bshape.w, dev_wei->bshape.h, dev_wei->bshape.c, dev_wei->bshape.n,
+                                            PIM_FP16, MEM_TYPE_HOST);
+        pre_wei = PimCreateBo(dev_wei->bshape.w, dev_wei->bshape.h, dev_wei->bshape.c, dev_wei->bshape.n, PIM_FP16,
+                              MEM_TYPE_PIM);
+        pim_manager_->convert_data_layout(host_reord_wei, dev_wei, OP_GEMV);
+        PimCopyMemory(pre_wei, host_reord_wei, HOST_TO_PIM);
+
+        insert_preloaded_pim_weight(dev_wei, pre_wei);
+
+        PimDestroyBo(host_reord_wei);
     }
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";

@@ -24,16 +24,17 @@ inline void print_pimbo(PimBo* bo, const char* str = nullptr, const char* func =
         return;
     }
 
-    char prefix[1024] = {0, };
-    snprintf(prefix , sizeof(prefix), "[%s][%d] ", (func != nullptr ? func : __func__), (line > 0 ? line : __LINE__));
+    char prefix[1024] = {
+        0,
+    };
+    snprintf(prefix, sizeof(prefix), "[%s][%d] ", (func != nullptr ? func : __func__), (line > 0 ? line : __LINE__));
 
     printf("%s %s\n", prefix, (str == nullptr ? "" : str));
-    printf("%s mem_type:%d, precision:%d, size:%lu, user_ptr:%d\n", prefix, bo->mem_type, bo->precision,
-            bo->size, bo->use_user_ptr);
-    printf("%s bshape(w:%d, h:%d, c:%d, n:%d)\n", prefix, bo->bshape.w, bo->bshape.h, bo->bshape.c,
-            bo->bshape.n);
+    printf("%s mem_type:%d, precision:%d, size:%lu, user_ptr:%d\n", prefix, bo->mem_type, bo->precision, bo->size,
+           bo->use_user_ptr);
+    printf("%s bshape(w:%d, h:%d, c:%d, n:%d)\n", prefix, bo->bshape.w, bo->bshape.h, bo->bshape.c, bo->bshape.n);
     printf("%s bshape_r(w:%d, h:%d, c:%d, n:%d)\n", prefix, bo->bshape_r.w, bo->bshape_r.h, bo->bshape_r.c,
-            bo->bshape_r.n);
+           bo->bshape_r.n);
     printf("\n");
 }
 

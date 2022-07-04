@@ -18,8 +18,8 @@
 #include "hip/hip_fp16.h"
 #include "pim_runtime_api.h"
 #include "utility/pim_debug.hpp"
-#include "utility/pim_util.h"
 #include "utility/pim_profile.h"
+#include "utility/pim_util.h"
 
 #define IN_LENGTH 1024
 #define BATCH_DIM 1

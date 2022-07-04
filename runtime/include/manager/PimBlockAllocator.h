@@ -24,7 +24,7 @@ class PimBlockAllocator
 {
    private:
 #if EMULATOR
-    static const size_t block_size_ = 134217728; // 128M Pim area
+    static const size_t block_size_ = 134217728;  // 128M Pim area
 #elif RADEON7
     static const size_t block_size_ = 8589934592;  // 8GB Pim area
 #else
@@ -37,8 +37,8 @@ class PimBlockAllocator
     uint64_t allocate_pim_block(size_t request_size, int device_id, PimRuntimeType rt_type) const;
     size_t block_size() const { return block_size_; }
 };
-}
-}
-}
+}  // namespace manager
+}  // namespace runtime
+}  // namespace pim
 
 #endif /*_PIM_BLOCK_ALLOCATOR_H_ */
