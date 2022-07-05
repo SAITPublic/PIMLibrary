@@ -47,8 +47,8 @@ class OpenCLMemManager : public PimMemoryManager
     cl_uint num_gpu_devices;    // num gpu devices
     cl_int err;
 };
-} /* manager */
-} /* runtime */
-} /* pim */
+}  // namespace manager
+}  // namespace runtime
+}  // namespace pim
 
 #endif /*_OPENCL_MEM_MANAGER_H_ */

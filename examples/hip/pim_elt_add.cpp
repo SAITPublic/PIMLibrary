@@ -150,7 +150,7 @@ int pim_elt_add_profile(bool block, int len)
 
     hipEventElapsedTime(&eventMs, start, stop);
 
-    printf("kernel Execution time             = %6.3fms\n", eventMs / 100);
+    //    printf("kernel Execution time             = %6.3fms\n", eventMs / 100);
 #endif
     PimCopyMemory(host_output, device_output, PIM_TO_HOST);
 

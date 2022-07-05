@@ -71,8 +71,7 @@ int OpenCLMemManager::initialize()
     */
     clGetDeviceIDs(cpPlatform, CL_DEVICE_TYPE_GPU, 1, &device_id, NULL);
     context = clCreateContext(0, 1, &device_id, NULL, NULL, &err);
-    cl_ok(err)
-    queue = clCreateCommandQueueWithProperties(context, device_id, 0, NULL);
+    cl_ok(err) queue = clCreateCommandQueueWithProperties(context, device_id, 0, NULL);
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
@@ -226,6 +225,6 @@ int OpenCLMemManager::copy_memory(PimBo* dst, PimBo* src, PimMemCpyType cpy_type
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
-}  // manager
-}  // runtime
-}  // pim
+}  // namespace manager
+}  // namespace runtime
+}  // namespace pim

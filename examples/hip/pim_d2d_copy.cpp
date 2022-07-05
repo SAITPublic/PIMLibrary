@@ -20,8 +20,8 @@
 #include "utility/pim_debug.hpp"
 
 #define NUM (1024)
-#define KNRM  "\x1B[0m"
-#define KRED  "\x1B[31m"
+#define KNRM "\x1B[0m"
+#define KRED "\x1B[31m"
 #define KBLUE "\x1b[34m"
 
 #define HIPCHECK(error)                                                                                               \
@@ -31,7 +31,7 @@
             (localError != hipErrorPeerAccessNotEnabled)) {                                                           \
             printf("%serror: '%s'(%d) from %s at %s:%d%s\n", KRED, hipGetErrorString(localError), localError, #error, \
                    __FILE__, __LINE__, KNRM);                                                                         \
-            printf("%sAPI returned error code.%s\n", KRED, KNRM);                                                                       \
+            printf("%sAPI returned error code.%s\n", KRED, KNRM);                                                     \
         }                                                                                                             \
     }
 
@@ -39,7 +39,7 @@
     {                                                                                        \
         if (error != 0) {                                                                    \
             printf("%serror: from %s at %s:%d%s\n", KRED, #error, __FILE__, __LINE__, KNRM); \
-            printf("%sAPI returned error code.%s\n", KRED, KNRM);                                               \
+            printf("%sAPI returned error code.%s\n", KRED, KNRM);                            \
         }                                                                                    \
     }
 
@@ -129,7 +129,7 @@ int pim_d2d_test()
     }
 
     for (int currentGpu = 0; currentGpu < gpuCount; currentGpu++) {
-        for (int peerGpu = currentGpu+1; peerGpu < gpuCount; peerGpu++) {
+        for (int peerGpu = currentGpu + 1; peerGpu < gpuCount; peerGpu++) {
             errors = 0;
             enablePeer2Peer(currentGpu, peerGpu);
             PimAllocMemory((void**)&device0_data, NUM * sizeof(half), MEM_TYPE_PIM);
@@ -147,7 +147,7 @@ int pim_d2d_test()
             // verify the results
             for (int i = 0; i < NUM; i++) {
                 if (std::abs(randArray[i] - output_data[i]) > eps) {
-                    //printf("failed : %d cpu: %f gpu peered data  %f\n", i, (float)randArray[i],
+                    // printf("failed : %d cpu: %f gpu peered data  %f\n", i, (float)randArray[i],
                     //(float)output_data[i]);
                     errors++;
                 } else {

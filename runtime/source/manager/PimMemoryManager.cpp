@@ -16,7 +16,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <iostream>
-#include<list>
+#include <list>
 #include "utility/pim_debug.hpp"
 #include "utility/pim_util.h"
 
@@ -38,7 +38,6 @@ namespace runtime
 {
 namespace manager
 {
-
 inline std::list<int> get_env(const char* key)
 {
     std::list<int> hip_devices = {};
@@ -69,7 +68,7 @@ inline std::list<int> get_env(const char* key)
     hip_devices.push_back(num);
 
     return hip_devices;
-}	
+}
 
 std::map<uint32_t, gpuInfo*> gpu_devices;
 PimMemoryManager::PimMemoryManager(PimDevice* pim_device, PimRuntimeType rt_type, PimPrecision precision)
@@ -79,7 +78,6 @@ PimMemoryManager::PimMemoryManager(PimDevice* pim_device, PimRuntimeType rt_type
     get_pim_block_info(&fbi_);
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
 }
-
 
 PimMemoryManager::~PimMemoryManager() { DLOG(INFO) << "[START] " << __FUNCTION__ << " called"; }
 int PimMemoryManager::initialize()
@@ -95,7 +93,7 @@ int PimMemoryManager::initialize()
     std::list<int> hip_visible_devices = get_env("HIP_VISIBLE_DEVICES");
     hipGetDeviceCount(&num_gpu_devices);
 
-    //if hip_device is not set , then assume all devices are visible
+    // if hip_device is not set , then assume all devices are visible
     if (hip_visible_devices.empty()) {
         for (int device = 0; device < num_gpu_devices; device++) {
             hip_visible_devices.push_back(device);
@@ -114,10 +112,10 @@ int PimMemoryManager::initialize()
         }
 
         fclose(fd);
-	if (gpu_id == 0) continue;
+        if (gpu_id == 0) continue;
         if (gpu_id != 0 && curr == hip_visible_devices.front()) {
             DLOG(INFO) << " adding device:" << id << " "
-                      << "gpu_id:" << gpu_id ;
+                       << "gpu_id:" << gpu_id;
             gpuInfo* device_info = new gpuInfo;
             device_info->node_id = id;
             device_info->gpu_id = gpu_id;
@@ -178,7 +176,7 @@ void PimBlockAllocator::free(void* ptr, size_t length) const
 uint64_t PimBlockAllocator::allocate_pim_block(size_t bsize, int device_id, PimRuntimeType rt_type) const
 {
     uint64_t ret = 0;
-    std::cout << "Device ID :" << device_id << std::endl;
+    DLOG(INFO) << "Device ID : " << device_id;
     if (pim_alloc_done[device_id] == true) return 0;
 
 #ifdef EMULATOR

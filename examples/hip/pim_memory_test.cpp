@@ -208,34 +208,34 @@ bool test_memcpy_latency()
     PimBo* pim = PimCreateBo(buffer_size, 1, 1, 1, PIM_FP16, MEM_TYPE_PIM);
 
     PimSynchronize();
-    PIM_PROFILE_TICK_A(host_to_device);
+    PIM_PROFILE_TICK(host_to_device);
     PimCopyMemory(device, host, HOST_TO_DEVICE);
-    PIM_PROFILE_TOCK_A(host_to_device);
+    PIM_PROFILE_TOCK(host_to_device);
 
     PimSynchronize();
-    PIM_PROFILE_TICK_A(host_to_pim);
+    PIM_PROFILE_TICK(host_to_pim);
     PimCopyMemory(pim, host, HOST_TO_PIM);
-    PIM_PROFILE_TOCK_A(host_to_pim);
+    PIM_PROFILE_TOCK(host_to_pim);
 
     PimSynchronize();
-    PIM_PROFILE_TICK_A(device_to_host);
+    PIM_PROFILE_TICK(device_to_host);
     PimCopyMemory(host, device, DEVICE_TO_HOST);
-    PIM_PROFILE_TOCK_A(device_to_host);
+    PIM_PROFILE_TOCK(device_to_host);
 
     PimSynchronize();
-    PIM_PROFILE_TICK_A(device_to_pim);
+    PIM_PROFILE_TICK(device_to_pim);
     PimCopyMemory(pim, device, DEVICE_TO_PIM);
-    PIM_PROFILE_TOCK_A(device_to_pim);
+    PIM_PROFILE_TOCK(device_to_pim);
 
     PimSynchronize();
-    PIM_PROFILE_TICK_A(pim_to_host);
+    PIM_PROFILE_TICK(pim_to_host);
     PimCopyMemory(host, pim, PIM_TO_HOST);
-    PIM_PROFILE_TOCK_A(pim_to_host);
+    PIM_PROFILE_TOCK(pim_to_host);
 
     PimSynchronize();
-    PIM_PROFILE_TICK_A(pim_to_device);
+    PIM_PROFILE_TICK(pim_to_device);
     PimCopyMemory(device, pim, PIM_TO_DEVICE);
-    PIM_PROFILE_TOCK_A(pim_to_device);
+    PIM_PROFILE_TOCK(pim_to_device);
 
     PimFreeMemory(device);
     PimFreeMemory(pim);
