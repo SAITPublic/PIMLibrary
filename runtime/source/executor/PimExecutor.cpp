@@ -1102,7 +1102,7 @@ uint8_t* PimExecutor::make_crf_bin(PimOpType op_type, int data_size)
 
     pim_manager_->copy_memory((void*)d_crf, (void*)h_crf, max_crf_size_, HOST_TO_DEVICE);
     crf_lut_.insert(std::make_pair(std::make_pair(op_type, data_size), d_crf));
-    free(h_crf);
+    delete[] h_crf;
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return d_crf;
