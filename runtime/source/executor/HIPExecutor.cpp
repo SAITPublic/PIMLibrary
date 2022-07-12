@@ -911,7 +911,7 @@ int HIPExecutor::execute_custom_gemv(PimBo* output, PimBo* operand0, PimBo* oper
     float alpha = 1.0f;
     float beta = is_gemv_add ? 1.0f : 0.0f;
 
-    if (is_transposed(operand1)) {
+    if (!is_transposed(operand1)) {
         m = operand1->bshape_r.h;
         k = operand1->bshape_r.w;
         n = 1;
@@ -952,7 +952,7 @@ int HIPExecutor::execute_custom_gemv_add(PimBo* output, PimBo* operand0, PimBo* 
     float alpha = 1.0f;
     float beta = 0.0f;
 
-    if (is_transposed(operand1)) {
+    if (!is_transposed(operand1)) {
         m = operand1->bshape_r.h;
         k = operand1->bshape_r.w;
         n = 1;
