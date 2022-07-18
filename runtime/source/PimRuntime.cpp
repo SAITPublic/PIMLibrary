@@ -240,7 +240,7 @@ int PimRuntime::execute_gemv(PimBo* output, PimBo* operand0, PimBo* operand1, vo
 
     if (kernel_type_ == CUSTOM_GPU) {
         ret = pim_executor_->execute_custom_gemv(output, operand0, operand1, false, stream, block);
-    } else if (kernel_type_ == PIM && !is_transposed(operand1)) {
+    } else if (kernel_type_ == PIM) {
         PimBo* pim_wei = get_preloaded_pim_weight(operand1);
         ret = pim_executor_->execute_gemv(output, operand0, pim_wei, stream, block);
     } else {
@@ -263,7 +263,7 @@ int PimRuntime::execute_gemv_add(PimBo* output, PimBo* operand0, PimBo* operand1
 
     if (kernel_type_ == CUSTOM_GPU) {
         ret = pim_executor_->execute_custom_gemv(output, operand0, operand1, true, stream, block);
-    } else if (kernel_type_ == PIM && !is_transposed(operand1)) {
+    } else if (kernel_type_ == PIM) {
         PimBo* pim_wei = get_preloaded_pim_weight(operand1);
         ret = pim_executor_->execute_gemv_add(output, operand0, pim_wei, stream, block);
     } else {
@@ -421,7 +421,6 @@ PimBo* PimRuntime::get_preloaded_pim_weight(PimBo* dev_wei)
 
         PimBo* host_reordered_weight = PimCreateBo(pim_desc, MEM_TYPE_HOST, GEMV_WEIGHT);
         pre_wei = PimCreateBo(pim_desc, MEM_TYPE_PIM, GEMV_WEIGHT);
-
         pim_manager_->convert_data_layout(host_reordered_weight, host_weight, OP_GEMV);
         PimCopyMemory(pre_wei, host_reordered_weight, HOST_TO_PIM);
 
@@ -445,9 +444,9 @@ PimBo* PimRuntime::get_preloaded_pim_weight_for_list(PimBo* dev_wei)
     PimBo* pre_wei = find_preloaded_pim_weight(dev_wei);
 
     if (pre_wei == nullptr) {
-        PimBo* host_reord_wei = PimCreateBo(dev_wei->bshape.w, dev_wei->bshape.h, dev_wei->bshape.c, dev_wei->bshape.n,
+        PimBo* host_reord_wei = PimCreateBo(dev_wei->bshape.n, dev_wei->bshape.c, dev_wei->bshape.h, dev_wei->bshape.w,
                                             PIM_FP16, MEM_TYPE_HOST);
-        pre_wei = PimCreateBo(dev_wei->bshape.w, dev_wei->bshape.h, dev_wei->bshape.c, dev_wei->bshape.n, PIM_FP16,
+        pre_wei = PimCreateBo(dev_wei->bshape.n, dev_wei->bshape.c, dev_wei->bshape.h, dev_wei->bshape.w, PIM_FP16,
                               MEM_TYPE_PIM);
         pim_manager_->convert_data_layout(host_reord_wei, dev_wei, OP_GEMV);
         PimCopyMemory(pre_wei, host_reord_wei, HOST_TO_PIM);

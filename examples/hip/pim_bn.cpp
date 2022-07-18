@@ -44,10 +44,10 @@ int pim_bn_up_to_256KB(bool block, uint64_t input_len)
 
     PimDesc* pim_desc = PimCreateDesc(BATCH, CH, HEIGHT, WIDTH, PIM_FP16);
 
-    PimBo* host_beta = PimCreateBo(1, 1, CH, 1, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* host_gamma = PimCreateBo(1, 1, CH, 1, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* host_mean = PimCreateBo(1, 1, CH, 1, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* host_variance = PimCreateBo(1, 1, CH, 1, PIM_FP16, MEM_TYPE_HOST);
+    PimBo* host_beta = PimCreateBo(1, CH, 1, 1, PIM_FP16, MEM_TYPE_HOST);
+    PimBo* host_gamma = PimCreateBo(1, CH, 1, 1, PIM_FP16, MEM_TYPE_HOST);
+    PimBo* host_mean = PimCreateBo(1, CH, 1, 1, PIM_FP16, MEM_TYPE_HOST);
+    PimBo* host_variance = PimCreateBo(1, CH, 1, 1, PIM_FP16, MEM_TYPE_HOST);
 
     /* __PIM_API__ call : Create PIM Buffer Object */
     PimBo* host_input = PimCreateBo(pim_desc, MEM_TYPE_HOST);

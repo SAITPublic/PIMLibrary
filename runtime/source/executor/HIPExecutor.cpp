@@ -293,11 +293,11 @@ int HIPExecutor::execute_gemv_tile_accum(PimBo* output, PimBo* operand0, PimBo* 
     unsigned blocks = fbi_.num_pim_chan;
     unsigned threads_per_block = 64;
 
-    int memory_size = weight->bshape.w;
-    int compute_size = 128 * ceil((float)weight->bshape_r.w / 128);
+    int memory_size = weight->bshape.h;
+    int compute_size = 128 * ceil((float)weight->bshape_r.h / 128);
     if (compute_size < 256) compute_size = 256;
-    int out_size = weight->bshape.h;
-    int real_out_size = weight->bshape_r.h;
+    int out_size = weight->bshape.w;
+    int real_out_size = weight->bshape_r.w;
     int n_batch = input->bshape.n;
     int n_compute_tile = compute_size * sizeof(uint16_t) / fbi_.trans_size / fbi_.num_grf_A;
     int n_memory_tile = memory_size * sizeof(uint16_t) / fbi_.trans_size / fbi_.num_grf_A;
@@ -420,9 +420,9 @@ int HIPExecutor::execute_gemv_tile_tree(PimBo* output, PimBo* operand0, PimBo* o
     unsigned blocks = fbi_.num_pim_chan;
     unsigned threads_per_block = 64;
 
-    int memory_size = weight->bshape.w;
-    int out_size = weight->bshape.h;
-    int real_out_size = weight->bshape_r.h;
+    int memory_size = weight->bshape.h;
+    int out_size = weight->bshape.w;
+    int real_out_size = weight->bshape_r.w;
     int n_batch = input->bshape.n;
     int n_memory_tile = memory_size * sizeof(uint16_t) / fbi_.trans_size / fbi_.num_grf_A;
     int n_out_tile = out_size / (fbi_.num_pim_chan * fbi_.num_pim_blocks * fbi_.num_grf_B);
@@ -482,7 +482,7 @@ int HIPExecutor::execute_gemv_list(PimBo* output, PimBo* input, PimBo* weight, v
     bool is_chwise = false;
     int ch_per_batch = 0;
 
-    if (weight->bshape.n % fbi_.num_pim_chan == 0) {
+    if (weight->bshape.c % fbi_.num_pim_chan == 0) {
         is_chwise = true;
         ch_per_batch = 1;
     }
@@ -503,11 +503,11 @@ int HIPExecutor::execute_gemv_list_normal(PimBo* output, PimBo* input, PimBo* we
 
     unsigned blocks = fbi_.num_pim_chan;
     unsigned threads_per_block = 64;
-    int list_size = output->bshape.n;
+    int list_size = output->bshape.c;
 
-    int input_size = 128 * ceil((float)weight->bshape_r.w / 128);
+    int input_size = 128 * ceil((float)weight->bshape_r.h / 128);
     if (input_size < 256) input_size = 256;
-    int output_size = weight->bshape.h * weight->bshape.n;
+    int output_size = weight->bshape.w * weight->bshape.c;
     int n_in_tile = input_size * sizeof(uint16_t) / fbi_.trans_size / fbi_.num_grf_A;
     int n_out_tile = output_size / (fbi_.num_pim_chan * fbi_.num_pim_blocks * fbi_.num_grf_B);
     int is_gemv_add = 0;
@@ -588,9 +588,9 @@ int HIPExecutor::execute_gemv_list_chwise(PimBo* output, PimBo* input, PimBo* we
     unsigned threads_per_block = 64;
     int list_size = output->bshape.n;
 
-    int input_size = 128 * ceil((float)weight->bshape_r.w / 128);
+    int input_size = 128 * ceil((float)weight->bshape_r.h / 128);
     if (input_size < 256) input_size = 256;
-    int output_size = weight->bshape.h;
+    int output_size = weight->bshape.w;
     int n_in_tile = input_size * sizeof(uint16_t) / fbi_.trans_size / fbi_.num_grf_A;
     int n_out_tile = output_size / (ch_per_op * fbi_.num_pim_blocks * fbi_.num_grf_B);
     int is_gemv_add = 0;
@@ -781,11 +781,11 @@ int HIPExecutor::execute_gemv_next_pim(PimBo* output, PimBo* operand0, PimBo* op
     unsigned blocks = fbi_.num_pim_chan;
     unsigned threads_per_block = 64;
 
-    int memory_size = weight->bshape.w;
-    int compute_size = 128 * ceil((float)weight->bshape_r.w / 128);
+    int memory_size = weight->bshape.h;
+    int compute_size = 128 * ceil((float)weight->bshape_r.h / 128);
     if (compute_size < 256) compute_size = 256;
-    int out_size = weight->bshape.h;
-    int real_out_size = weight->bshape_r.h;
+    int out_size = weight->bshape.w;
+    int real_out_size = weight->bshape_r.w;
     int n_batch = input->bshape.n;
     int n_compute_tile = compute_size * sizeof(uint16_t) / fbi_.trans_size / fbi_.num_grf_A;
     int n_memory_tile = memory_size * sizeof(uint16_t) / fbi_.trans_size / fbi_.num_grf_A;
@@ -891,7 +891,7 @@ int HIPExecutor::execute_custom_gemv(PimBo* output, PimBo* operand0, PimBo* oper
 
     if (operand0->bshape_r.n != 1) {
         std::cout << "[Error] " << __FUNCTION__ << ": GEMM is not supported" << std::endl;
-        return 1;
+        return -1;
     }
 
     // if operand1 is on HOST, copy it to DEVICE
@@ -899,7 +899,7 @@ int HIPExecutor::execute_custom_gemv(PimBo* output, PimBo* operand0, PimBo* oper
     if (operand1->mem_type == MEM_TYPE_HOST) {
         copy_to_device = true;
         PimBShape bs = operand1->bshape;
-        PimBo* operand1_device = PimCreateBo(bs.w, bs.h, bs.c, bs.n, PIM_FP16, MEM_TYPE_DEVICE, 0);
+        PimBo* operand1_device = PimCreateBo(bs.n, bs.c, bs.h, bs.w, PIM_FP16, MEM_TYPE_DEVICE, 0);
         pim_manager_->copy_memory(operand1_device->data, operand1->data, operand1->size, HOST_TO_DEVICE);
         operand1 = operand1_device;
     }
@@ -911,17 +911,10 @@ int HIPExecutor::execute_custom_gemv(PimBo* output, PimBo* operand0, PimBo* oper
     float alpha = 1.0f;
     float beta = is_gemv_add ? 1.0f : 0.0f;
 
-    if (!is_transposed(operand1)) {
-        m = operand1->bshape_r.h;
-        k = operand1->bshape_r.w;
-        n = 1;
-        rocblas_gemv_fp16_Axy(mat, vec, out, m, n, k, alpha, beta, (hipStream_t)stream);
-    } else {
-        m = 1;
-        k = operand1->bshape_r.w;
-        n = operand1->bshape_r.h;
-        rocblas_gemv_fp16_xAy(vec, mat, out, m, n, k, alpha, beta, (hipStream_t)stream);
-    }
+    m = operand1->bshape_r.h;
+    k = operand1->bshape_r.w;
+    n = 1;
+    rocblas_gemv_fp16_Axy(mat, vec, out, m, n, k, alpha, beta, (hipStream_t)stream);
 
     if (copy_to_device) {
         PimDestroyBo(operand1);
@@ -952,20 +945,13 @@ int HIPExecutor::execute_custom_gemv_add(PimBo* output, PimBo* operand0, PimBo* 
     float alpha = 1.0f;
     float beta = 0.0f;
 
-    if (!is_transposed(operand1)) {
-        m = operand1->bshape_r.h;
-        k = operand1->bshape_r.w;
-        n = 1;
-        if (m == 32317) {
-            rocblas_addmv_fp16_Axy_large(in, mat, vec, out, m, n, k, alpha, beta, relu, (hipStream_t)stream);
-        } else {
-            rocblas_addmv_fp16_Axy(in, mat, vec, out, m, n, k, alpha, beta, relu, (hipStream_t)stream);
-        }
+    m = operand1->bshape_r.h;
+    k = operand1->bshape_r.w;
+    n = 1;
+    if (m == 32317) {
+        rocblas_addmv_fp16_Axy_large(in, mat, vec, out, m, n, k, alpha, beta, relu, (hipStream_t)stream);
     } else {
-        m = 1;
-        k = operand1->bshape_r.w;
-        n = operand1->bshape_r.h;
-        rocblas_addmv_fp16_xAy(in, vec, mat, out, m, n, k, alpha, beta, relu, (hipStream_t)stream);
+        rocblas_addmv_fp16_Axy(in, mat, vec, out, m, n, k, alpha, beta, relu, (hipStream_t)stream);
     }
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";

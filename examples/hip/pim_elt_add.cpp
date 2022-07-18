@@ -98,14 +98,14 @@ int pim_elt_add_profile(bool block, int len)
     PimInitialize(RT_TYPE_HIP, PIM_FP16);
 
     /* __PIM_API__ call : Create PIM Buffer Object */
-    PimBo* host_input0 = PimCreateBo(length, 1, 1, 1, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* host_input1 = PimCreateBo(length, 1, 1, 1, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* host_output = PimCreateBo(length, 1, 1, 1, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* golden_output = PimCreateBo(length, 1, 1, 1, PIM_FP16, MEM_TYPE_HOST);
+    PimBo* host_input0 = PimCreateBo(1, 1, 1, length, PIM_FP16, MEM_TYPE_HOST);
+    PimBo* host_input1 = PimCreateBo(1, 1, 1, length, PIM_FP16, MEM_TYPE_HOST);
+    PimBo* host_output = PimCreateBo(1, 1, 1, length, PIM_FP16, MEM_TYPE_HOST);
+    PimBo* golden_output = PimCreateBo(1, 1, 1, length, PIM_FP16, MEM_TYPE_HOST);
 
-    PimBo* pim_input1 = PimCreateBo(length, 1, 1, 1, PIM_FP16, MEM_TYPE_PIM);
-    PimBo* device_output = PimCreateBo(length, 1, 1, 1, PIM_FP16, MEM_TYPE_PIM);
-    PimBo* pim_input0 = PimCreateBo(length, 1, 1, 1, PIM_FP16, MEM_TYPE_PIM);
+    PimBo* pim_input1 = PimCreateBo(1, 1, 1, length, PIM_FP16, MEM_TYPE_PIM);
+    PimBo* device_output = PimCreateBo(1, 1, 1, length, PIM_FP16, MEM_TYPE_PIM);
+    PimBo* pim_input0 = PimCreateBo(1, 1, 1, length, PIM_FP16, MEM_TYPE_PIM);
 
     std::string test_vector_data = TEST_VECTORS_DATA;
 

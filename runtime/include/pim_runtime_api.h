@@ -76,18 +76,18 @@ __PIM_API__ int PimSetDevice(uint32_t device_id);
 __PIM_API__ int PimGetDevice(uint32_t* device_id);
 
 /**
- * @brief Creates PIM buffer object of size w,h,c,n with precision (PIM_INT8, PIM_FP16)
+ * @brief Creates PIM buffer object of size n,c,h,w with precision (PIM_INT8, PIM_FP16)
  *
- * @param w width of buffer object
- * @param h height of buffer object
- * @param c number of channels in buffer object
  * @param n number of batches in buffer object
+ * @param c number of channels in buffer object
+ * @param h height of buffer object
+ * @param w width of buffer object
  * @param precision precision of buffer object (PIM_INT8, PIM_FP16)
  * @param mem_type  type of memory (PIM/GPU/HOST)
  *
  * @return Pointer to buffer object.
  */
-__PIM_API__ PimBo* PimCreateBo(int w, int h, int c, int n, PimPrecision precision, PimMemType mem_type,
+__PIM_API__ PimBo* PimCreateBo(int n, int c, int h, int w, PimPrecision precision, PimMemType mem_type,
                                void* user_ptr = nullptr);
 
 /**

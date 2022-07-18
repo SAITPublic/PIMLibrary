@@ -1,5 +1,4 @@
 /*
- * Copyright (C) 2021 Samsung Electronics Co. LTD
  *
  * This software is a property of Samsung Electronics.
  * No part of this software, either material or conceptual may be copied or distributed, transmitted,
@@ -119,7 +118,7 @@ int PimGetDevice(uint32_t* device_id)
     return ret;
 }
 
-PimBo* PimCreateBo(int w, int h, int c, int n, PimPrecision precision, PimMemType mem_type, void* user_ptr)
+PimBo* PimCreateBo(int n, int c, int h, int w, PimPrecision precision, PimMemType mem_type, void* user_ptr)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     PIM_PROFILE_TICK(CreateBo);
@@ -133,11 +132,11 @@ PimBo* PimCreateBo(int w, int h, int c, int n, PimPrecision precision, PimMemTyp
 
     PimBo* pim_bo = new PimBo;
     int type_size = (precision == PIM_FP16) ? 2 : 1;
-    size_t size = w * h * c * n * type_size;
+    size_t size = n * c * h * w * type_size;
 
     pim_bo->size = size;
-    pim_bo->bshape = {(uint32_t)w, (uint32_t)h, (uint32_t)c, (uint32_t)n, false};
-    pim_bo->bshape_r = {(uint32_t)w, (uint32_t)h, (uint32_t)c, (uint32_t)n, false};
+    pim_bo->bshape = {(uint32_t)n, (uint32_t)c, (uint32_t)h, (uint32_t)w};
+    pim_bo->bshape_r = {(uint32_t)n, (uint32_t)c, (uint32_t)h, (uint32_t)w};
     pim_bo->mem_type = mem_type;
     pim_bo->precision = precision;
 
@@ -200,7 +199,7 @@ PimDesc* PimCreateDesc(int n, int c, int h, int w, PimPrecision precision, PimOp
     PimDesc* pim_desc = new PimDesc;
 
     pim_desc->precision = precision;
-    pim_desc->bshape_r = {(uint32_t)w, (uint32_t)h, (uint32_t)c, (uint32_t)n, false};
+    pim_desc->bshape_r = {(uint32_t)n, (uint32_t)c, (uint32_t)h, (uint32_t)w};
     pim_desc->op_type = op_type;
 
     align_shape(pim_desc, op_type);
@@ -421,7 +420,7 @@ int PimExecuteAdd(PimBo* output, void* scalar, PimBo* vector, void* stream, bool
     }
 
     int num_vector = vector->size / sizeof(uint16_t);
-    PimBo* padded_scalar = PimCreateBo(num_vector, 1, 1, 1, PIM_FP16, MEM_TYPE_PIM);
+    PimBo* padded_scalar = PimCreateBo(1, 1, 1, num_vector, PIM_FP16, MEM_TYPE_PIM);
     for (int i = 0; i < num_vector; i++) {
         pim_runtime->copy_memory((void*)((char*)padded_scalar->data + i * sizeof(uint16_t)), scalar, sizeof(uint16_t),
                                  HOST_TO_PIM);
@@ -460,7 +459,7 @@ int PimExecuteMul(PimBo* output, void* scalar, PimBo* vector, void* stream, bool
     }
 
     int num_vector = vector->size / sizeof(uint16_t);
-    PimBo* padded_scalar = PimCreateBo(num_vector, 1, 1, 1, PIM_FP16, MEM_TYPE_PIM);
+    PimBo* padded_scalar = PimCreateBo(1, 1, 1, num_vector, PIM_FP16, MEM_TYPE_PIM);
     for (int i = 0; i < num_vector; i++) {
         pim_runtime->copy_memory((void*)((char*)padded_scalar->data + i * sizeof(uint16_t)), scalar, sizeof(uint16_t),
                                  HOST_TO_PIM);

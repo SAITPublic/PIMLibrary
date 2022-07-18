@@ -42,13 +42,13 @@ int pim_gemv_batch(bool block)
     PimInitialize(RT_TYPE_HIP, PIM_FP16);
 
     /* __PIM_API__ call : Create PIM Buffer Object */
-    PimBo* host_input = PimCreateBo(IN_LENGTH, 1, 1, BATCH_DIM, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* host_weight = PimCreateBo(IN_LENGTH, OUT_LENGTH, 1, 1, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* host_output = PimCreateBo(OUT_LENGTH, 1, 1, BATCH_DIM, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* golden_output = PimCreateBo(OUT_LENGTH, 1, 1, BATCH_DIM, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* device_input = PimCreateBo(IN_LENGTH, 1, 1, BATCH_DIM, PIM_FP16, MEM_TYPE_DEVICE);
-    PimBo* device_weight = PimCreateBo(IN_LENGTH, OUT_LENGTH, 1, 1, PIM_FP16, MEM_TYPE_DEVICE);
-    PimBo* device_output = PimCreateBo(OUT_LENGTH, 1, 1, BATCH_DIM, PIM_FP16, MEM_TYPE_DEVICE);
+    PimBo* host_input = PimCreateBo(BATCH_DIM, 1, 1, IN_LENGTH, PIM_FP16, MEM_TYPE_HOST);
+    PimBo* host_weight = PimCreateBo(1, 1, IN_LENGTH, OUT_LENGTH, PIM_FP16, MEM_TYPE_HOST);
+    PimBo* host_output = PimCreateBo(BATCH_DIM, 1, 1, OUT_LENGTH, PIM_FP16, MEM_TYPE_HOST);
+    PimBo* golden_output = PimCreateBo(BATCH_DIM, 1, 1, OUT_LENGTH, PIM_FP16, MEM_TYPE_HOST);
+    PimBo* device_input = PimCreateBo(BATCH_DIM, 1, 1, IN_LENGTH, PIM_FP16, MEM_TYPE_DEVICE);
+    PimBo* device_weight = PimCreateBo(1, 1, IN_LENGTH, OUT_LENGTH, PIM_FP16, MEM_TYPE_DEVICE);
+    PimBo* device_output = PimCreateBo(BATCH_DIM, 1, 1, OUT_LENGTH, PIM_FP16, MEM_TYPE_DEVICE);
 
     /* Initialize the input, weight, output data */
     std::string test_vector_data = TEST_VECTORS_DATA;
@@ -101,13 +101,13 @@ int pim_gemv_256(bool block)
     PimInitialize(RT_TYPE_HIP, PIM_FP16);
 
     /* __PIM_API__ call : Create PIM Buffer Object */
-    PimBo* host_input = PimCreateBo(IN_LENGTH, 1, 1, 1, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* host_weight = PimCreateBo(IN_LENGTH, OUT_LENGTH, 1, 1, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* host_output = PimCreateBo(OUT_LENGTH, 1, 1, 1, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* golden_output = PimCreateBo(OUT_LENGTH, 1, 1, 1, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* device_input = PimCreateBo(IN_LENGTH, 1, 1, 1, PIM_FP16, MEM_TYPE_DEVICE);
-    PimBo* device_weight = PimCreateBo(IN_LENGTH, OUT_LENGTH, 1, 1, PIM_FP16, MEM_TYPE_DEVICE);
-    PimBo* device_output = PimCreateBo(OUT_LENGTH, 1, 1, 1, PIM_FP16, MEM_TYPE_DEVICE);
+    PimBo* host_input = PimCreateBo(1, 1, 1, IN_LENGTH, PIM_FP16, MEM_TYPE_HOST);
+    PimBo* host_weight = PimCreateBo(1, 1, IN_LENGTH, OUT_LENGTH, PIM_FP16, MEM_TYPE_HOST);
+    PimBo* host_output = PimCreateBo(1, 1, 1, OUT_LENGTH, PIM_FP16, MEM_TYPE_HOST);
+    PimBo* golden_output = PimCreateBo(1, 1, 1, OUT_LENGTH, PIM_FP16, MEM_TYPE_HOST);
+    PimBo* device_input = PimCreateBo(1, 1, 1, IN_LENGTH, PIM_FP16, MEM_TYPE_DEVICE);
+    PimBo* device_weight = PimCreateBo(1, 1, IN_LENGTH, OUT_LENGTH, PIM_FP16, MEM_TYPE_DEVICE);
+    PimBo* device_output = PimCreateBo(1, 1, 1, OUT_LENGTH, PIM_FP16, MEM_TYPE_DEVICE);
 
     /* Initialize the input, weight, output data */
     std::string test_vector_data = TEST_VECTORS_DATA;
@@ -131,7 +131,7 @@ int pim_gemv_256(bool block)
         if (!block) PimSynchronize();
 
         PimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
-        //    dump_data(preload_weight.c_str(), (char*)preloaded_weight->data, preloaded_weight->size);
+        // dump_data(preload_weight.c_str(), (char*)preloaded_weight->data, preloaded_weight->size);
         //    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
 
         ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data, OUT_LENGTH, EPSILON);
@@ -159,13 +159,13 @@ int pim_gemv_512(bool block)
     PimInitialize(RT_TYPE_HIP, PIM_FP16);
 
     /* __PIM_API__ call : Create PIM Buffer Object */
-    PimBo* host_input = PimCreateBo(IN_LENGTH * 2, 1, 1, 1, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* host_weight = PimCreateBo(IN_LENGTH * 2, OUT_LENGTH, 1, 1, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* host_output = PimCreateBo(OUT_LENGTH, 1, 1, 1, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* golden_output = PimCreateBo(OUT_LENGTH, 1, 1, 1, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* device_input = PimCreateBo(IN_LENGTH * 2, 1, 1, 1, PIM_FP16, MEM_TYPE_DEVICE);
-    PimBo* device_weight = PimCreateBo(IN_LENGTH * 2, OUT_LENGTH, 1, 1, PIM_FP16, MEM_TYPE_DEVICE);
-    PimBo* device_output = PimCreateBo(OUT_LENGTH, 1, 1, 1, PIM_FP16, MEM_TYPE_DEVICE);
+    PimBo* host_input = PimCreateBo(1, 1, 1, IN_LENGTH * 2, PIM_FP16, MEM_TYPE_HOST);
+    PimBo* host_weight = PimCreateBo(1, 1, IN_LENGTH * 2, OUT_LENGTH, PIM_FP16, MEM_TYPE_HOST);
+    PimBo* host_output = PimCreateBo(1, 1, 1, OUT_LENGTH, PIM_FP16, MEM_TYPE_HOST);
+    PimBo* golden_output = PimCreateBo(1, 1, 1, OUT_LENGTH, PIM_FP16, MEM_TYPE_HOST);
+    PimBo* device_input = PimCreateBo(1, 1, 1, IN_LENGTH * 2, PIM_FP16, MEM_TYPE_DEVICE);
+    PimBo* device_weight = PimCreateBo(1, 1, IN_LENGTH * 2, OUT_LENGTH, PIM_FP16, MEM_TYPE_DEVICE);
+    PimBo* device_output = PimCreateBo(1, 1, 1, OUT_LENGTH, PIM_FP16, MEM_TYPE_DEVICE);
 
     /* Initialize the input, weight, output data */
     std::string test_vector_data = TEST_VECTORS_DATA;
@@ -221,7 +221,7 @@ int pim_gemv_desc(bool block)
 
     PimExecuteDummy();
 
-    PimDesc* pim_desc = PimCreateDesc(1, 1, out_size, in_size, PIM_FP16, OP_GEMV);
+    PimDesc* pim_desc = PimCreateDesc(1, 1, in_size, out_size, PIM_FP16, OP_GEMV);
     /* __PIM_API__ call : Create PIM Buffer Object */
     PimBo* host_input = PimCreateBo(pim_desc, MEM_TYPE_HOST, GEMV_INPUT);
     PimBo* host_weight = PimCreateBo(pim_desc, MEM_TYPE_HOST, GEMV_WEIGHT);
@@ -244,9 +244,10 @@ int pim_gemv_desc(bool block)
     load_data(input.c_str(), (char*)host_input->data, host_input->size);
     load_data(weight.c_str(), (char*)temp_weight->data, host_weight->size);
     load_data(output.c_str(), (char*)golden_output->data, out_size * sizeof(half));
-    for (int i = 0; i < pim_desc->bshape_r.h; i++) {
-        memcpy((half*)host_weight->data + i * pim_desc->bshape_r.w, (half*)temp_weight->data + i * pim_desc->bshape.w,
-               pim_desc->bshape_r.w * sizeof(half));
+
+    for (int i = 0; i < host_weight->bshape_r.w; i++) {
+        memcpy((half*)host_weight->data + i * host_weight->bshape_r.h,
+               (half*)temp_weight->data + i * host_weight->bshape.h, host_weight->bshape_r.h * sizeof(half));
     }
 
     PimCopyMemory(device_input, host_input, HOST_TO_DEVICE);
@@ -291,7 +292,7 @@ int pim_gemv_desc_batch(bool block)
     /* __PIM_API__ call : Initialize PimRuntime */
     PimInitialize(RT_TYPE_HIP, PIM_FP16);
 
-    PimDesc* pim_desc = PimCreateDesc(batch_n, 1, out_size, in_size, PIM_FP16, OP_GEMV);
+    PimDesc* pim_desc = PimCreateDesc(batch_n, 1, in_size, out_size, PIM_FP16, OP_GEMV);
     /* __PIM_API__ call : Create PIM Buffer Object */
     PimBo* host_input = PimCreateBo(pim_desc, MEM_TYPE_HOST, GEMV_INPUT);
     PimBo* host_weight = PimCreateBo(pim_desc, MEM_TYPE_HOST, GEMV_WEIGHT);
@@ -317,13 +318,13 @@ int pim_gemv_desc_batch(bool block)
     load_data(output.c_str(), (char*)temp_output->data, temp_output->size);
 
     for (int i = 0; i < batch_n; i++) {
-        memcpy((half*)golden_output->data + i * pim_desc->bshape_r.h, (half*)temp_output->data + i * pim_desc->bshape.h,
-               pim_desc->bshape_r.h * sizeof(half));
+        memcpy((half*)golden_output->data + i * pim_desc->bshape_r.w, (half*)temp_output->data + i * pim_desc->bshape.w,
+               pim_desc->bshape_r.w * sizeof(half));
     }
 
-    for (int i = 0; i < pim_desc->bshape_r.h; i++) {
-        memcpy((half*)host_weight->data + i * pim_desc->bshape_r.w, (half*)temp_weight->data + i * pim_desc->bshape.w,
-               pim_desc->bshape_r.w * sizeof(half));
+    for (int i = 0; i < pim_desc->bshape_r.w; i++) {
+        memcpy((half*)host_weight->data + i * pim_desc->bshape_r.h, (half*)temp_weight->data + i * pim_desc->bshape.h,
+               pim_desc->bshape_r.h * sizeof(half));
     }
 
     PimCopyMemory(device_input, host_input, HOST_TO_DEVICE);
@@ -364,13 +365,13 @@ int pim_gemv_uniform_128(bool block)
     PimInitialize(RT_TYPE_HIP, PIM_FP16);
 
     /* __PIM_API__ call : Create PIM Buffer Object */
-    PimBo* host_input = PimCreateBo(IN_LENGTH, 1, 1, 1, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* host_weight = PimCreateBo(IN_LENGTH, OUT_LENGTH, 1, 1, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* host_output = PimCreateBo(OUT_LENGTH, 1, 1, 1, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* golden_output = PimCreateBo(OUT_LENGTH, 1, 1, 1, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* device_input = PimCreateBo(IN_LENGTH, 1, 1, 1, PIM_FP16, MEM_TYPE_DEVICE);
-    PimBo* device_weight = PimCreateBo(IN_LENGTH, OUT_LENGTH, 1, 1, PIM_FP16, MEM_TYPE_DEVICE);
-    PimBo* device_output = PimCreateBo(OUT_LENGTH, 1, 1, 1, PIM_FP16, MEM_TYPE_DEVICE);
+    PimBo* host_input = PimCreateBo(1, 1, 1, IN_LENGTH, PIM_FP16, MEM_TYPE_HOST);
+    PimBo* host_weight = PimCreateBo(1, 1, IN_LENGTH, OUT_LENGTH, PIM_FP16, MEM_TYPE_HOST);
+    PimBo* host_output = PimCreateBo(1, 1, 1, OUT_LENGTH, PIM_FP16, MEM_TYPE_HOST);
+    PimBo* golden_output = PimCreateBo(1, 1, 1, OUT_LENGTH, PIM_FP16, MEM_TYPE_HOST);
+    PimBo* device_input = PimCreateBo(1, 1, 1, IN_LENGTH, PIM_FP16, MEM_TYPE_DEVICE);
+    PimBo* device_weight = PimCreateBo(1, 1, IN_LENGTH, OUT_LENGTH, PIM_FP16, MEM_TYPE_DEVICE);
+    PimBo* device_output = PimCreateBo(1, 1, 1, OUT_LENGTH, PIM_FP16, MEM_TYPE_DEVICE);
 
     /* Initialize the input, weight, output data */
     std::string test_vector_data = TEST_VECTORS_DATA;
@@ -422,13 +423,13 @@ int pim_gemv_normal_128(bool block)
     PimInitialize(RT_TYPE_HIP, PIM_FP16);
 
     /* __PIM_API__ call : Create PIM Buffer Object */
-    PimBo* host_input = PimCreateBo(IN_LENGTH, 1, 1, 1, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* host_weight = PimCreateBo(IN_LENGTH, OUT_LENGTH, 1, 1, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* host_output = PimCreateBo(OUT_LENGTH, 1, 1, 1, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* golden_output = PimCreateBo(OUT_LENGTH, 1, 1, 1, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* device_input = PimCreateBo(IN_LENGTH, 1, 1, 1, PIM_FP16, MEM_TYPE_DEVICE);
-    PimBo* device_weight = PimCreateBo(IN_LENGTH, OUT_LENGTH, 1, 1, PIM_FP16, MEM_TYPE_DEVICE);
-    PimBo* device_output = PimCreateBo(OUT_LENGTH, 1, 1, 1, PIM_FP16, MEM_TYPE_DEVICE);
+    PimBo* host_input = PimCreateBo(1, 1, 1, IN_LENGTH, PIM_FP16, MEM_TYPE_HOST);
+    PimBo* host_weight = PimCreateBo(1, 1, IN_LENGTH, OUT_LENGTH, PIM_FP16, MEM_TYPE_HOST);
+    PimBo* host_output = PimCreateBo(1, 1, 1, OUT_LENGTH, PIM_FP16, MEM_TYPE_HOST);
+    PimBo* golden_output = PimCreateBo(1, 1, 1, OUT_LENGTH, PIM_FP16, MEM_TYPE_HOST);
+    PimBo* device_input = PimCreateBo(1, 1, 1, IN_LENGTH, PIM_FP16, MEM_TYPE_DEVICE);
+    PimBo* device_weight = PimCreateBo(1, 1, IN_LENGTH, OUT_LENGTH, PIM_FP16, MEM_TYPE_DEVICE);
+    PimBo* device_output = PimCreateBo(1, 1, 1, OUT_LENGTH, PIM_FP16, MEM_TYPE_DEVICE);
 
     /* Initialize the input, weight, output data */
     std::string test_vector_data = TEST_VECTORS_DATA;
@@ -480,13 +481,13 @@ int pim_gemv_uniform_4096(bool block)
     PimInitialize(RT_TYPE_HIP, PIM_FP16);
 
     /* __PIM_API__ call : Create PIM Buffer Object */
-    PimBo* host_input = PimCreateBo(input_length, 1, 1, 1, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* host_weight = PimCreateBo(input_length, OUT_LENGTH, 1, 1, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* host_output = PimCreateBo(OUT_LENGTH, 1, 1, 1, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* golden_output = PimCreateBo(OUT_LENGTH, 1, 1, 1, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* device_input = PimCreateBo(input_length, 1, 1, 1, PIM_FP16, MEM_TYPE_DEVICE);
-    PimBo* device_weight = PimCreateBo(input_length, OUT_LENGTH, 1, 1, PIM_FP16, MEM_TYPE_DEVICE);
-    PimBo* device_output = PimCreateBo(OUT_LENGTH, 1, 1, 1, PIM_FP16, MEM_TYPE_DEVICE);
+    PimBo* host_input = PimCreateBo(1, 1, 1, input_length, PIM_FP16, MEM_TYPE_HOST);
+    PimBo* host_weight = PimCreateBo(1, 1, input_length, OUT_LENGTH, PIM_FP16, MEM_TYPE_HOST);
+    PimBo* host_output = PimCreateBo(1, 1, 1, OUT_LENGTH, PIM_FP16, MEM_TYPE_HOST);
+    PimBo* golden_output = PimCreateBo(1, 1, 1, OUT_LENGTH, PIM_FP16, MEM_TYPE_HOST);
+    PimBo* device_input = PimCreateBo(1, 1, 1, input_length, PIM_FP16, MEM_TYPE_DEVICE);
+    PimBo* device_weight = PimCreateBo(1, 1, input_length, OUT_LENGTH, PIM_FP16, MEM_TYPE_DEVICE);
+    PimBo* device_output = PimCreateBo(1, 1, 1, OUT_LENGTH, PIM_FP16, MEM_TYPE_DEVICE);
 
     /* Initialize the input, weight, output data */
     std::string test_vector_data = TEST_VECTORS_DATA;
@@ -538,13 +539,13 @@ int pim_gemv_normal_4096(bool block)
     PimInitialize(RT_TYPE_HIP, PIM_FP16);
 
     /* __PIM_API__ call : Create PIM Buffer Object */
-    PimBo* host_input = PimCreateBo(input_length, 1, 1, 1, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* host_weight = PimCreateBo(input_length, OUT_LENGTH, 1, 1, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* host_output = PimCreateBo(OUT_LENGTH, 1, 1, 1, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* golden_output = PimCreateBo(OUT_LENGTH, 1, 1, 1, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* device_input = PimCreateBo(input_length, 1, 1, 1, PIM_FP16, MEM_TYPE_DEVICE);
-    PimBo* device_weight = PimCreateBo(input_length, OUT_LENGTH, 1, 1, PIM_FP16, MEM_TYPE_DEVICE);
-    PimBo* device_output = PimCreateBo(OUT_LENGTH, 1, 1, 1, PIM_FP16, MEM_TYPE_DEVICE);
+    PimBo* host_input = PimCreateBo(1, 1, 1, input_length, PIM_FP16, MEM_TYPE_HOST);
+    PimBo* host_weight = PimCreateBo(1, 1, input_length, OUT_LENGTH, PIM_FP16, MEM_TYPE_HOST);
+    PimBo* host_output = PimCreateBo(1, 1, 1, OUT_LENGTH, PIM_FP16, MEM_TYPE_HOST);
+    PimBo* golden_output = PimCreateBo(1, 1, 1, OUT_LENGTH, PIM_FP16, MEM_TYPE_HOST);
+    PimBo* device_input = PimCreateBo(1, 1, 1, input_length, PIM_FP16, MEM_TYPE_DEVICE);
+    PimBo* device_weight = PimCreateBo(1, 1, input_length, OUT_LENGTH, PIM_FP16, MEM_TYPE_DEVICE);
+    PimBo* device_output = PimCreateBo(1, 1, 1, OUT_LENGTH, PIM_FP16, MEM_TYPE_DEVICE);
 
     /* Initialize the input, weight, output data */
     std::string test_vector_data = TEST_VECTORS_DATA;
@@ -597,13 +598,13 @@ int pim_gemv_no_accum_512(bool block)
     PimInitialize(RT_TYPE_HIP, PIM_FP16);
 
     /* __PIM_API__ call : Create PIM Buffer Object */
-    PimBo* host_input = PimCreateBo(IN_LENGTH * 2, 1, 1, 1, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* host_weight = PimCreateBo(IN_LENGTH * 2, OUT_LENGTH, 1, 1, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* host_output = PimCreateBo(OUT_LENGTH, 1, 1, 1, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* golden_output = PimCreateBo(OUT_LENGTH, 1, 1, 1, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* device_input = PimCreateBo(IN_LENGTH * 2, 1, 1, 1, PIM_FP16, MEM_TYPE_DEVICE);
-    PimBo* device_weight = PimCreateBo(IN_LENGTH * 2, OUT_LENGTH, 1, 1, PIM_FP16, MEM_TYPE_DEVICE);
-    PimBo* device_output = PimCreateBo(OUT_LENGTH, 1, 1, 1, PIM_FP16, MEM_TYPE_DEVICE);
+    PimBo* host_input = PimCreateBo(1, 1, 1, IN_LENGTH * 2, PIM_FP16, MEM_TYPE_HOST);
+    PimBo* host_weight = PimCreateBo(1, 1, IN_LENGTH * 2, OUT_LENGTH, PIM_FP16, MEM_TYPE_HOST);
+    PimBo* host_output = PimCreateBo(1, 1, 1, OUT_LENGTH, PIM_FP16, MEM_TYPE_HOST);
+    PimBo* golden_output = PimCreateBo(1, 1, 1, OUT_LENGTH, PIM_FP16, MEM_TYPE_HOST);
+    PimBo* device_input = PimCreateBo(1, 1, 1, IN_LENGTH * 2, PIM_FP16, MEM_TYPE_DEVICE);
+    PimBo* device_weight = PimCreateBo(1, 1, IN_LENGTH * 2, OUT_LENGTH, PIM_FP16, MEM_TYPE_DEVICE);
+    PimBo* device_output = PimCreateBo(1, 1, 1, OUT_LENGTH, PIM_FP16, MEM_TYPE_DEVICE);
 
     /* Initialize the input, weight, output data */
     std::string test_vector_data = TEST_VECTORS_DATA;
@@ -656,13 +657,13 @@ int pim_gemv_no_accum_256(bool block)
     PimInitialize(RT_TYPE_HIP, PIM_FP16);
 
     /* __PIM_API__ call : Create PIM Buffer Object */
-    PimBo* host_input = PimCreateBo(IN_LENGTH, 1, 1, 1, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* host_weight = PimCreateBo(IN_LENGTH, OUT_LENGTH, 1, 1, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* host_output = PimCreateBo(OUT_LENGTH, 1, 1, 1, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* golden_output = PimCreateBo(OUT_LENGTH, 1, 1, 1, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* device_input = PimCreateBo(IN_LENGTH, 1, 1, 1, PIM_FP16, MEM_TYPE_DEVICE);
-    PimBo* device_weight = PimCreateBo(IN_LENGTH, OUT_LENGTH, 1, 1, PIM_FP16, MEM_TYPE_DEVICE);
-    PimBo* device_output = PimCreateBo(OUT_LENGTH, 1, 1, 1, PIM_FP16, MEM_TYPE_DEVICE);
+    PimBo* host_input = PimCreateBo(1, 1, 1, IN_LENGTH, PIM_FP16, MEM_TYPE_HOST);
+    PimBo* host_weight = PimCreateBo(1, 1, IN_LENGTH, OUT_LENGTH, PIM_FP16, MEM_TYPE_HOST);
+    PimBo* host_output = PimCreateBo(1, 1, 1, OUT_LENGTH, PIM_FP16, MEM_TYPE_HOST);
+    PimBo* golden_output = PimCreateBo(1, 1, 1, OUT_LENGTH, PIM_FP16, MEM_TYPE_HOST);
+    PimBo* device_input = PimCreateBo(1, 1, 1, IN_LENGTH, PIM_FP16, MEM_TYPE_DEVICE);
+    PimBo* device_weight = PimCreateBo(1, 1, IN_LENGTH, OUT_LENGTH, PIM_FP16, MEM_TYPE_DEVICE);
+    PimBo* device_output = PimCreateBo(1, 1, 1, OUT_LENGTH, PIM_FP16, MEM_TYPE_DEVICE);
 
     /* Initialize the input, weight, output data */
     std::string test_vector_data = TEST_VECTORS_DATA;
@@ -718,7 +719,7 @@ int pim_gemv_no_accum_desc(bool block)
 
     PimExecuteDummy();
 
-    PimDesc* pim_desc = PimCreateDesc(1, 1, out_size, in_size, PIM_FP16, OP_GEMV);
+    PimDesc* pim_desc = PimCreateDesc(1, 1, in_size, out_size, PIM_FP16, OP_GEMV);
     /* __PIM_API__ call : Create PIM Buffer Object */
     PimBo* host_input = PimCreateBo(pim_desc, MEM_TYPE_HOST, GEMV_INPUT);
     PimBo* host_weight = PimCreateBo(pim_desc, MEM_TYPE_HOST, GEMV_WEIGHT);
@@ -741,9 +742,9 @@ int pim_gemv_no_accum_desc(bool block)
     load_data(input.c_str(), (char*)host_input->data, host_input->size);
     load_data(weight.c_str(), (char*)temp_weight->data, temp_weight->size);
     load_data(output.c_str(), (char*)golden_output->data, out_size * sizeof(half));
-    for (int i = 0; i < pim_desc->bshape_r.h; i++) {
-        memcpy((half*)host_weight->data + i * pim_desc->bshape_r.w, (half*)temp_weight->data + i * pim_desc->bshape.w,
-               pim_desc->bshape_r.w * sizeof(half));
+    for (int i = 0; i < pim_desc->bshape_r.w; i++) {
+        memcpy((half*)host_weight->data + i * pim_desc->bshape_r.h, (half*)temp_weight->data + i * pim_desc->bshape.h,
+               pim_desc->bshape_r.h * sizeof(half));
     }
 
     PimCopyMemory(device_input, host_input, HOST_TO_DEVICE);
@@ -800,13 +801,13 @@ int pim_gemv_moe(bool block)
     PimExecuteDummy();
 
     /* __PIM_API__ call : Create PIM Buffer Object List */
-    PimBo* host_input = PimCreateBo(in_size, 1, 1, moe_cnt, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* host_weight = PimCreateBo(in_size, out_size, 1, moe_cnt, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* host_output = PimCreateBo(out_size, 1, 1, moe_cnt, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* golden_output = PimCreateBo(out_size, 1, 1, moe_cnt, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* device_input = PimCreateBo(in_size, 1, 1, moe_cnt, PIM_FP16, MEM_TYPE_DEVICE);
-    PimBo* device_weight = PimCreateBo(in_size, out_size, 1, moe_cnt, PIM_FP16, MEM_TYPE_DEVICE);
-    PimBo* device_output = PimCreateBo(out_size, 1, 1, moe_cnt, PIM_FP16, MEM_TYPE_DEVICE);
+    PimBo* host_input = PimCreateBo(1, moe_cnt, 1, in_size, PIM_FP16, MEM_TYPE_HOST);
+    PimBo* host_weight = PimCreateBo(1, moe_cnt, in_size, out_size, PIM_FP16, MEM_TYPE_HOST);
+    PimBo* host_output = PimCreateBo(1, moe_cnt, 1, out_size, PIM_FP16, MEM_TYPE_HOST);
+    PimBo* golden_output = PimCreateBo(1, moe_cnt, 1, out_size, PIM_FP16, MEM_TYPE_HOST);
+    PimBo* device_input = PimCreateBo(1, moe_cnt, 1, in_size, PIM_FP16, MEM_TYPE_DEVICE);
+    PimBo* device_weight = PimCreateBo(1, moe_cnt, in_size, out_size, PIM_FP16, MEM_TYPE_DEVICE);
+    PimBo* device_output = PimCreateBo(1, moe_cnt, 1, out_size, PIM_FP16, MEM_TYPE_DEVICE);
 
     /* Initialize the input, weight, output data */
     set_half_data((half*)golden_output->data, half(0.0), out_size * moe_cnt);
@@ -869,13 +870,13 @@ int pim_gemv_moe_chwise(bool block)
     PimExecuteDummy();
 
     /* __PIM_API__ call : Create PIM Buffer Object List */
-    PimBo* host_input = PimCreateBo(in_size, 1, 1, moe_cnt, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* host_weight = PimCreateBo(in_size, out_size, 1, moe_cnt, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* host_output = PimCreateBo(out_size, 1, 1, moe_cnt, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* golden_output = PimCreateBo(out_size, 1, 1, moe_cnt, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* device_input = PimCreateBo(in_size, 1, 1, moe_cnt, PIM_FP16, MEM_TYPE_DEVICE);
-    PimBo* device_weight = PimCreateBo(in_size, out_size, 1, moe_cnt, PIM_FP16, MEM_TYPE_DEVICE);
-    PimBo* device_output = PimCreateBo(out_size, 1, 1, moe_cnt, PIM_FP16, MEM_TYPE_DEVICE);
+    PimBo* host_input = PimCreateBo(1, moe_cnt, 1, in_size, PIM_FP16, MEM_TYPE_HOST);
+    PimBo* host_weight = PimCreateBo(1, moe_cnt, in_size, out_size, PIM_FP16, MEM_TYPE_HOST);
+    PimBo* host_output = PimCreateBo(1, moe_cnt, 1, out_size, PIM_FP16, MEM_TYPE_HOST);
+    PimBo* golden_output = PimCreateBo(1, moe_cnt, 1, out_size, PIM_FP16, MEM_TYPE_HOST);
+    PimBo* device_input = PimCreateBo(1, moe_cnt, 1, in_size, PIM_FP16, MEM_TYPE_DEVICE);
+    PimBo* device_weight = PimCreateBo(1, moe_cnt, in_size, out_size, PIM_FP16, MEM_TYPE_DEVICE);
+    PimBo* device_output = PimCreateBo(1, moe_cnt, 1, out_size, PIM_FP16, MEM_TYPE_DEVICE);
 
     /* Initialize the input, weight, output data */
     set_half_data((half*)golden_output->data, half(0.0), out_size * moe_cnt);

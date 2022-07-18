@@ -318,6 +318,7 @@ int HIPMemManager::convert_data_layout(PimBo* dst, PimBo* src, PimOpType op_type
     int ch_per_op = 0;
 
     if (src->bshape.n % fbi_.num_pim_chan == 0) {
+        /* each pim channels is in charge of each batch gemv operation */
         is_chwise = true;
         ch_per_op = 1;
     }
@@ -368,14 +369,14 @@ int HIPMemManager::convert_data_layout_for_gemv_weight(PimBo* dst, PimBo* src)
     uint32_t odd_s_col = 0;   // starting_col;
 
     int type_size = (src->precision == PIM_FP16) ? 2 : 1;
-    int out_cnt = src->bshape.h;
-    int in_cnt = src->bshape.w * type_size / trans_size;
+    int out_cnt = src->bshape.w;
+    int in_cnt = src->bshape.h * type_size / trans_size;
 
     if (src->bshape.w != src->bshape_r.w || src->bshape.h != src->bshape_r.h) {
         src_temp = (char*)calloc(src->size / sizeof(half), sizeof(half));
-        for (int i = 0; i < src->bshape_r.h; i++) {
-            if (hipMemcpy((half*)src_temp + i * src->bshape.w, (half*)src_data + i * src->bshape_r.w,
-                          src->bshape_r.w * sizeof(half), hipMemcpyDeviceToHost) != hipSuccess) {
+        for (int i = 0; i < src->bshape_r.w; i++) {
+            if (hipMemcpy((half*)src_temp + i * src->bshape.h, (half*)src_data + i * src->bshape_r.h,
+                          src->bshape_r.h * sizeof(half), hipMemcpyDeviceToHost) != hipSuccess) {
                 DLOG(INFO) << "[END] " << __FUNCTION__ << " Failed to copy";
                 return -1;
             }
@@ -519,10 +520,10 @@ int HIPMemManager::convert_data_layout_for_gemv_weight(PimBo* dst, PimBo* src, i
 
     int type_size = (src->precision == PIM_FP16) ? 2 : 1;
     int batch = src->bshape.n;
-    int origin_width = src->bshape_r.w;
-    int padded_width = src->bshape.w;
-    int origin_height = src->bshape_r.h;
-    int padded_height = src->bshape.h;
+    int origin_width = src->bshape_r.h;
+    int padded_width = src->bshape.h;
+    int origin_height = src->bshape_r.w;
+    int padded_height = src->bshape.w;
     int weight_batch = src->bshape_r.n;
 
     int origin_matrix_dim = origin_width * origin_height;

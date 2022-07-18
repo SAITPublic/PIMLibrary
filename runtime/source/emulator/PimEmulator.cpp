@@ -115,8 +115,10 @@ int PimEmulator::execute_gemv_tile_accum(PimBo* output, PimBo* pim_data, PimMemT
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
+    int offset = 0;
+    int offset_r = 0;
     uint16_t* sim_output = nullptr;
-    int out_dim = pim_data->bshape.h * output->bshape.n;
+    int out_dim = output->bshape.n * output->bshape.c * output->bshape.h * output->bshape.w;
     sim_output = new uint16_t[out_dim];
     uint64_t tmp_data_addr = reinterpret_cast<uint64_t>(temp_buf);
     uint64_t pim_data_addr = reinterpret_cast<uint64_t>(pim_data->data);
@@ -126,9 +128,16 @@ int PimEmulator::execute_gemv_tile_accum(PimBo* output, PimBo* pim_data, PimMemT
     pim_sim_.read_result_gemv(sim_output, tmp_data_addr - pim_base_addr, out_dim);
 
     if (output->mem_type != MEM_TYPE_HOST) {
-        for (int i = 0; i < output->bshape.n; i++) {
-            hipMemcpy((half*)output->data + i * pim_data->bshape_r.h, (half*)sim_output + i * pim_data->bshape.h,
-                      pim_data->bshape_r.h * sizeof(half), hipMemcpyHostToDevice);
+        for (int n = 0; n < output->bshape.n; n++) {
+            for (int c = 0; c < output->bshape.c; c++) {
+                offset = n * output->bshape.c * output->bshape.h * output->bshape.w;
+                offset += c * output->bshape.h * output->bshape.w;
+                offset_r = n * output->bshape_r.c * output->bshape_r.h * output->bshape_r.w;
+                offset_r += c * output->bshape_r.h * output->bshape_r.w;
+
+                hipMemcpy((half*)output->data + offset_r, (half*)sim_output + offset,
+                          pim_data->bshape_r.w * sizeof(half), hipMemcpyHostToDevice);
+            }
         }
     }
 

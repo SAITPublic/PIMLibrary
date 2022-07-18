@@ -32,9 +32,9 @@ inline void print_pimbo(PimBo* bo, const char* str = nullptr, const char* func =
     printf("%s %s\n", prefix, (str == nullptr ? "" : str));
     printf("%s mem_type:%d, precision:%d, size:%lu, user_ptr:%d\n", prefix, bo->mem_type, bo->precision, bo->size,
            bo->use_user_ptr);
-    printf("%s bshape(w:%d, h:%d, c:%d, n:%d)\n", prefix, bo->bshape.w, bo->bshape.h, bo->bshape.c, bo->bshape.n);
-    printf("%s bshape_r(w:%d, h:%d, c:%d, n:%d)\n", prefix, bo->bshape_r.w, bo->bshape_r.h, bo->bshape_r.c,
-           bo->bshape_r.n);
+    printf("%s bshape(n:%d, c:%d, h:%d, w:%d)\n", prefix, bo->bshape.n, bo->bshape.c, bo->bshape.h, bo->bshape.w);
+    printf("%s bshape_r(n:%d, c:%d, h:%d, w:%d)\n", prefix, bo->bshape_r.n, bo->bshape_r.c, bo->bshape_r.h,
+           bo->bshape_r.w);
     printf("\n");
 }
 

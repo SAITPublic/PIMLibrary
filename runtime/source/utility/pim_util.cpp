@@ -9,43 +9,79 @@
  */
 
 #include "utility/pim_util.h"
+#include "half.hpp"
 
 #define DIM_OUT_PIM (3200)
 #define PIM_GEMV_OUT_ALIGN (4096)
 
 __host__ void get_pim_block_info(PimBlockInfo* fbi) { memcpy(fbi, &vega20_fbi, sizeof(PimBlockInfo)); }
 
+void set_pimbo_t(PimBo* dst, PimBo* src)
+{
+    memcpy(dst, src, sizeof(PimBo));
+    dst->bshape.w = src->bshape.h;
+    dst->bshape.h = src->bshape.w;
+    dst->bshape_r.w = src->bshape_r.h;
+    dst->bshape_r.h = src->bshape_r.w;
+}
+
+void transpose_pimbo(PimBo* dst, PimBo* src)
+{
+    int ret = 0;
+    int batch = src->bshape.n;
+    int row = src->bshape.h;
+    int col = src->bshape.w;
+    half_float::half* in = reinterpret_cast<half_float::half*>(src->data);
+    half_float::half* out = reinterpret_cast<half_float::half*>(dst->data);
+
+    for (int bi = 0; bi < batch; bi++) {
+        for (int ri = 0; ri < row; ri++) {
+            for (int ci = 0; ci < col; ci++) {
+                out[ci * row + ri] = in[ri * col + ci];
+            }
+        }
+        in += row * col;
+        out += row * col;
+    }
+}
+
 size_t get_aligned_size(PimDesc* pim_desc, PimMemFlag mem_flag, PimBo* pim_bo)
 {
     size_t size;
 
     PimBShape bs = pim_desc->bshape;
-    bs.t = false;
+    PimBShape bs_r = pim_desc->bshape_r;
 
     switch (mem_flag) {
         case ELT_OP:
             break;
         case GEMV_INPUT:
+            bs.c = 1;
+            bs.w = bs.h;
             bs.h = 1;
+            bs_r.c = 1;
+            bs_r.w = bs_r.h;
+            bs_r.h = 1;
             break;
         case GEMV_WEIGHT:
             bs.n = 1;
+            bs.c = 1;
+            bs_r.n = 1;
+            bs_r.c = 1;
             break;
         case GEMV_OUTPUT:
-            bs.w = bs.h;
+            bs.c = 1;
             bs.h = 1;
-            break;
-        case GEMV_WEIGHT_T:
-            bs.n = 1;
-            bs.t = true;
+            bs_r.c = 1;
+            bs_r.h = 1;
             break;
         default:
             std::cout << "[Error] " << __FUNCTION__ << ": wrong mem_flag" << std::endl;
             return 0;
     }
 
-    pim_bo->bshape_r = pim_desc->bshape_r;
-    pim_bo->bshape = {bs.w, bs.h, bs.c, bs.n, bs.t};
+    pim_bo->bshape_r = {bs_r.n, bs_r.c, bs_r.h, bs_r.w};
+    pim_bo->bshape = {bs.n, bs.c, bs.h, bs.w};
 
     size = bs.n * bs.c * bs.h * bs.w;
 
@@ -57,8 +93,8 @@ void align_shape(PimDesc* pim_desc, PimOpType op_type)
     PimBShape bs = pim_desc->bshape_r;
 
     if (op_type == OP_GEMV) {
-        bs.w = 256 * ceil((float)bs.w / 256);
-        bs.h = PIM_GEMV_OUT_ALIGN * ceil((float)bs.h / PIM_GEMV_OUT_ALIGN);
+        bs.h = 256 * ceil((float)bs.h / 256);
+        bs.w = PIM_GEMV_OUT_ALIGN * ceil((float)bs.w / PIM_GEMV_OUT_ALIGN);
     } else {
         bs.w = (256 * 1024) * ceil((float)bs.w / (256 * 1024));
     }
@@ -122,7 +158,7 @@ bool is_pim_available(PimBo* out, PimBo* op0, PimBo* op1, PimOpType op_type)
 bool is_pim_gemv_available(PimBo* bo)
 {
     /* TODO: find optimal shape to execute PIM ops */
-    if ((bo->bshape_r.h >= DIM_OUT_PIM || bo->bshape_r.n > 1) && !is_transposed(bo))
+    if ((bo->bshape_r.w >= DIM_OUT_PIM || bo->bshape_r.n > 1))
         return true;
     else
         return false;
@@ -133,10 +169,8 @@ bool is_pim_gemv_list_available(PimBo* output, PimBo* vector, PimBo* matrix)
     int out_dim = output->size;
 
     if ((out_dim % PIM_GEMV_OUT_ALIGN) != 0) return false;
-    if (output->bshape.n == 1) return false;
-    if (output->bshape.n != vector->bshape.n || output->bshape.n != matrix->bshape.n) return false;
+    if (output->bshape.c == 1) return false;
+    if (output->bshape.c != vector->bshape.c || output->bshape.c != matrix->bshape.c) return false;
 
     return true;
 }
-
-bool is_transposed(PimBo* bo) { return bo->bshape.t; }
