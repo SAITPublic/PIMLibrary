@@ -99,10 +99,12 @@ else
     cmake_build_options="${cmake_build_options} -DTARGET=ON -DEMULATOR=OFF"
 fi
 
-if [ $target_device = "mi50" ]; then
-    cmake_build_options="${cmake_build_options} -DMI50=ON"
-elif [ $target_device = "radeon7" ]; then
+if [ $target_device = "radeon7" ]; then
     cmake_build_options="${cmake_build_options} -DRADEON7=ON"
+elif [ $target_device = "mi50" ]; then
+    cmake_build_options="${cmake_build_options} -DMI50=ON"
+else
+    cmake_build_options="${cmake_build_options} -DMI50=ON"
 fi
 
 if [ $rocm3_enable = "y" ]; then
