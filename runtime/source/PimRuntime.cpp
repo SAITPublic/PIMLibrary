@@ -202,6 +202,17 @@ int PimRuntime::copy_memory(PimBo* dst, PimBo* src, PimMemCpyType cpy_type)
     return ret;
 }
 
+int PimRuntime::copy_memory_3d(const PimCopy3D* copy_params)
+{
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
+    int ret = 0;
+
+    ret = pim_manager_->copy_memory_3d(copy_params);
+
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+    return ret;
+}
+
 int PimRuntime::execute_add(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream, bool block)
 {
     DLOG(INFO) << "called";

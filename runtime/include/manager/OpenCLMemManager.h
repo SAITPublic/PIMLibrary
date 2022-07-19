@@ -37,6 +37,7 @@ class OpenCLMemManager : public PimMemoryManager
     int free_memory(PimBo* pim_bo);
     int copy_memory(void* dst, void* src, size_t size, PimMemCpyType cpy_type);
     int copy_memory(PimBo* dst, PimBo* src, PimMemCpyType cpy_type);
+    int copy_memory_3d(const PimCopy3D* copy_params);
     int get_physical_id();
     cl_context get_cl_context();
     cl_command_queue get_cl_queue();

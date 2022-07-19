@@ -984,6 +984,6 @@ int HIPExecutor::execute_dummy(void)
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
-}
-}
-}
+}  // namespace executor
+}  // namespace runtime
+}  // namespace pim

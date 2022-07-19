@@ -228,6 +228,17 @@ int OpenCLMemManager::copy_memory(PimBo* dst, PimBo* src, PimMemCpyType cpy_type
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
+
+int OpenCLMemManager::copy_memory_3d(const PimCopy3D* copy_params)
+{
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
+    int ret = 0;
+
+    // FIXME Need to implement
+
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+    return ret;
+}
 }  // namespace manager
 }  // namespace runtime
 }  // namespace pim

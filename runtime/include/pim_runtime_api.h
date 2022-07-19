@@ -48,6 +48,7 @@ __PIM_API__ int PimInitialize(PimRuntimeType rt_type = RT_TYPE_HIP, PimPrecision
  * @brief Deinitialize PIM
  *
  * This call need to be called when PIM need to be reset and clear resourses.
+ *
  * @return Return success/failure
  */
 __PIM_API__ int PimDeinitialize(void);
@@ -56,9 +57,10 @@ __PIM_API__ int PimDeinitialize(void);
  * @brief Set PimDevice for Execution
  *
  * This call set the current device for execution to device id
- * @param device_id device id value to set
- * @return Return success/failure
  *
+ * @param device_id device id value to set
+ *
+ * @return Return success/failure
  */
 __PIM_API__ int PimSetDevice(uint32_t device_id);
 
@@ -66,9 +68,10 @@ __PIM_API__ int PimSetDevice(uint32_t device_id);
  * @brief Get PimDevice to check device id
  *
  * This call get the current device to check current working device id
- * @param device_id device id variable to get
- * @return Return success/failure
  *
+ * @param device_id device id variable to get
+ *
+ * @return Return success/failure
  */
 __PIM_API__ int PimGetDevice(uint32_t* device_id);
 
@@ -95,6 +98,7 @@ __PIM_API__ PimBo* PimCreateBo(int w, int h, int c, int n, PimPrecision precisio
  * @param mem_flag Describes operation for which buffer is used for( element wise or gemv)
  * @param user_ptr external memory passed by user. If passed, Bo is created with user pointer.
  *                 if nullptr, pim library does the allocation
+ *
  * @return Pointer to buffer object
  */
 __PIM_API__ PimBo* PimCreateBo(PimDesc* pim_desc, PimMemType mem_type, PimMemFlag mem_flag = ELT_OP,
@@ -105,7 +109,7 @@ __PIM_API__ PimBo* PimCreateBo(PimDesc* pim_desc, PimMemType mem_type, PimMemFla
  *
  * @param pim_bo Buffer object pointer to be destroyed.
  *
- * @return
+ * @return successs/failure
  */
 __PIM_API__ int PimDestroyBo(PimBo* pim_bo);
 
@@ -180,7 +184,7 @@ __PIM_API__ int PimFreeMemory(PimBo* pim_bo);
  * @param size size of buffer to be copied
  * @param cpy_type type of memory transfer (HOST to GPU, GPU to HOST, GPU to PIM etc)
  *
- * @return
+ * @return successs/failure
  */
 __PIM_API__ int PimCopyMemory(void* dst, void* src, size_t size, PimMemCpyType cpy_type);
 
@@ -191,9 +195,18 @@ __PIM_API__ int PimCopyMemory(void* dst, void* src, size_t size, PimMemCpyType c
  * @param src source buffer object
  * @param cpy_type type of memory transfer (HOST to GPU, GPU to HOST, GPU to PIM etc)
  *
- * @return
+ * @return successs/failure
  */
 __PIM_API__ int PimCopyMemory(PimBo* dst, PimBo* src, PimMemCpyType cpy_type);
+
+/**
+ * @brief Copies a rectangular 3D slice between source and destination.
+ *
+ * @param copy_params 3D memory copy parameters for the rectangular copy.
+ *
+ * @return success/failure
+ */
+__PIM_API__ int PimCopyMemoryRect(const PimCopy3D* copy_params);
 
 /**
  * @brief Creates a new stream/CommandQueue based on runtime type
@@ -204,7 +217,6 @@ __PIM_API__ int PimCopyMemory(PimBo* dst, PimBo* src, PimMemCpyType cpy_type);
  *
  * @return void* stream object
  */
-
 __PIM_API__ void* createStream(PimRuntimeType rt_type);
 
 /**
@@ -220,7 +232,6 @@ __PIM_API__ void* createStream(PimRuntimeType rt_type);
  *
  * @return success/failure
  */
-
 __PIM_API__ int PimExecuteAdd(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream = nullptr,
                               bool block = false);
 
@@ -246,7 +257,7 @@ __PIM_API__ int PimExecuteAdd(PimBo* output, void* scalar, PimBo* vector, void* 
  * @param stream void pointer to stream identifier. default=nullptr
  * @param block enable/disable synchronization. default=false
  *
- * @return
+ * @return success/failure
  */
 __PIM_API__ int PimExecuteMul(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream = nullptr,
                               bool block = false);
@@ -289,9 +300,8 @@ __PIM_API__ int PimExecuteRelu(PimBo* output, PimBo* pim_data, void* stream = nu
  * @param stream void pointer to stream identifier. default=nullptr
  * @param block enable/disable synchronization. default=false
  *
- * @return success or failure
+ * @return success/failure
  */
-
 __PIM_API__ int PimExecuteGemv(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream = nullptr,
                                bool block = false);
 
@@ -305,7 +315,7 @@ __PIM_API__ int PimExecuteGemv(PimBo* output, PimBo* operand0, PimBo* operand1, 
  * @param operand0 input operand0(vector).
  * @param operand1 input operand1(matrix).
  *
- * @return success or failure
+ * @return success/failure
  */
 __PIM_API__ int PimExecuteGemvAdd(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream = nullptr,
                                   bool block = false);
@@ -322,7 +332,7 @@ __PIM_API__ int PimExecuteGemvAdd(PimBo* output, PimBo* operand0, PimBo* operand
  * @param operand2 input vector to be added
  * @param relu fuse ReLU if comes after the operation.
  *
- * @return success or failure
+ * @return success/failure
  */
 __PIM_API__ int PimExecuteGemvAdd(PimBo* output, PimBo* operand0, PimBo* operand1, PimBo* operand2, bool relu,
                                   void* stream = nullptr, bool block = false);
@@ -340,7 +350,7 @@ __PIM_API__ int PimExecuteGemvAdd(PimBo* output, PimBo* operand0, PimBo* operand
  * @param stream void pointer to stream identifier. default=nullptr
  * @param block enable/disable synchronization. default=false
  *
- * @return success or failure
+ * @return success/failure
  */
 __PIM_API__ int PimExecuteGemvList(PimBo* output, PimBo* vector, PimBo* matrix, void* stream = nullptr,
                                    bool block = false);
@@ -368,14 +378,14 @@ __PIM_API__ int PimExecuteBN(PimBo* output, PimBo* pim_data, PimBo* beta, PimBo*
  *
  * This API blocks execution until all previously issues commands are completed
  *
- * @return
+ * @return success or failure
  */
 __PIM_API__ int PimSynchronize(void* stream = nullptr);
 
 /**
  * @brief Execute Dummy operation in PIM
  *
- * @return
+ * @return success/failure
  */
 __PIM_API__ int PimExecuteDummy(void);
 

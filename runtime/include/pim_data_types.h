@@ -69,7 +69,7 @@ typedef struct __PimBufferObject {
     PimBShape bshape_r;
     PimPrecision precision;
     size_t size;
-    void* data;
+    void *data;
     bool use_user_ptr;
 } PimBo;
 
@@ -79,5 +79,26 @@ typedef struct __PimDescriptor {
     PimPrecision precision;
     PimOpType op_type;
 } PimDesc;
+
+typedef struct __PimCopy3D {
+    /* Source information */
+    size_t src_x_in_bytes, src_y, src_z;  /* X, Y, Z offset of the src pointer */
+    PimMemType src_mem_type;              /* Memory type of the source memory */
+    const void *src_ptr;                  /* Source pointer; ignored if srcBo != nullptr */
+    size_t src_pitch;                     /* Source row width in bytes; ignored if srcBo != nullptr */
+    size_t src_height;                    /* Source height (scalar); ignored if srcBo != nullptr */
+    const PimBo *src_bo;                  /* Source PIM buffer object */
+    /* Destination information */
+    size_t dst_x_in_bytes, dst_y, dst_z;  /* X, Y, Z offset of the src pointer */
+    PimMemType dst_mem_type;              /* Memory type of the destination memory */
+    void *dst_ptr;                        /* Destination pointer; ignored if dstBo != nullptr */
+    size_t dst_pitch;                     /* Destination row width in bytes; ignored if dstBo != null */
+    size_t dst_height;                    /* Destination height (scalar); ignored if dstBo != nullptr */
+    PimBo *dst_bo;                        /* Destination PIM buffer object */
+    /* Slice information */
+    size_t width_in_bytes;                /* Width of the slice to copy in bytes */
+    size_t height;                        /* Height of the slice to copy (scalar) */
+    size_t depth;                         /* Depth of the slice to copy (scalar) */
+} PimCopy3D;
 
 #endif /* _PIM_DATA_TYPE_H_ */

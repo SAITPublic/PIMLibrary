@@ -39,6 +39,7 @@ class PimRuntime
     int free_memory(PimBo* pimBo);
     int copy_memory(void* dst, void* src, size_t size, PimMemCpyType cpy_type);
     int copy_memory(PimBo* dst, PimBo* src, PimMemCpyType cpy_type);
+    int copy_memory_3d(const PimCopy3D* copy_params);
 
     int execute_add(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream, bool block = false);
     int execute_mul(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream, bool block = false);

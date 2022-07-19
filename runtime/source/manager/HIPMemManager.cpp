@@ -225,6 +225,80 @@ int HIPMemManager::copy_memory(PimBo* dst, PimBo* src, PimMemCpyType cpy_type)
     return ret;
 }
 
+size_t PrecisionSize(const PimBo* bo)
+{
+    assert(bo != nullptr && "Invalid buffer");
+    switch (bo->precision) {
+        case PIM_FP16:
+            return sizeof(half_float::half);
+        case PIM_INT8:
+        default:
+            return 1ul;
+    }
+}
+
+int HIPMemManager::copy_memory_3d(const PimCopy3D* copy_params)
+{
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
+    int ret = 0;
+
+    hipMemcpy3DParms param;
+    param.srcArray = nullptr;
+    param.dstArray = nullptr;
+
+    param.srcPos = make_hipPos(copy_params->src_x_in_bytes, copy_params->src_y, copy_params->src_z);  // x, y, z
+
+    param.dstPos = make_hipPos(copy_params->dst_x_in_bytes, copy_params->dst_y, copy_params->dst_z);
+
+    param.extent = make_hipExtent(copy_params->width_in_bytes, copy_params->height, copy_params->depth);  // w, h, d
+
+    // error check remaining - xsz = pitch/sizeof(precision)
+    if (copy_params->src_mem_type == MEM_TYPE_HOST &&
+        (copy_params->dst_mem_type == MEM_TYPE_DEVICE || copy_params->dst_mem_type == MEM_TYPE_PIM)) {
+        param.kind = hipMemcpyHostToDevice;
+        param.srcPtr = make_hipPitchedPtr((void*)copy_params->src_ptr, copy_params->src_pitch, copy_params->src_pitch,
+                                          copy_params->src_height);  // d, pitch, xsz, ysz
+
+        auto* bo = copy_params->dst_bo;
+        param.dstPtr = make_hipPitchedPtr((void*)bo->data, bo->bshape.w * PrecisionSize(bo),
+                                          bo->bshape.w * PrecisionSize(bo), bo->bshape.h);
+
+    } else if ((copy_params->src_mem_type == MEM_TYPE_DEVICE || copy_params->src_mem_type == MEM_TYPE_PIM) &&
+               copy_params->dst_mem_type == MEM_TYPE_HOST) {
+        param.kind = hipMemcpyDeviceToHost;
+        auto* bo = copy_params->src_bo;
+        param.srcPtr = make_hipPitchedPtr((void*)bo->data, bo->bshape.w * PrecisionSize(bo),
+                                          bo->bshape.w * PrecisionSize(bo), bo->bshape.h);
+        param.dstPtr = make_hipPitchedPtr((void*)copy_params->dst_ptr, copy_params->dst_pitch, copy_params->dst_pitch,
+                                          copy_params->dst_height);
+
+    } else if ((copy_params->src_mem_type == MEM_TYPE_DEVICE || copy_params->src_mem_type == MEM_TYPE_PIM) &&
+               (copy_params->dst_mem_type == MEM_TYPE_DEVICE || copy_params->dst_mem_type == MEM_TYPE_PIM)) {
+        param.kind = hipMemcpyDeviceToDevice;
+
+        auto* sbo = copy_params->src_bo;
+        param.srcPtr = make_hipPitchedPtr((void*)sbo->data, sbo->bshape.w * PrecisionSize(sbo),
+                                          sbo->bshape.w * PrecisionSize(sbo), sbo->bshape.h);
+
+        auto* dbo = copy_params->dst_bo;
+        param.dstPtr = make_hipPitchedPtr((void*)dbo->data, dbo->bshape.w * PrecisionSize(dbo),
+                                          dbo->bshape.w * PrecisionSize(dbo), dbo->bshape.h);
+    } else if (copy_params->src_mem_type == MEM_TYPE_HOST && copy_params->dst_mem_type == MEM_TYPE_HOST) {
+        param.kind = hipMemcpyHostToHost;
+        param.srcPtr = make_hipPitchedPtr((void*)copy_params->src_ptr, copy_params->src_pitch, copy_params->src_pitch,
+                                          copy_params->src_height);
+        param.dstPtr = make_hipPitchedPtr((void*)copy_params->dst_ptr, copy_params->dst_pitch, copy_params->dst_pitch,
+                                          copy_params->dst_height);
+    }
+
+    if (hipMemcpy3D(&param) != hipSuccess) {
+        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+        return -1;
+    }
+
+    return ret;
+}
+
 int HIPMemManager::convert_data_layout(void* dst, void* src, size_t size, PimOpType op_type)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";

@@ -361,6 +361,23 @@ int PimCopyMemory(PimBo* dst, PimBo* src, PimMemCpyType cpy_type)
     return ret;
 }
 
+int PimCopyMemoryRect(const PimCopy3D* copy_params)
+{
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
+    PIM_PROFILE_TICK(CopyMemoryRect);
+    int ret = 0;
+
+    if (pim_runtime == nullptr) {
+        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+        return -1;
+    }
+    ret = pim_runtime->copy_memory_3d(copy_params);
+    PIM_PROFILE_TOCK(CopyMemoryRect);
+
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+    return ret;
+}
+
 void* createStream(PimRuntimeType rt_type)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";

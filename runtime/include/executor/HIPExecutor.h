@@ -63,8 +63,8 @@ class HIPExecutor : public PimExecutor
     int execute_gemv_tile_tree(PimBo* output, PimBo* operand0, PimBo* operand1, int is_gemv_add, void* stream,
                                bool block);
 };
-}
-}
-}
+}  // namespace executor
+}  // namespace runtime
+}  // namespace pim
 
 #endif

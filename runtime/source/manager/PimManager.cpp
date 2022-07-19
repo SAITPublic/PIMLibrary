@@ -150,6 +150,17 @@ int PimManager::copy_memory(PimBo* dst, PimBo* src, PimMemCpyType cpy_type)
     return ret;
 }
 
+int PimManager::copy_memory_3d(const PimCopy3D* copy_params)
+{
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
+    int ret = 0;
+
+    ret = pim_memory_manager_->copy_memory_3d(copy_params);
+
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+    return ret;
+}
+
 int PimManager::convert_data_layout(void* dst, void* src, size_t size, PimOpType op_type)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
