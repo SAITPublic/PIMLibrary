@@ -158,7 +158,7 @@ bool is_pim_available(PimBo* out, PimBo* op0, PimBo* op1, PimOpType op_type)
 bool is_pim_gemv_available(PimBo* bo)
 {
     /* TODO: find optimal shape to execute PIM ops */
-    if ((bo->bshape_r.w >= DIM_OUT_PIM || bo->bshape_r.n > 1))
+    if (bo->bshape_r.n * bo->bshape_r.c * bo->bshape_r.w >= DIM_OUT_PIM)
         return true;
     else
         return false;

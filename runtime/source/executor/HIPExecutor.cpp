@@ -911,8 +911,8 @@ int HIPExecutor::execute_custom_gemv(PimBo* output, PimBo* operand0, PimBo* oper
     float alpha = 1.0f;
     float beta = is_gemv_add ? 1.0f : 0.0f;
 
-    m = operand1->bshape_r.h;
-    k = operand1->bshape_r.w;
+    m = operand1->bshape_r.w;
+    k = operand1->bshape_r.h;
     n = 1;
     rocblas_gemv_fp16_Axy(mat, vec, out, m, n, k, alpha, beta, (hipStream_t)stream);
 

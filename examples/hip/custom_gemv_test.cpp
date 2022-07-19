@@ -368,7 +368,7 @@ int custom_gemv_Axy_api(bool block)
     PimInitialize(RT_TYPE_HIP, PIM_FP16);
 
     /* __PIM_API__ call : Create PIM Buffer Object */
-    PimDesc* pim_desc = PimCreateDesc(1, 1, out_size, in_size, PIM_FP16, OP_GEMV);
+    PimDesc* pim_desc = PimCreateDesc(1, 1, in_size, out_size, PIM_FP16, OP_GEMV);
     PimBo* device_input = PimCreateBo(pim_desc, MEM_TYPE_DEVICE, GEMV_INPUT, input0_d);
     PimBo* device_weight = PimCreateBo(pim_desc, MEM_TYPE_DEVICE, GEMV_WEIGHT, input1_d);
     PimBo* device_output = PimCreateBo(pim_desc, MEM_TYPE_DEVICE, GEMV_OUTPUT, output_d);
