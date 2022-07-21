@@ -295,11 +295,6 @@ int HIPExecutor::execute_gemv_add(PimBo* output, PimBo* operand0, PimBo* operand
 int HIPExecutor::execute_gemv_tile_accum(PimBo* output, PimBo* operand0, PimBo* operand1, int is_gemv_add, void* stream,
                                          bool block)
 {
-    printf("joker trace %s %d\n", __func__, __LINE__);
-    print_pimbo(operand0, "input");
-    print_pimbo(operand1, "weight");
-    print_pimbo(output, "output");
-
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
 
@@ -317,10 +312,6 @@ int HIPExecutor::execute_gemv_tile_accum(PimBo* output, PimBo* operand0, PimBo* 
     int n_compute_tile = compute_size * sizeof(uint16_t) / fbi_.trans_size / fbi_.num_grf_A;
     int n_memory_tile = memory_size * sizeof(uint16_t) / fbi_.trans_size / fbi_.num_grf_A;
     int n_out_tile = out_size / (fbi_.num_pim_chan * fbi_.num_pim_blocks * fbi_.num_grf_B);
-
-    printf("memory_size:%d, compute_size:%d\n", memory_size, compute_size);
-    printf("n_memory_tile:%d, n_compute_tile:%d\n", n_memory_tile, n_compute_tile);
-    printf("n_out_tile:%d, out_size:%d, real_out_size:%d\n", n_out_tile, out_size, real_out_size);
 
     if (compiler_env_value == 1) {
         pimc_driver::PimCDriver gemv_execute;

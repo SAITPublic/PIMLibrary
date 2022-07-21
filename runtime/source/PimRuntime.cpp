@@ -239,7 +239,7 @@ int PimRuntime::execute_gemm(PimBo* output, PimBo* input, PimBo* weight, PimBo* 
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
 
-    PimBo* pim_wei = get_preloaded_pim_weight(weight);
+    PimBo* pim_wei = get_preloaded_pim_gemm_weight(weight);
     ret = pim_executor_->execute_gemm(output, input, pim_wei, bias, act_func, stream, block);
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
@@ -407,6 +407,44 @@ int PimRuntime::insert_preloaded_pim_weight(PimBo* dev_wei, PimBo* pim_wei)
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
+}
+
+PimBo* PimRuntime::get_preloaded_pim_gemm_weight(PimBo* dev_wei)
+{
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
+    PimBo* pre_wei = find_preloaded_pim_weight(dev_wei);
+
+    if (pre_wei == nullptr) {
+        PimBo* host_weight = nullptr;
+        PimBo* host_reordered_weight = nullptr;
+        PimBShape* bshape = &dev_wei->bshape;
+
+        if (dev_wei->data == nullptr) {
+            DLOG(ERROR) << "[END] " << __FUNCTION__ << " called";
+            return nullptr;
+        }
+        if (dev_wei->mem_type == MEM_TYPE_HOST) {
+            host_weight = dev_wei;
+        } else if (dev_wei->mem_type == MEM_TYPE_DEVICE || dev_wei->mem_type == MEM_TYPE_PIM) {
+            uint32_t w_size = dev_wei->size;
+            host_weight = PimCreateBo(bshape->n, bshape->c, bshape->h, bshape->w, PIM_FP16, MEM_TYPE_HOST);
+            hipMemcpy(host_weight->data, dev_wei->data, w_size, hipMemcpyDeviceToHost);
+        }
+
+        host_reordered_weight = PimCreateBo(bshape->n, bshape->c, bshape->h, bshape->w, PIM_FP16, MEM_TYPE_HOST);
+        pre_wei = PimCreateBo(bshape->n, bshape->c, bshape->h, bshape->w, PIM_FP16, MEM_TYPE_PIM);
+        pim_manager_->convert_data_layout(host_reordered_weight, host_weight, OP_GEMV);
+        PimCopyMemory(pre_wei, host_reordered_weight, HOST_TO_PIM);
+        insert_preloaded_pim_weight(dev_wei, pre_wei);
+        PimDestroyBo(host_reordered_weight);
+
+        if (host_weight != dev_wei) {
+            PimDestroyBo(host_weight);
+        }
+    }
+
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+    return pre_wei;
 }
 
 PimBo* PimRuntime::get_preloaded_pim_weight(PimBo* dev_wei)

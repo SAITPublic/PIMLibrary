@@ -64,7 +64,7 @@ int pim_gemm_bias_relu_1x1024_1024x4096(bool block)
     set_half_data((half*)host_output->data, half(0.0), out_size);
     set_half_data((half*)host_input->data, half(dis(gen)), in_size);
     set_half_data((half*)host_weight->data, half(dis(gen)), wei_size);
-    set_half_data((half*)host_bias->data, half(dis(gen)), out_size);
+    set_half_data((half*)host_bias->data, half(10.0), out_size);
     matmulCPU((half*)host_input->data, (half*)host_weight->data, (half*)golden_output->data, 1, out_size, in_size,
               half(alpha), half(beta));
     addBiasCPU((half*)golden_output->data, (half*)host_bias->data, out_size);
@@ -143,7 +143,7 @@ int pim_gemm_bias_relu_8x1024_1024x4096(bool block)
     set_half_data((half*)host_output->data, half(0.0), out_size);
     set_half_data((half*)host_input->data, half(dis(gen)), in_size);
     set_half_data((half*)host_weight->data, half(dis(gen)), wei_size);
-    set_half_data((half*)host_bias->data, half(dis(gen)), out_size);
+    set_half_data((half*)host_bias->data, half(10.0), out_size);
     matmulCPU((half*)host_input->data, (half*)host_weight->data, (half*)golden_output->data, inout_h, out_w, in_w,
               half(alpha), half(beta));
     addBiasCPU((half*)golden_output->data, (half*)host_bias->data, out_size);
@@ -183,4 +183,8 @@ int pim_gemm_bias_relu_8x1024_1024x4096(bool block)
 TEST(HIPIntegrationTest, pim_gemm_bias_relu_1x1024_1024x4096)
 {
     EXPECT_TRUE(pim_gemm_bias_relu_1x1024_1024x4096(true) == 0);
+}
+TEST(HIPIntegrationTest, pim_gemm_bias_relu_8x1024_1024x4096)
+{
+    EXPECT_TRUE(pim_gemm_bias_relu_8x1024_1024x4096(true) == 0);
 }

@@ -94,14 +94,14 @@ __global__ void pim_gemm_bias_relu_fp16(volatile uint8_t* __restrict__ pim_ctr, 
 #if COMPUTE_GEMV
     if (hipThreadIdx_x < 16) {
         /* change HAB mode to HAB_PIM mode */
-        for (int b_idx = 0; b_idx < batch; b_idx++) {
+        for (int in_idx = 0; in_idx < inout_h; in_idx++) {
             for (int o_idx = 0; o_idx < n_out_tile; o_idx++) {
                 addr = addr_gen(ch, 0, 0, 0, 0x3fff, 0x0);
                 W_CMD_R(&pim_ctr[addr + offset], gemv_hab_to_hab_pim + offset);
                 R_CMD(&pim_ctr[addr + offset]);
                 B_CMD(1);
 
-                uint64_t i_offset = b_idx * (n_in_tile << grf_shift);
+                uint64_t i_offset = in_idx * (n_in_tile << grf_shift);
                 int r_offset = (o_idx * n_in_tile) >> 1;
 
                 for (int i_idx = 0; i_idx < n_in_tile; i_idx += 2) {
@@ -176,7 +176,7 @@ __global__ void pim_gemm_bias_relu_fp16(volatile uint8_t* __restrict__ pim_ctr, 
                     R_CMD(&weight[addr + offset]);
                     B_CMD(1);
                 }
-                loc = (b_idx * n_out_tile << grf_shift) + (o_idx << grf_shift) + gidx;
+                loc = (in_idx * n_out_tile << grf_shift) + (o_idx << grf_shift) + gidx;
                 row = loc >> col_shift;
                 col = loc % num_col;
 
@@ -230,13 +230,13 @@ __global__ void pim_gemm_bias_relu_fp16(volatile uint8_t* __restrict__ pim_ctr, 
     int li;
     half t_output;
 
-    for (int bi = 0; bi < batch; bi++) {
+    for (int in_idx = 0; in_idx < inout_h; in_idx++) {
         for (int oi = 0; oi < n_out_tile; oi++) {
             /* int out_per_tile = 4096; */
             /* out_idx = oi * out_per_tile + t_idx; */
             out_idx = (oi << 12) + t_idx;
             if (out_idx < out_w) {
-                li = bi * n_out_tile + oi;
+                li = in_idx * n_out_tile + oi;
                 row = li >> 2;
                 col = hipThreadIdx_x % 8 + ((li % 4) << 3);
                 addr = addr_gen(ch, 0, bg, ba, row, col);
@@ -244,7 +244,7 @@ __global__ void pim_gemm_bias_relu_fp16(volatile uint8_t* __restrict__ pim_ctr, 
                 for (int ti = 0; ti < 16; ti++) {
                     t_output += ((half*)pim_partial_sum)[(addr >> 1) + ti];
                 }
-                out_offset = bi * out_w + out_idx;
+                out_offset = in_idx * out_w + out_idx;
                 if (is_bias) t_output += ((half*)bias)[out_offset];
                 if (is_relu)
                     if (t_output < (half)0.) t_output = (half)0.;

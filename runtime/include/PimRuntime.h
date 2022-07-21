@@ -61,6 +61,7 @@ class PimRuntime
     PimBo* get_preloaded_pim_weight_for_list(PimBo* dev_wei);
 
    private:
+    PimBo* get_preloaded_pim_gemm_weight(PimBo* dev_wei);
     pim::runtime::manager::PimManager* pim_manager_;
     pim::runtime::executor::PimExecutor* pim_executor_;
     PimRuntimeType rt_type_;
