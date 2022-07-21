@@ -43,6 +43,11 @@ class OpenCLExecutor : public PimExecutor
     {
         return -1;
     };
+    int execute_gemm(PimBo* output, PimBo* input, PimBo* weight, PimBo* bias, PimActFunc act_func, void* stream,
+                     bool block)
+    {
+        return -1;
+    };
     int execute_gemv(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream, bool block) { return -1; };
     int execute_gemv_add(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream, bool block) { return -1; };
     int execute_gemv_list(PimBo* output, PimBo* input, PimBo* weight, void* stream, bool block) { return -1; };
@@ -62,13 +67,14 @@ class OpenCLExecutor : public PimExecutor
     };
     int execute_sync(void* stream) { return -1; };
     int execute_dummy(void) { return -1; };
+
    private:
     cl_mem d_srf_bin_buffer_;
     cl_mem pim_gemv_tmp_buffer_;
     cl_mem zero_buffer_;
 };
-}
-}
-}
+}  // namespace executor
+}  // namespace runtime
+}  // namespace pim
 
 #endif

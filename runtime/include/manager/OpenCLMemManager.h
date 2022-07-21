@@ -44,7 +44,7 @@ class OpenCLMemManager : public PimMemoryManager
     cl_device_id* get_cl_device();
     cl_command_queue queue;  // command queue
     cl_context context;      // context
-    cl_device_id device_id;     // device ID
+    cl_device_id device_id;  // device ID
 
    private:
     cl_platform_id cpPlatform;  // OpenCL platform

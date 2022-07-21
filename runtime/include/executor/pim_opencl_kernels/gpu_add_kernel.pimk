@@ -3,11 +3,11 @@
 
 #include <stdio.h>
 
-const char *source = 
+const char *source =
     "#pragma OPENCL EXTENSION cl_khr_fp16 : enable              \n"
     "__kernel void gpuAdd(__global half* a,                     \n"
-    "                     __global half* b,                     \n" 
-    "                     __global half* output,                \n" 
+    "                     __global half* b,                     \n"
+    "                     __global half* output,                \n"
     "                     const unsigned int n)                 \n"
     "{                                                          \n"
     "   int gid = get_global_id(0);                             \n"

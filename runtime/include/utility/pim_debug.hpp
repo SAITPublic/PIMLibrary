@@ -51,18 +51,32 @@ inline void print_fp16(half_float::half* buffer, size_t size, size_t step = 0)
     printf("\n");
 }
 
-inline void matmulCPU(half_float::half* input0, half_float::half* input1, half_float::half* output, int m, int n, int k,
+inline void matmulCPU(half_float::half* input, half_float::half* weight, half_float::half* output, int m, int n, int k,
                       half_float::half alpha, half_float::half beta)
 {
     for (int mi = 0; mi < m; mi++) {
         for (int ni = 0; ni < n; ni++) {
             float temp = 0;
             for (int ki = 0; ki < k; ki++) {
-                temp += (input0[mi * k + ki] * input1[ki * n + ni]);
+                temp += (input[mi * k + ki] * weight[ki * n + ni]);
             }
             int out_idx = mi * n + ni;
             output[out_idx] += alpha * temp + beta * output[out_idx];
         }
+    }
+}
+
+inline void addBiasCPU(half_float::half* output, half_float::half* bias, int size)
+{
+    for (int i = 0; i < size; i++) {
+        output[i] += bias[i];
+    }
+}
+
+inline void reluCPU(half_float::half* data, int size)
+{
+    for (int i = 0; i < size; i++) {
+        if (data[i] < 0) data[i] = 0;
     }
 }
 

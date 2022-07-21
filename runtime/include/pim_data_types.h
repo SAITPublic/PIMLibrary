@@ -20,13 +20,23 @@ typedef enum __PimRuntimeType {
     RT_TYPE_HIP,
     RT_TYPE_OPENCL,
 } PimRuntimeType;
+
 typedef enum __PimMemType {
     MEM_TYPE_HOST,
     MEM_TYPE_DEVICE,
     MEM_TYPE_PIM,
 } PimMemType;
 
-typedef enum __PimMemFlag { ELT_OP, GEMV_INPUT, GEMV_WEIGHT, GEMV_OUTPUT } PimMemFlag;
+typedef enum __PimMemFlag {
+    ELT_OP,
+    GEMV_INPUT,
+    GEMV_WEIGHT,
+    GEMV_OUTPUT,
+    GEMM_INPUT,
+    GEMM_WEIGHT,
+    GEMM_BIAS,
+    GEMM_OUTPUT,
+} PimMemFlag;
 
 typedef enum __PimMemCpyType {
     HOST_TO_HOST,
@@ -42,6 +52,7 @@ typedef enum __PimMemCpyType {
 
 typedef enum __PimOpType {
     OP_GEMV,
+    OP_GEMM,
     OP_ELT_ADD,
     OP_ELT_MUL,
     OP_RELU,
@@ -50,12 +61,17 @@ typedef enum __PimOpType {
     OP_DUMMY,
 } PimOpType;
 
+typedef enum __PimActivationFunction {
+    NONE,
+    ACT_RELU,
+} PimActFunc;
+
 typedef enum __PimPrecision {
     PIM_FP16,
     PIM_INT8,
 } PimPrecision;
 
-typedef struct __PimBShape {
+typedef struct __PimBufferShape {
     uint32_t n;
     uint32_t c;
     uint32_t h;
@@ -72,6 +88,18 @@ typedef struct __PimBufferObject {
     bool use_user_ptr;
 } PimBo;
 
+typedef struct __PimGemmDescriptor {
+    PimBShape in_bshape;
+    PimBShape in_bshape_r;
+    PimBShape wei_bshape;
+    PimBShape wei_bshape_r;
+    PimBShape bias_bshape;
+    PimBShape bias_bshape_r;
+    PimBShape out_bshape;
+    PimBShape out_bshape_r;
+    PimPrecision precision;
+} PimGemmDesc;
+
 typedef struct __PimDescriptor {
     PimBShape bshape;
     PimBShape bshape_r;
@@ -81,23 +109,23 @@ typedef struct __PimDescriptor {
 
 typedef struct __PimCopy3D {
     /* Source information */
-    size_t src_x_in_bytes, src_y, src_z;  /* X, Y, Z offset of the src pointer */
-    PimMemType src_mem_type;              /* Memory type of the source memory */
-    const void *src_ptr;                  /* Source pointer; ignored if srcBo != nullptr */
-    size_t src_pitch;                     /* Source row width in bytes; ignored if srcBo != nullptr */
-    size_t src_height;                    /* Source height (scalar); ignored if srcBo != nullptr */
-    const PimBo *src_bo;                  /* Source PIM buffer object */
+    size_t src_x_in_bytes, src_y, src_z; /* X, Y, Z offset of the src pointer */
+    PimMemType src_mem_type;             /* Memory type of the source memory */
+    const void *src_ptr;                 /* Source pointer; ignored if srcBo != nullptr */
+    size_t src_pitch;                    /* Source row width in bytes; ignored if srcBo != nullptr */
+    size_t src_height;                   /* Source height (scalar); ignored if srcBo != nullptr */
+    const PimBo *src_bo;                 /* Source PIM buffer object */
     /* Destination information */
-    size_t dst_x_in_bytes, dst_y, dst_z;  /* X, Y, Z offset of the src pointer */
-    PimMemType dst_mem_type;              /* Memory type of the destination memory */
-    void *dst_ptr;                        /* Destination pointer; ignored if dstBo != nullptr */
-    size_t dst_pitch;                     /* Destination row width in bytes; ignored if dstBo != null */
-    size_t dst_height;                    /* Destination height (scalar); ignored if dstBo != nullptr */
-    PimBo *dst_bo;                        /* Destination PIM buffer object */
+    size_t dst_x_in_bytes, dst_y, dst_z; /* X, Y, Z offset of the src pointer */
+    PimMemType dst_mem_type;             /* Memory type of the destination memory */
+    void *dst_ptr;                       /* Destination pointer; ignored if dstBo != nullptr */
+    size_t dst_pitch;                    /* Destination row width in bytes; ignored if dstBo != null */
+    size_t dst_height;                   /* Destination height (scalar); ignored if dstBo != nullptr */
+    PimBo *dst_bo;                       /* Destination PIM buffer object */
     /* Slice information */
-    size_t width_in_bytes;                /* Width of the slice to copy in bytes */
-    size_t height;                        /* Height of the slice to copy (scalar) */
-    size_t depth;                         /* Depth of the slice to copy (scalar) */
+    size_t width_in_bytes; /* Width of the slice to copy in bytes */
+    size_t height;         /* Height of the slice to copy (scalar) */
+    size_t depth;          /* Depth of the slice to copy (scalar) */
 } PimCopy3D;
 
 #endif /* _PIM_DATA_TYPE_H_ */

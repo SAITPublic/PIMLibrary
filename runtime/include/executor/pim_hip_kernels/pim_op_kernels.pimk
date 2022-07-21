@@ -201,6 +201,7 @@ __device__ void _B_CMD(int type)
 #include "pim_bn_kernels.pimk"
 #include "pim_copy_kernels.pimk"
 #include "pim_elt_op_kernels.pimk"
+#include "pim_gemm_kernels.pimk"
 #include "pim_gemv_kernels.pimk"
 #include "pim_relu_kernels.pimk"
 

@@ -233,6 +233,19 @@ int PimRuntime::execute_mul(PimBo* output, PimBo* operand0, PimBo* operand1, voi
     return ret;
 }
 
+int PimRuntime::execute_gemm(PimBo* output, PimBo* input, PimBo* weight, PimBo* bias, PimActFunc act_func, void* stream,
+                             bool block)
+{
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
+    int ret = 0;
+
+    PimBo* pim_wei = get_preloaded_pim_weight(weight);
+    ret = pim_executor_->execute_gemm(output, input, pim_wei, bias, act_func, stream, block);
+
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+    return ret;
+}
+
 int PimRuntime::execute_gemv(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream, bool block)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";

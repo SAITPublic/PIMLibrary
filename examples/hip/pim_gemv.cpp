@@ -213,8 +213,8 @@ int pim_gemv_512(bool block)
 int pim_gemv_desc(bool block)
 {
     int ret = 0;
-    int in_size = 4096;
-    int out_size = 1024;
+    int in_size = 1024;
+    int out_size = 4096;
     float alpha = 1.0f;
     float beta = 0.0f;
     float epsilon = 0.1f;
@@ -245,7 +245,7 @@ int pim_gemv_desc(bool block)
     set_half_data((half*)host_input->data, half(dis(gen)), in_size);
     set_half_data((half*)host_weight->data, half(dis(gen)), in_size * out_size);
     matmulCPU((half*)host_input->data, (half*)host_weight->data, (half*)golden_output->data, 1, out_size, in_size,
-               half(alpha), half(beta));
+              half(alpha), half(beta));
 
     PimCopyMemory(device_input, host_input, HOST_TO_DEVICE);
     PimCopyMemory(device_weight, host_weight, HOST_TO_DEVICE);

@@ -99,6 +99,6 @@ int OpenCLExecutor::execute_add(PimBo* output, PimBo* operand0, PimBo* operand1,
     clFinish(pim_manager_->pim_memory_manager_->get_cl_queue());
     return ret;
 }
-}
-}
-}
+}  // namespace executor
+}  // namespace runtime
+}  // namespace pim

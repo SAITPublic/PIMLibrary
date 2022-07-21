@@ -38,6 +38,8 @@ class HIPExecutor : public PimExecutor
     int execute_copy(PimBo* output, PimBo* pim_data, void* stream, bool block);
     int execute_bn(PimBo* output, PimBo* pim_data, PimBo* beta, PimBo* gamma, PimBo* mean, PimBo* variance,
                    double epsilon, void* stream, bool block);
+    int execute_gemm(PimBo* output, PimBo* input, PimBo* weight, PimBo* bias, PimActFunc act_func, void* stream,
+                     bool block);
     int execute_gemv(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream, bool block);
     int execute_gemv_add(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream, bool block);
     int execute_gemv_list(PimBo* output, PimBo* input, PimBo* weight, void* stream, bool block);
@@ -62,6 +64,8 @@ class HIPExecutor : public PimExecutor
                                 bool block);
     int execute_gemv_tile_tree(PimBo* output, PimBo* operand0, PimBo* operand1, int is_gemv_add, void* stream,
                                bool block);
+    int execute_gemm_tile_accum(PimBo* output, PimBo* input, PimBo* weight, PimBo* bias, PimActFunc act_func,
+                                void* stream, bool block);
 };
 }  // namespace executor
 }  // namespace runtime

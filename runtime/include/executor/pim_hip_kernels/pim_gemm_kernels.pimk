@@ -1,0 +1,258 @@
+/*
+ * Copyright (C) 2021 Samsung Electronics Co. LTD
+ *
+ * This software is a property of Samsung Electronics.
+ * No part of this software, either material or conceptual may be copied or distributed, transmitted,
+ * transcribed, stored in a retrieval system or translated into any human or computer language in any form by any means,
+ * electronic, mechanical, manual or otherwise, or disclosed
+ * to third parties without the express written permission of Samsung Electronics.
+ */
+
+#ifndef _PIM_GEMM_KERNELS_PIMK_
+#define _PIM_GEMM_KERNELS_PIMK_
+
+#define PREPARE_KERNEL 1
+#define PARK_IN 1
+#define CHANGE_SB_HAB 1
+#define PROGRAM_CRF 1
+#define COMPUTE_GEMV 1
+#define CHANGE_HAB_SB 1
+#define PARK_OUT 1
+#ifndef EMULATOR
+#define REDUCE_SUM 1
+#endif
+
+__global__ void pim_gemm_bias_relu_fp16(volatile uint8_t* __restrict__ pim_ctr, volatile uint8_t* __restrict__ input,
+                                        volatile uint8_t* __restrict__ weight, volatile uint8_t* __restrict__ bias,
+                                        volatile uint8_t* __restrict__ output,
+                                        volatile uint8_t* __restrict__ pim_partial_sum, int batch, int channel,
+                                        int inout_h, int out_w, int n_in_tile, int n_out_tile, int is_bias, int is_relu,
+#ifdef EMULATOR
+                                        PimMemTraceData* fmtd16, int* frd_size, int mt_width,
+                                        PimMemTracer* emulator_trace,
+#endif
+                                        uint8_t* crf_binary, int crf_size)
+{
+#ifdef EMULATOR
+    emulator_trace->g_fba = (uint64_t)pim_ctr;
+    emulator_trace->g_fmtd16 = fmtd16;
+    emulator_trace->g_ridx[hipBlockIdx_x] = 0;
+    emulator_trace->m_width = mt_width;
+    __syncthreads();
+#endif
+
+#ifdef PREPARE_KERNEL
+    int grf_shift = 3;
+    int num_ba = 4;
+    int ba_shift = 2;
+    int num_col = 32;
+    int col_shift = 5;
+    int trans_shift = 5;
+    int even_row, odd_row, row, col, loc;
+    int ch = hipBlockIdx_x;
+    int w_idx = hipThreadIdx_x % 2;
+    int gidx = hipThreadIdx_x >> 1;
+    uint64_t offset = w_idx << 4;
+    uint64_t addr;
+#endif
+
+#if PARK_IN
+    if (hipThreadIdx_x < 32) {
+        addr = addr_gen(ch, 0, (gidx >> ba_shift), gidx % num_ba, (1 << 13), 0);
+        W_CMD(&pim_ctr[addr + offset]);
+        B_CMD(1);
+    }
+#endif
+
+#if CHANGE_SB_HAB
+    if (hipThreadIdx_x < 2) {
+        /* change SB mode to HAB mode */
+        addr = addr_gen(ch, 0, 2, 0, 0x27ff, 0x1f);
+        W_CMD(&pim_ctr[addr + offset]);
+        B_CMD(1);
+        addr = addr_gen(ch, 0, 2, 1, 0x27ff, 0x1f);
+        W_CMD(&pim_ctr[addr + offset]);
+        B_CMD(1);
+        addr = addr_gen(ch, 0, 0, 0, 0x27ff, 0x1f);
+        W_CMD(&pim_ctr[addr + offset]);
+        B_CMD(1);
+        addr = addr_gen(ch, 0, 0, 1, 0x27ff, 0x1f);
+        W_CMD(&pim_ctr[addr + offset]);
+        B_CMD(1);
+    }
+#endif
+
+#if PROGRAM_CRF
+    if (hipThreadIdx_x < (crf_size >> 4)) {
+        addr = addr_gen(hipBlockIdx_x, 0, 0, 1, 0x3fff, 0x4 + gidx);
+        W_CMD_R(&pim_ctr[addr + offset], crf_binary + (hipThreadIdx_x << 4));
+        R_CMD(&pim_ctr[addr + offset]);
+        B_CMD(1);
+    }
+#endif
+
+#if COMPUTE_GEMV
+    if (hipThreadIdx_x < 16) {
+        /* change HAB mode to HAB_PIM mode */
+        for (int b_idx = 0; b_idx < batch; b_idx++) {
+            for (int o_idx = 0; o_idx < n_out_tile; o_idx++) {
+                addr = addr_gen(ch, 0, 0, 0, 0x3fff, 0x0);
+                W_CMD_R(&pim_ctr[addr + offset], gemv_hab_to_hab_pim + offset);
+                R_CMD(&pim_ctr[addr + offset]);
+                B_CMD(1);
+
+                uint64_t i_offset = b_idx * (n_in_tile << grf_shift);
+                int r_offset = (o_idx * n_in_tile) >> 1;
+
+                for (int i_idx = 0; i_idx < n_in_tile; i_idx += 2) {
+                    /* write grf_A from WRIO */
+                    uint64_t i_addr = (i_offset + ((i_idx << grf_shift) + gidx)) << trans_shift;
+                    addr = addr_gen(ch, 0, 0, 0, 0x3fff, 0x8 + gidx);
+                    W_CMD_R(&pim_ctr[addr + offset], &input[i_addr + offset]);
+                    R_CMD(&pim_ctr[addr + offset]);
+                    B_CMD(1);
+
+                    even_row = ((i_idx >> 1) + r_offset) << 1;
+                    odd_row = even_row + 1;
+
+                    addr = addr_gen(ch, 0, 0, 0, even_row, gidx);
+                    R_CMD(&weight[addr + offset]);
+
+                    addr = addr_gen(ch, 0, 0, 0, even_row, gidx + 8);
+                    R_CMD(&weight[addr + offset]);
+
+                    addr = addr_gen(ch, 0, 0, 0, even_row, gidx + 16);
+                    R_CMD(&weight[addr + offset]);
+
+                    addr = addr_gen(ch, 0, 0, 0, even_row, gidx + 24);
+                    R_CMD(&weight[addr + offset]);
+
+                    addr = addr_gen(ch, 0, 0, 0, odd_row, gidx);
+                    R_CMD(&weight[addr + offset]);
+
+                    addr = addr_gen(ch, 0, 0, 0, odd_row, gidx + 8);
+                    R_CMD(&weight[addr + offset]);
+
+                    addr = addr_gen(ch, 0, 0, 0, odd_row, gidx + 16);
+                    R_CMD(&weight[addr + offset]);
+
+                    addr = addr_gen(ch, 0, 0, 0, odd_row, gidx + 24);
+                    R_CMD(&weight[addr + offset]);
+                    B_CMD(1);
+                }
+
+                for (int i_idx = 1; i_idx < n_in_tile; i_idx += 2) {
+                    uint64_t i_addr = (i_offset + ((i_idx << grf_shift) + gidx)) << trans_shift;
+                    addr = addr_gen(ch, 0, 0, 1, 0x3fff, 0x8 + gidx);
+                    W_CMD_R(&pim_ctr[addr + offset], &input[i_addr + offset]);
+                    R_CMD(&pim_ctr[addr + offset]);
+                    B_CMD(1);
+
+                    even_row = ((i_idx >> 1) + r_offset) << 1;
+                    odd_row = even_row + 1;
+
+                    addr = addr_gen(ch, 0, 0, 1, even_row, gidx);
+                    R_CMD(&weight[addr + offset]);
+
+                    addr = addr_gen(ch, 0, 0, 1, even_row, gidx + 8);
+                    R_CMD(&weight[addr + offset]);
+
+                    addr = addr_gen(ch, 0, 0, 1, even_row, gidx + 16);
+                    R_CMD(&weight[addr + offset]);
+
+                    addr = addr_gen(ch, 0, 0, 1, even_row, gidx + 24);
+                    R_CMD(&weight[addr + offset]);
+
+                    addr = addr_gen(ch, 0, 0, 1, odd_row, gidx);
+                    R_CMD(&weight[addr + offset]);
+
+                    addr = addr_gen(ch, 0, 0, 1, odd_row, gidx + 8);
+                    R_CMD(&weight[addr + offset]);
+
+                    addr = addr_gen(ch, 0, 0, 1, odd_row, gidx + 16);
+                    R_CMD(&weight[addr + offset]);
+
+                    addr = addr_gen(ch, 0, 0, 1, odd_row, gidx + 24);
+                    R_CMD(&weight[addr + offset]);
+                    B_CMD(1);
+                }
+                loc = (b_idx * n_out_tile << grf_shift) + (o_idx << grf_shift) + gidx;
+                row = loc >> col_shift;
+                col = loc % num_col;
+
+                // pipeline delay
+                // FIX : If alu is in operation, NOP should be added.
+                addr = addr_gen(ch, 0, 0, 1, row, col);
+                W_CMD(&pim_partial_sum[addr + offset]);
+                W_CMD(&pim_partial_sum[addr + offset]);
+                R_CMD(&pim_partial_sum[addr + offset]);
+                B_CMD(1);
+
+                addr = addr_gen(ch, 0, 0, 0, 0x3fff, 0x0);
+                W_CMD_R(&pim_ctr[addr + offset], gemv_hab_pim_to_hab + offset);
+                R_CMD(&pim_ctr[addr + offset]);
+                B_CMD(1);
+            }
+        }
+    }
+#endif
+
+#if CHANGE_HAB_SB
+    if (hipThreadIdx_x < 4) {
+        /* change HAB mode to SB mode */
+        addr = addr_gen(ch, 0, 0, gidx, 0x2fff, 0x1f);
+        W_CMD(&pim_ctr[addr + offset]);
+        R_CMD(&pim_ctr[addr + offset]);
+        B_CMD(1);
+    }
+#endif
+
+#if PARK_OUT
+    if (hipThreadIdx_x < 32) {
+        addr = addr_gen(ch, 0, gidx >> ba_shift, gidx % num_ba, (1 << 13), 0);
+        W_CMD(&pim_ctr[addr + offset]);
+        B_CMD(1);
+    }
+#endif
+
+#ifdef EMULATOR
+    if (hipBlockIdx_x == 0 && hipThreadIdx_x == 0) {
+        frd_size[0] = emulator_trace->g_ridx[0];
+    }
+#endif
+
+#if REDUCE_SUM
+    int bg = hipThreadIdx_x >> 4;
+    int ba = (((hipThreadIdx_x >> 3) % 2) << 1) + 1;
+    int t_idx = (hipBlockIdx_x << 6) + hipThreadIdx_x;
+    int out_idx;
+    int out_offset;
+    int li;
+    half t_output;
+
+    for (int bi = 0; bi < batch; bi++) {
+        for (int oi = 0; oi < n_out_tile; oi++) {
+            /* int out_per_tile = 4096; */
+            /* out_idx = oi * out_per_tile + t_idx; */
+            out_idx = (oi << 12) + t_idx;
+            if (out_idx < out_w) {
+                li = bi * n_out_tile + oi;
+                row = li >> 2;
+                col = hipThreadIdx_x % 8 + ((li % 4) << 3);
+                addr = addr_gen(ch, 0, bg, ba, row, col);
+                t_output = 0;
+                for (int ti = 0; ti < 16; ti++) {
+                    t_output += ((half*)pim_partial_sum)[(addr >> 1) + ti];
+                }
+                out_offset = bi * out_w + out_idx;
+                if (is_bias) t_output += ((half*)bias)[out_offset];
+                if (is_relu)
+                    if (t_output < (half)0.) t_output = (half)0.;
+                ((half*)output)[out_offset] = t_output;
+            }
+        }
+    }
+#endif
+}
+
+#endif /* _PIM_GEMV_KERNELS_PIMK_ */

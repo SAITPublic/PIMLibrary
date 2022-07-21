@@ -88,6 +88,65 @@ size_t get_aligned_size(PimDesc* pim_desc, PimMemFlag mem_flag, PimBo* pim_bo)
     return size;
 }
 
+void set_pimbo(PimGemmDesc* pim_gemm_desc, PimMemType mem_type, PimMemFlag mem_flag, PimBo* pim_bo)
+{
+    size_t size = 0;
+
+    PimBShape* bshape = nullptr;
+    PimBShape* bshape_r = nullptr;
+
+    switch (mem_flag) {
+        case GEMM_INPUT:
+            bshape = &pim_gemm_desc->in_bshape;
+            bshape_r = &pim_gemm_desc->in_bshape_r;
+            break;
+        case GEMM_WEIGHT:
+            bshape = &pim_gemm_desc->wei_bshape;
+            bshape_r = &pim_gemm_desc->wei_bshape_r;
+            break;
+        case GEMM_OUTPUT:
+            bshape = &pim_gemm_desc->out_bshape;
+            bshape_r = &pim_gemm_desc->out_bshape_r;
+            break;
+        case GEMM_BIAS:
+            bshape = &pim_gemm_desc->bias_bshape;
+            bshape_r = &pim_gemm_desc->bias_bshape_r;
+            break;
+        default:
+            printf("fail to get aligned buffer size");
+            return;
+    }
+
+    size = bshape->n * bshape->c * bshape->h * bshape->w;
+    if (pim_gemm_desc->precision == PIM_FP16) size *= 2;
+
+    pim_bo->size = size;
+    pim_bo->mem_type = mem_type;
+    pim_bo->precision = pim_gemm_desc->precision;
+    pim_bo->bshape = *bshape;
+    pim_bo->bshape_r = *bshape_r;
+}
+
+void align_gemm_shape(PimGemmDesc* pim_gemm_desc)
+{
+    int in_w = pim_gemm_desc->in_bshape_r.w;
+    int out_w = pim_gemm_desc->out_bshape_r.w;
+
+    int aligned_in_w = 256 * ceil((float)in_w / 256);
+    int aligned_out_w = PIM_GEMV_OUT_ALIGN * ceil((float)out_w / PIM_GEMV_OUT_ALIGN);
+
+    pim_gemm_desc->in_bshape = pim_gemm_desc->in_bshape_r;
+    pim_gemm_desc->wei_bshape = pim_gemm_desc->wei_bshape_r;
+    pim_gemm_desc->bias_bshape = pim_gemm_desc->bias_bshape_r;
+    pim_gemm_desc->out_bshape = pim_gemm_desc->out_bshape_r;
+
+    pim_gemm_desc->in_bshape.w = aligned_in_w;
+    pim_gemm_desc->wei_bshape.h = aligned_in_w;
+    pim_gemm_desc->wei_bshape.w = aligned_out_w;
+    pim_gemm_desc->bias_bshape.w = aligned_out_w;
+    pim_gemm_desc->out_bshape.w = aligned_out_w;
+}
+
 void align_shape(PimDesc* pim_desc, PimOpType op_type)
 {
     PimBShape bs = pim_desc->bshape_r;

@@ -245,6 +245,16 @@ int HIPExecutor::execute_mul(PimBo* output, PimBo* operand0, PimBo* operand1, vo
     return ret;
 }
 
+int HIPExecutor::execute_gemm(PimBo* output, PimBo* input, PimBo* weight, PimBo* bias, PimActFunc act_func,
+                              void* stream, bool block)
+{
+    int ret = 0;
+
+    ret = execute_gemm_tile_accum(output, input, weight, bias, act_func, stream, block);
+
+    return ret;
+}
+
 int HIPExecutor::execute_gemv(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream, bool block)
 {
     int ret = 0;
@@ -285,6 +295,11 @@ int HIPExecutor::execute_gemv_add(PimBo* output, PimBo* operand0, PimBo* operand
 int HIPExecutor::execute_gemv_tile_accum(PimBo* output, PimBo* operand0, PimBo* operand1, int is_gemv_add, void* stream,
                                          bool block)
 {
+    printf("joker trace %s %d\n", __func__, __LINE__);
+    print_pimbo(operand0, "input");
+    print_pimbo(operand1, "weight");
+    print_pimbo(output, "output");
+
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
 
@@ -302,6 +317,10 @@ int HIPExecutor::execute_gemv_tile_accum(PimBo* output, PimBo* operand0, PimBo* 
     int n_compute_tile = compute_size * sizeof(uint16_t) / fbi_.trans_size / fbi_.num_grf_A;
     int n_memory_tile = memory_size * sizeof(uint16_t) / fbi_.trans_size / fbi_.num_grf_A;
     int n_out_tile = out_size / (fbi_.num_pim_chan * fbi_.num_pim_blocks * fbi_.num_grf_B);
+
+    printf("memory_size:%d, compute_size:%d\n", memory_size, compute_size);
+    printf("n_memory_tile:%d, n_compute_tile:%d\n", n_memory_tile, n_compute_tile);
+    printf("n_out_tile:%d, out_size:%d, real_out_size:%d\n", n_out_tile, out_size, real_out_size);
 
     if (compiler_env_value == 1) {
         pimc_driver::PimCDriver gemv_execute;
@@ -954,6 +973,74 @@ int HIPExecutor::execute_custom_gemv_add(PimBo* output, PimBo* operand0, PimBo* 
         rocblas_addmv_fp16_Axy(in, mat, vec, out, m, n, k, alpha, beta, relu, (hipStream_t)stream);
     }
 
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+    return ret;
+}
+
+int HIPExecutor::execute_gemm_tile_accum(PimBo* output, PimBo* input, PimBo* weight, PimBo* bias, PimActFunc act_func,
+                                         void* stream, bool block)
+{
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
+    int ret = 0;
+
+    unsigned blocks = fbi_.num_pim_chan;
+    unsigned threads_per_block = 64;
+
+    int n_in_tile = input->bshape.w * sizeof(uint16_t) / fbi_.trans_size / fbi_.num_grf_A;
+    int n_out_tile = output->bshape.w / (fbi_.num_pim_chan * fbi_.num_pim_blocks * fbi_.num_grf_B);
+
+    int is_bias = (bias->size != 0) ? 1 : 0;
+    int is_relu = (act_func == ACT_RELU) ? 1 : 0;
+
+    PIM_PROFILE_TICK(CreateCRFBin);
+    uint8_t* crf_bin = find_crf(OP_GEMV, input->bshape.w * sizeof(uint16_t));
+    int crf_size = 32;
+    if (crf_bin == nullptr) {
+        crf_bin = (uint8_t*)make_crf_bin(OP_GEMV, input->bshape.w * sizeof(uint16_t));
+    }
+    PIM_PROFILE_TOCK(CreateCRFBin);
+
+    PIM_PROFILE_TICK(RunGemvKernel);
+    int device_id;
+    hipGetDevice(&device_id);
+    hipLaunchKernelGGL(pim_gemm_bias_relu_fp16, dim3(blocks), dim3(threads_per_block), 0, (hipStream_t)stream,
+                       (uint8_t*)(g_pim_base_addr[device_id]), (uint8_t*)input->data, (uint8_t*)weight->data,
+                       (uint8_t*)bias->data, (uint8_t*)output->data, (uint8_t*)pim_gemv_tmp_buffer_, input->bshape.n,
+                       input->bshape.c, input->bshape.h, output->bshape.w, n_in_tile, n_out_tile, is_bias, is_relu,
+#ifdef EMULATOR
+                       (PimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_,
+                       (PimMemTracer*)d_emulator_trace_,
+#endif
+                       (uint8_t*)crf_bin, crf_size);
+#ifndef EMULATOR
+    if (block) hipStreamSynchronize((hipStream_t)stream);
+    PIM_PROFILE_TOCK(RunGemvKernel);
+#endif
+
+#ifdef EMULATOR
+    hipStreamSynchronize((hipStream_t)stream);
+    PIM_PROFILE_TOCK(RunGemvKernel);
+
+    PIM_PROFILE_TICK(RunGemvEmulation);
+    hipMemcpy((void*)h_fmtd16_size_, (void*)d_fmtd16_size_, sizeof(int), hipMemcpyDeviceToHost);
+    hipMemcpy((void*)h_fmtd16_, (void*)d_fmtd16_, sizeof(PimMemTraceData) * max_fmtd_size_, hipMemcpyDeviceToHost);
+
+    for (size_t i = 1; i < blocks; i++) {
+        memcpy(&h_fmtd16_[i * h_fmtd16_size_[0]], &h_fmtd16_[i * fmtd_size_per_ch_],
+               h_fmtd16_size_[0] * sizeof(PimMemTraceData));
+    }
+    h_fmtd16_size_[0] *= blocks;
+
+    pim_emulator_->convert_mem_trace_from_16B_to_32B(h_fmtd32_, h_fmtd32_size_, h_fmtd16_, h_fmtd16_size_[0], OP_GEMV);
+    if (is_gemv_add)
+        pim_emulator_->execute_gemv_add_tile_accum(output, weight, h_fmtd32_, h_fmtd32_size_[0], OP_GEMV,
+                                                   g_pim_base_addr[device_id], pim_gemv_tmp_buffer_);
+    else
+        pim_emulator_->execute_gemv_tile_accum(output, weight, h_fmtd32_, h_fmtd32_size_[0], OP_GEMV,
+                                               g_pim_base_addr[device_id], pim_gemv_tmp_buffer_);
+
+    PIM_PROFILE_TOCK(RunGemvEmulation);
+#endif
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }

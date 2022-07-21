@@ -484,6 +484,7 @@ int HIPMemManager::convert_data_layout_for_gemv_weight(PimBo* dst, PimBo* src)
         }
     }
 
+    printf("joker trace %s %d\n", __func__, __LINE__);
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }

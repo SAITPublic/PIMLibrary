@@ -91,17 +91,31 @@ __PIM_API__ PimBo* PimCreateBo(int n, int c, int h, int w, PimPrecision precisio
                                void* user_ptr = nullptr);
 
 /**
- * @brief Create PIM buffer object with pim descriptor
+ * @brief create pim buffer object with pim descriptor
  *
- * @param pim_desc PIM descriptor
- * @param mem_type type of memory need to be allocated (PIM/GPU/HOST)
- * @param mem_flag Describes operation for which buffer is used for( element wise or gemv)
- * @param user_ptr external memory passed by user. If passed, Bo is created with user pointer.
+ * @param pim_desc pim descriptor
+ * @param mem_type type of memory need to be allocated (pim/gpu/host)
+ * @param mem_flag describes operation for which buffer is used for( element wise or gemv)
+ * @param user_ptr external memory passed by user. if passed, bo is created with user pointer.
  *                 if nullptr, pim library does the allocation
  *
- * @return Pointer to buffer object
+ * @return pointer to buffer object
  */
 __PIM_API__ PimBo* PimCreateBo(PimDesc* pim_desc, PimMemType mem_type, PimMemFlag mem_flag = ELT_OP,
+                               void* user_ptr = nullptr);
+
+/**
+ * @brief create pim buffer object with pim gemm descriptor
+ *
+ * @param pim_gemm_desc pim gemm descriptor
+ * @param mem_type type of memory need to be allocated (pim/gpu/host)
+ * @param mem_flag describes operation for which buffer is used for( element wise or gemv)
+ * @param user_ptr external memory passed by user. if passed, bo is created with user pointer.
+ *                 if nullptr, pim library does the allocation
+ *
+ * @return pointer to buffer object
+ */
+__PIM_API__ PimBo* PimCreateBo(PimGemmDesc* pim_gemm_desc, PimMemType mem_type, PimMemFlag mem_flag,
                                void* user_ptr = nullptr);
 
 /**
@@ -122,7 +136,7 @@ __PIM_API__ int PimDestroyBo(PimBo* pim_bo);
  * @param w width of buffer
  * @param precision precision of buffer
  *
- * @return Return success/failure
+ * @return PimDesc structure
  */
 __PIM_API__ PimDesc* PimCreateDesc(int n, int c, int h, int w, PimPrecision precision, PimOpType op_type = OP_ELT_ADD);
 
@@ -131,9 +145,34 @@ __PIM_API__ PimDesc* PimCreateDesc(int n, int c, int h, int w, PimPrecision prec
  *
  * @param pim_desc pointer to descriptor to be destroyed
  *
- * @return Return success/failure
+ * @return success/failure
  */
 __PIM_API__ int PimDestroyDesc(PimDesc* pim_desc);
+
+/**
+ * @brief Create PIM GEMM descriptor using parameters passed
+ *
+ * This API makes dimension for input(nchw) x weight(nchw) = output(nchw)
+ *
+ * @param n number of batches
+ * @param c number of channels
+ * @param inout_h height of input and output buffer
+ * @param in_w width of input buffer and height of weight buffer
+ * @param out_w width of weight and output buffer
+ * @param precision precision of buffer
+ *
+ * @return PimGemmDesc structure
+ */
+__PIM_API__ PimGemmDesc* PimCreateGemmDesc(int n, int c, int inout_h, int in_w, int out_w, PimPrecision precision);
+
+/**
+ * @brief Destroy PIM GEMM descriptor
+ *
+ * @param pim_gemm_desc pointer to descriptor to be destroyed
+ *
+ * @return success/failure
+ */
+__PIM_API__ int PimDestroyGemmDesc(PimGemmDesc* pim_gemm_desc);
 
 /**
  * @brief Alloc Memory of size and type mem_type
@@ -354,6 +393,27 @@ __PIM_API__ int PimExecuteGemvAdd(PimBo* output, PimBo* operand0, PimBo* operand
  */
 __PIM_API__ int PimExecuteGemvList(PimBo* output, PimBo* vector, PimBo* matrix, void* stream = nullptr,
                                    bool block = false);
+
+/**
+ * @brief Executes PIM GEMM operation
+ *
+ * This API provides interface for PIM GEMM operations.
+ * For PIM GemM operations, Input and Weight should be placed in GPU memory area.
+ * and weight(kernel values) are internally replaced in PIM area.
+ * Output values are also placed in GPU area.
+ *
+ * @param output output buffer object
+ * @param input input buffer object
+ * @param weight weight buffer object
+ * @param bias bias buffer object
+ * @param act_func activation function for PIM GEMM output
+ * @param stream void pointer to stream identifier. default=nullptr
+ * @param block enable/disable synchronization. default=false
+ *
+ * @return success/failure
+ */
+__PIM_API__ int PimExecuteGemm(PimBo* output, PimBo* input, PimBo* weight, PimBo* bias, PimActFunc act_func = NONE,
+                               void* stream = nullptr, bool block = false);
 
 /**
  * @brief Executes Batch normalization operation.

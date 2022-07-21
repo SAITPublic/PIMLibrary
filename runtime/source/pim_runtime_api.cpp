@@ -186,6 +186,74 @@ PimBo* PimCreateBo(PimDesc* pim_desc, PimMemType mem_type, PimMemFlag mem_flag, 
     return pim_bo;
 }
 
+PimBo* PimCreateBo(PimGemmDesc* pim_gemm_desc, PimMemType mem_type, PimMemFlag mem_flag, void* user_ptr)
+{
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
+    PIM_PROFILE_TICK(CreateBo);
+
+    int ret = 0;
+
+    if (pim_runtime == nullptr) {
+        DLOG(ERROR) << "PimRuntime is not initialized";
+        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+        return nullptr;
+    }
+
+    PimBo* pim_bo = new PimBo;
+
+    set_pimbo(pim_gemm_desc, mem_type, mem_flag, pim_bo);
+
+    ret = pim_runtime->alloc_memory(pim_bo, user_ptr);
+    if (ret != 0) {
+        DLOG(ERROR) << "Fail to alloc memory";
+        LOG(INFO) << "[END] " << __FUNCTION__ << " called";
+        return nullptr;
+    }
+
+    PIM_PROFILE_TOCK(CreateBo);
+
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+    return pim_bo;
+}
+
+PimGemmDesc* PimCreateGemmDesc(int n, int c, int inout_h, int in_w, int out_w, PimPrecision precision)
+{
+    DLOG(INFO) << "called";
+
+    if (pim_runtime == nullptr) {
+        DLOG(ERROR) << "PimRuntime is not initialized";
+        return nullptr;
+    }
+
+    PimGemmDesc* pim_gemm_desc = new PimGemmDesc;
+
+    pim_gemm_desc->precision = precision;
+    pim_gemm_desc->in_bshape_r = {(uint32_t)n, (uint32_t)c, (uint32_t)inout_h, (uint32_t)in_w};
+    pim_gemm_desc->wei_bshape_r = {(uint32_t)n, (uint32_t)c, (uint32_t)in_w, (uint32_t)out_w};
+    pim_gemm_desc->bias_bshape_r = {(uint32_t)n, (uint32_t)c, (uint32_t)inout_h, (uint32_t)out_w};
+    pim_gemm_desc->out_bshape_r = {(uint32_t)n, (uint32_t)c, (uint32_t)inout_h, (uint32_t)out_w};
+
+    align_gemm_shape(pim_gemm_desc);
+
+    return pim_gemm_desc;
+}
+
+int PimDestroyGemmDesc(PimGemmDesc* pim_gemm_desc)
+{
+    DLOG(INFO) << "called";
+
+    int ret = 0;
+
+    if (pim_gemm_desc == nullptr) {
+        DLOG(ERROR) << "pim_gemm_desc is nullptr";
+        return -1;
+    }
+
+    delete pim_gemm_desc;
+
+    return ret;
+}
+
 PimDesc* PimCreateDesc(int n, int c, int h, int w, PimPrecision precision, PimOpType op_type)
 {
     DLOG(INFO) << "called";
@@ -543,6 +611,25 @@ int PimExecuteGemvList(PimBo* output, PimBo* vector, PimBo* matrix, void* stream
 
     ret = pim_runtime->execute_gemv_list(output, vector, matrix, stream, block);
     PIM_PROFILE_TOCK(ExecuteGemvList);
+
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+    return ret;
+}
+
+int PimExecuteGemm(PimBo* output, PimBo* input, PimBo* weight, PimBo* bias, PimActFunc act_func, void* stream,
+                   bool block)
+{
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
+    PIM_PROFILE_TICK(ExecuteGemm);
+    int ret = 0;
+
+    if (pim_runtime == nullptr) {
+        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+        return -1;
+    }
+
+    ret = pim_runtime->execute_gemm(output, input, weight, bias, act_func, stream, block);
+    PIM_PROFILE_TOCK(ExecuteGemm);
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
