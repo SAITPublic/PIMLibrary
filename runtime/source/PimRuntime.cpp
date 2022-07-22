@@ -433,7 +433,7 @@ PimBo* PimRuntime::get_preloaded_pim_gemm_weight(PimBo* dev_wei)
 
         host_reordered_weight = PimCreateBo(bshape->n, bshape->c, bshape->h, bshape->w, PIM_FP16, MEM_TYPE_HOST);
         pre_wei = PimCreateBo(bshape->n, bshape->c, bshape->h, bshape->w, PIM_FP16, MEM_TYPE_PIM);
-        pim_manager_->convert_data_layout(host_reordered_weight, host_weight, OP_GEMV);
+        pim_manager_->convert_data_layout(host_reordered_weight, host_weight, OP_GEMM);
         PimCopyMemory(pre_wei, host_reordered_weight, HOST_TO_PIM);
         insert_preloaded_pim_weight(dev_wei, pre_wei);
         PimDestroyBo(host_reordered_weight);

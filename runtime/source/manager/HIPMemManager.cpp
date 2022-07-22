@@ -299,17 +299,6 @@ int HIPMemManager::copy_memory_3d(const PimCopy3D* copy_params)
     return ret;
 }
 
-int HIPMemManager::convert_data_layout(void* dst, void* src, size_t size, PimOpType op_type)
-{
-    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
-    int ret = 0;
-
-    DLOG(ERROR) << "not yet implemented";
-
-    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
-    return ret;
-}
-
 int HIPMemManager::convert_data_layout(PimBo* dst, PimBo* src, PimOpType op_type)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
@@ -325,9 +314,11 @@ int HIPMemManager::convert_data_layout(PimBo* dst, PimBo* src, PimOpType op_type
 
     if (op_type == OP_GEMV) {
         if (is_chwise == true)
-            ret = convert_data_layout_for_gemv_weight(dst, src, ch_per_op);
+            ret = convert_data_layout_for_gemv_weight(dst, src, 0, ch_per_op);
         else
-            ret = convert_data_layout_for_gemv_weight(dst, src);
+            ret = convert_data_layout_for_gemv_weight(dst, src, 0);
+    } else if (op_type == OP_GEMM) {
+        ret = convert_data_layout_for_gemm_weight(dst, src);
     } else {
         DLOG(ERROR) << "not yet implemented";
     }
@@ -336,7 +327,28 @@ int HIPMemManager::convert_data_layout(PimBo* dst, PimBo* src, PimOpType op_type
     return ret;
 }
 
-int HIPMemManager::convert_data_layout_for_gemv_weight(PimBo* dst, PimBo* src)
+int HIPMemManager::convert_data_layout_for_gemm_weight(PimBo* dst, PimBo* src)
+{
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
+    int ret = 0;
+    int data_offset = 0;
+
+    for (int ni = 0; ni < src->bshape.n; ni++) {
+        for (int ci = 0; ci < src->bshape.c; ci++) {
+            ret = convert_data_layout_for_gemv_weight(dst, src, data_offset);
+            if (ret != 0) {
+                printf("fail to convert data layout for gemm\n");
+                return ret;
+            }
+            data_offset += (src->bshape.h * src->bshape.w * sizeof(half));
+        }
+    }
+
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+    return ret;
+}
+
+int HIPMemManager::convert_data_layout_for_gemv_weight(PimBo* dst, PimBo* src, int data_offset)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
@@ -352,9 +364,9 @@ int HIPMemManager::convert_data_layout_for_gemv_weight(PimBo* dst, PimBo* src)
 
     int in_tile_size = num_grf_A;
     int out_tile_size = num_grf_B * num_pim_blocks * num_pim_chan * num_pim_rank;
-    char* dst_data = (char*)dst->data;
-    char* src_data = (char*)src->data;
-    char* src_temp;
+    char* dst_data = (char*)dst->data + data_offset;
+    char* src_data = (char*)src->data + data_offset;
+    char* src_temp = nullptr;
 
     int cidx = 0;
     int rank = 0;
@@ -362,7 +374,7 @@ int HIPMemManager::convert_data_layout_for_gemv_weight(PimBo* dst, PimBo* src)
     int bank = 0;
     uint32_t col = 0;
     uint32_t row = 0;
-    uint64_t addr;
+    uint64_t addr = 0;
     uint32_t even_s_row = 0;  // starting_row;
     uint32_t even_s_col = 0;  // starting_col;
     uint32_t odd_s_row = 0;   // starting_row;
@@ -371,9 +383,10 @@ int HIPMemManager::convert_data_layout_for_gemv_weight(PimBo* dst, PimBo* src)
     int type_size = (src->precision == PIM_FP16) ? 2 : 1;
     int out_cnt = src->bshape.w;
     int in_cnt = src->bshape.h * type_size / trans_size;
+    int src_size = src->size;
 
     if (src->bshape.w != src->bshape_r.w || src->bshape.h != src->bshape_r.h) {
-        src_temp = (char*)calloc(src->size / sizeof(half), sizeof(half));
+        src_temp = (char*)calloc(src_size, sizeof(half));
         for (int i = 0; i < src->bshape_r.w; i++) {
             if (hipMemcpy((half*)src_temp + i * src->bshape.h, (half*)src_data + i * src->bshape_r.h,
                           src->bshape_r.h * sizeof(half), hipMemcpyDeviceToHost) != hipSuccess) {
@@ -381,7 +394,7 @@ int HIPMemManager::convert_data_layout_for_gemv_weight(PimBo* dst, PimBo* src)
                 return -1;
             }
         }
-        if (hipMemcpy(src_data, src_temp, src->size, hipMemcpyHostToDevice) != hipSuccess) {
+        if (hipMemcpy(src_data, src_temp, src_size, hipMemcpyHostToDevice) != hipSuccess) {
             DLOG(INFO) << "[END] " << __FUNCTION__ << " Failed to copy";
             return -1;
         }
@@ -488,7 +501,7 @@ int HIPMemManager::convert_data_layout_for_gemv_weight(PimBo* dst, PimBo* src)
     return ret;
 }
 
-int HIPMemManager::convert_data_layout_for_gemv_weight(PimBo* dst, PimBo* src, int ch_per_op)
+int HIPMemManager::convert_data_layout_for_gemv_weight(PimBo* dst, PimBo* src, int data_offset, int ch_per_op)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
@@ -502,8 +515,8 @@ int HIPMemManager::convert_data_layout_for_gemv_weight(PimBo* dst, PimBo* src, i
     int num_bank_groups = fbi_.num_bank_groups;
     int trans_size = fbi_.trans_size;
 
-    char* dst_data = (char*)dst->data;
-    char* src_data = (char*)src->data;
+    char* dst_data = (char*)dst->data + data_offset;
+    char* src_data = (char*)src->data + data_offset;
     char* src_temp;
 
     int cidx = 0;

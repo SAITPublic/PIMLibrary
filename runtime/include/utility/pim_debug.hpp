@@ -66,6 +66,44 @@ inline void matmulCPU(half_float::half* input, half_float::half* weight, half_fl
     }
 }
 
+#if 0 /* need to verify */
+inline void gemmCPU(PimBo* output, PimBo* input, PimBo* weight, PimBo* bias, PimActFunc act)
+{
+    int n = input->bshape.n;
+    int c = input->bshape.c;
+    int inout_h = input->bshape.h;
+    int in_w = input->bshape.w;
+    int out_w = output->bshape.w;
+    float temp = 0;
+    half_float::half* in_data = (half_float::half*)input->data;
+    half_float::half* wei_data = (half_float::half*)weight->data;
+    half_float::half* out_data = (half_float::half*)output->data;
+    half_float::half* bias_data = nullptr;
+
+    if (bias != nullptr) bias_data = (half_float::half*)bias->data;
+
+    for (int ni = 0; ni < n; ni++) {
+        for (int ci = 0; ci < c; ci++) {
+            for (int hi = 0; hi < inout_h; hi++) {
+                for (int oi = 0; oi < out_w; oi++) {
+                    temp = 0;
+                    for (int wi = 0; wi < in_w; wi++) {
+                        temp += in_data[wi] * wei_data[wi * out_w + oi];
+                    }
+                    if (bias != nullptr) temp += bias_data[oi];
+                    if (act == ACT_RELU && temp < 0) temp = 0;
+                    out_data[oi] = temp;
+                }
+                in_data += in_w;
+                out_data += out_w;
+                if (bias != nullptr) bias_data += out_w;
+            }
+            wei_data += (in_w * out_w);
+        }
+    }
+}
+#endif
+
 inline void addBiasCPU(half_float::half* output, half_float::half* bias, int size)
 {
     for (int i = 0; i < size; i++) {

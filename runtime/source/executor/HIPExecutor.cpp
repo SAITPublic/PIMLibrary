@@ -249,9 +249,7 @@ int HIPExecutor::execute_gemm(PimBo* output, PimBo* input, PimBo* weight, PimBo*
                               void* stream, bool block)
 {
     int ret = 0;
-
     ret = execute_gemm_tile_accum(output, input, weight, bias, act_func, stream, block);
-
     return ret;
 }
 
@@ -980,7 +978,7 @@ int HIPExecutor::execute_gemm_tile_accum(PimBo* output, PimBo* input, PimBo* wei
     int n_in_tile = input->bshape.w * sizeof(uint16_t) / fbi_.trans_size / fbi_.num_grf_A;
     int n_out_tile = output->bshape.w / (fbi_.num_pim_chan * fbi_.num_pim_blocks * fbi_.num_grf_B);
 
-    int is_bias = (bias->size != 0) ? 1 : 0;
+    int is_bias = (bias != nullptr) ? 1 : 0;
     int is_relu = (act_func == ACT_RELU) ? 1 : 0;
 
     PIM_PROFILE_TICK(CreateCRFBin);
@@ -994,15 +992,15 @@ int HIPExecutor::execute_gemm_tile_accum(PimBo* output, PimBo* input, PimBo* wei
     PIM_PROFILE_TICK(RunGemvKernel);
     int device_id;
     hipGetDevice(&device_id);
-    hipLaunchKernelGGL(pim_gemm_bias_relu_fp16, dim3(blocks), dim3(threads_per_block), 0, (hipStream_t)stream,
-                       (uint8_t*)(g_pim_base_addr[device_id]), (uint8_t*)input->data, (uint8_t*)weight->data,
-                       (uint8_t*)bias->data, (uint8_t*)output->data, (uint8_t*)pim_gemv_tmp_buffer_, input->bshape.n,
-                       input->bshape.c, input->bshape.h, output->bshape.w, n_in_tile, n_out_tile, is_bias, is_relu,
+    hipLaunchKernelGGL(
+        pim_gemm_bias_relu_fp16, dim3(blocks), dim3(threads_per_block), 0, (hipStream_t)stream,
+        (uint8_t*)(g_pim_base_addr[device_id]), (uint8_t*)input->data, (uint8_t*)weight->data, (uint8_t*)bias->data,
+        (uint8_t*)output->data, (uint8_t*)pim_gemv_tmp_buffer_, input->bshape.n, input->bshape.c, input->bshape.h,
+        input->bshape.w, output->bshape.w, n_in_tile, n_out_tile, is_bias, is_relu,
 #ifdef EMULATOR
-                       (PimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_,
-                       (PimMemTracer*)d_emulator_trace_,
+        (PimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_, (PimMemTracer*)d_emulator_trace_,
 #endif
-                       (uint8_t*)crf_bin, crf_size);
+        (uint8_t*)crf_bin, crf_size);
 #ifndef EMULATOR
     if (block) hipStreamSynchronize((hipStream_t)stream);
     PIM_PROFILE_TOCK(RunGemvKernel);

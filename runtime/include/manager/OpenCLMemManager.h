@@ -39,6 +39,7 @@ class OpenCLMemManager : public PimMemoryManager
     int copy_memory(PimBo* dst, PimBo* src, PimMemCpyType cpy_type);
     int copy_memory_3d(const PimCopy3D* copy_params);
     int get_physical_id();
+    int convert_data_layout(PimBo* dst, PimBo* src, PimOpType op_type) { return -1; };
     cl_context get_cl_context();
     cl_command_queue get_cl_queue();
     cl_device_id* get_cl_device();

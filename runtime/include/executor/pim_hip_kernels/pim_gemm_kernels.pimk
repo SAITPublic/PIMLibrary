@@ -15,7 +15,7 @@
 #define PARK_IN 1
 #define CHANGE_SB_HAB 1
 #define PROGRAM_CRF 1
-#define COMPUTE_GEMV 1
+#define COMPUTE_GEMM 1
 #define CHANGE_HAB_SB 1
 #define PARK_OUT 1
 #ifndef EMULATOR
@@ -26,7 +26,8 @@ __global__ void pim_gemm_bias_relu_fp16(volatile uint8_t* __restrict__ pim_ctr, 
                                         volatile uint8_t* __restrict__ weight, volatile uint8_t* __restrict__ bias,
                                         volatile uint8_t* __restrict__ output,
                                         volatile uint8_t* __restrict__ pim_partial_sum, int batch, int channel,
-                                        int inout_h, int out_w, int n_in_tile, int n_out_tile, int is_bias, int is_relu,
+                                        int inout_h, int in_w, int out_w, int n_in_tile, int n_out_tile, int is_bias,
+                                        int is_relu,
 #ifdef EMULATOR
                                         PimMemTraceData* fmtd16, int* frd_size, int mt_width,
                                         PimMemTracer* emulator_trace,
@@ -54,6 +55,7 @@ __global__ void pim_gemm_bias_relu_fp16(volatile uint8_t* __restrict__ pim_ctr, 
     int gidx = hipThreadIdx_x >> 1;
     uint64_t offset = w_idx << 4;
     uint64_t addr;
+    int gemv_cnt = 0;
 #endif
 
 #if PARK_IN
@@ -91,108 +93,112 @@ __global__ void pim_gemm_bias_relu_fp16(volatile uint8_t* __restrict__ pim_ctr, 
     }
 #endif
 
-#if COMPUTE_GEMV
+#if COMPUTE_GEMM
     if (hipThreadIdx_x < 16) {
-        /* change HAB mode to HAB_PIM mode */
-        for (int in_idx = 0; in_idx < inout_h; in_idx++) {
-            for (int o_idx = 0; o_idx < n_out_tile; o_idx++) {
-                addr = addr_gen(ch, 0, 0, 0, 0x3fff, 0x0);
-                W_CMD_R(&pim_ctr[addr + offset], gemv_hab_to_hab_pim + offset);
-                R_CMD(&pim_ctr[addr + offset]);
-                B_CMD(1);
-
-                uint64_t i_offset = in_idx * (n_in_tile << grf_shift);
-                int r_offset = (o_idx * n_in_tile) >> 1;
-
-                for (int i_idx = 0; i_idx < n_in_tile; i_idx += 2) {
-                    /* write grf_A from WRIO */
-                    uint64_t i_addr = (i_offset + ((i_idx << grf_shift) + gidx)) << trans_shift;
-                    addr = addr_gen(ch, 0, 0, 0, 0x3fff, 0x8 + gidx);
-                    W_CMD_R(&pim_ctr[addr + offset], &input[i_addr + offset]);
+        for (int c_idx = 0; c_idx < channel; c_idx++) {
+            /* change HAB mode to HAB_PIM mode */
+            for (int in_idx = 0; in_idx < inout_h; in_idx++) {
+                for (int o_idx = 0; o_idx < n_out_tile; o_idx++) {
+                    addr = addr_gen(ch, 0, 0, 0, 0x3fff, 0x0);
+                    W_CMD_R(&pim_ctr[addr + offset], gemv_hab_to_hab_pim + offset);
                     R_CMD(&pim_ctr[addr + offset]);
                     B_CMD(1);
 
-                    even_row = ((i_idx >> 1) + r_offset) << 1;
-                    odd_row = even_row + 1;
+                    uint64_t i_offset = gemv_cnt * (n_in_tile << grf_shift);
+                    int r_offset = (o_idx * n_in_tile) >> 1;
 
-                    addr = addr_gen(ch, 0, 0, 0, even_row, gidx);
-                    R_CMD(&weight[addr + offset]);
+                    for (int i_idx = 0; i_idx < n_in_tile; i_idx += 2) {
+                        /* write grf_A from WRIO */
+                        uint64_t i_addr = (i_offset + ((i_idx << grf_shift) + gidx)) << trans_shift;
+                        addr = addr_gen(ch, 0, 0, 0, 0x3fff, 0x8 + gidx);
+                        W_CMD_R(&pim_ctr[addr + offset], &input[i_addr + offset]);
+                        R_CMD(&pim_ctr[addr + offset]);
+                        B_CMD(1);
 
-                    addr = addr_gen(ch, 0, 0, 0, even_row, gidx + 8);
-                    R_CMD(&weight[addr + offset]);
+                        even_row = ((i_idx >> 1) + r_offset) << 1;
+                        odd_row = even_row + 1;
 
-                    addr = addr_gen(ch, 0, 0, 0, even_row, gidx + 16);
-                    R_CMD(&weight[addr + offset]);
+                        addr = addr_gen(ch, 0, 0, 0, even_row, gidx);
+                        R_CMD(&weight[addr + offset]);
 
-                    addr = addr_gen(ch, 0, 0, 0, even_row, gidx + 24);
-                    R_CMD(&weight[addr + offset]);
+                        addr = addr_gen(ch, 0, 0, 0, even_row, gidx + 8);
+                        R_CMD(&weight[addr + offset]);
 
-                    addr = addr_gen(ch, 0, 0, 0, odd_row, gidx);
-                    R_CMD(&weight[addr + offset]);
+                        addr = addr_gen(ch, 0, 0, 0, even_row, gidx + 16);
+                        R_CMD(&weight[addr + offset]);
 
-                    addr = addr_gen(ch, 0, 0, 0, odd_row, gidx + 8);
-                    R_CMD(&weight[addr + offset]);
+                        addr = addr_gen(ch, 0, 0, 0, even_row, gidx + 24);
+                        R_CMD(&weight[addr + offset]);
 
-                    addr = addr_gen(ch, 0, 0, 0, odd_row, gidx + 16);
-                    R_CMD(&weight[addr + offset]);
+                        addr = addr_gen(ch, 0, 0, 0, odd_row, gidx);
+                        R_CMD(&weight[addr + offset]);
 
-                    addr = addr_gen(ch, 0, 0, 0, odd_row, gidx + 24);
-                    R_CMD(&weight[addr + offset]);
+                        addr = addr_gen(ch, 0, 0, 0, odd_row, gidx + 8);
+                        R_CMD(&weight[addr + offset]);
+
+                        addr = addr_gen(ch, 0, 0, 0, odd_row, gidx + 16);
+                        R_CMD(&weight[addr + offset]);
+
+                        addr = addr_gen(ch, 0, 0, 0, odd_row, gidx + 24);
+                        R_CMD(&weight[addr + offset]);
+                        B_CMD(1);
+                    }
+
+                    for (int i_idx = 1; i_idx < n_in_tile; i_idx += 2) {
+                        uint64_t i_addr = (i_offset + ((i_idx << grf_shift) + gidx)) << trans_shift;
+                        addr = addr_gen(ch, 0, 0, 1, 0x3fff, 0x8 + gidx);
+                        W_CMD_R(&pim_ctr[addr + offset], &input[i_addr + offset]);
+                        R_CMD(&pim_ctr[addr + offset]);
+                        B_CMD(1);
+
+                        even_row = ((i_idx >> 1) + r_offset) << 1;
+                        odd_row = even_row + 1;
+
+                        addr = addr_gen(ch, 0, 0, 1, even_row, gidx);
+                        R_CMD(&weight[addr + offset]);
+
+                        addr = addr_gen(ch, 0, 0, 1, even_row, gidx + 8);
+                        R_CMD(&weight[addr + offset]);
+
+                        addr = addr_gen(ch, 0, 0, 1, even_row, gidx + 16);
+                        R_CMD(&weight[addr + offset]);
+
+                        addr = addr_gen(ch, 0, 0, 1, even_row, gidx + 24);
+                        R_CMD(&weight[addr + offset]);
+
+                        addr = addr_gen(ch, 0, 0, 1, odd_row, gidx);
+                        R_CMD(&weight[addr + offset]);
+
+                        addr = addr_gen(ch, 0, 0, 1, odd_row, gidx + 8);
+                        R_CMD(&weight[addr + offset]);
+
+                        addr = addr_gen(ch, 0, 0, 1, odd_row, gidx + 16);
+                        R_CMD(&weight[addr + offset]);
+
+                        addr = addr_gen(ch, 0, 0, 1, odd_row, gidx + 24);
+                        R_CMD(&weight[addr + offset]);
+                        B_CMD(1);
+                    }
+                    loc = (gemv_cnt * n_out_tile << grf_shift) + (o_idx << grf_shift) + gidx;
+                    row = loc >> col_shift;
+                    col = loc % num_col;
+
+                    // pipeline delay
+                    // FIX : If alu is in operation, NOP should be added.
+                    addr = addr_gen(ch, 0, 0, 1, row, col);
+                    W_CMD(&pim_partial_sum[addr + offset]);
+                    W_CMD(&pim_partial_sum[addr + offset]);
+                    R_CMD(&pim_partial_sum[addr + offset]);
                     B_CMD(1);
-                }
 
-                for (int i_idx = 1; i_idx < n_in_tile; i_idx += 2) {
-                    uint64_t i_addr = (i_offset + ((i_idx << grf_shift) + gidx)) << trans_shift;
-                    addr = addr_gen(ch, 0, 0, 1, 0x3fff, 0x8 + gidx);
-                    W_CMD_R(&pim_ctr[addr + offset], &input[i_addr + offset]);
+                    addr = addr_gen(ch, 0, 0, 0, 0x3fff, 0x0);
+                    W_CMD_R(&pim_ctr[addr + offset], gemv_hab_pim_to_hab + offset);
                     R_CMD(&pim_ctr[addr + offset]);
                     B_CMD(1);
-
-                    even_row = ((i_idx >> 1) + r_offset) << 1;
-                    odd_row = even_row + 1;
-
-                    addr = addr_gen(ch, 0, 0, 1, even_row, gidx);
-                    R_CMD(&weight[addr + offset]);
-
-                    addr = addr_gen(ch, 0, 0, 1, even_row, gidx + 8);
-                    R_CMD(&weight[addr + offset]);
-
-                    addr = addr_gen(ch, 0, 0, 1, even_row, gidx + 16);
-                    R_CMD(&weight[addr + offset]);
-
-                    addr = addr_gen(ch, 0, 0, 1, even_row, gidx + 24);
-                    R_CMD(&weight[addr + offset]);
-
-                    addr = addr_gen(ch, 0, 0, 1, odd_row, gidx);
-                    R_CMD(&weight[addr + offset]);
-
-                    addr = addr_gen(ch, 0, 0, 1, odd_row, gidx + 8);
-                    R_CMD(&weight[addr + offset]);
-
-                    addr = addr_gen(ch, 0, 0, 1, odd_row, gidx + 16);
-                    R_CMD(&weight[addr + offset]);
-
-                    addr = addr_gen(ch, 0, 0, 1, odd_row, gidx + 24);
-                    R_CMD(&weight[addr + offset]);
-                    B_CMD(1);
                 }
-                loc = (in_idx * n_out_tile << grf_shift) + (o_idx << grf_shift) + gidx;
-                row = loc >> col_shift;
-                col = loc % num_col;
-
-                // pipeline delay
-                // FIX : If alu is in operation, NOP should be added.
-                addr = addr_gen(ch, 0, 0, 1, row, col);
-                W_CMD(&pim_partial_sum[addr + offset]);
-                W_CMD(&pim_partial_sum[addr + offset]);
-                R_CMD(&pim_partial_sum[addr + offset]);
-                B_CMD(1);
-
-                addr = addr_gen(ch, 0, 0, 0, 0x3fff, 0x0);
-                W_CMD_R(&pim_ctr[addr + offset], gemv_hab_pim_to_hab + offset);
-                R_CMD(&pim_ctr[addr + offset]);
-                B_CMD(1);
+                gemv_cnt++;
             }
+            weight += (in_w * out_w * 2);
         }
     }
 #endif
@@ -230,26 +236,31 @@ __global__ void pim_gemm_bias_relu_fp16(volatile uint8_t* __restrict__ pim_ctr, 
     int li;
     half t_output;
 
-    for (int in_idx = 0; in_idx < inout_h; in_idx++) {
-        for (int oi = 0; oi < n_out_tile; oi++) {
-            /* int out_per_tile = 4096; */
-            /* out_idx = oi * out_per_tile + t_idx; */
-            out_idx = (oi << 12) + t_idx;
-            if (out_idx < out_w) {
-                li = in_idx * n_out_tile + oi;
-                row = li >> 2;
-                col = hipThreadIdx_x % 8 + ((li % 4) << 3);
-                addr = addr_gen(ch, 0, bg, ba, row, col);
-                t_output = 0;
-                for (int ti = 0; ti < 16; ti++) {
-                    t_output += ((half*)pim_partial_sum)[(addr >> 1) + ti];
+    gemv_cnt = 0;
+
+    for (int c_idx = 0; c_idx < channel; c_idx++) {
+        for (int in_idx = 0; in_idx < inout_h; in_idx++) {
+            for (int oi = 0; oi < n_out_tile; oi++) {
+                /* int out_per_tile = 4096; */
+                /* out_idx = oi * out_per_tile + t_idx; */
+                out_idx = (oi << 12) + t_idx;
+                if (out_idx < out_w) {
+                    li = gemv_cnt * n_out_tile + oi;
+                    row = li >> 2;
+                    col = hipThreadIdx_x % 8 + ((li % 4) << 3);
+                    addr = addr_gen(ch, 0, bg, ba, row, col);
+                    t_output = 0;
+                    for (int ti = 0; ti < 16; ti++) {
+                        t_output += ((half*)pim_partial_sum)[(addr >> 1) + ti];
+                    }
+                    out_offset = gemv_cnt * out_w + out_idx;
+                    if (is_bias) t_output += ((half*)bias)[out_offset];
+                    if (is_relu)
+                        if (t_output < (half)0.) t_output = (half)0.;
+                    ((half*)output)[out_offset] = t_output;
                 }
-                out_offset = in_idx * out_w + out_idx;
-                if (is_bias) t_output += ((half*)bias)[out_offset];
-                if (is_relu)
-                    if (t_output < (half)0.) t_output = (half)0.;
-                ((half*)output)[out_offset] = t_output;
             }
+            gemv_cnt++;
         }
     }
 #endif

@@ -161,19 +161,6 @@ int PimManager::copy_memory_3d(const PimCopy3D* copy_params)
     return ret;
 }
 
-int PimManager::convert_data_layout(void* dst, void* src, size_t size, PimOpType op_type)
-{
-    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
-    int ret = 0;
-    if (rt_type_ == RT_TYPE_HIP) {
-        ret = pim_memory_manager_->convert_data_layout(dst, src, size, op_type);
-    } else {
-        DLOG(ERROR) << "not yet implemented";
-    }
-    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
-    return ret;
-}
-
 int PimManager::convert_data_layout(PimBo* dst, PimBo* src, PimOpType op_type)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
