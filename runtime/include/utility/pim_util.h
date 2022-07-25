@@ -18,6 +18,9 @@
 #include "pim_data_types.h"
 #include "utility/pim_log.h"
 
+#define DIM_OUT_PIM (3200)
+#define PIM_GEMV_OUT_ALIGN (4096)
+
 /* TODO: get VEGA20 scheme from device driver */
 static PimBlockInfo vega20_fbi = {
     .pim_addr_map = AMDGPU_VEGA20,
@@ -60,4 +63,5 @@ void align_gemm_shape(PimGemmDesc* pim_gemm_desc);
 bool is_pim_available(PimBo* out, PimBo* op0, PimBo* op1, PimOpType op_type);
 bool is_pim_gemv_available(PimBo* bo);
 bool is_pim_gemv_list_available(PimBo* output, PimBo* vector, PimBo* matrix);
+bool check_chwise_gemm_bo(PimBo* bo);
 #endif /* _PIM_UTIL_H_ */

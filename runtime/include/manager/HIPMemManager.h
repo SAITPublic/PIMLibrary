@@ -42,6 +42,8 @@ class HIPMemManager : public PimMemoryManager
 
    private:
     int convert_data_layout_for_gemm_weight(PimBo* dst, PimBo* src);
+    int convert_data_layout_for_aligned_gemm_weight(PimBo* dst, PimBo* src);
+    int convert_data_layout_for_chwise_gemm_weight(PimBo* dst, PimBo* src);
     int convert_data_layout_for_gemv_weight(PimBo* dst, PimBo* src, int data_offset);
     int convert_data_layout_for_gemv_weight(PimBo* dst, PimBo* src, int data_offset, int ch_per_op);
     int num_gpu_devices_;

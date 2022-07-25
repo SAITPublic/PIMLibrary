@@ -64,8 +64,10 @@ class HIPExecutor : public PimExecutor
                                 bool block);
     int execute_gemv_tile_tree(PimBo* output, PimBo* operand0, PimBo* operand1, int is_gemv_add, void* stream,
                                bool block);
-    int execute_gemm_tile_accum(PimBo* output, PimBo* input, PimBo* weight, PimBo* bias, PimActFunc act_func,
-                                void* stream, bool block);
+    int execute_aligned_gemm_tile_accum(PimBo* output, PimBo* input, PimBo* weight, PimBo* bias, PimActFunc act_func,
+                                        void* stream, bool block);
+    int execute_chwise_gemm_tile_accum(PimBo* output, PimBo* input, PimBo* weight, PimBo* bias, PimActFunc act_func,
+                                       void* stream, bool block);
 };
 }  // namespace executor
 }  // namespace runtime

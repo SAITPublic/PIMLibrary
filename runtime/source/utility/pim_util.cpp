@@ -11,9 +11,6 @@
 #include "utility/pim_util.h"
 #include "half.hpp"
 
-#define DIM_OUT_PIM (3200)
-#define PIM_GEMV_OUT_ALIGN (4096)
-
 __host__ void get_pim_block_info(PimBlockInfo* fbi) { memcpy(fbi, &vega20_fbi, sizeof(PimBlockInfo)); }
 
 void set_pimbo_t(PimBo* dst, PimBo* src)
@@ -129,11 +126,18 @@ void set_pimbo(PimGemmDesc* pim_gemm_desc, PimMemType mem_type, PimMemFlag mem_f
 
 void align_gemm_shape(PimGemmDesc* pim_gemm_desc)
 {
+    int n = pim_gemm_desc->in_bshape_r.n;
+    int c = pim_gemm_desc->in_bshape_r.c;
     int in_w = pim_gemm_desc->in_bshape_r.w;
     int out_w = pim_gemm_desc->out_bshape_r.w;
-
     int aligned_in_w = 256 * ceil((float)in_w / 256);
-    int aligned_out_w = PIM_GEMV_OUT_ALIGN * ceil((float)out_w / PIM_GEMV_OUT_ALIGN);
+    int aligned_out_w = 0;
+    int out_align = n * c * out_w;
+
+    if (out_align % PIM_GEMV_OUT_ALIGN == 0)
+        aligned_out_w = out_w;
+    else
+        aligned_out_w = PIM_GEMV_OUT_ALIGN * ceil((float)out_w / PIM_GEMV_OUT_ALIGN);
 
     pim_gemm_desc->in_bshape = pim_gemm_desc->in_bshape_r;
     pim_gemm_desc->wei_bshape = pim_gemm_desc->wei_bshape_r;
@@ -197,6 +201,16 @@ void pad_data(void* input, int in_size, int in_nsize, int batch_size, PimMemFlag
             ((half*)input)[i] = half(0);
         }
     }
+}
+
+bool check_chwise_gemm_bo(PimBo* bo)
+{
+    bool ret = true;
+
+    if (bo->bshape.w >= PIM_GEMV_OUT_ALIGN) return false;
+    if ((bo->bshape.n * bo->bshape.c * bo->bshape.w) % PIM_GEMV_OUT_ALIGN != 0) return false;
+
+    return ret;
 }
 
 bool is_pim_available(PimBo* out, PimBo* op0, PimBo* op1, PimOpType op_type)
