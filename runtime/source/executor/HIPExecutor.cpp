@@ -1079,12 +1079,31 @@ int HIPExecutor::execute_chwise_gemm_tile_accum(PimBo* output, PimBo* input, Pim
     if (crf_bin == nullptr) {
         crf_bin = (uint8_t*)make_crf_bin(OP_GEMV, input->bshape.w * sizeof(uint16_t));
     }
+
+    void (*gemm_kernel)(volatile uint8_t * __restrict__, volatile uint8_t * __restrict__,
+                        volatile uint8_t * __restrict__, volatile uint8_t * __restrict__,
+                        volatile uint8_t * __restrict__, volatile uint8_t * __restrict__, int, int, int, int, int, int,
+                        int, int,
+#ifdef EMULATOR
+                        PimMemTraceData*, int*, int, PimMemTracer*,
+#endif
+                        uint8_t*, int);
+
+    switch (n_in_tile) {
+        case 32:
+            gemm_kernel = pim_chwise_gemm_bias_relu_32tile_fp16;
+            break;
+        default:
+            gemm_kernel = pim_chwise_gemm_bias_relu_fp16;
+            break;
+    }
+
     PIM_PROFILE_TOCK(PrepareGemmKernel);
 
     PIM_PROFILE_TICK(RunGemmKernel);
     int device_id;
     hipGetDevice(&device_id);
-    hipLaunchKernelGGL(pim_chwise_gemm_bias_relu_fp16, dim3(blocks), dim3(threads_per_block), 0, (hipStream_t)stream,
+    hipLaunchKernelGGL(gemm_kernel, dim3(blocks), dim3(threads_per_block), 0, (hipStream_t)stream,
                        (uint8_t*)(g_pim_base_addr[device_id]), (uint8_t*)input->data, (uint8_t*)weight->data,
                        (uint8_t*)bias->data, (uint8_t*)output->data, (uint8_t*)pim_gemv_tmp_buffer_, iter_cnt,
                        input->bshape.h, input->bshape.w, output->bshape.w, n_in_tile, n_out_tile, is_bias, is_relu,
