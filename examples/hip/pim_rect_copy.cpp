@@ -54,7 +54,7 @@ int pim_copy_rect_h2d()
     }
 
     /* __PIM_API__ call : Create PIM Buffer Object */
-    auto *device_mem = PimCreateBo(4, 4, 3, 1, PIM_FP16, MEM_TYPE_PIM);
+    auto *device_mem = PimCreateBo(1, 3, 4, 4, PIM_FP16, MEM_TYPE_PIM);
 
     // Initialize the device buffer with ones before performing rectangular copy.
     PimCopyMemory(device_mem->data, device_check, sizeof(device_check), HOST_TO_PIM);
@@ -116,7 +116,7 @@ int pim_copy_rect_d2h()
                      1.0_h,  1.0_h,  1.0_h, 1.0_h, 1.0_h,  1.0_h,  1.0_h, 1.0_h, 1.0_h,  1.0_h,  1.0_h, 1.0_h};
 
     /* __PIM_API__ call : Create PIM Buffer Object */
-    auto *device_mem = PimCreateBo(4, 4, 3, 1, PIM_FP16, MEM_TYPE_PIM);
+    auto *device_mem = PimCreateBo(1, 3, 4, 4, PIM_FP16, MEM_TYPE_PIM);
 
     // Initialize the device buffer with ones before performing rectangular copy.
     PimCopyMemory(device_mem->data, device, sizeof(device), HOST_TO_PIM);
