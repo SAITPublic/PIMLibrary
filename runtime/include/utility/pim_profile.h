@@ -24,15 +24,24 @@ double getTickFrequency(void);
     std::cout << #name                                                                                             \
               << " time (ms) : " << ((double(getTickCount() - __tick_##name) / (double)getTickFrequency())) * 1000 \
               << std::endl;
+#define PIM_PROFILE_TOCK_ITER(name, iter_cnt)                                                                  \
+    std::cout << #name << " time (ms) : "                                                                      \
+              << ((((double(getTickCount() - __tick_##name) / (double)getTickFrequency())) * 1000) / iter_cnt) \
+              << std::endl;
 #else
 #define PIM_PROFILE_TOCK(name) \
     DLOG(INFO) << #name        \
                << " time (ms) : " << ((double(getTickCount() - __tick_##name) / (double)getTickFrequency())) * 1000;
+#define PIM_PROFILE_TOCK_ITER(name, iter_cnt)                                                                   \
+    DLOG(INFO) << #name << " time (ms) : "                                                                      \
+               << ((((double(getTickCount() - __tick_##name) / (double)getTickFrequency())) * 1000) / iter_cnt) \
+               << std::endl;
 #endif
 #else /* !PROFILE */
 
 #define PIM_PROFILE_TICK(name)
 #define PIM_PROFILE_TOCK(name)
+#define PIM_PROFILE_TOCK_ITER(name, iter_cnt)
 #endif /* PROFILE */
 
 /* Always Profile in Console */
@@ -41,5 +50,8 @@ double getTickFrequency(void);
     std::cout << #name                                                                                             \
               << " time (ms) : " << ((double(getTickCount() - __tick_##name) / (double)getTickFrequency())) * 1000 \
               << std::endl;
-
+#define PIM_PROFILE_TOCK_ITER_A(name, iter_cnt)                                                                \
+    std::cout << #name << " time (ms) : "                                                                      \
+              << ((((double(getTickCount() - __tick_##name) / (double)getTickFrequency())) * 1000) / iter_cnt) \
+              << std::endl;
 #endif /* _PIM_PROFILE_H_ */

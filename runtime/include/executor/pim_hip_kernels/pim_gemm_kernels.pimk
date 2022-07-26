@@ -250,7 +250,7 @@ __global__ void pim_chwise_gemm_bias_relu_fp16(
                 if (t_output < (half)0.) t_output = (half)0.;
             ((half*)output)[out_offset] = t_output;
 
-            output += 8192; /* out_align_size(4096) * type_size(2) */
+            output += 8192;            /* out_align_size(4096) * type_size(2) */
             pim_partial_sum += 131072; /* out_align_size(4096) * partial_sum_cnt(16) * type_size(2) */
         }
     }
