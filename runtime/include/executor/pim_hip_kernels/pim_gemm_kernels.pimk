@@ -55,7 +55,7 @@ __global__ void pim_chwise_gemm_bias_relu_fp16(
     uint64_t addr;
     int gemv_cnt = 0;
     int chs_per_op = 64 / (4096 / out_w);
-    input += ((hipBlockIdx_x / chs_per_op) * in_w * 2);
+    input += ((hipBlockIdx_x / chs_per_op) * in_w << 1);
 #endif
 
 #if PARK_IN
@@ -196,9 +196,9 @@ __global__ void pim_chwise_gemm_bias_relu_fp16(
                 B_CMD(1);
 
                 gemv_cnt++;
-                input += (in_w * 2);
+                input += (in_w << 1);
             }
-            weight += (in_w * 4096 * 2);
+            weight += (in_w << 13);
         }
     }
 #endif
@@ -249,6 +249,9 @@ __global__ void pim_chwise_gemm_bias_relu_fp16(
             if (is_relu)
                 if (t_output < (half)0.) t_output = (half)0.;
             ((half*)output)[out_offset] = t_output;
+
+            output += 8192; /* out_align_size(4096) * type_size(2) */
+            pim_partial_sum += 131072; /* out_align_size(4096) * partial_sum_cnt(16) * type_size(2) */
         }
     }
 #endif
@@ -428,7 +431,7 @@ __global__ void pim_aligned_gemm_bias_relu_fp16(
                 }
                 gemv_cnt++;
             }
-            weight += (in_w * out_w * 2);
+            weight += (in_w * out_w << 1);
         }
     }
 #endif
