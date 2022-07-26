@@ -974,6 +974,7 @@ int HIPExecutor::execute_custom_gemv_add(PimBo* output, PimBo* operand0, PimBo* 
 int HIPExecutor::execute_aligned_gemm_tile_accum(PimBo* output, PimBo* input, PimBo* weight, PimBo* bias,
                                                  PimActFunc act_func, void* stream, bool block)
 {
+    PIM_PROFILE_TICK(PrepareGemmKernel);
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
 
@@ -983,22 +984,38 @@ int HIPExecutor::execute_aligned_gemm_tile_accum(PimBo* output, PimBo* input, Pi
     int n_in_tile = input->bshape.w * sizeof(uint16_t) / fbi_.trans_size / fbi_.num_grf_A;
     int n_out_tile = output->bshape.w / (fbi_.num_pim_chan * fbi_.num_pim_blocks * fbi_.num_grf_B);
     int iter_cnt = weight->bshape.n * weight->bshape.c * weight->bshape.w / PIM_GEMV_OUT_ALIGN;
-
     int is_bias = (bias != nullptr) ? 1 : 0;
     int is_relu = (act_func == ACT_RELU) ? 1 : 0;
 
-    PIM_PROFILE_TICK(CreateCRFBin);
     uint8_t* crf_bin = find_crf(OP_GEMV, input->bshape.w * sizeof(uint16_t));
     int crf_size = 32;
     if (crf_bin == nullptr) {
         crf_bin = (uint8_t*)make_crf_bin(OP_GEMV, input->bshape.w * sizeof(uint16_t));
     }
-    PIM_PROFILE_TOCK(CreateCRFBin);
-
-    PIM_PROFILE_TICK(RunGemvKernel);
     int device_id;
     hipGetDevice(&device_id);
-    hipLaunchKernelGGL(pim_aligned_gemm_bias_relu_fp16, dim3(blocks), dim3(threads_per_block), 0, (hipStream_t)stream,
+
+    void (*gemm_kernel)(volatile uint8_t * __restrict__, volatile uint8_t * __restrict__,
+                        volatile uint8_t * __restrict__, volatile uint8_t * __restrict__,
+                        volatile uint8_t * __restrict__, volatile uint8_t * __restrict__, int, int, int, int, int, int,
+                        int, int,
+#ifdef EMULATOR
+                        PimMemTraceData*, int*, int, PimMemTracer*,
+#endif
+                        uint8_t*, int);
+
+    switch (n_in_tile) {
+        case 8:
+            gemm_kernel = pim_aligned_gemm_bias_relu_8tile_fp16;
+            break;
+        default:
+            gemm_kernel = pim_aligned_gemm_bias_relu_fp16;
+            break;
+    }
+    PIM_PROFILE_TOCK(PrepareGemmKernel);
+
+    PIM_PROFILE_TICK(RunGemmKernel);
+    hipLaunchKernelGGL(gemm_kernel, dim3(blocks), dim3(threads_per_block), 0, (hipStream_t)stream,
                        (uint8_t*)(g_pim_base_addr[device_id]), (uint8_t*)input->data, (uint8_t*)weight->data,
                        (uint8_t*)bias->data, (uint8_t*)output->data, (uint8_t*)pim_gemv_tmp_buffer_, iter_cnt,
                        input->bshape.h, input->bshape.w, output->bshape.w, n_in_tile, n_out_tile, is_bias, is_relu,
@@ -1009,14 +1026,14 @@ int HIPExecutor::execute_aligned_gemm_tile_accum(PimBo* output, PimBo* input, Pi
                        (uint8_t*)crf_bin, crf_size);
 #ifndef EMULATOR
     if (block) hipStreamSynchronize((hipStream_t)stream);
-    PIM_PROFILE_TOCK(RunGemvKernel);
+    PIM_PROFILE_TOCK(RunGemmKernel);
 #endif
 
 #ifdef EMULATOR
     hipStreamSynchronize((hipStream_t)stream);
-    PIM_PROFILE_TOCK(RunGemvKernel);
+    PIM_PROFILE_TOCK(RunGemmKernel);
 
-    PIM_PROFILE_TICK(RunGemvEmulation);
+    PIM_PROFILE_TICK(RunGemmEmulation);
     hipMemcpy((void*)h_fmtd16_size_, (void*)d_fmtd16_size_, sizeof(int), hipMemcpyDeviceToHost);
     hipMemcpy((void*)h_fmtd16_, (void*)d_fmtd16_, sizeof(PimMemTraceData) * max_fmtd_size_, hipMemcpyDeviceToHost);
 
@@ -1034,7 +1051,7 @@ int HIPExecutor::execute_aligned_gemm_tile_accum(PimBo* output, PimBo* input, Pi
         pim_emulator_->execute_gemv_tile_accum(output, weight, h_fmtd32_, h_fmtd32_size_[0], OP_GEMV,
                                                g_pim_base_addr[device_id], pim_gemv_tmp_buffer_);
 
-    PIM_PROFILE_TOCK(RunGemvEmulation);
+    PIM_PROFILE_TOCK(RunGemmEmulation);
 #endif
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
@@ -1043,6 +1060,7 @@ int HIPExecutor::execute_aligned_gemm_tile_accum(PimBo* output, PimBo* input, Pi
 int HIPExecutor::execute_chwise_gemm_tile_accum(PimBo* output, PimBo* input, PimBo* weight, PimBo* bias,
                                                 PimActFunc act_func, void* stream, bool block)
 {
+    PIM_PROFILE_TICK(PrepareGemmKernel);
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
 
@@ -1056,15 +1074,14 @@ int HIPExecutor::execute_chwise_gemm_tile_accum(PimBo* output, PimBo* input, Pim
     int is_bias = (bias != nullptr) ? 1 : 0;
     int is_relu = (act_func == ACT_RELU) ? 1 : 0;
 
-    PIM_PROFILE_TICK(CreateCRFBin);
     uint8_t* crf_bin = find_crf(OP_GEMV, input->bshape.w * sizeof(uint16_t));
     int crf_size = 32;
     if (crf_bin == nullptr) {
         crf_bin = (uint8_t*)make_crf_bin(OP_GEMV, input->bshape.w * sizeof(uint16_t));
     }
-    PIM_PROFILE_TOCK(CreateCRFBin);
+    PIM_PROFILE_TOCK(PrepareGemmKernel);
 
-    PIM_PROFILE_TICK(RunGemvKernel);
+    PIM_PROFILE_TICK(RunGemmKernel);
     int device_id;
     hipGetDevice(&device_id);
     hipLaunchKernelGGL(pim_chwise_gemm_bias_relu_fp16, dim3(blocks), dim3(threads_per_block), 0, (hipStream_t)stream,
@@ -1078,14 +1095,14 @@ int HIPExecutor::execute_chwise_gemm_tile_accum(PimBo* output, PimBo* input, Pim
                        (uint8_t*)crf_bin, crf_size);
 #ifndef EMULATOR
     if (block) hipStreamSynchronize((hipStream_t)stream);
-    PIM_PROFILE_TOCK(RunGemvKernel);
+    PIM_PROFILE_TOCK(RunGemmKernel);
 #endif
 
 #ifdef EMULATOR
     hipStreamSynchronize((hipStream_t)stream);
-    PIM_PROFILE_TOCK(RunGemvKernel);
+    PIM_PROFILE_TOCK(RunGemmKernel);
 
-    PIM_PROFILE_TICK(RunGemvEmulation);
+    PIM_PROFILE_TICK(RunGemmEmulation);
     hipMemcpy((void*)h_fmtd16_size_, (void*)d_fmtd16_size_, sizeof(int), hipMemcpyDeviceToHost);
     hipMemcpy((void*)h_fmtd16_, (void*)d_fmtd16_, sizeof(PimMemTraceData) * max_fmtd_size_, hipMemcpyDeviceToHost);
 
@@ -1103,7 +1120,7 @@ int HIPExecutor::execute_chwise_gemm_tile_accum(PimBo* output, PimBo* input, Pim
         pim_emulator_->execute_gemv_tile_accum(output, weight, h_fmtd32_, h_fmtd32_size_[0], OP_GEMV,
                                                g_pim_base_addr[device_id], pim_gemv_tmp_buffer_);
 
-    PIM_PROFILE_TOCK(RunGemvEmulation);
+    PIM_PROFILE_TOCK(RunGemmEmulation);
 #endif
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
