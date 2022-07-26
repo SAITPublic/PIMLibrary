@@ -693,7 +693,7 @@ int pim_gemm_profile(int n, int c, int inout_h, int in_w, int out_w)
     ret = PimExecuteGemm(device_output, device_input, device_weight, device_bias, act, nullptr, true);
 
     /* start profile */
-    printf("\tworkload:(%dx%dx%dx%d)*(%dx%dx%dx%d) --> ", n, c, inout_h, in_w, n, c, inout_h, out_w);
+    printf("\tworkload:(%dx%dx%dx%d)*(%dx%dx%dx%d) --> ", n, c, inout_h, in_w, n, c, in_w, out_w);
     PIM_PROFILE_TICK_A(PimExecuteGemm);
     for (int i = 0; i < iter_cnt; i++) {
         PimExecuteGemm(device_output, device_input, device_weight, device_bias, act, nullptr, false);
