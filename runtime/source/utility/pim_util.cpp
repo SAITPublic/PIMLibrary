@@ -130,7 +130,7 @@ void align_gemm_shape(PimGemmDesc* pim_gemm_desc)
     int c = pim_gemm_desc->in_bshape_r.c;
     int in_w = pim_gemm_desc->in_bshape_r.w;
     int out_w = pim_gemm_desc->out_bshape_r.w;
-    int aligned_in_w = 256 * ceil((float)in_w / 256);
+    int aligned_in_w = PIM_GEMV_IN_ALIGN * ceil((float)in_w / PIM_GEMV_IN_ALIGN);
     int aligned_out_w = 0;
     int out_align = n * c * out_w;
 
@@ -156,10 +156,10 @@ void align_shape(PimDesc* pim_desc, PimOpType op_type)
     PimBShape bs = pim_desc->bshape_r;
 
     if (op_type == OP_GEMV) {
-        bs.h = 256 * ceil((float)bs.h / 256);
+        bs.h = PIM_GEMV_IN_ALIGN * ceil((float)bs.h / PIM_GEMV_IN_ALIGN);
         bs.w = PIM_GEMV_OUT_ALIGN * ceil((float)bs.w / PIM_GEMV_OUT_ALIGN);
     } else {
-        bs.w = (256 * 1024) * ceil((float)bs.w / (256 * 1024));
+        bs.w = PIM_ELTWISE_ALIGN * ceil((float)bs.w / PIM_ELTWISE_ALIGN);
     }
     pim_desc->bshape = bs;
 }

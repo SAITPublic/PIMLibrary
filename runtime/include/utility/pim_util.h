@@ -19,7 +19,9 @@
 #include "utility/pim_log.h"
 
 #define DIM_OUT_PIM (3200)
+#define PIM_GEMV_IN_ALIGN (256)
 #define PIM_GEMV_OUT_ALIGN (4096)
+#define PIM_ELTWISE_ALIGN (256 * 1024)
 
 /* TODO: get VEGA20 scheme from device driver */
 static PimBlockInfo vega20_fbi = {
