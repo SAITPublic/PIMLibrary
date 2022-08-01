@@ -62,6 +62,9 @@ include_directories("${ROCM_PATH}/opencl/include/")
 add_definitions(-DTEST_VECTORS_DATA="${PROJECT_SOURCE_DIR}/test_vectors/")
 add_definitions(-DROCM_PATH="${ROCM_PATH}")
 
+# default OpenCL version 2.0
+add_definitions(-DCL_TARGET_OPENCL_VERSION=200)
+
 if(TARGET)
     add_definitions(-DTARGET=1)
 else()
