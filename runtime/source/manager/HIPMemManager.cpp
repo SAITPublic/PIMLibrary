@@ -363,7 +363,7 @@ int HIPMemManager::convert_data_layout_for_chwise_gemm_weight(PimBo* dst, PimBo*
 
     char* dst_data = nullptr;
     char* src_data = nullptr;
-    char* src_temp = nullptr;
+    //char* src_temp = nullptr; // not-used
 
     int cidx = 0;
     int rank = 0;
@@ -379,7 +379,7 @@ int HIPMemManager::convert_data_layout_for_chwise_gemm_weight(PimBo* dst, PimBo*
 
     int type_size = (src->precision == PIM_FP16) ? 2 : 1;
     int in_cnt = src->bshape.h * type_size / trans_size;
-    int src_size = src->size;
+    //int src_size = src->size; // not-used
 
     int in_tile_size = num_grf_A;
     int out_tile_size = num_grf_B * num_pim_blocks * num_pim_chan * num_pim_rank;
@@ -834,7 +834,7 @@ int HIPMemManager::convert_data_layout_for_gemv_weight(PimBo* dst, PimBo* src, i
     int num_grf_A = fbi_.num_grf;
     int num_grf_B = fbi_.num_grf;
     int num_pim_blocks = fbi_.num_pim_blocks;
-    int num_pim_chan = fbi_.num_pim_chan;
+    //int num_pim_chan = fbi_.num_pim_chan; // not-used
     int num_pim_rank = fbi_.num_pim_rank;
     int num_banks = fbi_.num_banks;
     int num_bank_groups = fbi_.num_bank_groups;
@@ -875,8 +875,8 @@ int HIPMemManager::convert_data_layout_for_gemv_weight(PimBo* dst, PimBo* src, i
     int start_channel = 0;
     int end_channel = ch_per_op;
 
-    half* dst_half = (half*)dst->data;
-    half* src_half = (half*)src->data;
+    //half* dst_half = (half*)dst->data; // not-used
+    //half* src_half = (half*)src->data; // not-used
 
     if (padded_width != origin_width || padded_height != origin_height) {
         src_temp = (char*)calloc(src->size / sizeof(half), sizeof(half));

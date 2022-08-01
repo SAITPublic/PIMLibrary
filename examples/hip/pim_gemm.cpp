@@ -74,7 +74,7 @@ int pim_gemm_bias_relu(int n, int c, int inout_h, int in_w, int out_w, PimActFun
     PimCopyMemory(device_output, host_output, HOST_TO_DEVICE);
 
     /* __PIM_API__ call : Execute PIM kernel (GEMM) */
-    PimBo* t_device_bias = (is_bias) ? device_bias : nullptr;
+    //PimBo* t_device_bias = (is_bias) ? device_bias : nullptr; // not-used
     ret = PimExecuteGemm(device_output, device_input, device_weight, device_bias, act, nullptr, block);
     if (!block) PimSynchronize();
 
@@ -111,7 +111,7 @@ int pim_fused_gemm_bias_relu(int n, int c, int inout_h, int in_w0, int out_w0, b
     int in_size0 = n * c * inout_h * in_w0;
     int wei_size0 = n * c * in_w0 * out_w0;
     int out_size0 = n * c * inout_h * out_w0;
-    int in_size1 = n * c * inout_h * in_w1;
+    //int in_size1 = n * c * inout_h * in_w1; // not-used
     int wei_size1 = n * c * in_w1 * out_w1;
     int out_size1 = n * c * inout_h * out_w1;
 
@@ -189,8 +189,7 @@ int pim_fused_gemm_bias_relu(int n, int c, int inout_h, int in_w0, int out_w0, b
     PimCopyMemory(device_bias1, host_bias1, HOST_TO_DEVICE);
 
     /* __PIM_API__ call : Execute PIM kernel (GEMM) */
-    PimBo* t_device_bias0 = (is_bias0) ? device_bias0 : nullptr;
-    PimBo* t_device_bias1 = (is_bias1) ? device_bias1 : nullptr;
+    // PimBo* t_device_bias1 = (is_bias1) ? device_bias1 : nullptr; // not-used
 
     ret = PimExecuteGemm(device_output0, device_input0, device_weight0, device_bias0, act0, nullptr, false);
     ret = PimExecuteGemm(device_output1, device_output0, device_weight1, device_bias1, act1, nullptr, true);

@@ -27,7 +27,6 @@ namespace runtime
 {
 namespace executor
 {
-constexpr uint32_t compiler_env_value = PIM_COMPILER_ENABLE;
 HIPExecutor::HIPExecutor(PimRuntimeType rt_type, PimPrecision precision) : PimExecutor(rt_type, precision)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called ";

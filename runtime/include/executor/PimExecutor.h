@@ -29,6 +29,8 @@ namespace runtime
 {
 namespace executor
 {
+constexpr uint32_t compiler_env_value = PIM_COMPILER_ENABLE;
+
 class PimExecutor
 {
    public:

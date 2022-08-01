@@ -24,7 +24,6 @@ void set_pimbo_t(PimBo* dst, PimBo* src)
 
 void transpose_pimbo(PimBo* dst, PimBo* src)
 {
-    int ret = 0;
     int batch = src->bshape.n;
     int row = src->bshape.h;
     int col = src->bshape.w;

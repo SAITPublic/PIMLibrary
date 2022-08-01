@@ -217,7 +217,7 @@ int pim_gemv_desc(bool block)
     int out_size = 4096;
     float alpha = 1.0f;
     float beta = 0.0f;
-    float epsilon = 0.1f;
+    //float epsilon = 0.1f; // not-used
 
     std::random_device rd;
     std::mt19937 gen(rd());
