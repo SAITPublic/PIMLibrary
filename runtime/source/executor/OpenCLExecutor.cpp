@@ -44,7 +44,8 @@ int OpenCLExecutor::initialize()
 
     pim_manager_->alloc_memory((void**)&d_srf_bin_buffer_, max_srf_size * 2, MEM_TYPE_DEVICE);
     pim_manager_->alloc_memory((void**)&zero_buffer_, 32 * 2, MEM_TYPE_DEVICE);
-    clEnqueueFillBuffer(pim_manager_->pim_memory_manager_->get_cl_queue(), zero_buffer_, (void*)&zero, sizeof(int), 0,
+    auto cl_command_queue_ptr = static_cast<cl_command_queue>(pim_manager_->pim_memory_manager_->get_queue());
+    clEnqueueFillBuffer(cl_command_queue_ptr, zero_buffer_, (void*)&zero, sizeof(int), 0,
                         32 * 2, 0, NULL, NULL);
 
     /* PIM HW can generate only gemv output without reduction sum */
@@ -73,10 +74,11 @@ int OpenCLExecutor::execute_add(PimBo* output, PimBo* operand0, PimBo* operand1,
     int ret = 0;
     cl_int exe_err;
 
-    cl_program program = clCreateProgramWithSource(pim_manager_->pim_memory_manager_->get_cl_context(), 1,
-                                                   (const char**)&source, NULL, &exe_err);
+    auto cl_context_ptr = static_cast<cl_context>(pim_manager_->pim_memory_manager_->get_context());
+    auto cl_device_ptr = static_cast<cl_device_id *>(pim_manager_->pim_memory_manager_->get_device());
+    cl_program program = clCreateProgramWithSource(cl_context_ptr, 1, (const char**)&source, NULL, &exe_err);
     cl_ok(exe_err);
-    clBuildProgram(program, 1, pim_manager_->pim_memory_manager_->get_cl_device(), NULL, NULL, &exe_err);
+    clBuildProgram(program, 1, cl_device_ptr, NULL, NULL, &exe_err);
     cl_ok(exe_err);
     cl_kernel kernel = clCreateKernel(program, "gpuAdd", &exe_err);
     cl_ok(exe_err);
@@ -93,10 +95,11 @@ int OpenCLExecutor::execute_add(PimBo* output, PimBo* operand0, PimBo* operand1,
     exe_err = clSetKernelArg(kernel, 3, sizeof(unsigned int), (void*)&length);
     cl_ok(exe_err);
 
-    exe_err = clEnqueueNDRangeKernel(pim_manager_->pim_memory_manager_->get_cl_queue(), kernel, 1, NULL,
+    auto cl_command_queue_ptr = static_cast<cl_command_queue>(pim_manager_->pim_memory_manager_->get_queue());
+    exe_err = clEnqueueNDRangeKernel(cl_command_queue_ptr, kernel, 1, NULL,
                                      &global_work_size, &local_work_size, 0, NULL, NULL);
     cl_ok(exe_err);
-    clFinish(pim_manager_->pim_memory_manager_->get_cl_queue());
+    clFinish(cl_command_queue_ptr);
     return ret;
 }
 }  // namespace executor

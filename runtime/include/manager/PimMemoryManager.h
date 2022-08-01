@@ -40,9 +40,6 @@ class PimMemoryManager
 
     virtual int initialize();
     virtual int deinitialize();
-    virtual cl_command_queue get_cl_queue(){};
-    virtual cl_context get_cl_context(){};
-    virtual cl_device_id* get_cl_device(){};
     virtual int alloc_memory(void** ptr, size_t size, PimMemType mem_type) = 0;
     virtual int alloc_memory(PimBo* pim_bo) = 0;
     virtual int free_memory(void* ptr, PimMemType mem_type) = 0;
@@ -54,6 +51,10 @@ class PimMemoryManager
     PimRuntimeType rt_type_;
     std::vector<SimpleHeap<PimBlockAllocator>*> fragment_allocator_;
 
+    // TODO, below methods seem better to be in PimDevice
+    virtual void* get_context(void) { return nullptr; }
+    virtual void* get_queue(void) { return nullptr; }
+    virtual void* get_device(void) { return nullptr; }
    protected:
     PimDevice* pim_device_;
     PimPrecision precision_;

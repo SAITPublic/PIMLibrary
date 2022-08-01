@@ -32,7 +32,7 @@ class OpenCLExecutor : public PimExecutor
 
     int initialize();
     int deinitialize(void);
-    void* createStream(){};
+    void* createStream() { return nullptr; }
 
     int execute_add(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream, bool block);
     int execute_mul(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream, bool block) { return -1; };

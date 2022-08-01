@@ -40,17 +40,19 @@ class OpenCLMemManager : public PimMemoryManager
     int copy_memory_3d(const PimCopy3D* copy_params);
     int get_physical_id();
     int convert_data_layout(PimBo* dst, PimBo* src, PimOpType op_type) { return -1; };
-    cl_context get_cl_context();
-    cl_command_queue get_cl_queue();
-    cl_device_id* get_cl_device();
-    cl_command_queue queue;  // command queue
-    cl_context context;      // context
-    cl_device_id device_id;  // device ID
+
+    void* get_context() { return static_cast<void *>(context); }
+    void* get_queue() { return static_cast<void *>(queue); }
+    void* get_device() { return static_cast<void *>(&device_id); }
 
    private:
     cl_platform_id cpPlatform;  // OpenCL platform
     cl_uint num_gpu_devices;    // num gpu devices
     cl_int err;
+
+    cl_command_queue queue;  // command queue
+    cl_context context;      // context
+    cl_device_id device_id;  // device ID
 };
 }  // namespace manager
 }  // namespace runtime
