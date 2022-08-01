@@ -64,6 +64,7 @@ add_definitions(-DROCM_PATH="${ROCM_PATH}")
 
 # default OpenCL version 2.0
 add_definitions(-DCL_TARGET_OPENCL_VERSION=200)
+add_definitions(-DCL_USE_DEPRECATED_OPENCL_1_2_APIS)
 
 if(TARGET)
     add_definitions(-DTARGET=1)
