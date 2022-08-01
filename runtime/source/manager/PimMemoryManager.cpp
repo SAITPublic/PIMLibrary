@@ -72,7 +72,7 @@ inline std::list<int> get_env(const char* key)
 
 std::map<uint32_t, gpuInfo*> gpu_devices;
 PimMemoryManager::PimMemoryManager(PimDevice* pim_device, PimRuntimeType rt_type, PimPrecision precision)
-    : pim_device_(pim_device), rt_type_(rt_type), precision_(precision)
+    : rt_type_(rt_type), pim_device_(pim_device), precision_(precision)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     get_pim_block_info(&fbi_);
