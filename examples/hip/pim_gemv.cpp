@@ -31,66 +31,121 @@
 #endif
 
 using half_float::half;
+using namespace std;
 
 #define EPSILON (1.0)
 
-int pim_gemv_batch(bool block)
-{
-    int ret = 0;
-
-    /* __PIM_API__ call : Initialize PimRuntime */
-    PimInitialize(RT_TYPE_HIP, PIM_FP16);
-
-    /* __PIM_API__ call : Create PIM Buffer Object */
-    PimBo* host_input = PimCreateBo(BATCH_DIM, 1, 1, IN_LENGTH, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* host_weight = PimCreateBo(1, 1, IN_LENGTH, OUT_LENGTH, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* host_output = PimCreateBo(BATCH_DIM, 1, 1, OUT_LENGTH, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* golden_output = PimCreateBo(BATCH_DIM, 1, 1, OUT_LENGTH, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* device_input = PimCreateBo(BATCH_DIM, 1, 1, IN_LENGTH, PIM_FP16, MEM_TYPE_DEVICE);
-    PimBo* device_weight = PimCreateBo(1, 1, IN_LENGTH, OUT_LENGTH, PIM_FP16, MEM_TYPE_DEVICE);
-    PimBo* device_output = PimCreateBo(BATCH_DIM, 1, 1, OUT_LENGTH, PIM_FP16, MEM_TYPE_DEVICE);
-
-    /* Initialize the input, weight, output data */
-    std::string test_vector_data = TEST_VECTORS_DATA;
-
-    std::string input = test_vector_data + "load/gemv/batch_input_2x256.dat";
-    std::string weight = test_vector_data + "load/gemv/batch_weight_256x4096.dat";
-    std::string output = test_vector_data + "load/gemv/batch_output_2x4096.dat";
-    std::string preload_weight = test_vector_data + "dump/gemv/batch_preloaded_weight_256x4096.dat";
-    std::string output_dump = test_vector_data + "dump/gemv/batch_output_2x4096.dat";
-
-    load_data(input.c_str(), (char*)host_input->data, host_input->size);
-    load_data(weight.c_str(), (char*)host_weight->data, host_weight->size);
-    load_data(output.c_str(), (char*)golden_output->data, golden_output->size);
-
-    PimCopyMemory(device_input, host_input, HOST_TO_DEVICE);
-    PimCopyMemory(device_weight, host_weight, HOST_TO_DEVICE);
-
-    for (int i = 0; i < NUM_ITER; i++) {
-        /* __PIM_API__ call : Execute PIM kernel (GEMV) */
-        PimExecuteGemv(device_output, device_input, device_weight, nullptr, block);
-
-        if (!block) PimSynchronize();
-
-        PimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
-
-        ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data, OUT_LENGTH * BATCH_DIM,
-                                    EPSILON);
+class PimGemvTestFixture : public ::testing::Test {
+protected:
+    virtual void SetUp() override {
+        PimInitialize(RT_TYPE_HIP, PIM_FP16);
     }
 
-    /* __PIM_API__ call : Destroy PIM Buffer Object */
-    PimDestroyBo(host_input);
-    PimDestroyBo(host_weight);
-    PimDestroyBo(host_output);
-    PimDestroyBo(golden_output);
-    PimDestroyBo(device_input);
-    PimDestroyBo(device_weight);
-    PimDestroyBo(device_output);
+    virtual void TearDown() override {
+        PimDeinitialize();
+    }
+};
 
-    /* __PIM_API__ call : Deinitialize PimRuntime */
-    PimDeinitialize();
 
-    return ret;
+enum GemvDataTypes {INPUT, WEIGHT, OUTPUT, BIAS, GOLDEN};
+
+class PimGemvTest {
+public:
+    PimGemvTest(unsigned n_, unsigned c_, unsigned h_, unsigned w_) : n(n_), c(c_), h(h_), w(w_) {
+        // n: batch, c: channel, h: in (height), w: out (width)
+        cout << "PimGemvTest: Test start (" << n << ", " << c << ", " << h << ", " << w << ")\n";
+        h_i = PimCreateBo(n, 1, 1, h, PIM_FP16, MEM_TYPE_HOST);
+        h_w = PimCreateBo(1, 1, h, w, PIM_FP16, MEM_TYPE_HOST);
+        h_o = PimCreateBo(n, 1, 1, w, PIM_FP16, MEM_TYPE_HOST);
+        d_i = PimCreateBo(n, 1, 1, h, PIM_FP16, MEM_TYPE_DEVICE);
+        d_w = PimCreateBo(1, 1, h, w, PIM_FP16, MEM_TYPE_DEVICE);
+        d_o = PimCreateBo(n, 1, 1, w, PIM_FP16, MEM_TYPE_DEVICE);
+        golden = PimCreateBo(n, 1, 1, w, PIM_FP16, MEM_TYPE_HOST);
+    }
+
+    void prepare() {
+        PimCopyMemory(d_i, h_i, HOST_TO_DEVICE);
+        PimCopyMemory(d_w, h_w, HOST_TO_DEVICE);
+    }
+
+    void run(bool block=true, unsigned niter=10) {
+        for (unsigned i = 0; i < niter; ++i) {
+            PimExecuteGemv(d_o, d_i, d_w, nullptr, block);
+            if (!block) PimSynchronize();
+        }
+        PimCopyMemory(h_o, d_o, DEVICE_TO_HOST);
+    }
+
+    int validate() {
+        return compare_half_relative((half *)golden->data, (half *)h_o->data, (n * w), EPSILON);
+    }
+
+    void loadDatafromFile(const string file, GemvDataTypes data_type, PimMemType mem_type) {
+        string filename = test_vector_data + file;
+        FILE* fp = fopen(filename.c_str(), "r");
+        if (fp == nullptr) {
+            throw invalid_argument("cannot open file");
+        }
+
+        auto getPimBo = [&]()-> PimBo* {
+            if (data_type == INPUT) {
+                return mem_type == MEM_TYPE_HOST ? h_i : d_i;
+            }
+            if (data_type == WEIGHT) {
+                return mem_type == MEM_TYPE_HOST ? h_w : d_w;
+            }
+            if (data_type == OUTPUT) {
+                return mem_type == MEM_TYPE_HOST ? h_o : d_o;
+            }
+            if (data_type == GOLDEN) {
+                return golden;
+            }
+            throw invalid_argument("invalid type of data");
+        };
+
+        PimBo* pimbo = getPimBo();
+        char *data = static_cast<char*>(pimbo->data);
+
+        for (size_t i = 0; i < pimbo->size; i++) {
+            fscanf(fp, "%c", &data[i]);
+        }
+        cout << "Loading " << filename << " to PimBo (type: " << data_type << ", mem: " << mem_type << ")\n";
+        fclose(fp);
+    }
+
+    ~PimGemvTest() {
+        cout << "PimGemvTest: Test done" << endl;
+        PimDestroyBo(h_i);
+        PimDestroyBo(h_w);
+        PimDestroyBo(h_o);
+        PimDestroyBo(golden);
+        PimDestroyBo(d_i);
+        PimDestroyBo(d_w);
+        PimDestroyBo(d_o);
+    }
+private:
+    unsigned n, c, h, w;
+
+    PimBo* h_i = nullptr;
+    PimBo* h_w = nullptr;
+    PimBo* h_o = nullptr;
+    PimBo* d_i = nullptr;
+    PimBo* d_w = nullptr;
+    PimBo* d_o = nullptr;
+    PimBo* golden = nullptr;
+
+    const string test_vector_data = TEST_VECTORS_DATA;
+};
+
+int pim_gemv_batch(bool block)
+{
+    PimGemvTest batched_gemv_test = PimGemvTest(BATCH_DIM, 1, IN_LENGTH, OUT_LENGTH);
+    batched_gemv_test.loadDatafromFile("load/gemv/batch_input_2x256.dat", INPUT, MEM_TYPE_HOST);
+    batched_gemv_test.loadDatafromFile("load/gemv/batch_weight_256x4096.dat", WEIGHT, MEM_TYPE_HOST);
+    batched_gemv_test.loadDatafromFile("load/gemv/batch_output_2x4096.dat", GOLDEN, MEM_TYPE_HOST);
+    batched_gemv_test.prepare();
+    batched_gemv_test.run(true, 10);
+    return batched_gemv_test.validate();
 }
 
 int pim_gemv_256(bool block)
@@ -909,10 +964,11 @@ int pim_gemv_moe_chwise(bool block)
     return ret;
 }
 
+TEST_F(PimGemvTestFixture, PimGemvBatchSync) { EXPECT_TRUE(pim_gemv_batch(true) == 0); }
+TEST_F(PimGemvTestFixture, PimGemvBatchAsync) { EXPECT_TRUE(pim_gemv_batch(false) == 0); }
+
 TEST(HIPIntegrationTest, PimGemvMoEChwiseSync) { EXPECT_TRUE(pim_gemv_moe_chwise(true) == 0); }
 TEST(HIPIntegrationTest, PimGemvMoESync) { EXPECT_TRUE(pim_gemv_moe(true) == 0); }
-TEST(HIPIntegrationTest, PimGemvBatchSync) { EXPECT_TRUE(pim_gemv_batch(true) == 0); }
-TEST(HIPIntegrationTest, PimGemvBatchAsync) { EXPECT_TRUE(pim_gemv_batch(false) == 0); }
 TEST(HIPIntegrationTest, PimGemv256Sync) { EXPECT_TRUE(pim_gemv_256(true) == 0); }
 TEST(HIPIntegrationTest, PimGemv256Async) { EXPECT_TRUE(pim_gemv_256(false) == 0); }
 TEST(HIPIntegrationTest, PimGemv512Sync) { EXPECT_TRUE(pim_gemv_512(true) == 0); }
