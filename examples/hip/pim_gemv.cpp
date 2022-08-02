@@ -20,10 +20,6 @@
 #include "utility/pim_debug.hpp"
 #include "utility/pim_profile.h"
 
-#define IN_LENGTH (256)
-#define OUT_LENGTH (4096)
-#define BATCH_DIM (2)
-
 #ifdef DEBUG_PIM
 #define NUM_ITER (100)
 #else
@@ -32,8 +28,7 @@
 
 using half_float::half;
 using namespace std;
-
-#define EPSILON (1.0)
+using GemvFunc = int(*)(PimBo*, PimBo*, PimBo*, void*, bool);
 
 class PimGemvTestFixture : public ::testing::Test {
 protected:
@@ -45,10 +40,6 @@ protected:
         PimDeinitialize();
     }
 };
-
-
-enum GemvDataTypes {INPUT, WEIGHT, OUTPUT, BIAS, GOLDEN};
-using GemvFunc = int(*)(PimBo*, PimBo*, PimBo*, void*, bool);
 
 class PimGemvTest {
 public:
@@ -123,36 +114,16 @@ public:
         return compare_half_relative((half *)golden->data, (half *)h_o->data, (n * c * w), epsilon);
     }
 
-    void loadDatafromFile(const string file, GemvDataTypes data_type, PimMemType mem_type) {
+    void loadDatafromFile(PimBo* pimbo, const string file, size_t size=0) {
         string filename = test_vector_data + file;
         FILE* fp = fopen(filename.c_str(), "r");
         if (fp == nullptr) {
             throw invalid_argument("cannot open file");
         }
-
-        auto getPimBo = [&]()-> PimBo* {
-            if (data_type == INPUT) {
-                return mem_type == MEM_TYPE_HOST ? h_i : d_i;
-            }
-            if (data_type == WEIGHT) {
-                return mem_type == MEM_TYPE_HOST ? h_w : d_w;
-            }
-            if (data_type == OUTPUT) {
-                return mem_type == MEM_TYPE_HOST ? h_o : d_o;
-            }
-            if (data_type == GOLDEN) {
-                return golden;
-            }
-            throw invalid_argument("invalid type of data");
-        };
-
-        PimBo* pimbo = getPimBo();
         char *data = static_cast<char*>(pimbo->data);
-
         for (size_t i = 0; i < pimbo->size; i++) {
             fscanf(fp, "%c", &data[i]);
         }
-        cout << "Loading " << filename << " to PimBo (type: " << data_type << ", mem: " << mem_type << ")\n";
         fclose(fp);
     }
 
@@ -184,9 +155,9 @@ public:
 int pim_gemv_batch(bool block)
 {
     PimGemvTest t = PimGemvTest(2, 1, 256, 4096);
-    t.loadDatafromFile("load/gemv/batch_input_2x256.dat", INPUT, MEM_TYPE_HOST);
-    t.loadDatafromFile("load/gemv/batch_weight_256x4096.dat", WEIGHT, MEM_TYPE_HOST);
-    t.loadDatafromFile("load/gemv/batch_output_2x4096.dat", GOLDEN, MEM_TYPE_HOST);
+    t.loadDatafromFile(t.h_i, "load/gemv/batch_input_2x256.dat");
+    t.loadDatafromFile(t.h_w, "load/gemv/batch_weight_256x4096.dat");
+    t.loadDatafromFile(t.golden, "load/gemv/batch_output_2x4096.dat");
     t.prepare();
     t.run(PimExecuteGemv, block);
     return t.validate();
@@ -195,9 +166,9 @@ int pim_gemv_batch(bool block)
 int pim_gemv_256(bool block)
 {
     PimGemvTest t = PimGemvTest(1, 1, 256, 4096);
-    t.loadDatafromFile("load/gemv/input_256x1.dat", INPUT, MEM_TYPE_HOST);
-    t.loadDatafromFile("load/gemv/weight_256x4096.dat", WEIGHT, MEM_TYPE_HOST);
-    t.loadDatafromFile("load/gemv/output_4096x1.dat", GOLDEN, MEM_TYPE_HOST);
+    t.loadDatafromFile(t.h_i, "load/gemv/input_256x1.dat");
+    t.loadDatafromFile(t.h_w, "load/gemv/weight_256x4096.dat");
+    t.loadDatafromFile(t.golden, "load/gemv/output_4096x1.dat");
     t.prepare();
     t.run(PimExecuteGemv, block);
     return t.validate();
@@ -206,9 +177,9 @@ int pim_gemv_256(bool block)
 int pim_gemv_512(bool block)
 {
     PimGemvTest t = PimGemvTest(1, 1, 512, 4096);
-    t.loadDatafromFile("load/gemv/input_512x1.dat", INPUT, MEM_TYPE_HOST);
-    t.loadDatafromFile("load/gemv/weight_512x4096.dat", WEIGHT, MEM_TYPE_HOST);
-    t.loadDatafromFile("load/gemv/output_4096x1_512.dat", GOLDEN, MEM_TYPE_HOST);
+    t.loadDatafromFile(t.h_i, "load/gemv/input_512x1.dat");
+    t.loadDatafromFile(t.h_w, "load/gemv/weight_512x4096.dat");
+    t.loadDatafromFile(t.golden, "load/gemv/output_4096x1_512.dat");
     t.prepare();
     t.run(PimExecuteGemv, block);
     return t.validate();
@@ -260,9 +231,9 @@ int pim_gemv_desc_batch(bool block)
 int pim_gemv_uniform_256(bool block)
 {
     PimGemvTest t = PimGemvTest(1, 1, 256, 4096);
-    t.loadDatafromFile("load/gemv/uniform_input_256x1.dat", INPUT, MEM_TYPE_HOST);
-    t.loadDatafromFile("load/gemv/uniform_weight_256x4096.dat", WEIGHT, MEM_TYPE_HOST);
-    t.loadDatafromFile("load/gemv/uniform_output_4096x1.dat", GOLDEN, MEM_TYPE_HOST);
+    t.loadDatafromFile(t.h_i, "load/gemv/uniform_input_256x1.dat");
+    t.loadDatafromFile(t.h_w, "load/gemv/uniform_weight_256x4096.dat");
+    t.loadDatafromFile(t.golden, "load/gemv/uniform_output_4096x1.dat");
     t.prepare();
     t.run(PimExecuteGemv, block);
     return t.validate();
@@ -271,9 +242,9 @@ int pim_gemv_uniform_256(bool block)
 int pim_gemv_normal_256(bool block)
 {
     PimGemvTest t = PimGemvTest(1, 1, 256, 4096);
-    t.loadDatafromFile("load/gemv/normal_input_256x1.dat", INPUT, MEM_TYPE_HOST);
-    t.loadDatafromFile("load/gemv/normal_weight_256x4096.dat", WEIGHT, MEM_TYPE_HOST);
-    t.loadDatafromFile("load/gemv/normal_output_4096x1.dat", GOLDEN, MEM_TYPE_HOST);
+    t.loadDatafromFile(t.h_i, "load/gemv/normal_input_256x1.dat");
+    t.loadDatafromFile(t.h_w, "load/gemv/normal_weight_256x4096.dat");
+    t.loadDatafromFile(t.golden, "load/gemv/normal_output_4096x1.dat");
     t.prepare();
     t.run(PimExecuteGemv, block);
     return t.validate();
@@ -282,9 +253,9 @@ int pim_gemv_normal_256(bool block)
 int pim_gemv_uniform_4096(bool block)
 {
     PimGemvTest t = PimGemvTest(1, 1, 4096, 4096);
-    t.loadDatafromFile("load/gemv/uniform_input_4096x1.dat", INPUT, MEM_TYPE_HOST);
-    t.loadDatafromFile("load/gemv/uniform_weight_4096x4096.dat", WEIGHT, MEM_TYPE_HOST);
-    t.loadDatafromFile("load/gemv/uniform_output_4096x4096.dat", GOLDEN, MEM_TYPE_HOST);
+    t.loadDatafromFile(t.h_i, "load/gemv/uniform_input_4096x1.dat");
+    t.loadDatafromFile(t.h_w, "load/gemv/uniform_weight_4096x4096.dat");
+    t.loadDatafromFile(t.golden, "load/gemv/uniform_output_4096x4096.dat");
     t.prepare();
     t.run(PimExecuteGemv, block);
     return t.validate();
@@ -293,9 +264,9 @@ int pim_gemv_uniform_4096(bool block)
 int pim_gemv_normal_4096(bool block)
 {
     PimGemvTest t = PimGemvTest(1, 1, 4096, 4096);
-    t.loadDatafromFile("load/gemv/normal_input_4096x1.dat", INPUT, MEM_TYPE_HOST);
-    t.loadDatafromFile("load/gemv/normal_weight_4096x4096.dat", WEIGHT, MEM_TYPE_HOST);
-    t.loadDatafromFile("load/gemv/normal_output_4096x4096.dat", GOLDEN, MEM_TYPE_HOST);
+    t.loadDatafromFile(t.h_i, "load/gemv/normal_input_4096x1.dat");
+    t.loadDatafromFile(t.h_w, "load/gemv/normal_weight_4096x4096.dat");
+    t.loadDatafromFile(t.golden, "load/gemv/normal_output_4096x4096.dat");
     t.prepare();
     t.run(PimExecuteGemv, block);
     return t.validate();
@@ -304,9 +275,9 @@ int pim_gemv_normal_4096(bool block)
 int pim_gemv_no_accum_512(bool block)
 {
     PimGemvTest t = PimGemvTest(1, 1, 512, 4096);
-    t.loadDatafromFile("load/gemv/input_512x1.dat", INPUT, MEM_TYPE_HOST);
-    t.loadDatafromFile("load/gemv/weight_512x4096.dat", WEIGHT, MEM_TYPE_HOST);
-    t.loadDatafromFile("load/gemv/output_4096x1_512.dat", GOLDEN, MEM_TYPE_HOST);
+    t.loadDatafromFile(t.h_i, "load/gemv/input_512x1.dat");
+    t.loadDatafromFile(t.h_w, "load/gemv/weight_512x4096.dat");
+    t.loadDatafromFile(t.golden, "load/gemv/output_4096x1_512.dat");
     t.prepare();
     t.run(PimExecuteGemv, block);
     return t.validate();
@@ -315,9 +286,9 @@ int pim_gemv_no_accum_512(bool block)
 int pim_gemv_no_accum_256(bool block)
 {
     PimGemvTest t = PimGemvTest(1, 1, 256, 4096);
-    t.loadDatafromFile("load/gemv/input_256x1.dat", INPUT, MEM_TYPE_HOST);
-    t.loadDatafromFile("load/gemv/weight_256x4096.dat", WEIGHT, MEM_TYPE_HOST);
-    t.loadDatafromFile("load/gemv/output_4096x1_256.dat", GOLDEN, MEM_TYPE_HOST);
+    t.loadDatafromFile(t.h_i, "load/gemv/input_256x1.dat");
+    t.loadDatafromFile(t.h_w, "load/gemv/weight_256x4096.dat");
+    t.loadDatafromFile(t.golden, "load/gemv/output_4096x1_256.dat");
     t.prepare();
     t.run(PimExecuteGemv, block);
     return t.validate();
