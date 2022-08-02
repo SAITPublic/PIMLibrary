@@ -48,19 +48,20 @@ protected:
 
 
 enum GemvDataTypes {INPUT, WEIGHT, OUTPUT, BIAS, GOLDEN};
+using GemvFunc = int(*)(PimBo*, PimBo*, PimBo*, void*, bool);
 
 class PimGemvTest {
 public:
     PimGemvTest(unsigned n_, unsigned c_, unsigned h_, unsigned w_) : n(n_), c(c_), h(h_), w(w_) {
         // n: batch, c: channel, h: in (height), w: out (width)
         cout << "PimGemvTest: Test start (" << n << ", " << c << ", " << h << ", " << w << ")\n";
-        h_i = PimCreateBo(n, 1, 1, h, PIM_FP16, MEM_TYPE_HOST);
-        h_w = PimCreateBo(1, 1, h, w, PIM_FP16, MEM_TYPE_HOST);
-        h_o = PimCreateBo(n, 1, 1, w, PIM_FP16, MEM_TYPE_HOST);
-        d_i = PimCreateBo(n, 1, 1, h, PIM_FP16, MEM_TYPE_DEVICE);
-        d_w = PimCreateBo(1, 1, h, w, PIM_FP16, MEM_TYPE_DEVICE);
-        d_o = PimCreateBo(n, 1, 1, w, PIM_FP16, MEM_TYPE_DEVICE);
-        golden = PimCreateBo(n, 1, 1, w, PIM_FP16, MEM_TYPE_HOST);
+        h_i = PimCreateBo(n, c, 1, h, PIM_FP16, MEM_TYPE_HOST);
+        h_w = PimCreateBo(n, c, h, w, PIM_FP16, MEM_TYPE_HOST);
+        h_o = PimCreateBo(n, c, 1, w, PIM_FP16, MEM_TYPE_HOST);
+        d_i = PimCreateBo(n, c, 1, h, PIM_FP16, MEM_TYPE_DEVICE);
+        d_w = PimCreateBo(n, c, h, w, PIM_FP16, MEM_TYPE_DEVICE);
+        d_o = PimCreateBo(n, c, 1, w, PIM_FP16, MEM_TYPE_DEVICE);
+        golden = PimCreateBo(n, c, 1, w, PIM_FP16, MEM_TYPE_HOST);
     }
 
     void prepare() {
@@ -68,9 +69,9 @@ public:
         PimCopyMemory(d_w, h_w, HOST_TO_DEVICE);
     }
 
-    void run(bool block=true, unsigned niter=10) {
+    void run(GemvFunc pFunc, bool block=true, unsigned niter=10) {
         for (unsigned i = 0; i < niter; ++i) {
-            PimExecuteGemv(d_o, d_i, d_w, nullptr, block);
+            pFunc(d_o, d_i, d_w, nullptr, block);
             if (!block) PimSynchronize();
         }
         PimCopyMemory(h_o, d_o, DEVICE_TO_HOST);
@@ -144,7 +145,7 @@ int pim_gemv_batch(bool block)
     batched_gemv_test.loadDatafromFile("load/gemv/batch_weight_256x4096.dat", WEIGHT, MEM_TYPE_HOST);
     batched_gemv_test.loadDatafromFile("load/gemv/batch_output_2x4096.dat", GOLDEN, MEM_TYPE_HOST);
     batched_gemv_test.prepare();
-    batched_gemv_test.run(true, 10);
+    batched_gemv_test.run(PimExecuteGemv, true, 10);
     return batched_gemv_test.validate();
 }
 
