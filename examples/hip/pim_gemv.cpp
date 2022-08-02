@@ -103,7 +103,7 @@ public:
     }
 
     int validate() {
-        return compare_half_relative((half *)golden->data, (half *)h_o->data, (n * w), EPSILON);
+        return compare_half_relative((half *)golden->data, (half *)h_o->data, (n * c * w), EPSILON);
     }
 
     void loadDatafromFile(const string file, GemvDataTypes data_type, PimMemType mem_type) {
@@ -165,130 +165,35 @@ private:
 
 int pim_gemv_batch(bool block)
 {
-    PimGemvTest batched_gemv_test = PimGemvTest(BATCH_DIM, 1, IN_LENGTH, OUT_LENGTH);
-    batched_gemv_test.loadDatafromFile("load/gemv/batch_input_2x256.dat", INPUT, MEM_TYPE_HOST);
-    batched_gemv_test.loadDatafromFile("load/gemv/batch_weight_256x4096.dat", WEIGHT, MEM_TYPE_HOST);
-    batched_gemv_test.loadDatafromFile("load/gemv/batch_output_2x4096.dat", GOLDEN, MEM_TYPE_HOST);
-    batched_gemv_test.prepare();
-    batched_gemv_test.run(PimExecuteGemv, true, 10);
-    return batched_gemv_test.validate();
+    PimGemvTest t = PimGemvTest(2, 1, 256, 4096);
+    t.loadDatafromFile("load/gemv/batch_input_2x256.dat", INPUT, MEM_TYPE_HOST);
+    t.loadDatafromFile("load/gemv/batch_weight_256x4096.dat", WEIGHT, MEM_TYPE_HOST);
+    t.loadDatafromFile("load/gemv/batch_output_2x4096.dat", GOLDEN, MEM_TYPE_HOST);
+    t.prepare();
+    t.run(PimExecuteGemv, block);
+    return t.validate();
 }
 
 int pim_gemv_256(bool block)
 {
-    int ret = 0;
-
-    /* __PIM_API__ call : Initialize PimRuntime */
-    PimInitialize(RT_TYPE_HIP, PIM_FP16);
-
-    /* __PIM_API__ call : Create PIM Buffer Object */
-    PimBo* host_input = PimCreateBo(1, 1, 1, IN_LENGTH, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* host_weight = PimCreateBo(1, 1, IN_LENGTH, OUT_LENGTH, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* host_output = PimCreateBo(1, 1, 1, OUT_LENGTH, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* golden_output = PimCreateBo(1, 1, 1, OUT_LENGTH, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* device_input = PimCreateBo(1, 1, 1, IN_LENGTH, PIM_FP16, MEM_TYPE_DEVICE);
-    PimBo* device_weight = PimCreateBo(1, 1, IN_LENGTH, OUT_LENGTH, PIM_FP16, MEM_TYPE_DEVICE);
-    PimBo* device_output = PimCreateBo(1, 1, 1, OUT_LENGTH, PIM_FP16, MEM_TYPE_DEVICE);
-
-    /* Initialize the input, weight, output data */
-    std::string test_vector_data = TEST_VECTORS_DATA;
-
-    std::string input = test_vector_data + "load/gemv/input_256x1.dat";
-    std::string weight = test_vector_data + "load/gemv/weight_256x4096.dat";
-    std::string output = test_vector_data + "load/gemv/output_4096x1.dat";
-    std::string preload_weight = test_vector_data + "dump/gemv/preloaded_weight_256x4096.dat";
-    std::string output_dump = test_vector_data + "dump/gemv/output_4096x1_256.dat";
-
-    load_data(input.c_str(), (char*)host_input->data, host_input->size);
-    load_data(weight.c_str(), (char*)host_weight->data, host_weight->size);
-    load_data(output.c_str(), (char*)golden_output->data, golden_output->size);
-
-    PimCopyMemory(device_input, host_input, HOST_TO_DEVICE);
-    PimCopyMemory(device_weight, host_weight, HOST_TO_DEVICE);
-
-    for (int i = 0; i < NUM_ITER; i++) {
-        /* __PIM_API__ call : Execute PIM kernel (GEMV) */
-        PimExecuteGemv(device_output, device_input, device_weight, nullptr, block);
-        if (!block) PimSynchronize();
-
-        PimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
-        // dump_data(preload_weight.c_str(), (char*)preloaded_weight->data, preloaded_weight->size);
-        //    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
-
-        ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data, OUT_LENGTH, EPSILON);
-    }
-    /* __PIM_API__ call : Destroy PIM Buffer Object */
-    PimDestroyBo(host_input);
-    PimDestroyBo(host_weight);
-    PimDestroyBo(host_output);
-    PimDestroyBo(golden_output);
-    PimDestroyBo(device_input);
-    PimDestroyBo(device_weight);
-    PimDestroyBo(device_output);
-
-    /* __PIM_API__ call : Deinitialize PimRuntime */
-    PimDeinitialize();
-
-    return ret;
+    PimGemvTest t = PimGemvTest(1, 1, 256, 4096);
+    t.loadDatafromFile("load/gemv/input_256x1.dat", INPUT, MEM_TYPE_HOST);
+    t.loadDatafromFile("load/gemv/weight_256x4096.dat", WEIGHT, MEM_TYPE_HOST);
+    t.loadDatafromFile("load/gemv/output_4096x1.dat", GOLDEN, MEM_TYPE_HOST);
+    t.prepare();
+    t.run(PimExecuteGemv, block);
+    return t.validate();
 }
 
 int pim_gemv_512(bool block)
 {
-    int ret = 0;
-
-    /* __PIM_API__ call : Initialize PimRuntime */
-    PimInitialize(RT_TYPE_HIP, PIM_FP16);
-
-    /* __PIM_API__ call : Create PIM Buffer Object */
-    PimBo* host_input = PimCreateBo(1, 1, 1, IN_LENGTH * 2, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* host_weight = PimCreateBo(1, 1, IN_LENGTH * 2, OUT_LENGTH, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* host_output = PimCreateBo(1, 1, 1, OUT_LENGTH, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* golden_output = PimCreateBo(1, 1, 1, OUT_LENGTH, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* device_input = PimCreateBo(1, 1, 1, IN_LENGTH * 2, PIM_FP16, MEM_TYPE_DEVICE);
-    PimBo* device_weight = PimCreateBo(1, 1, IN_LENGTH * 2, OUT_LENGTH, PIM_FP16, MEM_TYPE_DEVICE);
-    PimBo* device_output = PimCreateBo(1, 1, 1, OUT_LENGTH, PIM_FP16, MEM_TYPE_DEVICE);
-
-    /* Initialize the input, weight, output data */
-    std::string test_vector_data = TEST_VECTORS_DATA;
-
-    std::string input = test_vector_data + "load/gemv/input_512x1.dat";
-    std::string weight = test_vector_data + "load/gemv/weight_512x4096.dat";
-    std::string output = test_vector_data + "load/gemv/output_4096x1_512.dat";
-    std::string preload_weight = test_vector_data + "dump/gemv/preloaded_weight_512x4096.dat";
-    std::string output_dump = test_vector_data + "dump/gemv/output_4096x1_512.dat";
-
-    load_data(input.c_str(), (char*)host_input->data, host_input->size);
-    load_data(weight.c_str(), (char*)host_weight->data, host_weight->size);
-    load_data(output.c_str(), (char*)golden_output->data, golden_output->size);
-
-    PimCopyMemory(device_input, host_input, HOST_TO_DEVICE);
-    PimCopyMemory(device_weight, host_weight, HOST_TO_DEVICE);
-
-    for (int i = 0; i < NUM_ITER; i++) {
-        /* __PIM_API__ call : Execute PIM kernel (GEMV) */
-        PimExecuteGemv(device_output, device_input, device_weight, nullptr, block);
-        if (!block) PimSynchronize();
-
-        PimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
-
-        //    dump_data(preload_weight.c_str(), (char*)preloaded_weight->data, preloaded_weight->size);
-        //    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
-        ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data, OUT_LENGTH, EPSILON);
-    }
-
-    /* __PIM_API__ call : Destroy PIM Buffer Object */
-    PimDestroyBo(host_input);
-    PimDestroyBo(host_weight);
-    PimDestroyBo(host_output);
-    PimDestroyBo(golden_output);
-    PimDestroyBo(device_input);
-    PimDestroyBo(device_weight);
-    PimDestroyBo(device_output);
-
-    /* __PIM_API__ call : Deinitialize PimRuntime */
-    PimDeinitialize();
-
-    return ret;
+    PimGemvTest t = PimGemvTest(1, 1, 512, 4096);
+    t.loadDatafromFile("load/gemv/input_512x1.dat", INPUT, MEM_TYPE_HOST);
+    t.loadDatafromFile("load/gemv/weight_512x4096.dat", WEIGHT, MEM_TYPE_HOST);
+    t.loadDatafromFile("load/gemv/output_4096x1_512.dat", GOLDEN, MEM_TYPE_HOST);
+    t.prepare();
+    t.run(PimExecuteGemv, block);
+    return t.validate();
 }
 
 int pim_gemv_desc(bool block)
@@ -432,355 +337,70 @@ int pim_gemv_desc_batch(bool block)
     return ret;
 }
 
-int pim_gemv_uniform_128(bool block)
+int pim_gemv_uniform_256(bool block)
 {
-    int ret = 0;
-
-    /* __PIM_API__ call : Initialize PimRuntime */
-    PimInitialize(RT_TYPE_HIP, PIM_FP16);
-
-    /* __PIM_API__ call : Create PIM Buffer Object */
-    PimBo* host_input = PimCreateBo(1, 1, 1, IN_LENGTH, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* host_weight = PimCreateBo(1, 1, IN_LENGTH, OUT_LENGTH, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* host_output = PimCreateBo(1, 1, 1, OUT_LENGTH, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* golden_output = PimCreateBo(1, 1, 1, OUT_LENGTH, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* device_input = PimCreateBo(1, 1, 1, IN_LENGTH, PIM_FP16, MEM_TYPE_DEVICE);
-    PimBo* device_weight = PimCreateBo(1, 1, IN_LENGTH, OUT_LENGTH, PIM_FP16, MEM_TYPE_DEVICE);
-    PimBo* device_output = PimCreateBo(1, 1, 1, OUT_LENGTH, PIM_FP16, MEM_TYPE_DEVICE);
-
-    /* Initialize the input, weight, output data */
-    std::string test_vector_data = TEST_VECTORS_DATA;
-
-    // input is 0 from 128 to 255
-    std::string input = test_vector_data + "load/gemv/uniform_input_256x1.dat";
-    std::string weight = test_vector_data + "load/gemv/uniform_weight_256x4096.dat";
-    std::string output = test_vector_data + "load/gemv/uniform_output_4096x1.dat";
-    std::string preload_weight = test_vector_data + "dump/gemv/uniform_preloaded_weight_256x4096.dat";
-    std::string output_dump = test_vector_data + "dump/gemv/uniform_output_4096x1.dat";
-
-    load_data(input.c_str(), (char*)host_input->data, host_input->size);
-    load_data(weight.c_str(), (char*)host_weight->data, host_weight->size);
-    load_data(output.c_str(), (char*)golden_output->data, golden_output->size);
-
-    PimCopyMemory(device_input, host_input, HOST_TO_DEVICE);
-    PimCopyMemory(device_weight, host_weight, HOST_TO_DEVICE);
-
-    for (int i = 0; i < NUM_ITER; i++) {
-        /* __PIM_API__ call : Execute PIM kernel (GEMV) */
-        PimExecuteGemv(device_output, device_input, device_weight, nullptr, block);
-        if (!block) PimSynchronize();
-
-        PimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
-        //    dump_data(preload_weight.c_str(), (char*)preloaded_weight->data, preloaded_weight->size);
-        //    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
-        ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data, OUT_LENGTH, EPSILON);
-    }
-    /* __PIM_API__ call : Destroy PIM Buffer Object */
-    PimDestroyBo(host_input);
-    PimDestroyBo(host_weight);
-    PimDestroyBo(host_output);
-    PimDestroyBo(golden_output);
-    PimDestroyBo(device_input);
-    PimDestroyBo(device_weight);
-    PimDestroyBo(device_output);
-
-    /* __PIM_API__ call : Deinitialize PimRuntime */
-    PimDeinitialize();
-
-    return ret;
+    PimGemvTest t = PimGemvTest(1, 1, 256, 4096);
+    t.loadDatafromFile("load/gemv/uniform_input_256x1.dat", INPUT, MEM_TYPE_HOST);
+    t.loadDatafromFile("load/gemv/uniform_weight_256x4096.dat", WEIGHT, MEM_TYPE_HOST);
+    t.loadDatafromFile("load/gemv/uniform_output_4096x1.dat", GOLDEN, MEM_TYPE_HOST);
+    t.prepare();
+    t.run(PimExecuteGemv, block);
+    return t.validate();
 }
 
-int pim_gemv_normal_128(bool block)
+int pim_gemv_normal_256(bool block)
 {
-    int ret = 0;
-
-    /* __PIM_API__ call : Initialize PimRuntime */
-    PimInitialize(RT_TYPE_HIP, PIM_FP16);
-
-    /* __PIM_API__ call : Create PIM Buffer Object */
-    PimBo* host_input = PimCreateBo(1, 1, 1, IN_LENGTH, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* host_weight = PimCreateBo(1, 1, IN_LENGTH, OUT_LENGTH, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* host_output = PimCreateBo(1, 1, 1, OUT_LENGTH, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* golden_output = PimCreateBo(1, 1, 1, OUT_LENGTH, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* device_input = PimCreateBo(1, 1, 1, IN_LENGTH, PIM_FP16, MEM_TYPE_DEVICE);
-    PimBo* device_weight = PimCreateBo(1, 1, IN_LENGTH, OUT_LENGTH, PIM_FP16, MEM_TYPE_DEVICE);
-    PimBo* device_output = PimCreateBo(1, 1, 1, OUT_LENGTH, PIM_FP16, MEM_TYPE_DEVICE);
-
-    /* Initialize the input, weight, output data */
-    std::string test_vector_data = TEST_VECTORS_DATA;
-
-    // input is 0 from 128 to 255
-    std::string input = test_vector_data + "load/gemv/normal_input_256x1.dat";
-    std::string weight = test_vector_data + "load/gemv/normal_weight_256x4096.dat";
-    std::string output = test_vector_data + "load/gemv/normal_output_4096x1.dat";
-    std::string preload_weight = test_vector_data + "dump/gemv/normal_preloaded_weight_256x4096.dat";
-    std::string output_dump = test_vector_data + "dump/gemv/normal_output_4096x1.dat";
-
-    load_data(input.c_str(), (char*)host_input->data, host_input->size);
-    load_data(weight.c_str(), (char*)host_weight->data, host_weight->size);
-    load_data(output.c_str(), (char*)golden_output->data, golden_output->size);
-
-    PimCopyMemory(device_input, host_input, HOST_TO_DEVICE);
-    PimCopyMemory(device_weight, host_weight, HOST_TO_DEVICE);
-
-    for (int i = 0; i < NUM_ITER; i++) {
-        /* __PIM_API__ call : Execute PIM kernel (GEMV) */
-        PimExecuteGemv(device_output, device_input, device_weight, nullptr, block);
-        if (!block) PimSynchronize();
-
-        PimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
-        //    dump_data(preload_weight.c_str(), (char*)preloaded_weight->data, preloaded_weight->size);
-        //    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
-        ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data, OUT_LENGTH, EPSILON);
-    }
-    /* __PIM_API__ call : Destroy PIM Buffer Object */
-    PimDestroyBo(host_input);
-    PimDestroyBo(host_weight);
-    PimDestroyBo(host_output);
-    PimDestroyBo(golden_output);
-    PimDestroyBo(device_input);
-    PimDestroyBo(device_weight);
-    PimDestroyBo(device_output);
-
-    /* __PIM_API__ call : Deinitialize PimRuntime */
-    PimDeinitialize();
-
-    return ret;
+    PimGemvTest t = PimGemvTest(1, 1, 256, 4096);
+    t.loadDatafromFile("load/gemv/normal_input_256x1.dat", INPUT, MEM_TYPE_HOST);
+    t.loadDatafromFile("load/gemv/normal_weight_256x4096.dat", WEIGHT, MEM_TYPE_HOST);
+    t.loadDatafromFile("load/gemv/normal_output_4096x1.dat", GOLDEN, MEM_TYPE_HOST);
+    t.prepare();
+    t.run(PimExecuteGemv, block);
+    return t.validate();
 }
 
 int pim_gemv_uniform_4096(bool block)
 {
-    int ret = 0;
-    int input_length = 4096;
-    /* __PIM_API__ call : Initialize PimRuntime */
-    PimInitialize(RT_TYPE_HIP, PIM_FP16);
-
-    /* __PIM_API__ call : Create PIM Buffer Object */
-    PimBo* host_input = PimCreateBo(1, 1, 1, input_length, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* host_weight = PimCreateBo(1, 1, input_length, OUT_LENGTH, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* host_output = PimCreateBo(1, 1, 1, OUT_LENGTH, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* golden_output = PimCreateBo(1, 1, 1, OUT_LENGTH, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* device_input = PimCreateBo(1, 1, 1, input_length, PIM_FP16, MEM_TYPE_DEVICE);
-    PimBo* device_weight = PimCreateBo(1, 1, input_length, OUT_LENGTH, PIM_FP16, MEM_TYPE_DEVICE);
-    PimBo* device_output = PimCreateBo(1, 1, 1, OUT_LENGTH, PIM_FP16, MEM_TYPE_DEVICE);
-
-    /* Initialize the input, weight, output data */
-    std::string test_vector_data = TEST_VECTORS_DATA;
-
-    std::string input = test_vector_data + "load/gemv/uniform_input_4096x1.dat";
-    std::string weight = test_vector_data + "load/gemv/uniform_weight_4096x4096.dat";
-    std::string output = test_vector_data + "load/gemv/uniform_output_4096x4096.dat";
-    std::string preload_weight = test_vector_data + "dump/gemv/uniform_preloaded_weight_4096x4096.dat";
-    std::string output_dump = test_vector_data + "dump/gemv/uniform_output_4096x4096.dat";
-
-    load_data(input.c_str(), (char*)host_input->data, host_input->size);
-    load_data(weight.c_str(), (char*)host_weight->data, host_weight->size);
-    load_data(output.c_str(), (char*)golden_output->data, golden_output->size);
-
-    PimCopyMemory(device_input, host_input, HOST_TO_DEVICE);
-    PimCopyMemory(device_weight, host_weight, HOST_TO_DEVICE);
-
-    for (int i = 0; i < NUM_ITER; i++) {
-        /* __PIM_API__ call : Execute PIM kernel (GEMV) */
-        PimExecuteGemv(device_output, device_input, device_weight, nullptr, block);
-        if (!block) PimSynchronize();
-
-        PimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
-        //    dump_data(preload_weight.c_str(), (char*)preloaded_weight->data, preloaded_weight->size);
-        //    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
-
-        ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data, OUT_LENGTH, EPSILON);
-    }
-    /* __PIM_API__ call : Destroy PIM Buffer Object */
-    PimDestroyBo(host_input);
-    PimDestroyBo(host_weight);
-    PimDestroyBo(host_output);
-    PimDestroyBo(golden_output);
-    PimDestroyBo(device_input);
-    PimDestroyBo(device_weight);
-    PimDestroyBo(device_output);
-
-    /* __PIM_API__ call : Deinitialize PimRuntime */
-    PimDeinitialize();
-
-    return ret;
+    PimGemvTest t = PimGemvTest(1, 1, 4096, 4096);
+    t.loadDatafromFile("load/gemv/uniform_input_4096x1.dat", INPUT, MEM_TYPE_HOST);
+    t.loadDatafromFile("load/gemv/uniform_weight_4096x4096.dat", WEIGHT, MEM_TYPE_HOST);
+    t.loadDatafromFile("load/gemv/uniform_output_4096x4096.dat", GOLDEN, MEM_TYPE_HOST);
+    t.prepare();
+    t.run(PimExecuteGemv, block);
+    return t.validate();
 }
 
 int pim_gemv_normal_4096(bool block)
 {
-    int ret = 0;
-    int input_length = 4096;
-    /* __PIM_API__ call : Initialize PimRuntime */
-    PimInitialize(RT_TYPE_HIP, PIM_FP16);
-
-    /* __PIM_API__ call : Create PIM Buffer Object */
-    PimBo* host_input = PimCreateBo(1, 1, 1, input_length, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* host_weight = PimCreateBo(1, 1, input_length, OUT_LENGTH, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* host_output = PimCreateBo(1, 1, 1, OUT_LENGTH, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* golden_output = PimCreateBo(1, 1, 1, OUT_LENGTH, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* device_input = PimCreateBo(1, 1, 1, input_length, PIM_FP16, MEM_TYPE_DEVICE);
-    PimBo* device_weight = PimCreateBo(1, 1, input_length, OUT_LENGTH, PIM_FP16, MEM_TYPE_DEVICE);
-    PimBo* device_output = PimCreateBo(1, 1, 1, OUT_LENGTH, PIM_FP16, MEM_TYPE_DEVICE);
-
-    /* Initialize the input, weight, output data */
-    std::string test_vector_data = TEST_VECTORS_DATA;
-
-    // input is 0 from 128 to 255
-    std::string input = test_vector_data + "load/gemv/normal_input_4096x1.dat";
-    std::string weight = test_vector_data + "load/gemv/normal_weight_4096x4096.dat";
-    std::string output = test_vector_data + "load/gemv/normal_output_4096x4096.dat";
-    std::string preload_weight = test_vector_data + "dump/gemv/normal_preloaded_weight_4096x4096.dat";
-    std::string output_dump = test_vector_data + "dump/gemv/normal_output_4096x4096.dat";
-
-    load_data(input.c_str(), (char*)host_input->data, host_input->size);
-    load_data(weight.c_str(), (char*)host_weight->data, host_weight->size);
-    load_data(output.c_str(), (char*)golden_output->data, golden_output->size);
-
-    PimCopyMemory(device_input, host_input, HOST_TO_DEVICE);
-    PimCopyMemory(device_weight, host_weight, HOST_TO_DEVICE);
-
-    for (int i = 0; i < NUM_ITER; i++) {
-        /* __PIM_API__ call : Execute PIM kernel (GEMV) */
-        PimExecuteGemv(device_output, device_input, device_weight, nullptr, block);
-        if (!block) PimSynchronize();
-
-        PimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
-        //    dump_data(preload_weight.c_str(), (char*)preloaded_weight->data, preloaded_weight->size);
-        //    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
-
-        ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data, OUT_LENGTH, EPSILON);
-    }
-    /* __PIM_API__ call : Destroy PIM Buffer Object */
-    PimDestroyBo(host_input);
-    PimDestroyBo(host_weight);
-    PimDestroyBo(host_output);
-    PimDestroyBo(golden_output);
-    PimDestroyBo(device_input);
-    PimDestroyBo(device_weight);
-    PimDestroyBo(device_output);
-
-    /* __PIM_API__ call : Deinitialize PimRuntime */
-    PimDeinitialize();
-
-    return ret;
+    PimGemvTest t = PimGemvTest(1, 1, 4096, 4096);
+    t.loadDatafromFile("load/gemv/normal_input_4096x1.dat", INPUT, MEM_TYPE_HOST);
+    t.loadDatafromFile("load/gemv/normal_weight_4096x4096.dat", WEIGHT, MEM_TYPE_HOST);
+    t.loadDatafromFile("load/gemv/normal_output_4096x4096.dat", GOLDEN, MEM_TYPE_HOST);
+    t.prepare();
+    t.run(PimExecuteGemv, block);
+    return t.validate();
 }
 
 int pim_gemv_no_accum_512(bool block)
 {
-    int ret = 0;
-
-    /* __PIM_API__ call : Initialize PimRuntime */
-    PimInitialize(RT_TYPE_HIP, PIM_FP16);
-
-    /* __PIM_API__ call : Create PIM Buffer Object */
-    PimBo* host_input = PimCreateBo(1, 1, 1, IN_LENGTH * 2, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* host_weight = PimCreateBo(1, 1, IN_LENGTH * 2, OUT_LENGTH, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* host_output = PimCreateBo(1, 1, 1, OUT_LENGTH, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* golden_output = PimCreateBo(1, 1, 1, OUT_LENGTH, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* device_input = PimCreateBo(1, 1, 1, IN_LENGTH * 2, PIM_FP16, MEM_TYPE_DEVICE);
-    PimBo* device_weight = PimCreateBo(1, 1, IN_LENGTH * 2, OUT_LENGTH, PIM_FP16, MEM_TYPE_DEVICE);
-    PimBo* device_output = PimCreateBo(1, 1, 1, OUT_LENGTH, PIM_FP16, MEM_TYPE_DEVICE);
-
-    /* Initialize the input, weight, output data */
-    std::string test_vector_data = TEST_VECTORS_DATA;
-
-    std::string input = test_vector_data + "load/gemv/input_512x1.dat";
-    std::string weight = test_vector_data + "load/gemv/weight_512x4096.dat";
-    std::string output = test_vector_data + "load/gemv/output_4096x1_512.dat";
-    std::string preload_weight = test_vector_data + "dump/gemv/preloaded_weight_512x4096.dat";
-    std::string output_dump = test_vector_data + "dump/gemv/output_4096x1_512.dat";
-
-    load_data(input.c_str(), (char*)host_input->data, host_input->size);
-    load_data(weight.c_str(), (char*)host_weight->data, host_weight->size);
-    load_data(output.c_str(), (char*)golden_output->data, golden_output->size);
-
-    PimCopyMemory(device_input, host_input, HOST_TO_DEVICE);
-    PimCopyMemory(device_weight, host_weight, HOST_TO_DEVICE);
-
-    for (int i = 0; i < NUM_ITER; i++) {
-        /* __PIM_API__ call : Execute PIM kernel (GEMV) */
-        PimExecuteGemv(device_output, device_input, device_weight, nullptr, block);
-        if (!block) PimSynchronize();
-
-        PimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
-
-        //    dump_data(preload_weight.c_str(), (char*)preloaded_weight->data, preloaded_weight->size);
-        //    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
-        ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data, OUT_LENGTH, EPSILON);
-    }
-
-    /* __PIM_API__ call : Destroy PIM Buffer Object */
-    PimDestroyBo(host_input);
-    PimDestroyBo(host_weight);
-    PimDestroyBo(host_output);
-    PimDestroyBo(golden_output);
-    PimDestroyBo(device_input);
-    PimDestroyBo(device_weight);
-    PimDestroyBo(device_output);
-
-    /* __PIM_API__ call : Deinitialize PimRuntime */
-    PimDeinitialize();
-
-    return ret;
+    PimGemvTest t = PimGemvTest(1, 1, 512, 4096);
+    t.loadDatafromFile("load/gemv/input_512x1.dat", INPUT, MEM_TYPE_HOST);
+    t.loadDatafromFile("load/gemv/weight_512x4096.dat", WEIGHT, MEM_TYPE_HOST);
+    t.loadDatafromFile("load/gemv/output_4096x1_512.dat", GOLDEN, MEM_TYPE_HOST);
+    t.prepare();
+    t.run(PimExecuteGemv, block);
+    return t.validate();
 }
 
 int pim_gemv_no_accum_256(bool block)
 {
-    int ret = 0;
-
-    /* __PIM_API__ call : Initialize PimRuntime */
-    PimInitialize(RT_TYPE_HIP, PIM_FP16);
-
-    /* __PIM_API__ call : Create PIM Buffer Object */
-    PimBo* host_input = PimCreateBo(1, 1, 1, IN_LENGTH, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* host_weight = PimCreateBo(1, 1, IN_LENGTH, OUT_LENGTH, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* host_output = PimCreateBo(1, 1, 1, OUT_LENGTH, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* golden_output = PimCreateBo(1, 1, 1, OUT_LENGTH, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* device_input = PimCreateBo(1, 1, 1, IN_LENGTH, PIM_FP16, MEM_TYPE_DEVICE);
-    PimBo* device_weight = PimCreateBo(1, 1, IN_LENGTH, OUT_LENGTH, PIM_FP16, MEM_TYPE_DEVICE);
-    PimBo* device_output = PimCreateBo(1, 1, 1, OUT_LENGTH, PIM_FP16, MEM_TYPE_DEVICE);
-
-    /* Initialize the input, weight, output data */
-    std::string test_vector_data = TEST_VECTORS_DATA;
-
-    std::string input = test_vector_data + "load/gemv/input_256x1.dat";
-    std::string weight = test_vector_data + "load/gemv/weight_256x4096.dat";
-    std::string output = test_vector_data + "load/gemv/output_4096x1.dat";
-    std::string preload_weight = test_vector_data + "dump/gemv/preloaded_weight_256x4096.dat";
-    std::string output_dump = test_vector_data + "dump/gemv/output_4096x1_256.dat";
-
-    load_data(input.c_str(), (char*)host_input->data, host_input->size);
-    load_data(weight.c_str(), (char*)host_weight->data, host_weight->size);
-    load_data(output.c_str(), (char*)golden_output->data, golden_output->size);
-
-    PimCopyMemory(device_input, host_input, HOST_TO_DEVICE);
-    PimCopyMemory(device_weight, host_weight, HOST_TO_DEVICE);
-
-    for (int i = 0; i < NUM_ITER; i++) {
-        /* __PIM_API__ call : Execute PIM kernel (GEMV) */
-        PimExecuteGemv(device_output, device_input, device_weight, nullptr, block);
-        if (!block) PimSynchronize();
-
-        PimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
-
-        //    dump_data(preload_weight.c_str(), (char*)preloaded_weight->data, preloaded_weight->size);
-        //    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
-        ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data, OUT_LENGTH, EPSILON);
-    }
-
-    /* __PIM_API__ call : Destroy PIM Buffer Object */
-    PimDestroyBo(host_input);
-    PimDestroyBo(host_weight);
-    PimDestroyBo(host_output);
-    PimDestroyBo(golden_output);
-    PimDestroyBo(device_input);
-    PimDestroyBo(device_weight);
-    PimDestroyBo(device_output);
-
-    /* __PIM_API__ call : Deinitialize PimRuntime */
-    PimDeinitialize();
-
-    return ret;
+    PimGemvTest t = PimGemvTest(1, 1, 256, 4096);
+    t.loadDatafromFile("load/gemv/input_256x1.dat", INPUT, MEM_TYPE_HOST);
+    t.loadDatafromFile("load/gemv/weight_256x4096.dat", WEIGHT, MEM_TYPE_HOST);
+    t.loadDatafromFile("load/gemv/output_4096x1_256.dat", GOLDEN, MEM_TYPE_HOST);
+    t.prepare();
+    t.run(PimExecuteGemv, block);
+    return t.validate();
 }
 
 int pim_gemv_no_accum_desc(bool block)
@@ -875,18 +495,18 @@ TEST_F(PimGemvTestFixture, PimGemvBatchSync) { EXPECT_TRUE(pim_gemv_batch(true) 
 TEST_F(PimGemvTestFixture, PimGemvBatchAsync) { EXPECT_TRUE(pim_gemv_batch(false) == 0); }
 TEST_F(PimGemvTestFixture, PimGemvMoEChwiseSync) { EXPECT_TRUE(pim_gemv_moe_chwise(true) == 0); }
 TEST_F(PimGemvTestFixture, PimGemvMoESync) { EXPECT_TRUE(pim_gemv_moe(true) == 0); }
-TEST(HIPIntegrationTest, PimGemv256Sync) { EXPECT_TRUE(pim_gemv_256(true) == 0); }
-TEST(HIPIntegrationTest, PimGemv256Async) { EXPECT_TRUE(pim_gemv_256(false) == 0); }
-TEST(HIPIntegrationTest, PimGemv512Sync) { EXPECT_TRUE(pim_gemv_512(true) == 0); }
-TEST(HIPIntegrationTest, PimGemv512Async) { EXPECT_TRUE(pim_gemv_512(false) == 0); }
+TEST_F(PimGemvTestFixture, PimGemv256Sync) { EXPECT_TRUE(pim_gemv_256(true) == 0); }
+TEST_F(PimGemvTestFixture, PimGemv256Async) { EXPECT_TRUE(pim_gemv_256(false) == 0); }
+TEST_F(PimGemvTestFixture, PimGemv512Sync) { EXPECT_TRUE(pim_gemv_512(true) == 0); }
+TEST_F(PimGemvTestFixture, PimGemv512Async) { EXPECT_TRUE(pim_gemv_512(false) == 0); }
 TEST(HIPIntegrationTest, PimGemvDescSync) { EXPECT_TRUE(pim_gemv_desc(true) == 0); }
 TEST(HIPIntegrationTest, PimGemvDescAsync) { EXPECT_TRUE(pim_gemv_desc(false) == 0); }
 TEST(HIPIntegrationTest, PimGemvDescBatchSync) { EXPECT_TRUE(pim_gemv_desc_batch(true) == 0); }
 TEST(HIPIntegrationTest, PimGemvDescBatchASync) { EXPECT_TRUE(pim_gemv_desc_batch(false) == 0); }
-TEST(HIPIntegrationTest, PimGemvUniform128Sync) { EXPECT_TRUE(pim_gemv_uniform_128(true) == 0); }
-TEST(HIPIntegrationTest, PimGemvNormal128Sync) { EXPECT_TRUE(pim_gemv_normal_128(true) == 0); }
-TEST(HIPIntegrationTest, PimGemvUniform4096Sync) { EXPECT_TRUE(pim_gemv_uniform_4096(true) == 0); }
-TEST(HIPIntegrationTest, PimGemvNormal4096Sync) { EXPECT_TRUE(pim_gemv_normal_4096(true) == 0); }
-TEST(HIPIntegrationTest, PimGemvNoAccum512Sync) { EXPECT_TRUE(pim_gemv_no_accum_512(true) == 0); }
-TEST(HIPIntegrationTest, PimGemvNoAccum256Sync) { EXPECT_TRUE(pim_gemv_no_accum_256(true) == 0); }
+TEST_F(PimGemvTestFixture, PimGemvUniform256Sync) { EXPECT_TRUE(pim_gemv_uniform_256(true) == 0); }
+TEST_F(PimGemvTestFixture, PimGemvNormal256Sync) { EXPECT_TRUE(pim_gemv_normal_256(true) == 0); }
+TEST_F(PimGemvTestFixture, PimGemvUniform4096Sync) { EXPECT_TRUE(pim_gemv_uniform_4096(true) == 0); }
+TEST_F(PimGemvTestFixture, PimGemvNormal4096Sync) { EXPECT_TRUE(pim_gemv_normal_4096(true) == 0); }
+TEST_F(PimGemvTestFixture, PimGemvNoAccum512Sync) { EXPECT_TRUE(pim_gemv_no_accum_512(true) == 0); }
+TEST_F(PimGemvTestFixture, PimGemvNoAccum256Sync) { EXPECT_TRUE(pim_gemv_no_accum_256(true) == 0); }
 TEST(HIPIntegrationTest, PimGemvNoAccumDescSync) { EXPECT_TRUE(pim_gemv_no_accum_desc(true) == 0); }
