@@ -979,7 +979,9 @@ int HIPExecutor::execute_aligned_gemm_tile_accum(PimBo* output, PimBo* input, Pi
 
     unsigned blocks = fbi_.num_pim_chan;
     unsigned threads_per_block = 64;
+#ifdef EMULATOR
     int is_gemv_add = 0;
+#endif
 
     int n_in_tile = input->bshape.w * sizeof(uint16_t) / fbi_.trans_size / fbi_.num_grf_A;
     int n_out_tile = output->bshape.w / (fbi_.num_pim_chan * fbi_.num_pim_blocks * fbi_.num_grf_B);
@@ -1066,7 +1068,9 @@ int HIPExecutor::execute_chwise_gemm_tile_accum(PimBo* output, PimBo* input, Pim
 
     unsigned blocks = fbi_.num_pim_chan;
     unsigned threads_per_block = 64;
+#ifdef EMULATOR
     int is_gemv_add = 0;
+#endif
 
     int n_in_tile = input->bshape.w * sizeof(uint16_t) / fbi_.trans_size / fbi_.num_grf_A;
     int n_out_tile = 1;
