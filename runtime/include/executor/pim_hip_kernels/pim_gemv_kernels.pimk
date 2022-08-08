@@ -228,7 +228,7 @@ __global__ void gemv_list_chwise_pim_64cu_64th_fp16(
 #if REDUCE_SUM
     int bg = hipThreadIdx_x >> 4;
     int ba = (((hipThreadIdx_x >> 3) % 2) << 1) + 1;
-    //int t_idx = (hipBlockIdx_x % ch_per_op) * 64 + hipThreadIdx_x; // not-used
+    // int t_idx = (hipBlockIdx_x % ch_per_op) * 64 + hipThreadIdx_x; // not-used
     int out_idx;
     int out_offset;
     int li;

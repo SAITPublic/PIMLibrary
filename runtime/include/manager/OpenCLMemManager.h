@@ -41,9 +41,9 @@ class OpenCLMemManager : public PimMemoryManager
     int get_physical_id();
     int convert_data_layout(PimBo* dst, PimBo* src, PimOpType op_type) { return -1; };
 
-    void* get_context() { return static_cast<void *>(context); }
-    void* get_queue() { return static_cast<void *>(queue); }
-    void* get_device() { return static_cast<void *>(&device_id); }
+    void* get_context() { return static_cast<void*>(context); }
+    void* get_queue() { return static_cast<void*>(queue); }
+    void* get_device() { return static_cast<void*>(&device_id); }
 
    private:
     cl_platform_id cpPlatform;  // OpenCL platform

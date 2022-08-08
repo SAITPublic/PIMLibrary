@@ -416,6 +416,7 @@ PimBo* PimRuntime::get_preloaded_pim_gemm_weight(PimBo* dev_wei)
 
     if (pre_wei == nullptr) {
         PimBo* host_weight = nullptr;
+        PimBo* host_weight_t = nullptr;
         PimBo* host_reordered_weight = nullptr;
         PimBShape* bshape = &dev_wei->bshape;
 
@@ -423,13 +424,11 @@ PimBo* PimRuntime::get_preloaded_pim_gemm_weight(PimBo* dev_wei)
             DLOG(ERROR) << "[END] " << __FUNCTION__ << " called";
             return nullptr;
         }
-        if (dev_wei->mem_type == MEM_TYPE_HOST) {
-            host_weight = dev_wei;
-        } else if (dev_wei->mem_type == MEM_TYPE_DEVICE || dev_wei->mem_type == MEM_TYPE_PIM) {
-            uint32_t w_size = dev_wei->size;
-            host_weight = PimCreateBo(bshape->n, bshape->c, bshape->h, bshape->w, PIM_FP16, MEM_TYPE_HOST);
-            hipMemcpy(host_weight->data, dev_wei->data, w_size, hipMemcpyDeviceToHost);
-        }
+        uint32_t w_size = dev_wei->size;
+        host_weight = PimCreateBo(bshape->n, bshape->c, bshape->h, bshape->w, PIM_FP16, MEM_TYPE_HOST);
+        host_weight_t = PimCreateBo(bshape->n, bshape->c, bshape->h, bshape->w, PIM_FP16, MEM_TYPE_HOST);
+        hipMemcpy(host_weight_t->data, dev_wei->data, w_size, hipMemcpyDeviceToHost);
+        transpose_pimbo(host_weight, host_weight_t);
 
         host_reordered_weight = PimCreateBo(bshape->n, bshape->c, bshape->h, bshape->w, PIM_FP16, MEM_TYPE_HOST);
         pre_wei = PimCreateBo(bshape->n, bshape->c, bshape->h, bshape->w, PIM_FP16, MEM_TYPE_PIM);

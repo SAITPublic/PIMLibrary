@@ -14,7 +14,6 @@
 #include <stdlib.h>
 #include <algorithm>
 #include <iostream>
-#include <random>
 #include "half.hpp"
 #include "pim_runtime_api.h"
 #include "utility/pim_debug.hpp"
@@ -28,6 +27,7 @@ int pim_gemm_bias_relu(int n, int c, int inout_h, int in_w, int out_w, PimActFun
     float alpha = 1.0f;
     float beta = 0.0f;
     float epsilon = 0.1f;
+    float variation = 0.5f;
     int in_size = n * c * inout_h * in_w;
     int wei_size = n * c * in_w * out_w;
     int out_size = n * c * inout_h * out_w;
@@ -49,14 +49,11 @@ int pim_gemm_bias_relu(int n, int c, int inout_h, int in_w, int out_w, PimActFun
     PimBo* device_output = PimCreateBo(pim_gemm_desc, MEM_TYPE_DEVICE, GEMM_OUTPUT);
 
     /* Initialize the input, weight, output data */
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_real_distribution<> dis(-1.0, 1.0);
     set_half_data((half*)golden_output->data, half(0.0), out_size);
     set_half_data((half*)host_output->data, half(0.0), out_size);
-    set_half_data((half*)host_input->data, half(dis(gen)), in_size);
-    set_half_data((half*)host_weight->data, half(dis(gen)), wei_size);
-    set_half_data((half*)host_bias->data, half(10.0), out_size);
+    set_rand_half_data((half*)host_input->data, half(variation), in_size);
+    set_rand_half_data((half*)host_weight->data, half(variation), wei_size);
+    set_rand_half_data((half*)host_bias->data, half(variation), out_size);
     half* in_data = (half*)host_input->data;
     half* wei_data = (half*)host_weight->data;
     half* out_data = (half*)golden_output->data;
@@ -74,8 +71,8 @@ int pim_gemm_bias_relu(int n, int c, int inout_h, int in_w, int out_w, PimActFun
     PimCopyMemory(device_output, host_output, HOST_TO_DEVICE);
 
     /* __PIM_API__ call : Execute PIM kernel (GEMM) */
-    //PimBo* t_device_bias = (is_bias) ? device_bias : nullptr; // not-used
-    ret = PimExecuteGemm(device_output, device_input, device_weight, device_bias, act, nullptr, block);
+    PimBo* t_device_bias = (is_bias) ? device_bias : nullptr;
+    ret = PimExecuteGemm(device_output, device_input, device_weight, t_device_bias, act, nullptr, block);
     if (!block) PimSynchronize();
 
     /* Verify result */
@@ -106,12 +103,12 @@ int pim_fused_gemm_bias_relu(int n, int c, int inout_h, int in_w0, int out_w0, b
     int ret = 0;
     float alpha = 1.0f;
     float beta = 0.0f;
-    float epsilon = 0.1f;
+    float epsilon = 0.5f;
+    float variation = 0.5f;
 
     int in_size0 = n * c * inout_h * in_w0;
     int wei_size0 = n * c * in_w0 * out_w0;
     int out_size0 = n * c * inout_h * out_w0;
-    //int in_size1 = n * c * inout_h * in_w1; // not-used
     int wei_size1 = n * c * in_w1 * out_w1;
     int out_size1 = n * c * inout_h * out_w1;
 
@@ -141,17 +138,13 @@ int pim_fused_gemm_bias_relu(int n, int c, int inout_h, int in_w0, int out_w0, b
     PimBo* golden_output = PimCreateBo(pim_gemm_desc1, MEM_TYPE_HOST, GEMM_OUTPUT);
 
     /* Initialize the input, weight, output data */
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_real_distribution<> dis(-1.0, 1.0);
-
-    set_half_data((half*)host_input0->data, half(dis(gen)), in_size0);
-    set_half_data((half*)host_weight0->data, half(dis(gen)), wei_size0);
-    set_half_data((half*)host_bias0->data, half(10.0), out_size0);
+    set_rand_half_data((half*)host_input0->data, half(variation), in_size0);
+    set_rand_half_data((half*)host_weight0->data, half(variation), wei_size0);
+    set_rand_half_data((half*)host_bias0->data, half(variation), out_size0);
     set_half_data((half*)host_output0->data, half(0.0), out_size0);
 
-    set_half_data((half*)host_weight1->data, half(dis(gen)), wei_size1);
-    set_half_data((half*)host_bias1->data, half(10.0), out_size1);
+    set_rand_half_data((half*)host_weight1->data, half(variation), wei_size1);
+    set_rand_half_data((half*)host_bias1->data, half(variation), out_size1);
     set_half_data((half*)host_output1->data, half(0.0), out_size1);
     set_half_data((half*)golden_output->data, half(0.0), out_size1);
 
@@ -189,10 +182,11 @@ int pim_fused_gemm_bias_relu(int n, int c, int inout_h, int in_w0, int out_w0, b
     PimCopyMemory(device_bias1, host_bias1, HOST_TO_DEVICE);
 
     /* __PIM_API__ call : Execute PIM kernel (GEMM) */
-    // PimBo* t_device_bias1 = (is_bias1) ? device_bias1 : nullptr; // not-used
+    PimBo* t_device_bias0 = (is_bias0) ? device_bias0 : nullptr;  // not-used
+    PimBo* t_device_bias1 = (is_bias1) ? device_bias1 : nullptr;  // not-used
 
-    ret = PimExecuteGemm(device_output0, device_input0, device_weight0, device_bias0, act0, nullptr, false);
-    ret = PimExecuteGemm(device_output1, device_output0, device_weight1, device_bias1, act1, nullptr, true);
+    ret = PimExecuteGemm(device_output0, device_input0, device_weight0, t_device_bias0, act0, nullptr, false);
+    ret = PimExecuteGemm(device_output1, device_output0, device_weight1, t_device_bias1, act1, nullptr, true);
 
     /* Verify result */
     PimCopyMemory(host_output1, device_output1, DEVICE_TO_HOST);
@@ -225,93 +219,6 @@ int pim_fused_gemm_bias_relu(int n, int c, int inout_h, int in_w0, int out_w0, b
     return ret;
 }
 
-int pim_gemm_bias_relu_profile(int n, int c, int inout_h, int in_w, int out_w, PimActFunc act, bool is_bias, bool block)
-{
-    int ret = 0;
-    int in_size = n * c * inout_h * in_w;
-    int wei_size = n * c * in_w * out_w;
-    int out_size = n * c * inout_h * out_w;
-    int iter_cnt = 1000;
-    float alpha = 1.0f;
-    float beta = 0.0f;
-    float epsilon = 0.1f;
-
-    /* __PIM_API__ call : Initialize PimRuntime */
-    PimInitialize(RT_TYPE_HIP, PIM_FP16);
-    PimExecuteDummy();
-
-    /* __PIM_API__ call : Create PIM Buffer Object */
-    PimGemmDesc* pim_gemm_desc = PimCreateGemmDesc(n, c, inout_h, in_w, out_w, PIM_FP16);
-    PimBo* host_input = PimCreateBo(pim_gemm_desc, MEM_TYPE_HOST, GEMM_INPUT);
-    PimBo* host_weight = PimCreateBo(pim_gemm_desc, MEM_TYPE_HOST, GEMM_WEIGHT);
-    PimBo* host_bias = PimCreateBo(pim_gemm_desc, MEM_TYPE_HOST, GEMM_BIAS);
-    PimBo* host_output = PimCreateBo(pim_gemm_desc, MEM_TYPE_HOST, GEMM_OUTPUT);
-    PimBo* golden_output = PimCreateBo(pim_gemm_desc, MEM_TYPE_HOST, GEMM_OUTPUT);
-    PimBo* device_input = PimCreateBo(pim_gemm_desc, MEM_TYPE_DEVICE, GEMM_INPUT);
-    PimBo* device_weight = PimCreateBo(pim_gemm_desc, MEM_TYPE_DEVICE, GEMM_WEIGHT);
-    PimBo* device_bias = PimCreateBo(pim_gemm_desc, MEM_TYPE_DEVICE, GEMM_BIAS);
-    PimBo* device_output = PimCreateBo(pim_gemm_desc, MEM_TYPE_DEVICE, GEMM_OUTPUT);
-
-    /* Initialize the input, weight, output data */
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_real_distribution<> dis(-1.0, 1.0);
-    set_half_data((half*)golden_output->data, half(0.0), out_size);
-    set_half_data((half*)host_output->data, half(0.0), out_size);
-    set_half_data((half*)host_input->data, half(dis(gen)), in_size);
-    set_half_data((half*)host_weight->data, half(dis(gen)), wei_size);
-    set_half_data((half*)host_bias->data, half(10.0), out_size);
-    half* in_data = (half*)host_input->data;
-    half* wei_data = (half*)host_weight->data;
-    half* out_data = (half*)golden_output->data;
-    for (int ci = 0; ci < c; ci++) {
-        matmulCPU(in_data, wei_data, out_data, inout_h, out_w, in_w, half(alpha), half(beta));
-        in_data += (in_w * inout_h);
-        wei_data += (in_w * out_w);
-        out_data += (out_w * inout_h);
-    }
-    if (is_bias) addBiasCPU((half*)golden_output->data, (half*)host_bias->data, out_size);
-    if (act == ACT_RELU) reluCPU((half*)golden_output->data, out_size);
-    PimCopyMemory(device_input, host_input, HOST_TO_DEVICE);
-    PimCopyMemory(device_weight, host_weight, HOST_TO_DEVICE);
-    PimCopyMemory(device_bias, host_bias, HOST_TO_DEVICE);
-    PimCopyMemory(device_output, host_output, HOST_TO_DEVICE);
-
-    /* Warm up GPU and preload weight data into PIM area */
-    PimBo* t_device_bias = (is_bias) ? device_bias : nullptr;
-    ret = PimExecuteGemm(device_output, device_input, device_weight, t_device_bias, act, nullptr, true);
-
-    /* Start profile */
-    PIM_PROFILE_TICK_A(PimExecuteGemm);
-    for (int i = 0; i < iter_cnt; i++) {
-        PimExecuteGemm(device_output, device_input, device_weight, t_device_bias, act, nullptr, false);
-    }
-    PimSynchronize();
-    PIM_PROFILE_TOCK_ITER_A(PimExecuteGemm, iter_cnt);
-    /* End profile */
-
-    /* Verify result */
-    PimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
-    ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data, out_size, epsilon);
-
-    /* __PIM_API__ call : Destroy PIM Buffer Object */
-    PimDestroyBo(host_input);
-    PimDestroyBo(host_weight);
-    PimDestroyBo(host_bias);
-    PimDestroyBo(host_output);
-    PimDestroyBo(golden_output);
-    PimDestroyBo(device_input);
-    PimDestroyBo(device_weight);
-    PimDestroyBo(device_bias);
-    PimDestroyBo(device_output);
-    PimDestroyGemmDesc(pim_gemm_desc);
-
-    /* __PIM_API__ call : Deinitialize PimRuntime */
-    PimDeinitialize();
-
-    return ret;
-}
-
 TEST(HIPIntegrationTest, pim_gemm_bias_relu_1x1024_1024x4096)
 {
     EXPECT_TRUE(pim_gemm_bias_relu(1, 1, 1, 1024, 4096, ACT_RELU, true, true) == 0);
@@ -336,6 +243,7 @@ TEST(HIPIntegrationTest, pim_gemm_bias_relu_4x1x4096_4x4096x1024)
 {
     EXPECT_TRUE(pim_gemm_bias_relu(1, 4, 1, 4096, 1024, ACT_RELU, true, true) == 0);
 }
+#if 0
 TEST(HIPIntegrationTest, pim_gemm_bias_relu_4x8x4096_4x4096x1024)
 {
     EXPECT_TRUE(pim_gemm_bias_relu(1, 4, 8, 4096, 1024, ACT_RELU, true, true) == 0);
@@ -348,11 +256,4 @@ TEST(HIPIntegrationTest, pim_fused_gemm_bias_relu_4x8x1024_4x1024x4096_4x4096x10
 {
     EXPECT_TRUE(pim_fused_gemm_bias_relu(1, 4, 8, 1024, 4096, true, ACT_RELU, 4096, 1024, true, NONE) == 0);
 }
-TEST(HIPIntegrationTest, pim_gemm_bias_relu_4x8x1024_4x1024x4096_profile)
-{
-    EXPECT_TRUE(pim_gemm_bias_relu_profile(1, 4, 8, 1024, 4096, ACT_RELU, true, true) == 0);
-}
-TEST(HIPIntegrationTest, pim_gemm_bias_relu_4x8x4096_4x4096x1024_profile)
-{
-    EXPECT_TRUE(pim_gemm_bias_relu_profile(1, 4, 8, 4096, 1024, NONE, true, true) == 0);
-}
+#endif

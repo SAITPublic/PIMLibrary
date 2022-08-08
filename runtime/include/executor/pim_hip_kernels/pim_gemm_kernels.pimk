@@ -232,7 +232,7 @@ __global__ void pim_chwise_gemm_bias_relu_fp16(
     int ba = (((hipThreadIdx_x >> 3) % 2) << 1) + 1;
     int t_idx = hipThreadIdx_x;
     int out_offset = 0;
-    //int li = 0; // not-used
+    // int li = 0; // not-used
     half t_output = 0;
 
     for (int i = 0; i < iter_cnt; i++) {
@@ -341,7 +341,7 @@ __global__ void pim_chwise_gemm_bias_relu_32tile_fp16(
                 uint64_t i_offset = gemv_cnt * (n_in_tile << grf_shift);
                 int r_offset = 0;
 
-//#pragma unroll
+                //#pragma unroll
                 for (int i = 0, i_idx = 0; i < 16; i++, i_idx += 2) {
                     /* write grf_A from WRIO */
                     uint64_t i_addr = (i_offset + ((i_idx << grf_shift) + gidx)) << trans_shift;
@@ -379,7 +379,7 @@ __global__ void pim_chwise_gemm_bias_relu_32tile_fp16(
                     B_CMD(1);
                 }
 
-//#pragma unroll
+                //#pragma unroll
                 for (int i = 0, i_idx = 1; i < 16; i++, i_idx += 2) {
                     uint64_t i_addr = (i_offset + ((i_idx << grf_shift) + gidx)) << trans_shift;
                     addr = addr_gen(ch, 0, 0, 1, 0x3fff, 0x8 + gidx);
@@ -469,7 +469,7 @@ __global__ void pim_chwise_gemm_bias_relu_32tile_fp16(
     int ba = (((hipThreadIdx_x >> 3) % 2) << 1) + 1;
     int t_idx = hipThreadIdx_x;
     int out_offset = 0;
-    //int li = 0; // not-used
+    // int li = 0; // not-used
     half t_output = 0;
 
     for (int i = 0; i < iter_cnt; i++) {

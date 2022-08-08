@@ -28,22 +28,21 @@
 
 using half_float::half;
 using namespace std;
-using GemvFunc = int(*)(PimBo*, PimBo*, PimBo*, void*, bool);
+using GemvFunc = int (*)(PimBo*, PimBo*, PimBo*, void*, bool);
 
-class PimGemvTestFixture : public ::testing::Test {
-protected:
-    virtual void SetUp() override {
-        PimInitialize(RT_TYPE_HIP, PIM_FP16);
-    }
+class PimGemvTestFixture : public ::testing::Test
+{
+   protected:
+    virtual void SetUp() override { PimInitialize(RT_TYPE_HIP, PIM_FP16); }
 
-    virtual void TearDown() override {
-        PimDeinitialize();
-    }
+    virtual void TearDown() override { PimDeinitialize(); }
 };
 
-class PimGemvTest {
-public:
-    PimGemvTest(unsigned n_, unsigned c_, unsigned h_, unsigned w_) : n(n_), c(c_), h(h_), w(w_) {
+class PimGemvTest
+{
+   public:
+    PimGemvTest(unsigned n_, unsigned c_, unsigned h_, unsigned w_) : n(n_), c(c_), h(h_), w(w_)
+    {
         // n: batch, c: channel, h: in (height), w: out (width)
         cout << "PimGemvTest: Test start (" << n << ", " << c << ", " << h << ", " << w << ")\n";
         if (n > 1 && c > 1) {
@@ -58,7 +57,8 @@ public:
         golden = PimCreateBo(n, c, 1, w, PIM_FP16, MEM_TYPE_HOST);
     }
 
-    PimGemvTest(PimDesc* i_desc, PimDesc* w_desc, PimDesc* o_desc) {
+    PimGemvTest(PimDesc* i_desc, PimDesc* w_desc, PimDesc* o_desc)
+    {
         // n: batch, c: channel, h: in (height), w: out (width)
         n = i_desc->bshape_r.n;
         c = i_desc->bshape_r.c;
@@ -75,7 +75,8 @@ public:
         golden = PimCreateBo(o_desc, MEM_TYPE_HOST, GEMV_OUTPUT);
     }
 
-    void prepare(bool use_random_data=false, float alpha=1.0f, float beta=0.0f) {
+    void prepare(bool use_random_data = false, float alpha = 1.0f, float beta = 0.0f)
+    {
         if (use_random_data) {
             random_device rd;
             mt19937 gen(rd());
@@ -93,8 +94,8 @@ public:
                 for (int i = 0; i < c; i++) {
                     set_half_data(((half*)h_i->data) + i * h, half(dis(gen)), h);
                     set_half_data(((half*)h_w->data) + i * h * w, half(dis(gen)), h * w);
-                    matmulCPU(((half*)h_i->data) + i * h, ((half*)h_w->data) + i * h * w,
-                              ((half*)golden->data) + i * w, 1, w, h, half(alpha), half(beta));
+                    matmulCPU(((half*)h_i->data) + i * h, ((half*)h_w->data) + i * h * w, ((half*)golden->data) + i * w,
+                              1, w, h, half(alpha), half(beta));
                 }
             }
         }
@@ -102,7 +103,8 @@ public:
         PimCopyMemory(d_w, h_w, HOST_TO_DEVICE);
     }
 
-    void run(GemvFunc pFunc, bool block=true, unsigned niter=10) {
+    void run(GemvFunc pFunc, bool block = true, unsigned niter = 10)
+    {
         for (unsigned i = 0; i < niter; ++i) {
             pFunc(d_o, d_i, d_w, nullptr, block);
             if (!block) PimSynchronize();
@@ -110,24 +112,27 @@ public:
         PimCopyMemory(h_o, d_o, DEVICE_TO_HOST);
     }
 
-    int validate(float epsilon=1.0f) {
-        return compare_half_relative((half *)golden->data, (half *)h_o->data, (n * c * w), epsilon);
+    int validate(float epsilon = 1.0f)
+    {
+        return compare_half_relative((half*)golden->data, (half*)h_o->data, (n * c * w), epsilon);
     }
 
-    void loadDatafromFile(PimBo* pimbo, const string file, size_t size=0) {
+    void loadDatafromFile(PimBo* pimbo, const string file, size_t size = 0)
+    {
         string filename = test_vector_data + file;
         FILE* fp = fopen(filename.c_str(), "r");
         if (fp == nullptr) {
             throw invalid_argument("cannot open file");
         }
-        char *data = static_cast<char*>(pimbo->data);
+        char* data = static_cast<char*>(pimbo->data);
         for (size_t i = 0; i < pimbo->size; i++) {
             fscanf(fp, "%c", &data[i]);
         }
         fclose(fp);
     }
 
-    ~PimGemvTest() {
+    ~PimGemvTest()
+    {
         cout << "PimGemvTest: Test done" << endl;
         PimDestroyBo(h_i);
         PimDestroyBo(h_w);
@@ -137,10 +142,11 @@ public:
         PimDestroyBo(d_w);
         PimDestroyBo(d_o);
     }
-private:
+
+   private:
     unsigned n, c, h, w;
 
-public:
+   public:
     PimBo* h_i = nullptr;
     PimBo* h_w = nullptr;
     PimBo* h_o = nullptr;
@@ -206,18 +212,18 @@ int pim_gemv_desc_batch(bool block)
     PimBo* tmp_w = PimCreateBo(pim_desc, MEM_TYPE_HOST, GEMV_WEIGHT);
     PimBo* tmp_o = PimCreateBo(pim_desc, MEM_TYPE_HOST, GEMV_OUTPUT);
 
-    load_data(i_filename.c_str(), static_cast<char *>(t.h_i->data), t.h_i->size);
-    load_data(w_filename.c_str(), static_cast<char *>(tmp_w->data), tmp_w->size);
-    load_data(o_filename.c_str(), static_cast<char *>(tmp_o->data), tmp_o->size);
- 
+    load_data(i_filename.c_str(), static_cast<char*>(t.h_i->data), t.h_i->size);
+    load_data(w_filename.c_str(), static_cast<char*>(tmp_w->data), tmp_w->size);
+    load_data(o_filename.c_str(), static_cast<char*>(tmp_o->data), tmp_o->size);
+
     for (unsigned i = 0; i < pim_desc->bshape.n; i++) {
-        memcpy(static_cast<half*>(t.golden->data) + i * pim_desc->bshape_r.w, static_cast<half*>(tmp_o->data) + i * pim_desc->bshape.w,
-               pim_desc->bshape_r.w * sizeof(half));
+        memcpy(static_cast<half*>(t.golden->data) + i * pim_desc->bshape_r.w,
+               static_cast<half*>(tmp_o->data) + i * pim_desc->bshape.w, pim_desc->bshape_r.w * sizeof(half));
     }
 
     for (unsigned i = 0; i < pim_desc->bshape_r.w; i++) {
-        memcpy(static_cast<half*>(t.h_w->data) + i * pim_desc->bshape_r.h, static_cast<half*>(tmp_w->data) + i * pim_desc->bshape.h,
-               pim_desc->bshape_r.h * sizeof(half));
+        memcpy(static_cast<half*>(t.h_w->data) + i * pim_desc->bshape_r.h,
+               static_cast<half*>(tmp_w->data) + i * pim_desc->bshape.h, pim_desc->bshape_r.h * sizeof(half));
     }
 
     t.prepare();
@@ -306,18 +312,18 @@ int pim_gemv_no_accum_desc(bool block)
     PimBo* tmp_w = PimCreateBo(pim_desc, MEM_TYPE_HOST, GEMV_WEIGHT);
     PimBo* tmp_o = PimCreateBo(pim_desc, MEM_TYPE_HOST, GEMV_OUTPUT);
 
-    load_data(i_filename.c_str(), static_cast<char *>(t.h_i->data), t.h_i->size);
-    load_data(w_filename.c_str(), static_cast<char *>(tmp_w->data), tmp_w->size);
-    load_data(o_filename.c_str(), static_cast<char *>(tmp_o->data), tmp_o->size);
- 
+    load_data(i_filename.c_str(), static_cast<char*>(t.h_i->data), t.h_i->size);
+    load_data(w_filename.c_str(), static_cast<char*>(tmp_w->data), tmp_w->size);
+    load_data(o_filename.c_str(), static_cast<char*>(tmp_o->data), tmp_o->size);
+
     for (unsigned i = 0; i < pim_desc->bshape.n; i++) {
-        memcpy(static_cast<half*>(t.golden->data) + i * pim_desc->bshape_r.w, static_cast<half*>(tmp_o->data) + i * pim_desc->bshape.w,
-               pim_desc->bshape_r.w * sizeof(half));
+        memcpy(static_cast<half*>(t.golden->data) + i * pim_desc->bshape_r.w,
+               static_cast<half*>(tmp_o->data) + i * pim_desc->bshape.w, pim_desc->bshape_r.w * sizeof(half));
     }
 
     for (unsigned i = 0; i < pim_desc->bshape_r.w; i++) {
-        memcpy(static_cast<half*>(t.h_w->data) + i * pim_desc->bshape_r.h, static_cast<half*>(tmp_w->data) + i * pim_desc->bshape.h,
-               pim_desc->bshape_r.h * sizeof(half));
+        memcpy(static_cast<half*>(t.h_w->data) + i * pim_desc->bshape_r.h,
+               static_cast<half*>(tmp_w->data) + i * pim_desc->bshape.h, pim_desc->bshape_r.h * sizeof(half));
     }
 
     t.prepare();

@@ -55,6 +55,7 @@ class PimMemoryManager
     virtual void* get_context(void) { return nullptr; }
     virtual void* get_queue(void) { return nullptr; }
     virtual void* get_device(void) { return nullptr; }
+
    protected:
     PimDevice* pim_device_;
     PimPrecision precision_;

@@ -12,6 +12,7 @@
 #define _PIM_DEBUG_HPP_
 
 #include <iostream>
+#include <random>
 #include "half.hpp"
 #include "manager/PimInfo.h"
 #include "pim_data_types.h"
@@ -253,6 +254,17 @@ inline void set_half_data(half_float::half* buffer, half_float::half value, size
 {
     for (int i = 0; i < size; i++) {
         buffer[i] = value;
+    }
+}
+
+inline void set_rand_half_data(half_float::half* buffer, half_float::half variation, size_t size)
+{
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<> dis(-variation, variation);
+
+    for (size_t i = 0; i < size; i++) {
+        buffer[i] = half_float::half(dis(gen));
     }
 }
 

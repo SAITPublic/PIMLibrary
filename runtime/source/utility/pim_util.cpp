@@ -25,12 +25,13 @@ void set_pimbo_t(PimBo* dst, PimBo* src)
 void transpose_pimbo(PimBo* dst, PimBo* src)
 {
     int batch = src->bshape.n;
+    int channel = src->bshape.c;
     int row = src->bshape.h;
     int col = src->bshape.w;
     half_float::half* in = reinterpret_cast<half_float::half*>(src->data);
     half_float::half* out = reinterpret_cast<half_float::half*>(dst->data);
 
-    for (int bi = 0; bi < batch; bi++) {
+    for (int iter = 0; iter < batch * channel; iter++) {
         for (int ri = 0; ri < row; ri++) {
             for (int ci = 0; ci < col; ci++) {
                 out[ci * row + ri] = in[ri * col + ci];
@@ -79,7 +80,7 @@ size_t get_aligned_size(PimDesc* pim_desc, PimMemFlag mem_flag, PimBo* pim_bo)
     pim_bo->bshape_r = {bs_r.n, bs_r.c, bs_r.h, bs_r.w};
     pim_bo->bshape = {bs.n, bs.c, bs.h, bs.w};
 
-    size = bs.n * bs.c * bs.h * bs.w;
+    size = (size_t)bs.n * (size_t)bs.c * (size_t)bs.h * (size_t)bs.w;
 
     return size;
 }
