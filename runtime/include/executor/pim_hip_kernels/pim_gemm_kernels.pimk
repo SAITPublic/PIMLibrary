@@ -45,17 +45,16 @@ __global__ void pim_chwise_gemm_bias_relu_fp16(
     int num_ba = 4;
     int ba_shift = 2;
     int num_col = 32;
-    int col_shift = 5;
     int trans_shift = 5;
-    int even_row, odd_row, row, col, loc;
+    int even_row, odd_row, col, loc;
     int ch = hipBlockIdx_x;
     int w_idx = hipThreadIdx_x % 2;
     int gidx = hipThreadIdx_x >> 1;
     uint64_t offset = w_idx << 4;
     uint64_t addr;
-    int gemv_cnt = 0;
     int chs_per_op = 64 / (4096 / out_w);
     input += ((hipBlockIdx_x / chs_per_op) * in_w << 1);
+    volatile uint8_t* __restrict__ t_pim_partial_sum = pim_partial_sum;
 #endif
 
 #if PARK_IN
@@ -103,9 +102,8 @@ __global__ void pim_chwise_gemm_bias_relu_fp16(
                 R_CMD(&pim_ctr[addr + offset]);
                 B_CMD(1);
 
-                uint64_t i_offset = gemv_cnt * (n_in_tile << grf_shift);
+                uint64_t i_offset = 0;
                 int r_offset = 0;
-
                 for (int i_idx = 0; i_idx < n_in_tile; i_idx += 2) {
                     /* write grf_A from WRIO */
                     uint64_t i_addr = (i_offset + ((i_idx << grf_shift) + gidx)) << trans_shift;
@@ -178,16 +176,15 @@ __global__ void pim_chwise_gemm_bias_relu_fp16(
                     R_CMD(&weight[addr + offset]);
                     B_CMD(1);
                 }
-                loc = (gemv_cnt << grf_shift) + gidx;
-                row = loc >> col_shift;
+                loc = gidx;
                 col = loc % num_col;
 
                 // pipeline delay
                 // FIX : If alu is in operation, NOP should be added.
-                addr = addr_gen(ch, 0, 0, 1, row, col);
-                W_CMD(&pim_partial_sum[addr + offset]);
-                W_CMD(&pim_partial_sum[addr + offset]);
-                R_CMD(&pim_partial_sum[addr + offset]);
+                addr = addr_gen(ch, 0, 0, 1, 0, col);
+                W_CMD(&t_pim_partial_sum[addr + offset]);
+                W_CMD(&t_pim_partial_sum[addr + offset]);
+                R_CMD(&t_pim_partial_sum[addr + offset]);
                 B_CMD(1);
 
                 addr = addr_gen(ch, 0, 0, 0, 0x3fff, 0x0);
@@ -195,10 +192,10 @@ __global__ void pim_chwise_gemm_bias_relu_fp16(
                 R_CMD(&pim_ctr[addr + offset]);
                 B_CMD(1);
 
-                gemv_cnt++;
-                input += (in_w << 1);
             }
+            input += (in_w * (4096 / out_w) * 2);
             weight += (in_w << 13);
+            t_pim_partial_sum += (1 << 18);
         }
     }
 #endif
@@ -232,17 +229,17 @@ __global__ void pim_chwise_gemm_bias_relu_fp16(
     int ba = (((hipThreadIdx_x >> 3) % 2) << 1) + 1;
     int t_idx = hipThreadIdx_x;
     int out_offset = 0;
-    // int li = 0; // not-used
     half t_output = 0;
+    t_pim_partial_sum = pim_partial_sum;
 
     for (int i = 0; i < iter_cnt; i++) {
         for (int in_idx = 0; in_idx < inout_h; in_idx++) {
-            row = 0;
+            loc = gidx;
             col = hipThreadIdx_x % 8;
-            addr = addr_gen(ch, 0, bg, ba, row, col);
+            addr = addr_gen(ch, 0, bg, ba, 0, col);
             t_output = 0;
             for (int ti = 0; ti < 16; ti++) {
-                t_output += ((half*)pim_partial_sum)[(addr >> 1) + ti];
+                t_output += ((half*)t_pim_partial_sum)[(addr >> 1) + ti];
             }
             out_offset = (hipBlockIdx_x << 6) + t_idx;
             if (is_bias) t_output += ((half*)bias)[out_offset];
@@ -250,9 +247,9 @@ __global__ void pim_chwise_gemm_bias_relu_fp16(
                 if (t_output < (half)0.) t_output = (half)0.;
             ((half*)output)[out_offset] = t_output;
 
-            output += 8192;            /* out_align_size(4096) * type_size(2) */
-            pim_partial_sum += 131072; /* out_align_size(4096) * partial_sum_cnt(16) * type_size(2) */
         }
+        output += 8192;
+        t_pim_partial_sum += (1 << 18);
     }
 #endif
 }
@@ -280,17 +277,16 @@ __global__ void pim_chwise_gemm_bias_relu_32tile_fp16(
     int num_ba = 4;
     int ba_shift = 2;
     int num_col = 32;
-    int col_shift = 5;
     int trans_shift = 5;
-    int even_row, odd_row, row, col, loc;
+    int even_row, odd_row, col, loc;
     int ch = hipBlockIdx_x;
     int w_idx = hipThreadIdx_x % 2;
     int gidx = hipThreadIdx_x >> 1;
     uint64_t offset = w_idx << 4;
     uint64_t addr;
-    int gemv_cnt = 0;
     int chs_per_op = 64 / (4096 / out_w);
     input += ((hipBlockIdx_x / chs_per_op) * in_w << 1);
+    volatile uint8_t* __restrict__ t_pim_partial_sum = pim_partial_sum;
 #endif
 
 #if PARK_IN
@@ -338,10 +334,8 @@ __global__ void pim_chwise_gemm_bias_relu_32tile_fp16(
                 R_CMD(&pim_ctr[addr + offset]);
                 B_CMD(1);
 
-                uint64_t i_offset = gemv_cnt * (n_in_tile << grf_shift);
+                uint64_t i_offset = 0;
                 int r_offset = 0;
-
-                //#pragma unroll
                 for (int i = 0, i_idx = 0; i < 16; i++, i_idx += 2) {
                     /* write grf_A from WRIO */
                     uint64_t i_addr = (i_offset + ((i_idx << grf_shift) + gidx)) << trans_shift;
@@ -379,7 +373,6 @@ __global__ void pim_chwise_gemm_bias_relu_32tile_fp16(
                     B_CMD(1);
                 }
 
-                //#pragma unroll
                 for (int i = 0, i_idx = 1; i < 16; i++, i_idx += 2) {
                     uint64_t i_addr = (i_offset + ((i_idx << grf_shift) + gidx)) << trans_shift;
                     addr = addr_gen(ch, 0, 0, 1, 0x3fff, 0x8 + gidx);
@@ -415,16 +408,15 @@ __global__ void pim_chwise_gemm_bias_relu_32tile_fp16(
                     R_CMD(&weight[addr + offset]);
                     B_CMD(1);
                 }
-                loc = (gemv_cnt << grf_shift) + gidx;
-                row = loc >> col_shift;
+                loc = gidx;
                 col = loc % num_col;
 
                 // pipeline delay
                 // FIX : If alu is in operation, NOP should be added.
-                addr = addr_gen(ch, 0, 0, 1, row, col);
-                W_CMD(&pim_partial_sum[addr + offset]);
-                W_CMD(&pim_partial_sum[addr + offset]);
-                R_CMD(&pim_partial_sum[addr + offset]);
+                addr = addr_gen(ch, 0, 0, 1, 0, col);
+                W_CMD(&t_pim_partial_sum[addr + offset]);
+                W_CMD(&t_pim_partial_sum[addr + offset]);
+                R_CMD(&t_pim_partial_sum[addr + offset]);
                 B_CMD(1);
 
                 addr = addr_gen(ch, 0, 0, 0, 0x3fff, 0x0);
@@ -432,10 +424,10 @@ __global__ void pim_chwise_gemm_bias_relu_32tile_fp16(
                 R_CMD(&pim_ctr[addr + offset]);
                 B_CMD(1);
 
-                gemv_cnt++;
-                input += (in_w << 1);
             }
+            input += (in_w * (4096 / out_w) * 2);
             weight += (in_w << 13);
+            t_pim_partial_sum += (1 << 18);
         }
     }
 #endif
@@ -469,17 +461,17 @@ __global__ void pim_chwise_gemm_bias_relu_32tile_fp16(
     int ba = (((hipThreadIdx_x >> 3) % 2) << 1) + 1;
     int t_idx = hipThreadIdx_x;
     int out_offset = 0;
-    // int li = 0; // not-used
     half t_output = 0;
+    t_pim_partial_sum = pim_partial_sum;
 
     for (int i = 0; i < iter_cnt; i++) {
         for (int in_idx = 0; in_idx < inout_h; in_idx++) {
-            row = 0;
+            loc = gidx;
             col = hipThreadIdx_x % 8;
-            addr = addr_gen(ch, 0, bg, ba, row, col);
+            addr = addr_gen(ch, 0, bg, ba, 0, col);
             t_output = 0;
             for (int ti = 0; ti < 16; ti++) {
-                t_output += ((half*)pim_partial_sum)[(addr >> 1) + ti];
+                t_output += ((half*)t_pim_partial_sum)[(addr >> 1) + ti];
             }
             out_offset = (hipBlockIdx_x << 6) + t_idx;
             if (is_bias) t_output += ((half*)bias)[out_offset];
@@ -487,9 +479,9 @@ __global__ void pim_chwise_gemm_bias_relu_32tile_fp16(
                 if (t_output < (half)0.) t_output = (half)0.;
             ((half*)output)[out_offset] = t_output;
 
-            output += 8192;            /* out_align_size(4096) * type_size(2) */
-            pim_partial_sum += 131072; /* out_align_size(4096) * partial_sum_cnt(16) * type_size(2) */
         }
+        output += 8192;
+        t_pim_partial_sum += (1 << 18);
     }
 #endif
 }

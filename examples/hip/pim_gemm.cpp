@@ -26,8 +26,8 @@ int pim_gemm_bias_relu(int n, int c, int inout_h, int in_w, int out_w, PimActFun
     int ret = 0;
     float alpha = 1.0f;
     float beta = 0.0f;
-    float epsilon = 0.1f;
-    float variation = 0.5f;
+    float epsilon = 0.5f;
+    float variation = 0.2f;
     int in_size = n * c * inout_h * in_w;
     int wei_size = n * c * in_w * out_w;
     int out_size = n * c * inout_h * out_w;
@@ -104,7 +104,7 @@ int pim_fused_gemm_bias_relu(int n, int c, int inout_h, int in_w0, int out_w0, b
     float alpha = 1.0f;
     float beta = 0.0f;
     float epsilon = 0.5f;
-    float variation = 0.5f;
+    float variation = 0.2f;
 
     int in_size0 = n * c * inout_h * in_w0;
     int wei_size0 = n * c * in_w0 * out_w0;
@@ -219,38 +219,50 @@ int pim_fused_gemm_bias_relu(int n, int c, int inout_h, int in_w0, int out_w0, b
     return ret;
 }
 
-TEST(HIPIntegrationTest, pim_gemm_bias_relu_1x1024_1024x4096)
+TEST(HIPIntegrationTest, pim_aligned_gemm_bias_relu_1x1024_1024x4096)
 {
     EXPECT_TRUE(pim_gemm_bias_relu(1, 1, 1, 1024, 4096, ACT_RELU, true, true) == 0);
 }
-TEST(HIPIntegrationTest, pim_gemm_bias_relu_8x1024_1024x4096)
+TEST(HIPIntegrationTest, pim_aligned_gemm_bias_relu_4x1x1024_4x1024x4096)
+{
+    EXPECT_TRUE(pim_gemm_bias_relu(1, 4, 1, 1024, 4096, ACT_RELU, true, true) == 0);
+}
+TEST(HIPIntegrationTest, pim_aligned_gemm_bias_relu_8x1024_1024x4096)
 {
     EXPECT_TRUE(pim_gemm_bias_relu(1, 1, 8, 1024, 4096, ACT_RELU, true, true) == 0);
 }
-TEST(HIPIntegrationTest, pim_gemm_bias_relu_4x8x1024_4x1024x4096)
+TEST(HIPIntegrationTest, pim_aligned_gemm_bias_relu_4x8x1024_4x1024x4096)
 {
     EXPECT_TRUE(pim_gemm_bias_relu(1, 4, 8, 1024, 4096, ACT_RELU, true, true) == 0);
 }
-TEST(HIPIntegrationTest, pim_gemm_bias_relu_64x1x256_64x256x64)
+TEST(HIPIntegrationTest, pim_chwise_gemm_bias_relu_64x1x256_64x256x64)
 {
     EXPECT_TRUE(pim_gemm_bias_relu(1, 64, 1, 256, 64, ACT_RELU, true, true) == 0);
 }
-TEST(HIPIntegrationTest, pim_gemm_bias_relu_64x1x1024_64x1024x64)
+TEST(HIPIntegrationTest, pim_chwise_gemm_bias_relu_64x1x1024_64x1024x64)
 {
     EXPECT_TRUE(pim_gemm_bias_relu(1, 64, 1, 1024, 64, ACT_RELU, true, true) == 0);
 }
-TEST(HIPIntegrationTest, pim_gemm_bias_relu_4x1x4096_4x4096x1024)
+TEST(HIPIntegrationTest, pim_chwise_gemm_bias_relu_4x1x4096_4x4096x1024)
 {
     EXPECT_TRUE(pim_gemm_bias_relu(1, 4, 1, 4096, 1024, ACT_RELU, true, true) == 0);
+}
+TEST(HIPIntegrationTest, pim_chwise_gemm_bias_relu_8x1x4096_8x4096x1024)
+{
+    EXPECT_TRUE(pim_gemm_bias_relu(1, 8, 1, 4096, 1024, ACT_RELU, true, true) == 0);
+}
+TEST(HIPIntegrationTest, pim_fused_gemm_bias_relu_4x1x1024_4x1024x4096_4x4096x1024)
+{
+    EXPECT_TRUE(pim_fused_gemm_bias_relu(1, 4, 1, 1024, 4096, true, ACT_RELU, 4096, 1024, true, NONE) == 0);
+}
+TEST(HIPIntegrationTest, pim_fused_gemm_bias_relu_8x1x1024_8x1024x4096_8x4096x1024)
+{
+    EXPECT_TRUE(pim_fused_gemm_bias_relu(1, 8, 1, 1024, 4096, true, ACT_RELU, 4096, 1024, true, NONE) == 0);
 }
 #if 0
 TEST(HIPIntegrationTest, pim_gemm_bias_relu_4x8x4096_4x4096x1024)
 {
     EXPECT_TRUE(pim_gemm_bias_relu(1, 4, 8, 4096, 1024, ACT_RELU, true, true) == 0);
-}
-TEST(HIPIntegrationTest, pim_fused_gemm_bias_relu_4x1x1024_4x1024x4096_4x4096x1024)
-{
-    EXPECT_TRUE(pim_fused_gemm_bias_relu(1, 4, 1, 1024, 4096, true, ACT_RELU, 4096, 1024, true, NONE) == 0);
 }
 TEST(HIPIntegrationTest, pim_fused_gemm_bias_relu_4x8x1024_4x1024x4096_4x4096x1024)
 {
