@@ -1019,7 +1019,7 @@ int HIPExecutor::execute_aligned_gemm_tile_accum(PimBo* output, PimBo* input, Pi
     PIM_PROFILE_TICK(RunGemmKernel);
     hipLaunchKernelGGL(gemm_kernel, dim3(blocks), dim3(threads_per_block), 0, (hipStream_t)stream,
                        (uint8_t*)(g_pim_base_addr[device_id]), (uint8_t*)input->data, (uint8_t*)weight->data,
-                       (uint8_t*)bias->data, (uint8_t*)output->data, (uint8_t*)pim_gemv_tmp_buffer_, iter_cnt,
+                       is_bias ? (uint8_t*)bias->data : nullptr, (uint8_t*)output->data, (uint8_t*)pim_gemv_tmp_buffer_, iter_cnt,
                        input->bshape.h, input->bshape.w, output->bshape.w, n_in_tile, n_out_tile, is_bias, is_relu,
 #ifdef EMULATOR
                        (PimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_,
