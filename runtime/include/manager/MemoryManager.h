@@ -11,11 +11,11 @@
 #ifndef _MEMORY_MANAGER_H_
 #define _MEMORY_MANAGER_H_
 
-#include "manager/HIPMemManager.h"
-#include "manager/OpenCLMemManager.h"
+#include "manager/HipMemManager.h"
+#include "manager/IPimMemoryManager.h"
+#include "manager/OclMemManager.h"
 #include "manager/PimDevice.h"
 #include "manager/PimInfo.h"
-#include "manager/PimMemoryManager.h"
 #include "pim_data_types.h"
 
 namespace pim
@@ -27,14 +27,14 @@ namespace manager
 class MemoryManager
 {
    public:
-    PimMemoryManager* getPimMemoryManager(PimDevice* pim_device, PimRuntimeType rt_type, PimPrecision precision)
+    IPimMemoryManager* getPimMemoryManager(PimDevice* pim_device, PimRuntimeType rt_type, PimPrecision precision)
     {
-        PimMemoryManager* mem_manager = nullptr;
+        IPimMemoryManager* mem_manager = nullptr;
 
         if (rt_type == RT_TYPE_HIP) {
-            mem_manager = new HIPMemManager(pim_device, rt_type, precision);
+            mem_manager = new HipMemManager(pim_device, precision);
         } else if (rt_type == RT_TYPE_OPENCL) {
-            mem_manager = new OpenCLMemManager(pim_device, rt_type, precision);
+            mem_manager = new OclMemManager(pim_device, precision);
         } else {
             throw std::invalid_argument("invalid type of runtime");
         }

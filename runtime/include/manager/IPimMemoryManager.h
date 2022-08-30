@@ -11,11 +11,6 @@
 #ifndef _PIM_MEMORY_MANAGER_H_
 #define _PIM_MEMORY_MANAGER_H_
 
-#include <vector>
-#include "CL/opencl.h"
-#include "internal/simple_heap.hpp"
-#include "manager/PimBlockAllocator.h"
-#include "manager/PimInfo.h"
 #include "pim_data_types.h"
 
 namespace pim
@@ -24,16 +19,11 @@ namespace runtime
 {
 namespace manager
 {
-class PimDevice;
-
-class PimMemoryManager
+class IPimMemoryManager
 {
    public:
-    PimMemoryManager(PimDevice* pim_device, PimRuntimeType rt_type, PimPrecision precision);
-    virtual ~PimMemoryManager(void);
-
-    virtual int initialize();
-    virtual int deinitialize();
+    virtual int initialize(void) = 0;
+    virtual int deinitialize(void) = 0;
     virtual int alloc_memory(void** ptr, size_t size, PimMemType mem_type) = 0;
     virtual int alloc_memory(PimBo* pim_bo) = 0;
     virtual int free_memory(void* ptr, PimMemType mem_type) = 0;
@@ -42,25 +32,11 @@ class PimMemoryManager
     virtual int copy_memory(PimBo* dst, PimBo* src, PimMemCpyType cpy_type) = 0;
     virtual int copy_memory_3d(const PimCopy3D* copy_params) = 0;
     virtual int convert_data_layout(PimBo* dst, PimBo* src, PimOpType op_type) = 0;
-    PimRuntimeType rt_type_;
-    std::vector<SimpleHeap<PimBlockAllocator>*> fragment_allocator_;
 
     // TODO, below methods seem better to be in PimDevice
-    virtual void* get_context(void) { return nullptr; }
-    virtual void* get_queue(void) { return nullptr; }
-    virtual void* get_device(void) { return nullptr; }
-
-   protected:
-    PimDevice* pim_device_;
-    PimPrecision precision_;
-    PimBlockInfo fbi_;
-
-    /**
-     * @brief PIM Block allocator of size 2MB
-     *
-     * TODO: This is a simple block allocator where it uses malloc for allocation and free
-     *       It has to be modified to use PIM memory region for alloc and free.
-     */
+    virtual void* get_context(void) = 0;
+    virtual void* get_queue(void) = 0;
+    virtual void* get_device(void) = 0;
 };
 } /* namespace manager */
 } /* namespace runtime */

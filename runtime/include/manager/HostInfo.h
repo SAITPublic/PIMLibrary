@@ -24,4 +24,4 @@ typedef struct __HostInfo {
     uint32_t base_address;
 } HostInfo;
 
-#endif /* _PIM_INFO_H_ */
+#endif /* _HOST_INFO_H_ */

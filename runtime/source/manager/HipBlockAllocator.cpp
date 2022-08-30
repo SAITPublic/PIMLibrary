@@ -8,12 +8,13 @@
  * to third parties without the express written permission of Samsung Electronics.
  */
 
+#include "manager/HipBlockAllocator.h"
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 #include <iostream>
 #include <list>
-#include "manager/PimBlockAllocator.h"
+#include <map>
 #include "executor/PimExecutor.h"
 #include "manager/HostInfo.h"
 #include "utility/pim_debug.hpp"
@@ -39,14 +40,14 @@ namespace runtime
 {
 namespace manager
 {
-void* PimBlockAllocator::alloc(size_t request_size, size_t& allocated_size, int device_id, PimRuntimeType rt_type) const
+void* HipBlockAllocator::alloc(size_t request_size, size_t& allocated_size, int host_id) const
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     assert(request_size <= block_size() && "BlockAllocator alloc request exceeds block size.");
     uint64_t ret = 0;
     size_t bsize = block_size();
 
-    ret = allocate_pim_block(bsize, device_id, rt_type);
+    ret = allocate_pim_block(bsize, host_id);
 
     if (ret == 0) return NULL;
 
@@ -56,7 +57,7 @@ void* PimBlockAllocator::alloc(size_t request_size, size_t& allocated_size, int 
     return (void*)ret;
 }
 
-void PimBlockAllocator::free(void* ptr, size_t length) const
+void HipBlockAllocator::free(void* ptr, size_t length) const
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     if (ptr == NULL || length == 0) {
@@ -68,7 +69,7 @@ void PimBlockAllocator::free(void* ptr, size_t length) const
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
 }
 
-uint64_t PimBlockAllocator::allocate_pim_block(size_t bsize, int host_id, PimRuntimeType rt_type) const
+uint64_t HipBlockAllocator::allocate_pim_block(size_t bsize, int host_id) const
 {
     uint64_t ret = 0;
     DLOG(INFO) << "PIM's Host Device ID : " << host_id;
@@ -86,15 +87,7 @@ uint64_t PimBlockAllocator::allocate_pim_block(size_t bsize, int host_id, PimRun
         pim_alloc_done[host_id] = true;
         g_pim_base_addr[host_id] = ret;
 #ifndef EMULATOR
-        if (rt_type == RT_TYPE_HIP) {
-            hipHostRegister((void*)g_pim_base_addr[host_id], bsize, hipRegisterExternalSvm);
-        } else if (rt_type == RT_TYPE_OPENCL) {
-            /*
-            this function is just a place holder to register the memory for pim , through opencl.
-            have to implement this function.
-            */
-            // clHostRegister((void*)g_pim_base_addr[host_id], bsize);
-        }
+        hipHostRegister((void*)g_pim_base_addr[host_id], bsize, hipRegisterExternalSvm);
 #endif
     } else {
         std::cout << "fmm_map_pim failed! " << ret << std::endl;

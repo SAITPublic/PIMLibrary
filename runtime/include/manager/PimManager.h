@@ -11,11 +11,11 @@
 #ifndef _PIM_MANAGER_H_
 #define _PIM_MANAGER_H_
 
+#include "manager/IPimMemoryManager.h"
 #include "manager/PimControlManager.h"
 #include "manager/PimCrfBinGen.h"
 #include "manager/PimDevice.h"
 #include "manager/PimInfo.h"
-#include "manager/PimMemoryManager.h"
 #include "pim_data_types.h"
 
 namespace pim
@@ -24,7 +24,6 @@ namespace runtime
 {
 namespace manager
 {
-class PimMemoryManager;
 class PimControlManager;
 class PimDevice;
 
@@ -46,10 +45,10 @@ class PimManager
     int copy_memory_3d(const PimCopy3D* copy_params);
     int convert_data_layout(PimBo* dst, PimBo* src, PimOpType op_type);
 
-    uint8_t* get_crf_binary();
-    int get_crf_size();
+    uint8_t* get_crf_binary(void);
+    int get_crf_size(void);
     PimCrfBinGen* pim_crf_generator_;
-    PimMemoryManager* pim_memory_manager_;
+    IPimMemoryManager* pim_memory_manager_;
 
    private:
     PimManager(PimRuntimeType rt_type, PimPrecision precision);

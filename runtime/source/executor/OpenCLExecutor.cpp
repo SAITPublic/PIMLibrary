@@ -33,8 +33,9 @@ OpenCLExecutor::OpenCLExecutor(PimRuntimeType rt_type, PimPrecision precision) :
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
 }
 
-int OpenCLExecutor::initialize()
+int OpenCLExecutor::initialize(void)
 {
+    printf("OCL exe %d\n", __LINE__);
     int ret = PimExecutor::initialize();
     DLOG(INFO) << "[START] " << __FUNCTION__ << "OpenCL executor Intialization ";
 
@@ -46,11 +47,13 @@ int OpenCLExecutor::initialize()
     pim_manager_->alloc_memory((void**)&zero_buffer_, 32 * 2, MEM_TYPE_DEVICE);
     auto cl_command_queue_ptr = static_cast<cl_command_queue>(pim_manager_->pim_memory_manager_->get_queue());
     clEnqueueFillBuffer(cl_command_queue_ptr, zero_buffer_, (void*)&zero, sizeof(int), 0, 32 * 2, 0, NULL, NULL);
+    printf("OCL exe %d\n", __LINE__);
 
     /* PIM HW can generate only gemv output without reduction sum */
     /* so PimExecutor needs to maintain intermediate output buffer for gemv op */
     pim_manager_->alloc_memory((void**)&pim_gemv_tmp_buffer_, 8 * 2 * 1024 * 1024, MEM_TYPE_PIM);
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+    printf("OCL exe %d\n", __LINE__);
     return ret;
 }
 

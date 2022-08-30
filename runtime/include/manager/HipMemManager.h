@@ -11,10 +11,14 @@
 #ifndef _HIP_MEM_MANAGER_H_
 #define _HIP_MEM_MANAGER_H_
 
+#include <map>
 #include <vector>
 #include "internal/simple_heap.hpp"
+#include "manager/HipBlockAllocator.h"
+#include "manager/HostInfo.h"
+#include "manager/IPimMemoryManager.h"
+#include "manager/PimDevice.h"
 #include "manager/PimInfo.h"
-#include "manager/PimMemoryManager.h"
 #include "pim_data_types.h"
 
 namespace pim
@@ -23,11 +27,12 @@ namespace runtime
 {
 namespace manager
 {
-class HIPMemManager : public PimMemoryManager
+class PimDevice;
+class HipMemManager : public IPimMemoryManager
 {
    public:
-    HIPMemManager(PimDevice* pim_device, PimRuntimeType rt_type, PimPrecision precision);
-    virtual ~HIPMemManager();
+    HipMemManager(PimDevice* pim_device, PimPrecision precision);
+    virtual ~HipMemManager(void);
 
     int initialize(void);
     int deinitialize(void);
@@ -40,14 +45,24 @@ class HIPMemManager : public PimMemoryManager
     int copy_memory_3d(const PimCopy3D* copy_params);
     int convert_data_layout(PimBo* dst, PimBo* src, PimOpType op_type);
 
+    void* get_context(void) { return nullptr; }
+    void* get_queue(void) { return nullptr; }
+    void* get_device(void) { return nullptr; }
+
    private:
     int convert_data_layout_for_gemm_weight(PimBo* dst, PimBo* src);
     int convert_data_layout_for_aligned_gemm_weight(PimBo* dst, PimBo* src);
     int convert_data_layout_for_chwise_gemm_weight(PimBo* dst, PimBo* src);
     int convert_data_layout_for_gemv_weight(PimBo* dst, PimBo* src, int data_offset);
     int convert_data_layout_for_gemv_weight(PimBo* dst, PimBo* src, int data_offset, int ch_per_op);
+
+   private:
+    std::vector<SimpleHeap<HipBlockAllocator>*> fragment_allocator_;
     int num_gpu_devices_;
-    int device_id_;
+    int host_id_;
+    PimDevice* pim_device_;
+    PimPrecision precision_;
+    PimBlockInfo fbi_;
 };
 }  // namespace manager
 }  // namespace runtime

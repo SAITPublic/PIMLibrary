@@ -8,24 +8,18 @@
  * to third parties without the express written permission of Samsung Electronics.
  */
 
-#include "manager/HIPMemManager.h"
-
+#include "manager/HipMemManager.h"
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 #include <iostream>
+#include <list>
 #include "hip/hip_runtime.h"
-#include "manager/PimMemoryManager.h"
+#include "manager/HostInfo.h"
 #include "utility/pim_debug.hpp"
 #include "utility/pim_util.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-uint64_t fmm_map_pim(uint32_t, uint32_t, uint64_t);
-#ifdef __cplusplus
-}
-#endif
+extern std::map<uint32_t, HostInfo*> host_devices;
 
 namespace pim
 {
@@ -33,45 +27,120 @@ namespace runtime
 {
 namespace manager
 {
-HIPMemManager::HIPMemManager(PimDevice* pim_device, PimRuntimeType rt_type, PimPrecision precision)
-    : PimMemoryManager(pim_device, rt_type, precision)
+inline std::list<int> get_env(const char* key)
 {
-    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
-    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+    std::list<int> hip_devices = {};
+    if (key == nullptr) {
+        return hip_devices;
+    }
+
+    if (*key == '\0') {
+        return hip_devices;
+    }
+
+    const char* ev_val = getenv(key);
+    if (ev_val == nullptr) {
+        return hip_devices;  // variable not defined
+    }
+
+    std::string env = getenv(key);
+    std::string delimiter = ",";
+    size_t pos = 0;
+    std::string token;
+    while ((pos = env.find(delimiter)) != std::string::npos) {
+        token = env.substr(0, pos);
+        int num = stoi((token));
+        hip_devices.push_back(num);
+        env.erase(0, pos + delimiter.length());
+    }
+    int num = stoi((env));
+    hip_devices.push_back(num);
+
+    return hip_devices;
 }
 
-HIPMemManager::~HIPMemManager() { DLOG(INFO) << "[START] " << __FUNCTION__ << " called"; }
-int HIPMemManager::initialize()
+HipMemManager::HipMemManager(PimDevice* pim_device, PimPrecision precision)
+    : pim_device_(pim_device), precision_(precision)
+{
+    get_pim_block_info(&fbi_);
+}
+
+HipMemManager::~HipMemManager() { DLOG(INFO) << "[START] " << __FUNCTION__ << " called"; }
+int HipMemManager::initialize()
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
-    int device_id_ = PimMemoryManager::initialize();
-    if (device_id_ < 0) {
-        return device_id_;
+
+    int max_topology = 32;
+    FILE* fd;
+    char path[256];
+    uint32_t gpu_id;
+    int host_cnt = 0;
+    int num_gpu_devices = 0;
+    std::list<int> hip_visible_devices = get_env("HIP_VISIBLE_DEVICES");
+    hipGetDeviceCount(&num_gpu_devices);
+
+    // if hip_device is not set , then assume all devices are visible
+    if (hip_visible_devices.empty()) {
+        for (int device = 0; device < num_gpu_devices; device++) {
+            hip_visible_devices.push_back(device);
+        }
     }
+
+    int curr = 0;
+    for (int id = 0; id < max_topology; id++) {
+        // Get GPU ID
+        snprintf(path, 256, "/sys/devices/virtual/kfd/kfd/topology/nodes/%d/gpu_id", id);
+        fd = fopen(path, "r");
+        if (!fd) continue;
+        if (fscanf(fd, "%ul", &gpu_id) != 1) {
+            fclose(fd);
+            continue;
+        }
+
+        fclose(fd);
+        if (gpu_id == 0) continue;
+        if (gpu_id != 0 && curr == hip_visible_devices.front()) {
+            DLOG(INFO) << " adding device:" << id << " "
+                       << "gpu_id:" << gpu_id;
+            HostInfo* host_info = new HostInfo;
+            host_info->host_type = AMDGPU;
+            host_info->node_id = id;
+            host_info->host_id = gpu_id;
+            host_info->base_address = 0;
+            host_devices[host_cnt] = host_info;
+            host_cnt++;
+            hip_visible_devices.pop_front();
+        }
+        curr++;
+    }
+
+    if (host_cnt == 0) {
+        ret = -1;
+        DLOG(ERROR) << "AMDGPU device not found " << __FUNCTION__ << " called";
+    }
+
     hipGetDeviceCount(&num_gpu_devices_);
-    if (device_id_ != num_gpu_devices_) {
+    if (host_cnt != num_gpu_devices_) {
         ret = -1;
         DLOG(ERROR) << "Number of GPU Ids and Device Count doesn't match" << __FUNCTION__ << " called";
     }
 
     for (int device = 0; device < num_gpu_devices_; device++) {
-        fragment_allocator_.push_back(new SimpleHeap<PimBlockAllocator>);
+        fragment_allocator_.push_back(new SimpleHeap<HipBlockAllocator>);
     }
-    hipGetDevice(&device_id_);
+    hipGetDevice(&host_id_);
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
 
-int HIPMemManager::deinitialize(void)
+int HipMemManager::deinitialize(void)
 {
-    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
-    int ret = PimMemoryManager::deinitialize();
-    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+    int ret = 0;
     return ret;
 }
 
-int HIPMemManager::alloc_memory(void** ptr, size_t size, PimMemType mem_type)
+int HipMemManager::alloc_memory(void** ptr, size_t size, PimMemType mem_type)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
@@ -85,15 +154,15 @@ int HIPMemManager::alloc_memory(void** ptr, size_t size, PimMemType mem_type)
             return -1;
         }
     } else if (mem_type == MEM_TYPE_PIM) {
-        hipGetDevice(&device_id_);
-        *ptr = fragment_allocator_[device_id_]->alloc(size, device_id_, rt_type_);
+        hipGetDevice(&host_id_);
+        *ptr = fragment_allocator_[host_id_]->alloc(size, host_id_);
     }
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
 
-int HIPMemManager::alloc_memory(PimBo* pim_bo)
+int HipMemManager::alloc_memory(PimBo* pim_bo)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
@@ -109,15 +178,15 @@ int HIPMemManager::alloc_memory(PimBo* pim_bo)
             return -1;
         }
     } else if (pim_bo->mem_type == MEM_TYPE_PIM) {
-        hipGetDevice(&device_id_);
-        pim_bo->data = fragment_allocator_[device_id_]->alloc(pim_bo->size, device_id_, rt_type_);
+        hipGetDevice(&host_id_);
+        pim_bo->data = fragment_allocator_[host_id_]->alloc(pim_bo->size, host_id_);
     }
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
 
-int HIPMemManager::free_memory(void* ptr, PimMemType mem_type)
+int HipMemManager::free_memory(void* ptr, PimMemType mem_type)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
@@ -130,15 +199,15 @@ int HIPMemManager::free_memory(void* ptr, PimMemType mem_type)
     } else if (mem_type == MEM_TYPE_HOST) {
         hipHostFree(ptr);
     } else if (mem_type == MEM_TYPE_PIM) {
-        hipGetDevice(&device_id_);
-        return fragment_allocator_[device_id_]->free(ptr);
+        hipGetDevice(&host_id_);
+        return fragment_allocator_[host_id_]->free(ptr);
     }
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
 
-int HIPMemManager::free_memory(PimBo* pim_bo)
+int HipMemManager::free_memory(PimBo* pim_bo)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
@@ -152,8 +221,8 @@ int HIPMemManager::free_memory(PimBo* pim_bo)
         hipHostFree(pim_bo->data);
         pim_bo->data = nullptr;
     } else if (pim_bo->mem_type == MEM_TYPE_PIM) {
-        hipGetDevice(&device_id_);
-        if (fragment_allocator_[device_id_]->free(pim_bo->data)) return 0;
+        hipGetDevice(&host_id_);
+        if (fragment_allocator_[host_id_]->free(pim_bo->data)) return 0;
         DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
         return -1;
     }
@@ -162,7 +231,7 @@ int HIPMemManager::free_memory(PimBo* pim_bo)
     return ret;
 }
 
-int HIPMemManager::copy_memory(void* dst, void* src, size_t size, PimMemCpyType cpy_type)
+int HipMemManager::copy_memory(void* dst, void* src, size_t size, PimMemCpyType cpy_type)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
@@ -193,7 +262,7 @@ int HIPMemManager::copy_memory(void* dst, void* src, size_t size, PimMemCpyType 
     return ret;
 }
 
-int HIPMemManager::copy_memory(PimBo* dst, PimBo* src, PimMemCpyType cpy_type)
+int HipMemManager::copy_memory(PimBo* dst, PimBo* src, PimMemCpyType cpy_type)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
@@ -237,7 +306,7 @@ size_t PrecisionSize(const PimBo* bo)
     }
 }
 
-int HIPMemManager::copy_memory_3d(const PimCopy3D* copy_params)
+int HipMemManager::copy_memory_3d(const PimCopy3D* copy_params)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
@@ -299,7 +368,7 @@ int HIPMemManager::copy_memory_3d(const PimCopy3D* copy_params)
     return ret;
 }
 
-int HIPMemManager::convert_data_layout(PimBo* dst, PimBo* src, PimOpType op_type)
+int HipMemManager::convert_data_layout(PimBo* dst, PimBo* src, PimOpType op_type)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
@@ -327,7 +396,7 @@ int HIPMemManager::convert_data_layout(PimBo* dst, PimBo* src, PimOpType op_type
     return ret;
 }
 
-int HIPMemManager::convert_data_layout_for_gemm_weight(PimBo* dst, PimBo* src)
+int HipMemManager::convert_data_layout_for_gemm_weight(PimBo* dst, PimBo* src)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
@@ -347,7 +416,7 @@ int HIPMemManager::convert_data_layout_for_gemm_weight(PimBo* dst, PimBo* src)
     return ret;
 }
 
-int HIPMemManager::convert_data_layout_for_chwise_gemm_weight(PimBo* dst, PimBo* src)
+int HipMemManager::convert_data_layout_for_chwise_gemm_weight(PimBo* dst, PimBo* src)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
@@ -499,7 +568,7 @@ int HIPMemManager::convert_data_layout_for_chwise_gemm_weight(PimBo* dst, PimBo*
     return ret;
 }
 
-int HIPMemManager::convert_data_layout_for_aligned_gemm_weight(PimBo* dst, PimBo* src)
+int HipMemManager::convert_data_layout_for_aligned_gemm_weight(PimBo* dst, PimBo* src)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
@@ -671,7 +740,7 @@ int HIPMemManager::convert_data_layout_for_aligned_gemm_weight(PimBo* dst, PimBo
     return ret;
 }
 
-int HIPMemManager::convert_data_layout_for_gemv_weight(PimBo* dst, PimBo* src, int data_offset)
+int HipMemManager::convert_data_layout_for_gemv_weight(PimBo* dst, PimBo* src, int data_offset)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
@@ -824,7 +893,7 @@ int HIPMemManager::convert_data_layout_for_gemv_weight(PimBo* dst, PimBo* src, i
     return ret;
 }
 
-int HIPMemManager::convert_data_layout_for_gemv_weight(PimBo* dst, PimBo* src, int data_offset, int ch_per_op)
+int HipMemManager::convert_data_layout_for_gemv_weight(PimBo* dst, PimBo* src, int data_offset, int ch_per_op)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;

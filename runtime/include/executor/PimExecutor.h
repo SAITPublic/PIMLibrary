@@ -11,7 +11,7 @@
 #ifndef _PIM_EXECUTOR_H_
 #define _PIM_EXECUTOR_H_
 
-#include <unordered_map>
+#include <map>
 #ifdef EMULATOR
 #include "emulator/PimEmulator.h"
 #endif

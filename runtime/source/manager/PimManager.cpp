@@ -16,6 +16,8 @@
 #include "utility/pim_log.h"
 #include "utility/pim_util.h"
 
+std::map<uint32_t, HostInfo*> host_devices;
+
 namespace pim
 {
 namespace runtime
