@@ -12,11 +12,11 @@
 #define _OPENCL_MEM_MANAGER_H_
 
 #include <CL/cl.h>
-#include "internal/simple_heap.hpp"
 #include "manager/IPimMemoryManager.h"
-#include "manager/OclBlockAllocator.h"
 #include "manager/PimDevice.h"
 #include "manager/PimInfo.h"
+#include "manager/ocl/OclBlockAllocator.h"
+#include "manager/simple_heap.hpp"
 #include "pim_data_types.h"
 
 namespace pim

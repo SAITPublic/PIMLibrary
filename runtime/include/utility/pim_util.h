@@ -66,4 +66,6 @@ bool is_pim_available(PimBo* out, PimBo* op0, PimBo* op1, PimOpType op_type);
 bool is_pim_gemv_available(PimBo* bo);
 bool is_pim_gemv_list_available(PimBo* output, PimBo* vector, PimBo* matrix);
 bool check_chwise_gemm_bo(PimBo* bo);
+size_t PrecisionSize(const PimBo* bo);
+
 #endif /* _PIM_UTIL_H_ */

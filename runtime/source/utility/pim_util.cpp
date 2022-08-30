@@ -247,3 +247,17 @@ bool is_pim_gemv_list_available(PimBo* output, PimBo* vector, PimBo* matrix)
 
     return true;
 }
+
+size_t PrecisionSize(const PimBo* bo)
+{
+    size_t ret = 0;
+    assert(bo != nullptr && "Invalid buffer");
+    switch (bo->precision) {
+        case PIM_FP16:
+            ret = sizeof(half_float::half);
+        case PIM_INT8:
+        default:
+            ret = 1ul;
+    }
+    return ret;
+}

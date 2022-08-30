@@ -11,11 +11,11 @@
 #ifndef _MEMORY_MANAGER_H_
 #define _MEMORY_MANAGER_H_
 
-#include "manager/HipMemManager.h"
 #include "manager/IPimMemoryManager.h"
-#include "manager/OclMemManager.h"
 #include "manager/PimDevice.h"
 #include "manager/PimInfo.h"
+#include "manager/hip/HipMemManager.h"
+#include "manager/ocl/OclMemManager.h"
 #include "pim_data_types.h"
 
 namespace pim

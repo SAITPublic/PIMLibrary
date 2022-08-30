@@ -1,5 +1,7 @@
 aux_source_directory(. runtime_source)
 aux_source_directory(manager  runtime_source)
+aux_source_directory(manager/hip  runtime_source)
+aux_source_directory(manager/ocl  runtime_source)
 aux_source_directory(executor runtime_source)
 if(EMULATOR)
 aux_source_directory(emulator runtime_source)

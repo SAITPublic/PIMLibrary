@@ -8,7 +8,7 @@
  * to third parties without the express written permission of Samsung Electronics.
  */
 
-#include "manager/OclMemManager.h"
+#include "manager/ocl/OclMemManager.h"
 #include <CL/opencl.h>
 #include <assert.h>
 #include <stdlib.h>

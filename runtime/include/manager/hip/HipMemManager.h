@@ -13,12 +13,12 @@
 
 #include <map>
 #include <vector>
-#include "internal/simple_heap.hpp"
-#include "manager/HipBlockAllocator.h"
 #include "manager/HostInfo.h"
 #include "manager/IPimMemoryManager.h"
 #include "manager/PimDevice.h"
 #include "manager/PimInfo.h"
+#include "manager/hip/HipBlockAllocator.h"
+#include "manager/simple_heap.hpp"
 #include "pim_data_types.h"
 
 namespace pim

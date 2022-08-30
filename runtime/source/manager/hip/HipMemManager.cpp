@@ -8,7 +8,7 @@
  * to third parties without the express written permission of Samsung Electronics.
  */
 
-#include "manager/HipMemManager.h"
+#include "manager/hip/HipMemManager.h"
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
@@ -292,18 +292,6 @@ int HipMemManager::copy_memory(PimBo* dst, PimBo* src, PimMemCpyType cpy_type)
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
-}
-
-size_t PrecisionSize(const PimBo* bo)
-{
-    assert(bo != nullptr && "Invalid buffer");
-    switch (bo->precision) {
-        case PIM_FP16:
-            return sizeof(half_float::half);
-        case PIM_INT8:
-        default:
-            return 1ul;
-    }
 }
 
 int HipMemManager::copy_memory_3d(const PimCopy3D* copy_params)
