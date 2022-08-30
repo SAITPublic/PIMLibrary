@@ -32,9 +32,9 @@ class PimBlockAllocator
 #endif
    public:
     explicit PimBlockAllocator() {}
-    void* alloc(size_t request_size, size_t& allocated_size, int device_id, PimRuntimeType rt_type) const;
+    void* alloc(size_t request_size, size_t& allocated_size, int host_id, PimRuntimeType rt_type) const;
     void free(void* ptr, size_t length) const;
-    uint64_t allocate_pim_block(size_t request_size, int device_id, PimRuntimeType rt_type) const;
+    uint64_t allocate_pim_block(size_t request_size, int host_id, PimRuntimeType rt_type) const;
     size_t block_size() const { return block_size_; }
 };
 }  // namespace manager

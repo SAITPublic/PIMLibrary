@@ -24,12 +24,6 @@ namespace runtime
 {
 namespace manager
 {
-struct gpuInfo {
-    uint32_t node_id;
-    uint32_t gpu_id;
-    uint32_t base_address;
-};
-
 class PimDevice;
 
 class PimMemoryManager

@@ -1,0 +1,27 @@
+/*
+ * Copyright (C) 2021 Samsung Electronics Co. LTD
+ *
+ * This software is a property of Samsung Electronics.
+ * No part of this software, either material or conceptual may be copied or distributed, transmitted,
+ * transcribed, stored in a retrieval system or translated into any human or computer language in any form by any means,
+ * electronic, mechanical, manual or otherwise, or disclosed
+ * to third parties without the express written permission of Samsung Electronics.
+ */
+
+#ifndef _HOST_INFO_H_
+#define _HOST_INFO_H_
+
+typedef enum __HostType {
+    AMDGPU,
+    CPU,
+    FPGA,
+} HostType;
+
+typedef struct __HostInfo {
+    HostType host_type;
+    uint32_t node_id;
+    uint32_t host_id;
+    uint32_t base_address;
+} HostInfo;
+
+#endif /* _PIM_INFO_H_ */
