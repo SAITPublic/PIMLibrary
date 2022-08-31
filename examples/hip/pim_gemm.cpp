@@ -20,249 +20,145 @@
 #include "utility/pim_profile.h"
 
 using half_float::half;
+using namespace std;
+
+class PimGemmTest
+{
+  public:
+    PimGemmTest(unsigned n_, unsigned c_, unsigned h_, unsigned in_w_, unsigned out_w_, PimActFunc act_, bool has_bias_):
+        n(n_), c(c_), h(h_), in_w(in_w_), out_w(out_w_), act(act_), has_bias(has_bias_)
+    {
+        if (!is_support_activation(act)) {
+            throw invalid_argument("Invalid activation type");
+        }
+
+        in_size = n * c * h * in_w;
+        wgt_size = n * c * in_w * out_w;
+        out_size = n * c * h * out_w;
+ 
+        desc = PimCreateGemmDesc(n, c, h, in_w, out_w, PIM_FP16);
+        h_i = PimCreateBo(desc, MEM_TYPE_HOST, GEMM_INPUT);
+        h_w = PimCreateBo(desc, MEM_TYPE_HOST, GEMM_WEIGHT);
+        h_b = PimCreateBo(desc, MEM_TYPE_HOST, GEMM_BIAS);
+        h_o = PimCreateBo(desc, MEM_TYPE_HOST, GEMM_OUTPUT);
+        d_i = PimCreateBo(desc, MEM_TYPE_DEVICE, GEMM_INPUT);
+        d_w = PimCreateBo(desc, MEM_TYPE_DEVICE, GEMM_WEIGHT);
+        d_b = PimCreateBo(desc, MEM_TYPE_DEVICE, GEMM_BIAS);
+        d_o = PimCreateBo(desc, MEM_TYPE_DEVICE, GEMM_OUTPUT);
+        golden = PimCreateBo(desc, MEM_TYPE_HOST, GEMM_OUTPUT);
+    }
+
+    PimGemmTest(unsigned n_, unsigned c_, unsigned h_, unsigned in_w_, unsigned out_w_):
+        PimGemmTest(n_, c_, h_, in_w_, out_w_, ACT_RELU, true) {}
+
+    ~PimGemmTest() {
+        PimDestroyBo(h_i);
+        PimDestroyBo(h_w);
+        PimDestroyBo(h_b);
+        PimDestroyBo(h_o);
+        PimDestroyBo(golden);
+        PimDestroyBo(d_i);
+        PimDestroyBo(d_w);
+        PimDestroyBo(d_b);
+        PimDestroyBo(d_o);
+    }
+
+    void prepare(float alpha = 1.0f, float beta = 0.0f, float variation = 0.2f) {
+        set_half_data((half*)golden->data, half(0.0), out_size);
+        set_half_data((half*)h_o->data, half(0.0), out_size);
+        set_rand_half_data((half*)h_i->data, half(variation), in_size);
+        set_rand_half_data((half*)h_w->data, half(variation), wgt_size);
+        set_rand_half_data((half*)h_b->data, half(variation), out_size);
+
+        half* h_i_data = (half*)h_i->data;
+        half* h_w_data = (half*)h_w->data;
+        half* golden_data = (half*)golden->data;
+        for (int nc_i = 0; nc_i < n * c; nc_i++) {
+            matmulCPU(h_i_data, h_w_data, golden_data, h, out_w, in_w, half(alpha), half(beta));
+            h_i_data += (in_w * h);
+            h_w_data += (in_w * out_w);
+            golden_data += (out_w * h);
+        }
+        if (has_bias) {
+            addBiasCPU((half*)golden->data, (half*)h_b->data, out_size);
+        }
+        if (act == ACT_RELU) {
+            reluCPU((half*)golden->data, out_size);
+        }
+        PimCopyMemory(d_i, h_i, HOST_TO_DEVICE);
+        PimCopyMemory(d_w, h_w, HOST_TO_DEVICE);
+        PimCopyMemory(d_o, h_o, HOST_TO_DEVICE);
+
+        if (has_bias) {
+            PimCopyMemory(d_b, h_b, HOST_TO_DEVICE);
+        } else {
+            d_b = nullptr;
+        }
+    }
+
+    void run(bool block = true, unsigned niter = 1) {
+        for (unsigned i = 0; i < niter; ++i) {
+            (void)PimExecuteGemm(d_o, d_i, d_w, d_b, act, nullptr, block);
+            if (!block) PimSynchronize();
+        }
+        PimCopyMemory(h_o, d_o, DEVICE_TO_HOST);
+    }
+
+    int validate(float epsilon = 1.0f) {
+        return compare_half_relative((half*)golden->data, (half*)h_o->data, out_size, epsilon);
+    }
+
+  private:
+    bool is_support_activation(const PimActFunc& act) {
+        return (act == ACT_RELU || act == NONE) ? true : false;
+    }
+
+    // (n, c, h, in_w) * (n, c, in_w, out_w) = (n, c, h, out_w)
+    unsigned n;
+    unsigned c;
+    unsigned h;
+    unsigned in_w;
+    unsigned out_w;  
+
+    PimActFunc act;
+    bool has_bias;
+
+    unsigned in_size;
+    unsigned wgt_size;
+    unsigned out_size;
+
+    PimGemmDesc* desc;
+    PimBo* h_i, *h_w, *h_b, *h_o; // input, weight, bias, output
+    PimBo* d_i, *d_w, *d_b, *d_o;
+    PimBo* golden;
+};
+
 
 class PimGemmTestFixture : public ::testing::Test
 {
-   protected:
+  protected:
     virtual void SetUp() override {
         PimInitialize(RT_TYPE_HIP, PIM_FP16);
         PimExecuteDummy();
     }
-    virtual void TearDown() override { PimDeinitialize(); }
+    virtual void TearDown() override {
+        PimDeinitialize();
+    }
+
+    int ExecuteTest(unsigned n, unsigned c, unsigned h, unsigned in_w, unsigned out_w,
+                    bool has_bias = true, bool block = true, PimActFunc act = ACT_RELU) {
+        PimGemmTest pimGemmTest = PimGemmTest(n, c, h, in_w, out_w, act, has_bias);
+        pimGemmTest.prepare();
+        pimGemmTest.run(block);
+        return pimGemmTest.validate();
+    }
 };
 
-
-int pim_gemm_bias_relu(int n, int c, int inout_h, int in_w, int out_w, PimActFunc act, bool is_bias, bool block)
-{
-    int ret = 0;
-    float alpha = 1.0f;
-    float beta = 0.0f;
-    float epsilon = 0.5f;
-    float variation = 0.2f;
-    int in_size = n * c * inout_h * in_w;
-    int wei_size = n * c * in_w * out_w;
-    int out_size = n * c * inout_h * out_w;
-
-    /* __PIM_API__ call : Create PIM Buffer Object */
-    PimGemmDesc* pim_gemm_desc = PimCreateGemmDesc(n, c, inout_h, in_w, out_w, PIM_FP16);
-    PimBo* host_input = PimCreateBo(pim_gemm_desc, MEM_TYPE_HOST, GEMM_INPUT);
-    PimBo* host_weight = PimCreateBo(pim_gemm_desc, MEM_TYPE_HOST, GEMM_WEIGHT);
-    PimBo* host_bias = PimCreateBo(pim_gemm_desc, MEM_TYPE_HOST, GEMM_BIAS);
-    PimBo* host_output = PimCreateBo(pim_gemm_desc, MEM_TYPE_HOST, GEMM_OUTPUT);
-    PimBo* golden_output = PimCreateBo(pim_gemm_desc, MEM_TYPE_HOST, GEMM_OUTPUT);
-    PimBo* device_input = PimCreateBo(pim_gemm_desc, MEM_TYPE_DEVICE, GEMM_INPUT);
-    PimBo* device_weight = PimCreateBo(pim_gemm_desc, MEM_TYPE_DEVICE, GEMM_WEIGHT);
-    PimBo* device_bias = PimCreateBo(pim_gemm_desc, MEM_TYPE_DEVICE, GEMM_BIAS);
-    PimBo* device_output = PimCreateBo(pim_gemm_desc, MEM_TYPE_DEVICE, GEMM_OUTPUT);
-
-    /* Initialize the input, weight, output data */
-    set_half_data((half*)golden_output->data, half(0.0), out_size);
-    set_half_data((half*)host_output->data, half(0.0), out_size);
-    set_rand_half_data((half*)host_input->data, half(variation), in_size);
-    set_rand_half_data((half*)host_weight->data, half(variation), wei_size);
-    set_rand_half_data((half*)host_bias->data, half(variation), out_size);
-    half* in_data = (half*)host_input->data;
-    half* wei_data = (half*)host_weight->data;
-    half* out_data = (half*)golden_output->data;
-    for (int nc_i = 0; nc_i < n * c; nc_i++) {
-        matmulCPU(in_data, wei_data, out_data, inout_h, out_w, in_w, half(alpha), half(beta));
-        in_data += (in_w * inout_h);
-        wei_data += (in_w * out_w);
-        out_data += (out_w * inout_h);
-    }
-    if (is_bias) addBiasCPU((half*)golden_output->data, (half*)host_bias->data, out_size);
-    if (act == ACT_RELU) reluCPU((half*)golden_output->data, out_size);
-    PimCopyMemory(device_input, host_input, HOST_TO_DEVICE);
-    PimCopyMemory(device_weight, host_weight, HOST_TO_DEVICE);
-    PimCopyMemory(device_bias, host_bias, HOST_TO_DEVICE);
-    PimCopyMemory(device_output, host_output, HOST_TO_DEVICE);
-
-    /* __PIM_API__ call : Execute PIM kernel (GEMM) */
-    PimBo* t_device_bias = (is_bias) ? device_bias : nullptr;
-    ret = PimExecuteGemm(device_output, device_input, device_weight, t_device_bias, act, nullptr, block);
-    if (!block) PimSynchronize();
-
-    /* Verify result */
-    PimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
-    ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data, out_size, epsilon);
-
-    /* __PIM_API__ call : Destroy PIM Buffer Object */
-    PimDestroyBo(host_input);
-    PimDestroyBo(host_weight);
-    PimDestroyBo(host_bias);
-    PimDestroyBo(host_output);
-    PimDestroyBo(golden_output);
-    PimDestroyBo(device_input);
-    PimDestroyBo(device_weight);
-    PimDestroyBo(device_bias);
-    PimDestroyBo(device_output);
-    PimDestroyGemmDesc(pim_gemm_desc);
-
-    return ret;
-}
-
-int pim_fused_gemm_bias_relu(int n, int c, int inout_h, int in_w0, int out_w0, bool is_bias0, PimActFunc act0,
-                             int in_w1, int out_w1, bool is_bias1, PimActFunc act1)
-{
-    int ret = 0;
-    float alpha = 1.0f;
-    float beta = 0.0f;
-    float epsilon = 0.5f;
-    float variation = 0.2f;
-
-    int in_size0 = n * c * inout_h * in_w0;
-    int wei_size0 = n * c * in_w0 * out_w0;
-    int out_size0 = n * c * inout_h * out_w0;
-    int wei_size1 = n * c * in_w1 * out_w1;
-    int out_size1 = n * c * inout_h * out_w1;
-
-    /* __PIM_API__ call : Create PIM Buffer Object */
-    PimGemmDesc* pim_gemm_desc0 = PimCreateGemmDesc(n, c, inout_h, in_w0, out_w0, PIM_FP16);
-    PimGemmDesc* pim_gemm_desc1 = PimCreateGemmDesc(n, c, inout_h, in_w1, out_w1, PIM_FP16);
-
-    PimBo* host_input0 = PimCreateBo(pim_gemm_desc0, MEM_TYPE_HOST, GEMM_INPUT);
-    PimBo* host_weight0 = PimCreateBo(pim_gemm_desc0, MEM_TYPE_HOST, GEMM_WEIGHT);
-    PimBo* host_bias0 = PimCreateBo(pim_gemm_desc0, MEM_TYPE_HOST, GEMM_BIAS);
-    PimBo* host_output0 = PimCreateBo(pim_gemm_desc0, MEM_TYPE_HOST, GEMM_OUTPUT);
-    PimBo* device_input0 = PimCreateBo(pim_gemm_desc0, MEM_TYPE_DEVICE, GEMM_INPUT);
-    PimBo* device_weight0 = PimCreateBo(pim_gemm_desc0, MEM_TYPE_DEVICE, GEMM_WEIGHT);
-    PimBo* device_bias0 = PimCreateBo(pim_gemm_desc0, MEM_TYPE_DEVICE, GEMM_BIAS);
-    PimBo* device_output0 = PimCreateBo(pim_gemm_desc0, MEM_TYPE_DEVICE, GEMM_OUTPUT);
-
-    PimBo* host_weight1 = PimCreateBo(pim_gemm_desc1, MEM_TYPE_HOST, GEMM_WEIGHT);
-    PimBo* host_bias1 = PimCreateBo(pim_gemm_desc1, MEM_TYPE_HOST, GEMM_BIAS);
-    PimBo* host_output1 = PimCreateBo(pim_gemm_desc1, MEM_TYPE_HOST, GEMM_OUTPUT);
-    PimBo* device_weight1 = PimCreateBo(pim_gemm_desc1, MEM_TYPE_DEVICE, GEMM_WEIGHT);
-    PimBo* device_bias1 = PimCreateBo(pim_gemm_desc1, MEM_TYPE_DEVICE, GEMM_BIAS);
-    PimBo* device_output1 = PimCreateBo(pim_gemm_desc1, MEM_TYPE_DEVICE, GEMM_OUTPUT);
-    PimBo* golden_output = PimCreateBo(pim_gemm_desc1, MEM_TYPE_HOST, GEMM_OUTPUT);
-
-    /* Initialize the input, weight, output data */
-    set_rand_half_data((half*)host_input0->data, half(variation), in_size0);
-    set_rand_half_data((half*)host_weight0->data, half(variation), wei_size0);
-    set_rand_half_data((half*)host_bias0->data, half(variation), out_size0);
-    set_half_data((half*)host_output0->data, half(0.0), out_size0);
-
-    set_rand_half_data((half*)host_weight1->data, half(variation), wei_size1);
-    set_rand_half_data((half*)host_bias1->data, half(variation), out_size1);
-    set_half_data((half*)host_output1->data, half(0.0), out_size1);
-    set_half_data((half*)golden_output->data, half(0.0), out_size1);
-
-    half* in_data0 = (half*)host_input0->data;
-    half* wei_data0 = (half*)host_weight0->data;
-    half* out_data0 = (half*)host_output0->data;
-
-    half* wei_data1 = (half*)host_weight1->data;
-    half* out_data1 = (half*)golden_output->data;
-
-    for (int nc_i = 0; nc_i < n * c; nc_i++) {
-        matmulCPU(in_data0, wei_data0, out_data0, inout_h, out_w0, in_w0, half(alpha), half(beta));
-        in_data0 += (in_w0 * inout_h);
-        wei_data0 += (in_w0 * out_w0);
-        out_data0 += (out_w0 * inout_h);
-    }
-    if (is_bias0) addBiasCPU((half*)host_output0->data, (half*)host_bias0->data, out_size0);
-    if (act0 == ACT_RELU) reluCPU((half*)host_output0->data, out_size0);
-
-    half* in_data1 = (half*)host_output0->data;
-    for (int nc_i = 0; nc_i < n * c; nc_i++) {
-        matmulCPU(in_data1, wei_data1, out_data1, inout_h, out_w1, in_w1, half(alpha), half(beta));
-        in_data1 += (in_w1 * inout_h);
-        wei_data1 += (in_w1 * out_w1);
-        out_data1 += (out_w1 * inout_h);
-    }
-    if (is_bias1) addBiasCPU((half*)golden_output->data, (half*)host_bias1->data, out_size1);
-    if (act1 == ACT_RELU) reluCPU((half*)golden_output->data, out_size1);
-
-    PimCopyMemory(device_input0, host_input0, HOST_TO_DEVICE);
-    PimCopyMemory(device_weight0, host_weight0, HOST_TO_DEVICE);
-    PimCopyMemory(device_bias0, host_bias0, HOST_TO_DEVICE);
-
-    PimCopyMemory(device_weight1, host_weight1, HOST_TO_DEVICE);
-    PimCopyMemory(device_bias1, host_bias1, HOST_TO_DEVICE);
-
-    /* __PIM_API__ call : Execute PIM kernel (GEMM) */
-    PimBo* t_device_bias0 = (is_bias0) ? device_bias0 : nullptr;  // not-used
-    PimBo* t_device_bias1 = (is_bias1) ? device_bias1 : nullptr;  // not-used
-
-    ret = PimExecuteGemm(device_output0, device_input0, device_weight0, t_device_bias0, act0, nullptr, false);
-    ret = PimExecuteGemm(device_output1, device_output0, device_weight1, t_device_bias1, act1, nullptr, true);
-
-    /* Verify result */
-    PimCopyMemory(host_output1, device_output1, DEVICE_TO_HOST);
-    ret = compare_half_relative((half*)golden_output->data, (half*)host_output1->data, out_size1, epsilon);
-
-    /* __PIM_API__ call : Destroy PIM Buffer Object */
-    PimDestroyBo(host_input0);
-    PimDestroyBo(host_weight0);
-    PimDestroyBo(host_bias0);
-    PimDestroyBo(host_output0);
-    PimDestroyBo(device_input0);
-    PimDestroyBo(device_weight0);
-    PimDestroyBo(device_bias0);
-    PimDestroyBo(device_output0);
-
-    PimDestroyBo(host_weight1);
-    PimDestroyBo(host_bias1);
-    PimDestroyBo(host_output1);
-    PimDestroyBo(device_weight1);
-    PimDestroyBo(device_bias1);
-    PimDestroyBo(device_output1);
-    PimDestroyBo(golden_output);
-
-    PimDestroyGemmDesc(pim_gemm_desc0);
-    PimDestroyGemmDesc(pim_gemm_desc1);
-
-    return ret;
-}
-
-TEST_F(PimGemmTestFixture, pim_aligned_gemm_bias_relu_1x1024_1024x4096)
-{
-    EXPECT_TRUE(pim_gemm_bias_relu(1, 1, 1, 1024, 4096, ACT_RELU, true, true) == 0);
-}
-TEST_F(PimGemmTestFixture, pim_aligned_gemm_bias_relu_4x1x1024_4x1024x4096)
-{
-    EXPECT_TRUE(pim_gemm_bias_relu(1, 4, 1, 1024, 4096, ACT_RELU, true, true) == 0);
-}
-TEST_F(PimGemmTestFixture, pim_aligned_gemm_bias_relu_8x1024_1024x4096)
-{
-    EXPECT_TRUE(pim_gemm_bias_relu(1, 1, 8, 1024, 4096, ACT_RELU, true, true) == 0);
-}
-TEST_F(PimGemmTestFixture, pim_aligned_gemm_bias_relu_4x8x1024_4x1024x4096)
-{
-    EXPECT_TRUE(pim_gemm_bias_relu(1, 4, 8, 1024, 4096, ACT_RELU, true, true) == 0);
-}
-TEST_F(PimGemmTestFixture, pim_chwise_gemm_bias_relu_64x1x256_64x256x64)
-{
-    EXPECT_TRUE(pim_gemm_bias_relu(1, 64, 1, 256, 64, ACT_RELU, true, true) == 0);
-}
-TEST_F(PimGemmTestFixture, pim_chwise_gemm_bias_relu_64x1x1024_64x1024x64)
-{
-    EXPECT_TRUE(pim_gemm_bias_relu(1, 64, 1, 1024, 64, ACT_RELU, true, true) == 0);
-}
-TEST_F(PimGemmTestFixture, pim_chwise_gemm_bias_relu_4x1x4096_4x4096x1024)
-{
-    EXPECT_TRUE(pim_gemm_bias_relu(1, 4, 1, 4096, 1024, ACT_RELU, true, true) == 0);
-}
-TEST_F(PimGemmTestFixture, pim_chwise_gemm_bias_relu_8x1x4096_8x4096x1024)
-{
-    EXPECT_TRUE(pim_gemm_bias_relu(1, 8, 1, 4096, 1024, ACT_RELU, true, true) == 0);
-}
-TEST_F(PimGemmTestFixture, pim_fused_gemm_bias_relu_4x1x1024_4x1024x4096_4x4096x1024)
-{
-    EXPECT_TRUE(pim_fused_gemm_bias_relu(1, 4, 1, 1024, 4096, true, ACT_RELU, 4096, 1024, true, NONE) == 0);
-}
-TEST_F(PimGemmTestFixture, pim_fused_gemm_bias_relu_8x1x1024_8x1024x4096_8x4096x1024)
-{
-    EXPECT_TRUE(pim_fused_gemm_bias_relu(1, 8, 1, 1024, 4096, true, ACT_RELU, 4096, 1024, true, NONE) == 0);
-}
-#if 0
-TEST_F(PimGemmTestFixture, pim_gemm_bias_relu_4x8x4096_4x4096x1024)
-{
-    EXPECT_TRUE(pim_gemm_bias_relu(1, 4, 8, 4096, 1024, ACT_RELU, true, true) == 0);
-}
-TEST_F(PimGemmTestFixture, pim_fused_gemm_bias_relu_4x8x1024_4x1024x4096_4x4096x1024)
-{
-    EXPECT_TRUE(pim_fused_gemm_bias_relu(1, 4, 8, 1024, 4096, true, ACT_RELU, 4096, 1024, true, NONE) == 0);
-}
-#endif
+TEST_F(PimGemmTestFixture, pim_gemm_bias_relu_1x1024_1024x4096) { EXPECT_TRUE(ExecuteTest(1, 1, 1, 1024, 4096) == 0); }
+TEST_F(PimGemmTestFixture, pim_gemm_bias_relu_8x1024_1024x4096) { EXPECT_TRUE(ExecuteTest(1, 1, 8, 1024, 4096) == 0); }
+TEST_F(PimGemmTestFixture, pim_gemm_bias_relu_4x1x1024_4x1024x4096) { EXPECT_TRUE(ExecuteTest(1, 4, 1, 1024, 4096) == 0); }
+TEST_F(PimGemmTestFixture, pim_gemm_bias_relu_4x8x1024_4x1024x4096) { EXPECT_TRUE(ExecuteTest(1, 4, 8, 1024, 4096) == 0); }
+TEST_F(PimGemmTestFixture, pim_gemm_bias_relu_64x1x256_64x256x64) { EXPECT_TRUE(ExecuteTest(1, 64, 1, 256, 64) == 0); }
+TEST_F(PimGemmTestFixture, pim_gemm_bias_relu_64x1x1024_64x1024x64) { EXPECT_TRUE(ExecuteTest(1, 64, 1, 1024, 64) == 0); }
+TEST_F(PimGemmTestFixture, pim_gemm_bias_relu_4x1x4096_4x4096x1024) { EXPECT_TRUE(ExecuteTest(1, 4, 1, 4096, 1024) == 0); }
+TEST_F(PimGemmTestFixture, pim_gemm_bias_relu_8x1x4096_8x4096x1024) { EXPECT_TRUE(ExecuteTest(1, 8, 1, 4096, 1024) == 0); }
