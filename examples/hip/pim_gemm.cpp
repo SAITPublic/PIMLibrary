@@ -21,6 +21,17 @@
 
 using half_float::half;
 
+class PimGemmTestFixture : public ::testing::Test
+{
+   protected:
+    virtual void SetUp() override {
+        PimInitialize(RT_TYPE_HIP, PIM_FP16);
+        PimExecuteDummy();
+    }
+    virtual void TearDown() override { PimDeinitialize(); }
+};
+
+
 int pim_gemm_bias_relu(int n, int c, int inout_h, int in_w, int out_w, PimActFunc act, bool is_bias, bool block)
 {
     int ret = 0;
@@ -31,10 +42,6 @@ int pim_gemm_bias_relu(int n, int c, int inout_h, int in_w, int out_w, PimActFun
     int in_size = n * c * inout_h * in_w;
     int wei_size = n * c * in_w * out_w;
     int out_size = n * c * inout_h * out_w;
-
-    /* __PIM_API__ call : Initialize PimRuntime */
-    PimInitialize(RT_TYPE_HIP, PIM_FP16);
-    PimExecuteDummy();
 
     /* __PIM_API__ call : Create PIM Buffer Object */
     PimGemmDesc* pim_gemm_desc = PimCreateGemmDesc(n, c, inout_h, in_w, out_w, PIM_FP16);
@@ -91,9 +98,6 @@ int pim_gemm_bias_relu(int n, int c, int inout_h, int in_w, int out_w, PimActFun
     PimDestroyBo(device_output);
     PimDestroyGemmDesc(pim_gemm_desc);
 
-    /* __PIM_API__ call : Deinitialize PimRuntime */
-    PimDeinitialize();
-
     return ret;
 }
 
@@ -111,10 +115,6 @@ int pim_fused_gemm_bias_relu(int n, int c, int inout_h, int in_w0, int out_w0, b
     int out_size0 = n * c * inout_h * out_w0;
     int wei_size1 = n * c * in_w1 * out_w1;
     int out_size1 = n * c * inout_h * out_w1;
-
-    /* __PIM_API__ call : Initialize PimRuntime */
-    PimInitialize(RT_TYPE_HIP, PIM_FP16);
-    PimExecuteDummy();
 
     /* __PIM_API__ call : Create PIM Buffer Object */
     PimGemmDesc* pim_gemm_desc0 = PimCreateGemmDesc(n, c, inout_h, in_w0, out_w0, PIM_FP16);
@@ -213,58 +213,55 @@ int pim_fused_gemm_bias_relu(int n, int c, int inout_h, int in_w0, int out_w0, b
     PimDestroyGemmDesc(pim_gemm_desc0);
     PimDestroyGemmDesc(pim_gemm_desc1);
 
-    /* __PIM_API__ call : Deinitialize PimRuntime */
-    PimDeinitialize();
-
     return ret;
 }
 
-TEST(HIPIntegrationTest, pim_aligned_gemm_bias_relu_1x1024_1024x4096)
+TEST_F(PimGemmTestFixture, pim_aligned_gemm_bias_relu_1x1024_1024x4096)
 {
     EXPECT_TRUE(pim_gemm_bias_relu(1, 1, 1, 1024, 4096, ACT_RELU, true, true) == 0);
 }
-TEST(HIPIntegrationTest, pim_aligned_gemm_bias_relu_4x1x1024_4x1024x4096)
+TEST_F(PimGemmTestFixture, pim_aligned_gemm_bias_relu_4x1x1024_4x1024x4096)
 {
     EXPECT_TRUE(pim_gemm_bias_relu(1, 4, 1, 1024, 4096, ACT_RELU, true, true) == 0);
 }
-TEST(HIPIntegrationTest, pim_aligned_gemm_bias_relu_8x1024_1024x4096)
+TEST_F(PimGemmTestFixture, pim_aligned_gemm_bias_relu_8x1024_1024x4096)
 {
     EXPECT_TRUE(pim_gemm_bias_relu(1, 1, 8, 1024, 4096, ACT_RELU, true, true) == 0);
 }
-TEST(HIPIntegrationTest, pim_aligned_gemm_bias_relu_4x8x1024_4x1024x4096)
+TEST_F(PimGemmTestFixture, pim_aligned_gemm_bias_relu_4x8x1024_4x1024x4096)
 {
     EXPECT_TRUE(pim_gemm_bias_relu(1, 4, 8, 1024, 4096, ACT_RELU, true, true) == 0);
 }
-TEST(HIPIntegrationTest, pim_chwise_gemm_bias_relu_64x1x256_64x256x64)
+TEST_F(PimGemmTestFixture, pim_chwise_gemm_bias_relu_64x1x256_64x256x64)
 {
     EXPECT_TRUE(pim_gemm_bias_relu(1, 64, 1, 256, 64, ACT_RELU, true, true) == 0);
 }
-TEST(HIPIntegrationTest, pim_chwise_gemm_bias_relu_64x1x1024_64x1024x64)
+TEST_F(PimGemmTestFixture, pim_chwise_gemm_bias_relu_64x1x1024_64x1024x64)
 {
     EXPECT_TRUE(pim_gemm_bias_relu(1, 64, 1, 1024, 64, ACT_RELU, true, true) == 0);
 }
-TEST(HIPIntegrationTest, pim_chwise_gemm_bias_relu_4x1x4096_4x4096x1024)
+TEST_F(PimGemmTestFixture, pim_chwise_gemm_bias_relu_4x1x4096_4x4096x1024)
 {
     EXPECT_TRUE(pim_gemm_bias_relu(1, 4, 1, 4096, 1024, ACT_RELU, true, true) == 0);
 }
-TEST(HIPIntegrationTest, pim_chwise_gemm_bias_relu_8x1x4096_8x4096x1024)
+TEST_F(PimGemmTestFixture, pim_chwise_gemm_bias_relu_8x1x4096_8x4096x1024)
 {
     EXPECT_TRUE(pim_gemm_bias_relu(1, 8, 1, 4096, 1024, ACT_RELU, true, true) == 0);
 }
-TEST(HIPIntegrationTest, pim_fused_gemm_bias_relu_4x1x1024_4x1024x4096_4x4096x1024)
+TEST_F(PimGemmTestFixture, pim_fused_gemm_bias_relu_4x1x1024_4x1024x4096_4x4096x1024)
 {
     EXPECT_TRUE(pim_fused_gemm_bias_relu(1, 4, 1, 1024, 4096, true, ACT_RELU, 4096, 1024, true, NONE) == 0);
 }
-TEST(HIPIntegrationTest, pim_fused_gemm_bias_relu_8x1x1024_8x1024x4096_8x4096x1024)
+TEST_F(PimGemmTestFixture, pim_fused_gemm_bias_relu_8x1x1024_8x1024x4096_8x4096x1024)
 {
     EXPECT_TRUE(pim_fused_gemm_bias_relu(1, 8, 1, 1024, 4096, true, ACT_RELU, 4096, 1024, true, NONE) == 0);
 }
 #if 0
-TEST(HIPIntegrationTest, pim_gemm_bias_relu_4x8x4096_4x4096x1024)
+TEST_F(PimGemmTestFixture, pim_gemm_bias_relu_4x8x4096_4x4096x1024)
 {
     EXPECT_TRUE(pim_gemm_bias_relu(1, 4, 8, 4096, 1024, ACT_RELU, true, true) == 0);
 }
-TEST(HIPIntegrationTest, pim_fused_gemm_bias_relu_4x8x1024_4x1024x4096_4x4096x1024)
+TEST_F(PimGemmTestFixture, pim_fused_gemm_bias_relu_4x8x1024_4x1024x4096_4x4096x1024)
 {
     EXPECT_TRUE(pim_fused_gemm_bias_relu(1, 4, 8, 1024, 4096, true, ACT_RELU, 4096, 1024, true, NONE) == 0);
 }
