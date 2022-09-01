@@ -55,7 +55,6 @@ class OclMemoryManager : public IPimMemoryManager
     cl_command_queue queue_;
     cl_context context_;
     cl_uint num_gpu_devices_;
-    cl_int err_;
 };
 }  // namespace manager
 }  // namespace runtime

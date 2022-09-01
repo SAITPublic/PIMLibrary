@@ -300,11 +300,11 @@ bool test_memcpy_exp()
     return true;
 }
 
-TEST(UnitTest, simplePimAllocFree) { EXPECT_TRUE(simple_pim_alloc_free()); }
-TEST(UnitTest, PimRepeatAllocateFree) { EXPECT_TRUE(pim_repeat_allocate_free()); }
+// TEST(UnitTest, simplePimAllocFree) { EXPECT_TRUE(simple_pim_alloc_free()); }
+// TEST(UnitTest, PimRepeatAllocateFree) { EXPECT_TRUE(pim_repeat_allocate_free()); }
 TEST(UnitTest, PimMemCopyHostAndDeviceTest) { EXPECT_TRUE(test_memcpy_bw_host_device()); }
 TEST(UnitTest, PimMemCopyDeviceAndDeviceTest) { EXPECT_TRUE(test_memcpy_bw_device_device()); }
-TEST(UnitTest, PimMemCopyHostAndPimTest) { EXPECT_TRUE(test_memcpy_bw_host_pim()); }
+// TEST(UnitTest, PimMemCopyHostAndPimTest) { EXPECT_TRUE(test_memcpy_bw_host_pim()); }
 // TEST(UnitTest, PimMemCopyDeviceAndPimTest) { EXPECT_TRUE(test_memcpy_bw_device_pim()); } /* currently failing */
 /* experimental tests */
 // TEST(UnitTest, PimMemCopyDeviceAndPimTest_1) { EXPECT_TRUE(test_memcpy_bw_host_pim_device_host()); }

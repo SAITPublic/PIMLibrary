@@ -53,7 +53,6 @@ OpenCLExecutor::OpenCLExecutor(PimRuntimeType rt_type, PimPrecision precision) :
 
 int OpenCLExecutor::initialize(void)
 {
-    printf("OCL exe %d\n", __LINE__);
     int ret = PimExecutor::initialize();
     DLOG(INFO) << "[START] " << __FUNCTION__ << "OpenCL executor Intialization ";
 
@@ -64,13 +63,11 @@ int OpenCLExecutor::initialize(void)
     pim_manager_->alloc_memory((void**)&d_srf_bin_buffer_, max_srf_size * 2, MEM_TYPE_DEVICE);
     pim_manager_->alloc_memory((void**)&zero_buffer_, 32 * 2, MEM_TYPE_DEVICE);
     clEnqueueFillBuffer(queue_, zero_buffer_, (void*)&zero, sizeof(int), 0, 32 * 2, 0, NULL, NULL);
-    printf("OCL exe %d\n", __LINE__);
 
     /* PIM HW can generate only gemv output without reduction sum */
     /* so PimExecutor needs to maintain intermediate output buffer for gemv op */
-    pim_manager_->alloc_memory((void**)&pim_gemv_tmp_buffer_, 8 * 2 * 1024 * 1024, MEM_TYPE_PIM);
+    // pim_manager_->alloc_memory((void**)&pim_gemv_tmp_buffer_, 8 * 2 * 1024 * 1024, MEM_TYPE_PIM);
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
-    printf("OCL exe %d\n", __LINE__);
     return ret;
 }
 
@@ -80,7 +77,7 @@ int OpenCLExecutor::deinitialize(void)
     DLOG(INFO) << " [START] " << __FUNCTION__ << " called";
     clReleaseMemObject(d_srf_bin_buffer_);
     clReleaseMemObject(zero_buffer_);
-    pim_manager_->free_memory((void*)pim_gemv_tmp_buffer_, MEM_TYPE_PIM);
+    // pim_manager_->free_memory((void*)pim_gemv_tmp_buffer_, MEM_TYPE_PIM);
     // where is crf_lut allocated host or device. and why hipfree is used if host_Allocated.
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
