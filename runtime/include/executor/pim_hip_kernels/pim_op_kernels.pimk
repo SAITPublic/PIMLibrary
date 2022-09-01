@@ -82,14 +82,14 @@ __host__ __device__ uint64_t addr_gen(uint32_t chan, uint32_t rank, uint32_t ban
 __host__ __device__ uint64_t addr_gen_safe(uint32_t chan, uint32_t rank, uint32_t bg, uint32_t bank, uint32_t& row,
                                            uint32_t& col)
 {
-    PimBlockInfo* fbi = &vega20_fbi;
+    PimBlockInfo* pbi = &vega20_pbi;
 
-    while (col >= fbi->num_col / fbi->bl) {
+    while (col >= pbi->num_col / pbi->bl) {
         row++;
-        col -= (fbi->num_col / fbi->bl);
+        col -= (pbi->num_col / pbi->bl);
     }
 
-    if (row >= fbi->num_row) {
+    if (row >= pbi->num_row) {
     }
 
     return addr_gen(chan, rank, bg, bank, row, col);

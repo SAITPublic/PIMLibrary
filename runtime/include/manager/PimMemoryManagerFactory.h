@@ -8,14 +8,14 @@
  * to third parties without the express written permission of Samsung Electronics.
  */
 
-#ifndef _MEMORY_MANAGER_H_
-#define _MEMORY_MANAGER_H_
+#ifndef _PIM_MEMORY_MANAGER_FACTORY_H_
+#define _PIM_MEMORY_MANAGER_FACTORY_H_
 
 #include "manager/IPimMemoryManager.h"
 #include "manager/PimDevice.h"
 #include "manager/PimInfo.h"
-#include "manager/hip/HipMemManager.h"
-#include "manager/ocl/OclMemManager.h"
+#include "manager/hip/HipMemoryManager.h"
+#include "manager/ocl/OclMemoryManager.h"
 #include "pim_data_types.h"
 
 namespace pim
@@ -24,7 +24,7 @@ namespace runtime
 {
 namespace manager
 {
-class MemoryManager
+class PimMemoryManagerFactory
 {
    public:
     IPimMemoryManager* getPimMemoryManager(PimDevice* pim_device, PimRuntimeType rt_type, PimPrecision precision)
@@ -32,18 +32,17 @@ class MemoryManager
         IPimMemoryManager* mem_manager = nullptr;
 
         if (rt_type == RT_TYPE_HIP) {
-            mem_manager = new HipMemManager(pim_device, precision);
+            mem_manager = new HipMemoryManager(pim_device, precision);
         } else if (rt_type == RT_TYPE_OPENCL) {
-            mem_manager = new OclMemManager(pim_device, precision);
+            mem_manager = new OclMemoryManager(pim_device, precision);
         } else {
             throw std::invalid_argument("invalid type of runtime");
         }
         return mem_manager;
     }
 };
-
 }  // namespace manager
 }  // namespace runtime
 }  // namespace pim
 
-#endif  // _MEMORY_MANAGER_FACTORY_H_
+#endif  // _PIM_MEMORY_MANAGER_FACTORY_H_

@@ -56,7 +56,7 @@ int PimControlManager::program_crf_code(void)
     int ret = 0;
 
     /* ioctl by pim command */
-    ret = pim_device_->request_ioctl();
+    // ret = pim_device_->request_ioctl();
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
@@ -69,7 +69,7 @@ int PimControlManager::set_pim_mode(void)
     int ret = 0;
 
     /* ioctl by pim command */
-    ret = pim_device_->request_ioctl();
+    // ret = pim_device_->request_ioctl();
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
 
     return ret;

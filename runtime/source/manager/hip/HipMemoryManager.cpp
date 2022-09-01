@@ -8,7 +8,7 @@
  * to third parties without the express written permission of Samsung Electronics.
  */
 
-#include "manager/hip/HipMemManager.h"
+#include "manager/hip/HipMemoryManager.h"
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
@@ -59,17 +59,18 @@ inline std::list<int> get_env(const char* key)
     return hip_devices;
 }
 
-HipMemManager::HipMemManager(PimDevice* pim_device, PimPrecision precision)
+HipMemoryManager::HipMemoryManager(PimDevice* pim_device, PimPrecision precision)
     : pim_device_(pim_device), precision_(precision)
 {
-    get_pim_block_info(&fbi_);
 }
 
-HipMemManager::~HipMemManager() { DLOG(INFO) << "[START] " << __FUNCTION__ << " called"; }
-int HipMemManager::initialize()
+HipMemoryManager::~HipMemoryManager() { DLOG(INFO) << "[START] " << __FUNCTION__ << " called"; }
+int HipMemoryManager::initialize()
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
+
+    pbi_ = pim_device_->get_pim_block_info();
 
     int max_topology = 32;
     FILE* fd;
@@ -134,13 +135,13 @@ int HipMemManager::initialize()
     return ret;
 }
 
-int HipMemManager::deinitialize(void)
+int HipMemoryManager::deinitialize(void)
 {
     int ret = 0;
     return ret;
 }
 
-int HipMemManager::alloc_memory(void** ptr, size_t size, PimMemType mem_type)
+int HipMemoryManager::alloc_memory(void** ptr, size_t size, PimMemType mem_type)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
@@ -162,7 +163,7 @@ int HipMemManager::alloc_memory(void** ptr, size_t size, PimMemType mem_type)
     return ret;
 }
 
-int HipMemManager::alloc_memory(PimBo* pim_bo)
+int HipMemoryManager::alloc_memory(PimBo* pim_bo)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
@@ -186,7 +187,7 @@ int HipMemManager::alloc_memory(PimBo* pim_bo)
     return ret;
 }
 
-int HipMemManager::free_memory(void* ptr, PimMemType mem_type)
+int HipMemoryManager::free_memory(void* ptr, PimMemType mem_type)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
@@ -207,7 +208,7 @@ int HipMemManager::free_memory(void* ptr, PimMemType mem_type)
     return ret;
 }
 
-int HipMemManager::free_memory(PimBo* pim_bo)
+int HipMemoryManager::free_memory(PimBo* pim_bo)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
@@ -231,7 +232,7 @@ int HipMemManager::free_memory(PimBo* pim_bo)
     return ret;
 }
 
-int HipMemManager::copy_memory(void* dst, void* src, size_t size, PimMemCpyType cpy_type)
+int HipMemoryManager::copy_memory(void* dst, void* src, size_t size, PimMemCpyType cpy_type)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
@@ -262,7 +263,7 @@ int HipMemManager::copy_memory(void* dst, void* src, size_t size, PimMemCpyType 
     return ret;
 }
 
-int HipMemManager::copy_memory(PimBo* dst, PimBo* src, PimMemCpyType cpy_type)
+int HipMemoryManager::copy_memory(PimBo* dst, PimBo* src, PimMemCpyType cpy_type)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
@@ -294,7 +295,7 @@ int HipMemManager::copy_memory(PimBo* dst, PimBo* src, PimMemCpyType cpy_type)
     return ret;
 }
 
-int HipMemManager::copy_memory_3d(const PimCopy3D* copy_params)
+int HipMemoryManager::copy_memory_3d(const PimCopy3D* copy_params)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
@@ -356,14 +357,14 @@ int HipMemManager::copy_memory_3d(const PimCopy3D* copy_params)
     return ret;
 }
 
-int HipMemManager::convert_data_layout(PimBo* dst, PimBo* src, PimOpType op_type)
+int HipMemoryManager::convert_data_layout(PimBo* dst, PimBo* src, PimOpType op_type)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
     bool is_chwise = false;
     int ch_per_op = 0;
 
-    if (src->bshape.n % fbi_.num_pim_chan == 0) {
+    if (src->bshape.n % pbi_->num_pim_chan == 0) {
         /* each pim channels is in charge of each batch gemv operation */
         is_chwise = true;
         ch_per_op = 1;
@@ -384,7 +385,7 @@ int HipMemManager::convert_data_layout(PimBo* dst, PimBo* src, PimOpType op_type
     return ret;
 }
 
-int HipMemManager::convert_data_layout_for_gemm_weight(PimBo* dst, PimBo* src)
+int HipMemoryManager::convert_data_layout_for_gemm_weight(PimBo* dst, PimBo* src)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
@@ -404,19 +405,19 @@ int HipMemManager::convert_data_layout_for_gemm_weight(PimBo* dst, PimBo* src)
     return ret;
 }
 
-int HipMemManager::convert_data_layout_for_chwise_gemm_weight(PimBo* dst, PimBo* src)
+int HipMemoryManager::convert_data_layout_for_chwise_gemm_weight(PimBo* dst, PimBo* src)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
 
-    int num_grf_A = fbi_.num_grf;
-    int num_grf_B = fbi_.num_grf;
-    int num_pim_blocks = fbi_.num_pim_blocks;
-    int num_pim_chan = fbi_.num_pim_chan;
-    int num_pim_rank = fbi_.num_pim_rank;
-    int num_banks = fbi_.num_banks;
-    int num_bank_groups = fbi_.num_bank_groups;
-    int trans_size = fbi_.trans_size;
+    int num_grf_A = pbi_->num_grf;
+    int num_grf_B = pbi_->num_grf;
+    int num_pim_blocks = pbi_->num_pim_blocks;
+    int num_pim_chan = pbi_->num_pim_chan;
+    int num_pim_rank = pbi_->num_pim_rank;
+    int num_banks = pbi_->num_banks;
+    int num_bank_groups = pbi_->num_bank_groups;
+    int trans_size = pbi_->trans_size;
 
     char* dst_data = nullptr;
     char* src_data = nullptr;
@@ -556,19 +557,19 @@ int HipMemManager::convert_data_layout_for_chwise_gemm_weight(PimBo* dst, PimBo*
     return ret;
 }
 
-int HipMemManager::convert_data_layout_for_aligned_gemm_weight(PimBo* dst, PimBo* src)
+int HipMemoryManager::convert_data_layout_for_aligned_gemm_weight(PimBo* dst, PimBo* src)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
 
-    int num_grf_A = fbi_.num_grf;
-    int num_grf_B = fbi_.num_grf;
-    int num_pim_blocks = fbi_.num_pim_blocks;
-    int num_pim_chan = fbi_.num_pim_chan;
-    int num_pim_rank = fbi_.num_pim_rank;
-    int num_banks = fbi_.num_banks;
-    int num_bank_groups = fbi_.num_bank_groups;
-    int trans_size = fbi_.trans_size;
+    int num_grf_A = pbi_->num_grf;
+    int num_grf_B = pbi_->num_grf;
+    int num_pim_blocks = pbi_->num_pim_blocks;
+    int num_pim_chan = pbi_->num_pim_chan;
+    int num_pim_rank = pbi_->num_pim_rank;
+    int num_banks = pbi_->num_banks;
+    int num_bank_groups = pbi_->num_bank_groups;
+    int trans_size = pbi_->trans_size;
 
     int in_tile_size = num_grf_A;
     int out_tile_size = num_grf_B * num_pim_blocks * num_pim_chan * num_pim_rank;
@@ -728,19 +729,19 @@ int HipMemManager::convert_data_layout_for_aligned_gemm_weight(PimBo* dst, PimBo
     return ret;
 }
 
-int HipMemManager::convert_data_layout_for_gemv_weight(PimBo* dst, PimBo* src, int data_offset)
+int HipMemoryManager::convert_data_layout_for_gemv_weight(PimBo* dst, PimBo* src, int data_offset)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
 
-    int num_grf_A = fbi_.num_grf;
-    int num_grf_B = fbi_.num_grf;
-    int num_pim_blocks = fbi_.num_pim_blocks;
-    int num_pim_chan = fbi_.num_pim_chan;
-    int num_pim_rank = fbi_.num_pim_rank;
-    int num_banks = fbi_.num_banks;
-    int num_bank_groups = fbi_.num_bank_groups;
-    int trans_size = fbi_.trans_size;
+    int num_grf_A = pbi_->num_grf;
+    int num_grf_B = pbi_->num_grf;
+    int num_pim_blocks = pbi_->num_pim_blocks;
+    int num_pim_chan = pbi_->num_pim_chan;
+    int num_pim_rank = pbi_->num_pim_rank;
+    int num_banks = pbi_->num_banks;
+    int num_bank_groups = pbi_->num_bank_groups;
+    int trans_size = pbi_->trans_size;
 
     int in_tile_size = num_grf_A;
     int out_tile_size = num_grf_B * num_pim_blocks * num_pim_chan * num_pim_rank;
@@ -881,18 +882,18 @@ int HipMemManager::convert_data_layout_for_gemv_weight(PimBo* dst, PimBo* src, i
     return ret;
 }
 
-int HipMemManager::convert_data_layout_for_gemv_weight(PimBo* dst, PimBo* src, int data_offset, int ch_per_op)
+int HipMemoryManager::convert_data_layout_for_gemv_weight(PimBo* dst, PimBo* src, int data_offset, int ch_per_op)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
 
-    int num_grf_A = fbi_.num_grf;
-    int num_grf_B = fbi_.num_grf;
-    int num_pim_blocks = fbi_.num_pim_blocks;
-    int num_pim_rank = fbi_.num_pim_rank;
-    int num_banks = fbi_.num_banks;
-    int num_bank_groups = fbi_.num_bank_groups;
-    int trans_size = fbi_.trans_size;
+    int num_grf_A = pbi_->num_grf;
+    int num_grf_B = pbi_->num_grf;
+    int num_pim_blocks = pbi_->num_pim_blocks;
+    int num_pim_rank = pbi_->num_pim_rank;
+    int num_banks = pbi_->num_banks;
+    int num_bank_groups = pbi_->num_bank_groups;
+    int trans_size = pbi_->trans_size;
 
     char* dst_data = (char*)dst->data + data_offset;
     char* src_data = (char*)src->data + data_offset;

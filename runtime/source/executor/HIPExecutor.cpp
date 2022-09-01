@@ -302,7 +302,7 @@ int HIPExecutor::execute_gemv_tile_accum(PimBo* output, PimBo* operand0, PimBo* 
 
     PimBo* input = operand0;
     PimBo* weight = operand1;
-    unsigned blocks = fbi_.num_pim_chan;
+    unsigned blocks = pbi_->num_pim_chan;
     unsigned threads_per_block = 64;
 
     int memory_size = weight->bshape.h;
@@ -311,9 +311,9 @@ int HIPExecutor::execute_gemv_tile_accum(PimBo* output, PimBo* operand0, PimBo* 
     int out_size = weight->bshape.w;
     int real_out_size = weight->bshape_r.w;
     int n_batch = input->bshape.n;
-    int n_compute_tile = compute_size * sizeof(uint16_t) / fbi_.trans_size / fbi_.num_grf_A;
-    int n_memory_tile = memory_size * sizeof(uint16_t) / fbi_.trans_size / fbi_.num_grf_A;
-    int n_out_tile = out_size / (fbi_.num_pim_chan * fbi_.num_pim_blocks * fbi_.num_grf_B);
+    int n_compute_tile = compute_size * sizeof(uint16_t) / pbi_->trans_size / pbi_->num_grf_A;
+    int n_memory_tile = memory_size * sizeof(uint16_t) / pbi_->trans_size / pbi_->num_grf_A;
+    int n_out_tile = out_size / (pbi_->num_pim_chan * pbi_->num_pim_blocks * pbi_->num_grf_B);
 
     if (compiler_env_value == 1) {
         pimc_driver::PimCDriver gemv_execute;
@@ -429,15 +429,15 @@ int HIPExecutor::execute_gemv_tile_tree(PimBo* output, PimBo* operand0, PimBo* o
 
     PimBo* input = operand0;
     PimBo* weight = operand1;
-    unsigned blocks = fbi_.num_pim_chan;
+    unsigned blocks = pbi_->num_pim_chan;
     unsigned threads_per_block = 64;
 
     int memory_size = weight->bshape.h;
     int out_size = weight->bshape.w;
     int real_out_size = weight->bshape_r.w;
     int n_batch = input->bshape.n;
-    int n_memory_tile = memory_size * sizeof(uint16_t) / fbi_.trans_size / fbi_.num_grf_A;
-    int n_out_tile = out_size / (fbi_.num_pim_chan * fbi_.num_pim_blocks * fbi_.num_grf_B);
+    int n_memory_tile = memory_size * sizeof(uint16_t) / pbi_->trans_size / pbi_->num_grf_A;
+    int n_out_tile = out_size / (pbi_->num_pim_chan * pbi_->num_pim_blocks * pbi_->num_grf_B);
 
     PIM_PROFILE_TICK(CreateCRFBin);
 
@@ -494,7 +494,7 @@ int HIPExecutor::execute_gemv_list(PimBo* output, PimBo* input, PimBo* weight, v
     bool is_chwise = false;
     int ch_per_batch = 0;
 
-    if (weight->bshape.c % fbi_.num_pim_chan == 0) {
+    if (weight->bshape.c % pbi_->num_pim_chan == 0) {
         is_chwise = true;
         ch_per_batch = 1;
     }
@@ -513,15 +513,15 @@ int HIPExecutor::execute_gemv_list_normal(PimBo* output, PimBo* input, PimBo* we
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
 
-    unsigned blocks = fbi_.num_pim_chan;
+    unsigned blocks = pbi_->num_pim_chan;
     unsigned threads_per_block = 64;
     int list_size = output->bshape.c;
 
     int input_size = 128 * ceil((float)weight->bshape_r.h / 128);
     if (input_size < 256) input_size = 256;
     int output_size = weight->bshape.w * weight->bshape.c;
-    int n_in_tile = input_size * sizeof(uint16_t) / fbi_.trans_size / fbi_.num_grf_A;
-    int n_out_tile = output_size / (fbi_.num_pim_chan * fbi_.num_pim_blocks * fbi_.num_grf_B);
+    int n_in_tile = input_size * sizeof(uint16_t) / pbi_->trans_size / pbi_->num_grf_A;
+    int n_out_tile = output_size / (pbi_->num_pim_chan * pbi_->num_pim_blocks * pbi_->num_grf_B);
     int is_gemv_add = 0;
 
     PIM_PROFILE_TICK(CreateCRFBin);
@@ -596,15 +596,15 @@ int HIPExecutor::execute_gemv_list_chwise(PimBo* output, PimBo* input, PimBo* we
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
 
-    unsigned blocks = fbi_.num_pim_chan;
+    unsigned blocks = pbi_->num_pim_chan;
     unsigned threads_per_block = 64;
     int list_size = output->bshape.n;
 
     int input_size = 128 * ceil((float)weight->bshape_r.h / 128);
     if (input_size < 256) input_size = 256;
     int output_size = weight->bshape.w;
-    int n_in_tile = input_size * sizeof(uint16_t) / fbi_.trans_size / fbi_.num_grf_A;
-    int n_out_tile = output_size / (ch_per_op * fbi_.num_pim_blocks * fbi_.num_grf_B);
+    int n_in_tile = input_size * sizeof(uint16_t) / pbi_->trans_size / pbi_->num_grf_A;
+    int n_out_tile = output_size / (ch_per_op * pbi_->num_pim_blocks * pbi_->num_grf_B);
     int is_gemv_add = 0;
 
     PIM_PROFILE_TICK(CreateCRFBin);
@@ -694,7 +694,7 @@ int HIPExecutor::execute_relu(PimBo* output, PimBo* pim_data, void* stream, bool
 
         pimc_driver::ReluArgs<half_float::half> kargs(&input_t, &output_t, pim_op->get_crf_binary(), kernel);
         auto out_dim = (output_t.get_desc().get_dim(3) * sizeof(half_float::half)) / 32;
-        uint32_t num_tile = out_dim / ((fbi_.num_pim_blocks * fbi_.num_pim_chan * fbi_.num_grf) / 2);
+        uint32_t num_tile = out_dim / ((pbi_->num_pim_blocks * pbi_->num_pim_chan * pbi_->num_grf) / 2);
         kargs.set_num_tile(num_tile);
 
         relu_execute.execute_code(&kargs);
@@ -705,7 +705,7 @@ int HIPExecutor::execute_relu(PimBo* output, PimBo* pim_data, void* stream, bool
             crf_bin = (uint8_t*)make_crf_bin(OP_RELU, output->size);
         }
 
-        unsigned blocks = fbi_.num_pim_chan;
+        unsigned blocks = pbi_->num_pim_chan;
         unsigned threads_per_block = 32;
         int device_id;
         hipGetDevice(&device_id);
@@ -750,7 +750,7 @@ int HIPExecutor::execute_copy(PimBo* output, PimBo* pim_data, void* stream, bool
             crf_bin = (uint8_t*)make_crf_bin(OP_COPY, output->size);
         }
 
-        unsigned blocks = fbi_.num_pim_chan;
+        unsigned blocks = pbi_->num_pim_chan;
         unsigned threads_per_block = 32;
 
         int device_id;
@@ -790,7 +790,7 @@ int HIPExecutor::execute_gemv_next_pim(PimBo* output, PimBo* operand0, PimBo* op
 
     PimBo* input = operand0;
     PimBo* weight = operand1;
-    unsigned blocks = fbi_.num_pim_chan;
+    unsigned blocks = pbi_->num_pim_chan;
     unsigned threads_per_block = 64;
 
     int memory_size = weight->bshape.h;
@@ -799,9 +799,9 @@ int HIPExecutor::execute_gemv_next_pim(PimBo* output, PimBo* operand0, PimBo* op
     int out_size = weight->bshape.w;
     int real_out_size = weight->bshape_r.w;
     int n_batch = input->bshape.n;
-    int n_compute_tile = compute_size * sizeof(uint16_t) / fbi_.trans_size / fbi_.num_grf_A;
-    int n_memory_tile = memory_size * sizeof(uint16_t) / fbi_.trans_size / fbi_.num_grf_A;
-    int n_out_tile = out_size / (fbi_.num_pim_chan * fbi_.num_pim_blocks * fbi_.num_grf_B);
+    int n_compute_tile = compute_size * sizeof(uint16_t) / pbi_->trans_size / pbi_->num_grf_A;
+    int n_memory_tile = memory_size * sizeof(uint16_t) / pbi_->trans_size / pbi_->num_grf_A;
+    int n_out_tile = out_size / (pbi_->num_pim_chan * pbi_->num_pim_blocks * pbi_->num_grf_B);
 
     PIM_PROFILE_TICK(CreateCRFBin);
 
@@ -849,8 +849,8 @@ int HIPExecutor::execute_bn(PimBo* output, PimBo* pim_data, PimBo* beta, PimBo* 
         crf_bin = (uint8_t*)make_crf_bin(OP_BN, output_size);
     }
 
-    uint8_t* srf_binary = new uint8_t[fbi_.num_pim_chan * fbi_.num_pim_rank * fbi_.trans_size];
-    int srf_size = fbi_.num_pim_chan * fbi_.num_pim_rank * fbi_.trans_size;
+    uint8_t* srf_binary = new uint8_t[pbi_->num_pim_chan * pbi_->num_pim_rank * pbi_->trans_size];
+    int srf_size = pbi_->num_pim_chan * pbi_->num_pim_rank * pbi_->trans_size;
     preprocess_srf(beta, gamma, mean, variance, epsilon, srf_binary);
 
     hipMemcpy((void*)d_srf_bin_buffer_, (void*)srf_binary, srf_size, hipMemcpyHostToDevice);
@@ -977,14 +977,14 @@ int HIPExecutor::execute_aligned_gemm_tile_accum(PimBo* output, PimBo* input, Pi
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
 
-    unsigned blocks = fbi_.num_pim_chan;
+    unsigned blocks = pbi_->num_pim_chan;
     unsigned threads_per_block = 64;
 #ifdef EMULATOR
     int is_gemv_add = 0;
 #endif
 
-    int n_in_tile = input->bshape.w * sizeof(uint16_t) / fbi_.trans_size / fbi_.num_grf_A;
-    int n_out_tile = output->bshape.w / (fbi_.num_pim_chan * fbi_.num_pim_blocks * fbi_.num_grf_B);
+    int n_in_tile = input->bshape.w * sizeof(uint16_t) / pbi_->trans_size / pbi_->num_grf_A;
+    int n_out_tile = output->bshape.w / (pbi_->num_pim_chan * pbi_->num_pim_blocks * pbi_->num_grf_B);
     int iter_cnt = weight->bshape.n * weight->bshape.c * weight->bshape.w / PIM_GEMV_OUT_ALIGN;
     int is_bias = (bias != nullptr) ? 1 : 0;
     int is_relu = (act_func == ACT_RELU) ? 1 : 0;
@@ -1066,13 +1066,13 @@ int HIPExecutor::execute_chwise_gemm_tile_accum(PimBo* output, PimBo* input, Pim
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
 
-    unsigned blocks = fbi_.num_pim_chan;
+    unsigned blocks = pbi_->num_pim_chan;
     unsigned threads_per_block = 64;
 #ifdef EMULATOR
     int is_gemv_add = 0;
 #endif
 
-    int n_in_tile = input->bshape.w * sizeof(uint16_t) / fbi_.trans_size / fbi_.num_grf_A;
+    int n_in_tile = input->bshape.w * sizeof(uint16_t) / pbi_->trans_size / pbi_->num_grf_A;
     int n_out_tile = 1;
     int iter_cnt = (weight->bshape.n * weight->bshape.c) / (PIM_GEMV_OUT_ALIGN / weight->bshape.w);
 

@@ -71,11 +71,12 @@ class PimExecutor
    protected:
     int max_crf_size_;
     pim::runtime::manager::PimManager* pim_manager_;
+    pim::runtime::manager::PimDevice* pim_device_;
     std::map<std::pair<PimOpType, int>, uint8_t*> crf_lut_;
 
     PimRuntimeType rt_type_;
     PimPrecision precision_;
-    PimBlockInfo fbi_;
+    PimBlockInfo* pbi_;
     PimGemvType pim_gemv_type_;
     PimExecutor* pim_executor_;
 

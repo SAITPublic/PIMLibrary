@@ -11,7 +11,7 @@
 #include "utility/pim_util.h"
 #include "half.hpp"
 
-__host__ void get_pim_block_info(PimBlockInfo* fbi) { memcpy(fbi, &vega20_fbi, sizeof(PimBlockInfo)); }
+__host__ void get_pim_block_info(PimBlockInfo* pbi) { memcpy(pbi, &vega20_pbi, sizeof(PimBlockInfo)); }
 
 void set_pimbo_t(PimBo* dst, PimBo* src)
 {

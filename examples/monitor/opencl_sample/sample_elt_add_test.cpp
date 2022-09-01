@@ -1,7 +1,6 @@
 #include <CL/opencl.h>
 #include <stdio.h>
 #include <iostream>
-#include "executor/pim_opencl_kernels/gpu_add_kernel.pimk"
 
 int length = 256;
 cl_half* inp1 = NULL;
@@ -11,6 +10,18 @@ cl_half* ref = NULL;
 
 cl_half* temp1 = NULL;
 cl_half* temp2 = NULL;
+
+const char* source =
+    "#pragma OPENCL EXTENSION cl_khr_fp16 : enable              \n"
+    "__kernel void gpuAdd(__global half* a,                     \n"
+    "                     __global half* b,                     \n"
+    "                     __global half* output,                \n"
+    "                     const unsigned int n)                 \n"
+    "{                                                          \n"
+    "   int gid = get_global_id(0);                             \n"
+    "   if(gid < n)                                             \n"
+    "       output[gid] = a[gid] + b[gid];                      \n"
+    "}                                                          \n";
 
 void add_vector()
 {

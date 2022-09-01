@@ -8,16 +8,14 @@
  * to third parties without the express written permission of Samsung Electronics.
  */
 
-#ifndef _HIP_MEM_MANAGER_H_
-#define _HIP_MEM_MANAGER_H_
+#ifndef _OPENCL_MEM_MANAGER_H_
+#define _OPENCL_MEM_MANAGER_H_
 
-#include <map>
-#include <vector>
-#include "manager/HostInfo.h"
+#include <CL/cl.h>
 #include "manager/IPimMemoryManager.h"
 #include "manager/PimDevice.h"
 #include "manager/PimInfo.h"
-#include "manager/hip/HipBlockAllocator.h"
+#include "manager/ocl/OclBlockAllocator.h"
 #include "manager/simple_heap.hpp"
 #include "pim_data_types.h"
 
@@ -27,12 +25,11 @@ namespace runtime
 {
 namespace manager
 {
-class PimDevice;
-class HipMemManager : public IPimMemoryManager
+class OclMemoryManager : public IPimMemoryManager
 {
    public:
-    HipMemManager(PimDevice* pim_device, PimPrecision precision);
-    virtual ~HipMemManager(void);
+    OclMemoryManager(PimDevice* pim_device, PimPrecision precision);
+    virtual ~OclMemoryManager(void);
 
     int initialize(void);
     int deinitialize(void);
@@ -43,29 +40,25 @@ class HipMemManager : public IPimMemoryManager
     int copy_memory(void* dst, void* src, size_t size, PimMemCpyType cpy_type);
     int copy_memory(PimBo* dst, PimBo* src, PimMemCpyType cpy_type);
     int copy_memory_3d(const PimCopy3D* copy_params);
-    int convert_data_layout(PimBo* dst, PimBo* src, PimOpType op_type);
-
-    void* get_context(void) { return nullptr; }
-    void* get_queue(void) { return nullptr; }
-    void* get_device(void) { return nullptr; }
+    int get_physical_id(void);
+    int convert_data_layout(PimBo* dst, PimBo* src, PimOpType op_type) { return -1; };
 
    private:
-    int convert_data_layout_for_gemm_weight(PimBo* dst, PimBo* src);
-    int convert_data_layout_for_aligned_gemm_weight(PimBo* dst, PimBo* src);
-    int convert_data_layout_for_chwise_gemm_weight(PimBo* dst, PimBo* src);
-    int convert_data_layout_for_gemv_weight(PimBo* dst, PimBo* src, int data_offset);
-    int convert_data_layout_for_gemv_weight(PimBo* dst, PimBo* src, int data_offset, int ch_per_op);
-
-   private:
-    std::vector<SimpleHeap<HipBlockAllocator>*> fragment_allocator_;
-    int num_gpu_devices_;
+    std::vector<SimpleHeap<OclBlockAllocator>*> fragment_allocator_;
     int host_id_;
     PimDevice* pim_device_;
     PimPrecision precision_;
-    PimBlockInfo fbi_;
+    PimBlockInfo* pbi_;
+
+    cl_platform_id platform_;
+    cl_device_id device_id_;
+    cl_command_queue queue_;
+    cl_context context_;
+    cl_uint num_gpu_devices_;
+    cl_int err_;
 };
 }  // namespace manager
 }  // namespace runtime
 }  // namespace pim
 
-#endif /*_HIP_MEM_MANAGER_H_*/
+#endif /*_OPENCL_MEM_MANAGER_H_ */

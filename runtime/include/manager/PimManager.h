@@ -25,7 +25,6 @@ namespace runtime
 namespace manager
 {
 class PimControlManager;
-class PimDevice;
 
 class PimManager
 {
@@ -47,13 +46,15 @@ class PimManager
 
     uint8_t* get_crf_binary(void);
     int get_crf_size(void);
+    PimDevice* get_pim_device(void) { return pim_device_; }
+
+    PimControlManager* pim_control_manager_;
     PimCrfBinGen* pim_crf_generator_;
-    IPimMemoryManager* pim_memory_manager_;
 
    private:
     PimManager(PimRuntimeType rt_type, PimPrecision precision);
+    IPimMemoryManager* pim_memory_manager_;
     PimDevice* pim_device_;
-    PimControlManager* pim_control_manager_;
 
     PimRuntimeType rt_type_;
     PimPrecision precision_;
@@ -62,7 +63,6 @@ class PimManager
         0,
     };
     int crf_size_;
-    PimBlockInfo fbi_;
 };
 } /* namespace manager */
 } /* namespace runtime */

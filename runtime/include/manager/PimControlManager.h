@@ -13,6 +13,7 @@
 
 #pragma GCC diagnostic ignored "-Wunused-private-field"
 
+#include "manager/PimDevice.h"
 #include "manager/PimInfo.h"
 #include "manager/PimManager.h"
 #include "pim_data_types.h"
@@ -23,8 +24,6 @@ namespace runtime
 {
 namespace manager
 {
-class PimDevice;
-
 class PimControlManager
 {
    public:

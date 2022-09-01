@@ -69,6 +69,12 @@ class OpenCLExecutor : public PimExecutor
     int execute_dummy(void) { return -1; };
 
    private:
+    cl_platform_id platform_;
+    cl_context context_;
+    cl_program program_;
+    cl_device_id device_id_;
+    cl_command_queue queue_;
+
     cl_mem d_srf_bin_buffer_;
     cl_mem pim_gemv_tmp_buffer_;
     cl_mem zero_buffer_;

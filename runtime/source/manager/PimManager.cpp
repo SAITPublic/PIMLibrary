@@ -12,7 +12,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <iostream>
-#include "manager/MemoryManager.h"
+#include "manager/PimMemoryManagerFactory.h"
 #include "utility/pim_log.h"
 #include "utility/pim_util.h"
 
@@ -27,10 +27,10 @@ namespace manager
 PimManager::PimManager(PimRuntimeType rt_type, PimPrecision precision) : rt_type_(rt_type), precision_(precision)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
-    pim_device_ = new PimDevice(precision_);
+    pim_device_ = new PimDevice();
+    PimMemoryManagerFactory memory_manager_factory{};
+    pim_memory_manager_ = memory_manager_factory.getPimMemoryManager(pim_device_, rt_type_, precision_);
     pim_control_manager_ = new PimControlManager(pim_device_, rt_type_, precision_);
-    MemoryManager mem_manager{};
-    pim_memory_manager_ = mem_manager.getPimMemoryManager(pim_device_, rt_type_, precision_);
     pim_crf_generator_ = new PimCrfBinGen();
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
 }
@@ -59,7 +59,6 @@ int PimManager::initialize(void)
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
 
-    pim_device_->initialize();
     pim_control_manager_->initialize();
     pim_memory_manager_->initialize();
 
@@ -74,7 +73,6 @@ int PimManager::deinitialize(void)
 
     pim_memory_manager_->deinitialize();
     pim_control_manager_->deinitialize();
-    pim_device_->deinitialize();
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;

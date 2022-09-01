@@ -13,6 +13,11 @@
 
 #include <stdint.h>
 
+#define DIM_OUT_PIM (3200)
+#define PIM_GEMV_IN_ALIGN (256)
+#define PIM_GEMV_OUT_ALIGN (4096)
+#define PIM_ELTWISE_ALIGN (256 * 1024)
+
 typedef enum __PimAddrMap {
     AMDGPU_VEGA20,
 } PimAddrMap;
@@ -43,6 +48,33 @@ typedef struct __PimBlockInfo {
     int trans_size;
     int num_out_per_grf;
 } PimBlockInfo;
+
+static PimBlockInfo vega20_pbi = {
+    .pim_addr_map = AMDGPU_VEGA20,
+    .num_banks = 16,
+    .num_bank_groups = 4,
+    .num_rank_bit = 1,
+    .num_row_bit = 14,
+    .num_col_high_bit = 3,
+    .num_bank_high_bit = 1,
+    .num_bankgroup_bit = 2,
+    .num_bank_low_bit = 1,
+    .num_chan_bit = 6,
+    .num_col_low_bit = 2,
+    .num_offset_bit = 5,
+    .num_grf = 8,
+    .num_grf_A = 8,
+    .num_grf_B = 8,
+    .num_srf = 4,
+    .num_col = 128,
+    .num_row = 16384,
+    .bl = 4,
+    .num_pim_blocks = 8,
+    .num_pim_rank = 1,
+    .num_pim_chan = 64,
+    .trans_size = 32,
+    .num_out_per_grf = 16,
+};
 
 typedef struct __PimMemTraceData {
     uint8_t data[32];

@@ -11,9 +11,8 @@
 #ifndef _PIM_DEVICE_H_
 #define _PIM_DEVICE_H_
 
-#pragma GCC diagnostic ignored "-Wunused-private-field"
-
-#include "pim_data_types.h"
+#include "manager/PimInfo.h"
+#include "utility/pim_util.h"
 
 namespace pim
 {
@@ -24,24 +23,21 @@ namespace manager
 class PimDevice
 {
    public:
-    PimDevice(PimPrecision precision);
-    virtual ~PimDevice(void);
+    PimDevice(void) { ::get_pim_block_info(&pbi_); }
+    virtual ~PimDevice(void) {}
+    PimBlockInfo* get_pim_block_info(void) { return &pbi_; }
 
-    int initialize(void);
-    int deinitialize(void);
-    int request_ioctl(void);
-
+#if 0 /* TODO: enable PIM Device Driver */
+    int init_device(void) = 0;
+    int deinit_device(void) = 0;
+    int set_property(void) = 0;
+    int get_property(void) = 0;
+    int open_device(void) = 0;
+    int close_device(void) = 0;
+#endif
    private:
-    int open_device(void);
-    int close_device(void);
-
-    static constexpr char pim_drv_name_[] = "/dev/pim_drv";
-    size_t grf_size_;
-    size_t grf_cnt_;
-    size_t channel_cnt_;
-    PimPrecision precision_;
+    PimBlockInfo pbi_;
 };
-
 } /* namespace manager */
 } /* namespace runtime */
 } /* namespace pim */

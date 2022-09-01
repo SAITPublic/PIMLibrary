@@ -31,11 +31,13 @@ namespace executor
 PimExecutor::PimExecutor(PimRuntimeType rt_type, PimPrecision precision) : rt_type_(rt_type), precision_(precision)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called ";
-    get_pim_block_info(&fbi_);
+    pim_manager_ = pim::runtime::manager::PimManager::get_instance(rt_type_, precision_);
+    pim_device_ = pim_manager_->get_pim_device();
+    pbi_ = pim_device_->get_pim_block_info();
 #ifdef EMULATOR
     pim_emulator_ = pim::runtime::emulator::PimEmulator::get_instance();
     fmtd_size_per_ch_ = 100000;
-    max_block_size_ = fbi_.num_pim_chan;
+    max_block_size_ = pbi_->num_pim_chan;
     max_fmtd_size_ = fmtd_size_per_ch_ * max_block_size_;
 #endif
     pim_gemv_type_ = TILE_ACCUM;
@@ -72,7 +74,6 @@ int PimExecutor::initialize(void)
     DLOG(INFO) << "[START]" << __FUNCTION__ << "Initializing ";
     int ret = 0;
     int is_gemv_tile_tree = pim_gemv_type_ == TILE_TREE ? 1 : 0;
-    pim_manager_ = pim::runtime::manager::PimManager::get_instance(rt_type_, precision_);
     pim_manager_->pim_crf_generator_->set_gemv_tile_tree(is_gemv_tile_tree);
 
     DLOG(INFO) << "[END]" << __FUNCTION__ << " called ";
@@ -89,8 +90,8 @@ int PimExecutor::deinitialize(void)
 int PimExecutor::preprocess_srf(PimBo* beta, PimBo* gamma, PimBo* mean, PimBo* variance, double epsilon,
                                 uint8_t* srf_binary)
 {
-    int num_pim_rank = fbi_.num_pim_rank;
-    int num_pim_chan = fbi_.num_pim_chan;
+    int num_pim_rank = pbi_->num_pim_rank;
+    int num_pim_chan = pbi_->num_pim_chan;
 
     int cidx = 0;
     int rank = 0;
@@ -134,14 +135,14 @@ int PimExecutor::get_loop_counter(PimOpType op_type, int input_size)
 {
     int lc = 0;
     int num_transaction = (input_size / 16) / sizeof(uint16_t);
-    int num_parallelism = fbi_.num_pim_blocks * fbi_.num_pim_chan * fbi_.num_pim_rank * fbi_.num_grf;
+    int num_parallelism = pbi_->num_pim_blocks * pbi_->num_pim_chan * pbi_->num_pim_rank * pbi_->num_grf;
     int num_tile = num_transaction / num_parallelism;
 
     if (op_type == OP_GEMV) {
         if (pim_gemv_type_ == TILE_TREE)
-            lc = (input_size / fbi_.trans_size / fbi_.num_grf_A / 2) - 1;
+            lc = (input_size / pbi_->trans_size / pbi_->num_grf_A / 2) - 1;
         else
-            lc = input_size / fbi_.trans_size / fbi_.num_grf_A;
+            lc = input_size / pbi_->trans_size / pbi_->num_grf_A;
     } else
         lc = num_tile / 2 - 1;
     return lc;

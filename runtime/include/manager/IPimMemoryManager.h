@@ -32,11 +32,6 @@ class IPimMemoryManager
     virtual int copy_memory(PimBo* dst, PimBo* src, PimMemCpyType cpy_type) = 0;
     virtual int copy_memory_3d(const PimCopy3D* copy_params) = 0;
     virtual int convert_data_layout(PimBo* dst, PimBo* src, PimOpType op_type) = 0;
-
-    // TODO, below methods seem better to be in PimDevice
-    virtual void* get_context(void) = 0;
-    virtual void* get_queue(void) = 0;
-    virtual void* get_device(void) = 0;
 };
 } /* namespace manager */
 } /* namespace runtime */

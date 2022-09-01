@@ -8,7 +8,7 @@
  * to third parties without the express written permission of Samsung Electronics.
  */
 
-#include "manager/ocl/OclMemManager.h"
+#include "manager/ocl/OclMemoryManager.h"
 #include <CL/opencl.h>
 #include <assert.h>
 #include <stdlib.h>
@@ -31,13 +31,13 @@ namespace runtime
 {
 namespace manager
 {
-OclMemManager::OclMemManager(PimDevice* pim_device, PimPrecision precision)
+OclMemoryManager::OclMemoryManager(PimDevice* pim_device, PimPrecision precision)
     : pim_device_(pim_device), precision_(precision)
 {
 }
 
-OclMemManager::~OclMemManager() { DLOG(INFO) << "[START] " << __FUNCTION__ << " called"; }
-int OclMemManager::initialize()
+OclMemoryManager::~OclMemoryManager() { DLOG(INFO) << "[START] " << __FUNCTION__ << " called"; }
+int OclMemoryManager::initialize(void)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
@@ -57,13 +57,13 @@ int OclMemManager::initialize()
     return ret;
 }
 
-int OclMemManager::deinitialize(void)
+int OclMemoryManager::deinitialize(void)
 {
     int ret = 0;
     return ret;
 }
 
-int OclMemManager::get_physical_id(void)
+int OclMemoryManager::get_physical_id(void)
 {
     /*
     just a dummy function which reutrn a default device id.
@@ -71,7 +71,7 @@ int OclMemManager::get_physical_id(void)
     return 0;
 }
 
-int OclMemManager::alloc_memory(void** ptr, size_t size, PimMemType mem_type)
+int OclMemoryManager::alloc_memory(void** ptr, size_t size, PimMemType mem_type)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
@@ -92,7 +92,7 @@ int OclMemManager::alloc_memory(void** ptr, size_t size, PimMemType mem_type)
     return ret;
 }
 
-int OclMemManager::alloc_memory(PimBo* pim_bo)
+int OclMemoryManager::alloc_memory(PimBo* pim_bo)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
@@ -118,7 +118,7 @@ int OclMemManager::alloc_memory(PimBo* pim_bo)
     return ret;
 }
 
-int OclMemManager::free_memory(void* ptr, PimMemType mem_type)
+int OclMemoryManager::free_memory(void* ptr, PimMemType mem_type)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
@@ -137,7 +137,7 @@ int OclMemManager::free_memory(void* ptr, PimMemType mem_type)
     return ret;
 }
 
-int OclMemManager::free_memory(PimBo* pim_bo)
+int OclMemoryManager::free_memory(PimBo* pim_bo)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
@@ -157,7 +157,7 @@ int OclMemManager::free_memory(PimBo* pim_bo)
 }
 
 // error check remaining
-int OclMemManager::copy_memory(void* dst, void* src, size_t size, PimMemCpyType cpy_type)
+int OclMemoryManager::copy_memory(void* dst, void* src, size_t size, PimMemCpyType cpy_type)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
@@ -181,7 +181,7 @@ int OclMemManager::copy_memory(void* dst, void* src, size_t size, PimMemCpyType 
 }
 
 // error check remaining
-int OclMemManager::copy_memory(PimBo* dst, PimBo* src, PimMemCpyType cpy_type)
+int OclMemoryManager::copy_memory(PimBo* dst, PimBo* src, PimMemCpyType cpy_type)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
@@ -207,7 +207,7 @@ int OclMemManager::copy_memory(PimBo* dst, PimBo* src, PimMemCpyType cpy_type)
     return ret;
 }
 
-int OclMemManager::copy_memory_3d(const PimCopy3D* copy_params)
+int OclMemoryManager::copy_memory_3d(const PimCopy3D* copy_params)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
