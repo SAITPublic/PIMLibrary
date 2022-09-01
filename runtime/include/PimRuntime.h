@@ -14,7 +14,7 @@
 #pragma GCC diagnostic ignored "-Wunused-private-field"
 
 #include <unordered_map>
-#include "executor/PimExecutor.h"
+#include "executor/IPimExecutor.h"
 #include "manager/PimInfo.h"
 #include "manager/PimManager.h"
 #include "pim_data_types.h"
@@ -27,7 +27,8 @@ class PimRuntime
 {
    public:
     PimRuntime(PimRuntimeType rtType, PimPrecision precision);
-    virtual ~PimRuntime(void) {}
+    virtual ~PimRuntime(void);
+
     int initialize(void);
     int deinitialize(void);
     int set_device(uint32_t device_id);
@@ -64,7 +65,7 @@ class PimRuntime
     PimBo* get_preloaded_pim_gemm_weight(PimBo* dev_wei);
     pim::runtime::manager::PimManager* pim_manager_;
     pim::runtime::manager::PimDevice* pim_device_;
-    pim::runtime::executor::PimExecutor* pim_executor_;
+    pim::runtime::executor::IPimExecutor* pim_executor_;
     PimRuntimeType rt_type_;
     PimPrecision precision_;
     std::unordered_map<uint32_t, PimBo*> weight_map_;

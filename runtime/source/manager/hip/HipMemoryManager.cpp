@@ -64,8 +64,9 @@ HipMemoryManager::HipMemoryManager(PimDevice* pim_device, PimPrecision precision
 {
 }
 
-HipMemoryManager::~HipMemoryManager() { DLOG(INFO) << "[START] " << __FUNCTION__ << " called"; }
-int HipMemoryManager::initialize()
+HipMemoryManager::~HipMemoryManager(void) { DLOG(INFO) << "[START] " << __FUNCTION__ << " called"; }
+
+int HipMemoryManager::initialize(void)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;

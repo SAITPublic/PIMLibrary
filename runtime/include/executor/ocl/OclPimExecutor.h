@@ -8,12 +8,12 @@
  * to third parties without the express written permission of Samsung Electronics.
  */
 
-#ifndef _OPENCL_EXECUTOR_H_
-#define _OPENCL_EXECUTOR_H_
+#ifndef _OCL_PIM_EXECUTOR_H_
+#define _OCL_PIM_EXECUTOR_H_
 
 #include <CL/cl.h>
-#include "PimExecutor.h"
 #include "emulator/PimEmulator.h"
+#include "executor/IPimExecutor.h"
 #include "manager/PimInfo.h"
 #include "manager/PimManager.h"
 #include "pim_data_types.h"
@@ -24,51 +24,56 @@ namespace runtime
 {
 namespace executor
 {
-class OpenCLExecutor : public PimExecutor
+class OclPimExecutor : public IPimExecutor
 {
    public:
-    OpenCLExecutor(PimRuntimeType rt_type, PimPrecision precision);
-    virtual ~OpenCLExecutor(void){};
+    OclPimExecutor(pim::runtime::manager::PimManager* pim_manager, PimPrecision precision);
+    virtual ~OclPimExecutor(void);
 
-    int initialize();
+    int initialize(void);
     int deinitialize(void);
-    void* createStream() { return nullptr; }
-
     int execute_add(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream, bool block);
-    int execute_mul(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream, bool block) { return -1; };
-    int execute_relu(PimBo* output, PimBo* pim_data, void* stream, bool block) { return -1; };
-    int execute_copy(PimBo* output, PimBo* pim_data, void* stream, bool block) { return -1; };
+    int execute_mul(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream, bool block) { return -1; }
+    int execute_relu(PimBo* output, PimBo* pim_data, void* stream, bool block) { return -1; }
+    int execute_copy(PimBo* output, PimBo* pim_data, void* stream, bool block) { return -1; }
     int execute_bn(PimBo* output, PimBo* pim_data, PimBo* beta, PimBo* gamma, PimBo* mean, PimBo* variance,
                    double epsilon, void* stream, bool block)
     {
         return -1;
-    };
+    }
     int execute_gemm(PimBo* output, PimBo* input, PimBo* weight, PimBo* bias, PimActFunc act_func, void* stream,
                      bool block)
     {
         return -1;
-    };
-    int execute_gemv(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream, bool block) { return -1; };
-    int execute_gemv_add(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream, bool block) { return -1; };
-    int execute_gemv_list(PimBo* output, PimBo* input, PimBo* weight, void* stream, bool block) { return -1; };
-    int execute_gemv_list_normal(PimBo* output, PimBo* input, PimBo* weight, void* stream, bool block) { return -1; };
+    }
+    int execute_gemv(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream, bool block) { return -1; }
+    int execute_gemv_add(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream, bool block) { return -1; }
+    int execute_gemv_list(PimBo* output, PimBo* input, PimBo* weight, void* stream, bool block) { return -1; }
+    int execute_gemv_list_normal(PimBo* output, PimBo* input, PimBo* weight, void* stream, bool block) { return -1; }
     int execute_gemv_list_chwise(PimBo* output, PimBo* input, PimBo* weight, int ch_per_op, void* stream, bool block)
     {
         return -1;
-    };
+    }
     int execute_custom_gemv(PimBo* output, PimBo* operand0, PimBo* operand1, bool is_gemv_add, void* stream, bool block)
     {
         return -1;
-    };
+    }
     int execute_custom_gemv_add(PimBo* output, PimBo* operand0, PimBo* operand1, PimBo* operand2, bool relu,
                                 void* stream, bool block)
     {
         return -1;
-    };
-    int execute_sync(void* stream) { return -1; };
-    int execute_dummy(void) { return -1; };
+    }
+    int execute_sync(void* stream) { return -1; }
+    int execute_dummy(void) { return -1; }
+    void* createStream(void) { return nullptr; }
 
    private:
+    pim::runtime::manager::PimManager* pim_manager_;
+    pim::runtime::manager::PimDevice* pim_device_;
+    PimPrecision precision_;
+    PimBlockInfo* pbi_;
+    int max_crf_size_;
+
     cl_platform_id platform_;
     cl_context context_;
     cl_program program_;

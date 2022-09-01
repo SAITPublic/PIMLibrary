@@ -23,6 +23,7 @@ static bool log_initialized = false;
 static bool pim_initialized = false;
 bool pim_alloc_done[10] = {false};
 uint64_t g_pim_base_addr[10] = {0x0};
+
 int PimInitialize(PimRuntimeType rt_type, PimPrecision precision)
 {
     int ret = 0;
@@ -40,12 +41,11 @@ int PimInitialize(PimRuntimeType rt_type, PimPrecision precision)
     if (!pim_initialized) {
         DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
         PIM_PROFILE_TICK(Initialize);
-
         if (pim_runtime == nullptr) pim_runtime = new PimRuntime(rt_type, precision);
+
         ret = pim_runtime->initialize();
         pim_initialized = true;
         PIM_PROFILE_TOCK(Initialize);
-
         DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     } else {
         DLOG(INFO) << "PIM Already initialized " << __FUNCTION__ << " called";

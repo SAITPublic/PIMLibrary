@@ -8,11 +8,10 @@
  * to third parties without the express written permission of Samsung Electronics.
  */
 
-#include "executor/OpenCLExecutor.h"
+#include "executor/ocl/OclPimExecutor.h"
 #include <assert.h>
 #include <stdlib.h>
 #include <iostream>
-#include "executor/PimExecutor.h"
 #include "utility/assert_cl.h"
 #include "utility/pim_debug.hpp"
 #include "utility/pim_log.h"
@@ -37,7 +36,8 @@ namespace runtime
 {
 namespace executor
 {
-OpenCLExecutor::OpenCLExecutor(PimRuntimeType rt_type, PimPrecision precision) : PimExecutor(rt_type, precision)
+OclPimExecutor::OclPimExecutor(pim::runtime::manager::PimManager* pim_manager, PimPrecision precision)
+    : pim_manager_(pim_manager), precision_(precision), max_crf_size_(128)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called ";
 
@@ -51,12 +51,12 @@ OpenCLExecutor::OpenCLExecutor(PimRuntimeType rt_type, PimPrecision precision) :
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
 }
 
-int OpenCLExecutor::initialize(void)
-{
-    int ret = PimExecutor::initialize();
-    DLOG(INFO) << "[START] " << __FUNCTION__ << "OpenCL executor Intialization ";
+OclPimExecutor::~OclPimExecutor(void) {}
 
-    max_crf_size_ = 128;
+int OclPimExecutor::initialize(void)
+{
+    DLOG(INFO) << "[START] " << __FUNCTION__ << "OpenCL executor Intialization ";
+    int ret = 0;
     int max_srf_size = 2048;
     int zero = 0;
 
@@ -71,10 +71,10 @@ int OpenCLExecutor::initialize(void)
     return ret;
 }
 
-int OpenCLExecutor::deinitialize(void)
+int OclPimExecutor::deinitialize(void)
 {
-    int ret = PimExecutor::deinitialize();
     DLOG(INFO) << " [START] " << __FUNCTION__ << " called";
+    int ret = 0;
     clReleaseMemObject(d_srf_bin_buffer_);
     clReleaseMemObject(zero_buffer_);
     // pim_manager_->free_memory((void*)pim_gemv_tmp_buffer_, MEM_TYPE_PIM);
@@ -84,7 +84,7 @@ int OpenCLExecutor::deinitialize(void)
     return ret;
 }
 
-int OpenCLExecutor::execute_add(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream, bool block)
+int OclPimExecutor::execute_add(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream, bool block)
 {
     DLOG(INFO) << "called";
     int ret = 0;

@@ -12,8 +12,6 @@
 #define _PIM_MANAGER_H_
 
 #include "manager/IPimMemoryManager.h"
-#include "manager/PimControlManager.h"
-#include "manager/PimCrfBinGen.h"
 #include "manager/PimDevice.h"
 #include "manager/PimInfo.h"
 #include "pim_data_types.h"
@@ -24,8 +22,6 @@ namespace runtime
 {
 namespace manager
 {
-class PimControlManager;
-
 class PimManager
 {
    public:
@@ -47,9 +43,6 @@ class PimManager
     uint8_t* get_crf_binary(void);
     int get_crf_size(void);
     PimDevice* get_pim_device(void) { return pim_device_; }
-
-    PimControlManager* pim_control_manager_;
-    PimCrfBinGen* pim_crf_generator_;
 
    private:
     PimManager(PimRuntimeType rt_type, PimPrecision precision);

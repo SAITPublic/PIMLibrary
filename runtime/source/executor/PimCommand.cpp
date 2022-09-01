@@ -8,13 +8,13 @@
  * to third parties without the express written permission of Samsung Electronics.
  */
 
-#include "manager/PimCommand.h"
+#include "executor/PimCommand.h"
 
 namespace pim
 {
 namespace runtime
 {
-namespace manager
+namespace executor
 {
 bool operator==(const PimCommand& lhs, const PimCommand& rhs) { return lhs.to_int() == rhs.to_int(); }
 
@@ -149,7 +149,6 @@ std::string PimCommand::to_str() const
     }
     return ss.str();
 }
-
-} /* namespace manager */
+} /* namespace executor */
 } /* namespace runtime */
 } /* namespace pim */

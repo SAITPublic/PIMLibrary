@@ -22,7 +22,7 @@ namespace pim
 {
 namespace runtime
 {
-namespace manager
+namespace executor
 {
 enum class PimCmdType { NOP, ADD, MUL, MAC, MAD, REV0, REV1, REV2, MOV, FILL, REV3, REV4, REV5, REV6, JUMP, EXIT };
 enum class PimOpdType { A_OUT, M_OUT, EVEN_BANK, ODD_BANK, GRF_A, GRF_B, SRF_M, SRF_A };
@@ -207,7 +207,7 @@ class PimCommand
 bool operator==(const PimCommand& lhs, const PimCommand& rhs);
 bool operator!=(const PimCommand& lhs, const PimCommand& rhs);
 
-} /* namespace manager */
+} /* namespace executor */
 } /* namespace runtime */
 } /* namespace pim */
 

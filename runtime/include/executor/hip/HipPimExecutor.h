@@ -8,11 +8,14 @@
  * to third parties without the express written permission of Samsung Electronics.
  */
 
-#ifndef _HIP_EXECUTOR_H_
-#define _HIP_EXECUTOR_H_
+#ifndef _HIP_PIM_EXECUTOR_H_
+#define _HIP_PIM_EXECUTOR_H_
 
-#include "PimExecutor.h"
 #include "emulator/PimEmulator.h"
+#include "executor/IPimExecutor.h"
+#include "executor/PimCrfBinGen.h"
+#include "hip/hip_fp16.h"
+#include "hip/hip_runtime.h"
 #include "manager/PimInfo.h"
 #include "manager/PimManager.h"
 #include "pim_data_types.h"
@@ -23,15 +26,14 @@ namespace runtime
 {
 namespace executor
 {
-class HIPExecutor : public PimExecutor
+class HipPimExecutor : public IPimExecutor
 {
    public:
-    HIPExecutor(PimRuntimeType rt_type, PimPrecision precision);
-    virtual ~HIPExecutor(void) {}
+    HipPimExecutor(pim::runtime::manager::PimManager* pim_manager, PimPrecision precision);
+    virtual ~HipPimExecutor(void);
+
     int initialize(void);
     int deinitialize(void);
-
-    void* createStream();
     int execute_add(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream, bool block);
     int execute_mul(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream, bool block);
     int execute_relu(PimBo* output, PimBo* pim_data, void* stream, bool block);
@@ -51,13 +53,9 @@ class HIPExecutor : public PimExecutor
                                 void* stream, bool block);
     int execute_sync(void* stream);
     int execute_dummy(void);
+    void* createStream(void);
 
    private:
-    uint8_t* d_srf_bin_buffer_;
-    uint8_t* pim_gemv_tmp_buffer_;
-    uint8_t* zero_buffer_;
-    hipDeviceProp_t dev_prop_;
-
     int execute_gemv_next_pim(PimBo* output, PimBo* operand0, PimBo* operand1, int is_gemv_add, void* stream,
                               bool block);
     int execute_gemv_tile_accum(PimBo* output, PimBo* operand0, PimBo* operand1, int is_gemv_add, void* stream,
@@ -68,6 +66,33 @@ class HIPExecutor : public PimExecutor
                                         void* stream, bool block);
     int execute_chwise_gemm_tile_accum(PimBo* output, PimBo* input, PimBo* weight, PimBo* bias, PimActFunc act_func,
                                        void* stream, bool block);
+
+   private:
+    pim::runtime::manager::PimManager* pim_manager_;
+    pim::runtime::manager::PimDevice* pim_device_;
+    PimCrfBinGen* pim_crf_generator_;
+    PimPrecision precision_;
+    PimBlockInfo* pbi_;
+    PimGemvType pim_gemv_type_;
+    int max_crf_size_;
+    uint8_t* d_srf_bin_buffer_;
+    uint8_t* pim_gemv_tmp_buffer_;
+    uint8_t* zero_buffer_;
+    hipDeviceProp_t dev_prop_;
+
+#ifdef EMULATOR
+    PimMemTraceData* d_fmtd16_;
+    int* d_fmtd16_size_;
+    pim::runtime::emulator::PimEmulator* pim_emulator_;
+    PimMemTraceData* h_fmtd16_;
+    PimMemTraceData* h_fmtd32_;
+    PimMemTracer* d_emulator_trace_;
+    int* h_fmtd16_size_;
+    int* h_fmtd32_size_;
+    int fmtd_size_per_ch_;
+    int max_block_size_;
+    int max_fmtd_size_;
+#endif
 };
 }  // namespace executor
 }  // namespace runtime

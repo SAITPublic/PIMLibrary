@@ -1,7 +1,7 @@
 #include <assert.h>
 #include <gtest/gtest.h>
 #include <random>
-#include "executor/gpu_hip_kernels/gpu_custom_ops.h"
+#include "executor/hip/gpu_custom_ops.h"
 #include "half.hpp"
 #include "pim_runtime_api.h"
 #include "utility/pim_debug.hpp"

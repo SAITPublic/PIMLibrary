@@ -30,8 +30,6 @@ PimManager::PimManager(PimRuntimeType rt_type, PimPrecision precision) : rt_type
     pim_device_ = new PimDevice();
     PimMemoryManagerFactory memory_manager_factory{};
     pim_memory_manager_ = memory_manager_factory.getPimMemoryManager(pim_device_, rt_type_, precision_);
-    pim_control_manager_ = new PimControlManager(pim_device_, rt_type_, precision_);
-    pim_crf_generator_ = new PimCrfBinGen();
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
 }
 
@@ -39,19 +37,17 @@ PimManager::~PimManager(void)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     delete pim_device_;
-    delete pim_control_manager_;
     delete pim_memory_manager_;
-    delete pim_crf_generator_;
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
 }
 
 PimManager* PimManager::get_instance(PimRuntimeType rt_type, PimPrecision precision)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
-    static PimManager* instance_ = new PimManager(rt_type, precision);
+    static PimManager* instance = new PimManager(rt_type, precision);
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
-    return instance_;
+    return instance;
 }
 
 int PimManager::initialize(void)
@@ -59,7 +55,6 @@ int PimManager::initialize(void)
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
 
-    pim_control_manager_->initialize();
     pim_memory_manager_->initialize();
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
@@ -72,7 +67,6 @@ int PimManager::deinitialize(void)
     int ret = 0;
 
     pim_memory_manager_->deinitialize();
-    pim_control_manager_->deinitialize();
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;

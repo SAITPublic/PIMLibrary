@@ -8,14 +8,14 @@
  * to third parties without the express written permission of Samsung Electronics.
  */
 
-#include "executor/HIPExecutor.h"
+#include "executor/hip/HipPimExecutor.h"
 #include <assert.h>
 #include <stdlib.h>
 #include <iostream>
 #include "executor/PimCompilerDriver.h"
 #include "executor/PimExecutor.h"
-#include "executor/gpu_hip_kernels/gpu_custom_ops.h"
-#include "executor/pim_hip_kernels/pim_op_kernels.pimk"
+#include "executor/hip/gpu_custom_ops.h"
+#include "executor/hip/pim_op_kernels.pimk"
 #include "utility/pim_debug.hpp"
 #include "utility/pim_log.h"
 #include "utility/pim_profile.h"
@@ -27,16 +27,45 @@ namespace runtime
 {
 namespace executor
 {
-HIPExecutor::HIPExecutor(PimRuntimeType rt_type, PimPrecision precision) : PimExecutor(rt_type, precision)
+HipPimExecutor::HipPimExecutor(pim::runtime::manager::PimManager* pim_manager, PimPrecision precision)
+    : pim_manager_(pim_manager), precision_(precision)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called ";
+    pim_crf_generator_ = new PimCrfBinGen(pim_manager_);
+    pim_device_ = pim_manager_->get_pim_device();
+    pbi_ = pim_device_->get_pim_block_info();
+#ifdef EMULATOR
+    pim_emulator_ = pim::runtime::emulator::PimEmulator::get_instance();
+    fmtd_size_per_ch_ = 100000;
+    max_block_size_ = pbi_->num_pim_chan;
+    max_fmtd_size_ = fmtd_size_per_ch_ * max_block_size_;
+#endif
+    pim_gemv_type_ = TILE_ACCUM;
+
+    const char* env_p = std::getenv("ENABLE_NEXT_PIM");
+    if (env_p != nullptr) {
+        if (env_p[0] == '1') {
+            pim_gemv_type_ = NEXT_PIM;
+            std::cout << "NEXT_PIM(GEMV) is enabled" << std::endl;
+        }
+    }
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
 }
 
-int HIPExecutor::initialize(void)
+HipPimExecutor::~HipPimExecutor(void)
 {
-    int ret = PimExecutor::initialize();
-    DLOG(INFO) << "[START] " << __FUNCTION__ << "HIP Intialization ";
+    delete pim_crf_generator_;
+#ifdef EMULATOR
+    delete pim_emulator_;
+#endif
+}
+
+int HipPimExecutor::initialize(void)
+{
+    DLOG(INFO) << "[START]" << __FUNCTION__ << "Initializing ";
+    int ret = 0;
+    int is_gemv_tile_tree = pim_gemv_type_ == TILE_TREE ? 1 : 0;
+    pim_crf_generator_->set_gemv_tile_tree(is_gemv_tile_tree);
 
     int device_id;
     hipGetDevice(&device_id);
@@ -47,7 +76,6 @@ int HIPExecutor::initialize(void)
     DLOG(INFO) << " device id " << device_id << std::endl;
     DLOG(INFO) << " hip Device prop succeeded " << std::endl;
 
-    max_crf_size_ = 128;
     int max_srf_size = 2048;
 
     hipMalloc((void**)&d_srf_bin_buffer_, max_srf_size);
@@ -73,15 +101,11 @@ int HIPExecutor::initialize(void)
     return ret;
 }
 
-int HIPExecutor::deinitialize(void)
+int HipPimExecutor::deinitialize(void)
 {
-    int ret = PimExecutor::deinitialize();
     DLOG(INFO) << " [START] " << __FUNCTION__ << " called";
+    int ret = 0;
     hipFree((void*)d_srf_bin_buffer_);
-    for (auto it = crf_lut_.begin(); it != crf_lut_.end(); it++) {
-        hipFree((void*)it->second);
-    }
-    crf_lut_.clear();
     hipFree((void*)zero_buffer_);
     pim_manager_->free_memory((void*)pim_gemv_tmp_buffer_, MEM_TYPE_PIM);
 #ifdef EMULATOR
@@ -96,14 +120,14 @@ int HIPExecutor::deinitialize(void)
     return ret;
 }
 
-void* HIPExecutor::createStream()
+void* HipPimExecutor::createStream(void)
 {
     hipStream_t new_stream;
     hipStreamCreate(&new_stream);
     return (void*)new_stream;
 }
 
-int HIPExecutor::execute_add(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream, bool block)
+int HipPimExecutor::execute_add(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream, bool block)
 {
     DLOG(INFO) << "called";
     int ret = 0;
@@ -132,10 +156,10 @@ int HIPExecutor::execute_add(PimBo* output, PimBo* operand0, PimBo* operand1, vo
     } else {
         int output_size = output->size;
 
-        uint8_t* crf_bin = find_crf(OP_ELT_ADD, output_size);
+        uint8_t* crf_bin = pim_crf_generator_->find_crf(OP_ELT_ADD, output_size);
         int crf_size = 32;
         if (crf_bin == nullptr) {
-            crf_bin = (uint8_t*)make_crf_bin(OP_ELT_ADD, output_size);
+            crf_bin = (uint8_t*)pim_crf_generator_->make_crf_bin(OP_ELT_ADD, output_size);
         }
 
         int align_size = (131072 << 1);
@@ -173,7 +197,7 @@ int HIPExecutor::execute_add(PimBo* output, PimBo* operand0, PimBo* operand1, vo
     return ret;
 }
 
-int HIPExecutor::execute_mul(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream, bool block)
+int HipPimExecutor::execute_mul(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream, bool block)
 {
     DLOG(INFO) << "called";
     int ret = 0;
@@ -202,10 +226,10 @@ int HIPExecutor::execute_mul(PimBo* output, PimBo* operand0, PimBo* operand1, vo
     } else {
         int output_size = output->size;
 
-        uint8_t* crf_bin = find_crf(OP_ELT_MUL, output->size);
+        uint8_t* crf_bin = pim_crf_generator_->find_crf(OP_ELT_MUL, output->size);
         int crf_size = 32;
         if (crf_bin == nullptr) {
-            crf_bin = (uint8_t*)make_crf_bin(OP_ELT_MUL, output->size);
+            crf_bin = (uint8_t*)pim_crf_generator_->make_crf_bin(OP_ELT_MUL, output->size);
         }
 
         int align_size = (131072 << 1);
@@ -244,8 +268,8 @@ int HIPExecutor::execute_mul(PimBo* output, PimBo* operand0, PimBo* operand1, vo
     return ret;
 }
 
-int HIPExecutor::execute_gemm(PimBo* output, PimBo* input, PimBo* weight, PimBo* bias, PimActFunc act_func,
-                              void* stream, bool block)
+int HipPimExecutor::execute_gemm(PimBo* output, PimBo* input, PimBo* weight, PimBo* bias, PimActFunc act_func,
+                                 void* stream, bool block)
 {
     int ret = 0;
     bool is_chwise = check_chwise_gemm_bo(weight);
@@ -257,7 +281,7 @@ int HIPExecutor::execute_gemm(PimBo* output, PimBo* input, PimBo* weight, PimBo*
     return ret;
 }
 
-int HIPExecutor::execute_gemv(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream, bool block)
+int HipPimExecutor::execute_gemv(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream, bool block)
 {
     int ret = 0;
     int is_gemv_add = 0;
@@ -276,7 +300,7 @@ int HIPExecutor::execute_gemv(PimBo* output, PimBo* operand0, PimBo* operand1, v
     return ret;
 }
 
-int HIPExecutor::execute_gemv_add(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream, bool block)
+int HipPimExecutor::execute_gemv_add(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream, bool block)
 {
     int ret = 0;
     int is_gemv_add = 1;
@@ -294,8 +318,8 @@ int HIPExecutor::execute_gemv_add(PimBo* output, PimBo* operand0, PimBo* operand
     return ret;
 }
 
-int HIPExecutor::execute_gemv_tile_accum(PimBo* output, PimBo* operand0, PimBo* operand1, int is_gemv_add, void* stream,
-                                         bool block)
+int HipPimExecutor::execute_gemv_tile_accum(PimBo* output, PimBo* operand0, PimBo* operand1, int is_gemv_add,
+                                            void* stream, bool block)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
@@ -367,10 +391,10 @@ int HIPExecutor::execute_gemv_tile_accum(PimBo* output, PimBo* operand0, PimBo* 
         }
 
         /* TODO: check tile_accum crf bin */
-        uint8_t* crf_bin = find_crf(OP_GEMV, compute_size * sizeof(uint16_t));
+        uint8_t* crf_bin = pim_crf_generator_->find_crf(OP_GEMV, compute_size * sizeof(uint16_t));
         int crf_size = 32;
         if (crf_bin == nullptr) {
-            crf_bin = (uint8_t*)make_crf_bin(OP_GEMV, compute_size * sizeof(uint16_t));
+            crf_bin = (uint8_t*)pim_crf_generator_->make_crf_bin(OP_GEMV, compute_size * sizeof(uint16_t));
         }
         PIM_PROFILE_TOCK(CreateCRFBin);
 
@@ -421,8 +445,8 @@ int HIPExecutor::execute_gemv_tile_accum(PimBo* output, PimBo* operand0, PimBo* 
     return ret;
 }
 
-int HIPExecutor::execute_gemv_tile_tree(PimBo* output, PimBo* operand0, PimBo* operand1, int is_gemv_add, void* stream,
-                                        bool block)
+int HipPimExecutor::execute_gemv_tile_tree(PimBo* output, PimBo* operand0, PimBo* operand1, int is_gemv_add,
+                                           void* stream, bool block)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
@@ -441,10 +465,10 @@ int HIPExecutor::execute_gemv_tile_tree(PimBo* output, PimBo* operand0, PimBo* o
 
     PIM_PROFILE_TICK(CreateCRFBin);
 
-    uint8_t* crf_bin = find_crf(OP_GEMV, memory_size * sizeof(uint16_t));
+    uint8_t* crf_bin = pim_crf_generator_->find_crf(OP_GEMV, memory_size * sizeof(uint16_t));
     int crf_size = 64;
     if (crf_bin == nullptr) {
-        crf_bin = (uint8_t*)make_crf_bin(OP_GEMV, memory_size * sizeof(uint16_t));
+        crf_bin = (uint8_t*)pim_crf_generator_->make_crf_bin(OP_GEMV, memory_size * sizeof(uint16_t));
     }
     PIM_PROFILE_TOCK(CreateCRFBin);
 
@@ -488,7 +512,7 @@ int HIPExecutor::execute_gemv_tile_tree(PimBo* output, PimBo* operand0, PimBo* o
     return ret;
 }
 
-int HIPExecutor::execute_gemv_list(PimBo* output, PimBo* input, PimBo* weight, void* stream, bool block)
+int HipPimExecutor::execute_gemv_list(PimBo* output, PimBo* input, PimBo* weight, void* stream, bool block)
 {
     int ret = 0;
     bool is_chwise = false;
@@ -508,7 +532,7 @@ int HIPExecutor::execute_gemv_list(PimBo* output, PimBo* input, PimBo* weight, v
     return ret;
 }
 
-int HIPExecutor::execute_gemv_list_normal(PimBo* output, PimBo* input, PimBo* weight, void* stream, bool block)
+int HipPimExecutor::execute_gemv_list_normal(PimBo* output, PimBo* input, PimBo* weight, void* stream, bool block)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
@@ -536,10 +560,10 @@ int HIPExecutor::execute_gemv_list_normal(PimBo* output, PimBo* input, PimBo* we
 
     gemv_kernel = gemv_list_pim_64cu_64th_fp16;
 
-    uint8_t* crf_bin = find_crf(OP_GEMV, input_size * sizeof(uint16_t));
+    uint8_t* crf_bin = pim_crf_generator_->find_crf(OP_GEMV, input_size * sizeof(uint16_t));
     int crf_size = 32;
     if (crf_bin == nullptr) {
-        crf_bin = (uint8_t*)make_crf_bin(OP_GEMV, input_size * sizeof(uint16_t));
+        crf_bin = (uint8_t*)pim_crf_generator_->make_crf_bin(OP_GEMV, input_size * sizeof(uint16_t));
     }
     PIM_PROFILE_TOCK(CreateCRFBin);
     PIM_PROFILE_TICK(RunGemvListKernel);
@@ -590,8 +614,8 @@ int HIPExecutor::execute_gemv_list_normal(PimBo* output, PimBo* input, PimBo* we
     return ret;
 }
 
-int HIPExecutor::execute_gemv_list_chwise(PimBo* output, PimBo* input, PimBo* weight, int ch_per_op, void* stream,
-                                          bool block)
+int HipPimExecutor::execute_gemv_list_chwise(PimBo* output, PimBo* input, PimBo* weight, int ch_per_op, void* stream,
+                                             bool block)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
@@ -618,10 +642,10 @@ int HIPExecutor::execute_gemv_list_chwise(PimBo* output, PimBo* input, PimBo* we
                         uint8_t*, int, int, int);
     gemv_kernel = gemv_list_chwise_pim_64cu_64th_fp16;
 
-    uint8_t* crf_bin = find_crf(OP_GEMV, input_size * sizeof(uint16_t));
+    uint8_t* crf_bin = pim_crf_generator_->find_crf(OP_GEMV, input_size * sizeof(uint16_t));
     int crf_size = 32;
     if (crf_bin == nullptr) {
-        crf_bin = (uint8_t*)make_crf_bin(OP_GEMV, input_size * sizeof(uint16_t));
+        crf_bin = (uint8_t*)pim_crf_generator_->make_crf_bin(OP_GEMV, input_size * sizeof(uint16_t));
     }
     PIM_PROFILE_TOCK(CreateCRFBin);
     PIM_PROFILE_TICK(RunGemvListKernel);
@@ -672,7 +696,7 @@ int HIPExecutor::execute_gemv_list_chwise(PimBo* output, PimBo* input, PimBo* we
     return ret;
 }
 
-int HIPExecutor::execute_relu(PimBo* output, PimBo* pim_data, void* stream, bool block)
+int HipPimExecutor::execute_relu(PimBo* output, PimBo* pim_data, void* stream, bool block)
 {
     DLOG(INFO) << "called";
     int ret = 0;
@@ -699,10 +723,10 @@ int HIPExecutor::execute_relu(PimBo* output, PimBo* pim_data, void* stream, bool
 
         relu_execute.execute_code(&kargs);
     } else {
-        uint8_t* crf_bin = find_crf(OP_RELU, output->size);
+        uint8_t* crf_bin = pim_crf_generator_->find_crf(OP_RELU, output->size);
         int crf_size = 32;
         if (crf_bin == nullptr) {
-            crf_bin = (uint8_t*)make_crf_bin(OP_RELU, output->size);
+            crf_bin = (uint8_t*)pim_crf_generator_->make_crf_bin(OP_RELU, output->size);
         }
 
         unsigned blocks = pbi_->num_pim_chan;
@@ -736,7 +760,7 @@ int HIPExecutor::execute_relu(PimBo* output, PimBo* pim_data, void* stream, bool
     return ret;
 }
 
-int HIPExecutor::execute_copy(PimBo* output, PimBo* pim_data, void* stream, bool block)
+int HipPimExecutor::execute_copy(PimBo* output, PimBo* pim_data, void* stream, bool block)
 {
     DLOG(INFO) << "called";
     int ret = 0;
@@ -744,10 +768,10 @@ int HIPExecutor::execute_copy(PimBo* output, PimBo* pim_data, void* stream, bool
     if (compiler_env_value == 1) {
         DLOG(ERROR) << "PIM compiler path is not supported yet";
     } else {
-        uint8_t* crf_bin = find_crf(OP_COPY, output->size);
+        uint8_t* crf_bin = pim_crf_generator_->find_crf(OP_COPY, output->size);
         int crf_size = 32;
         if (crf_bin == nullptr) {
-            crf_bin = (uint8_t*)make_crf_bin(OP_COPY, output->size);
+            crf_bin = (uint8_t*)pim_crf_generator_->make_crf_bin(OP_COPY, output->size);
         }
 
         unsigned blocks = pbi_->num_pim_chan;
@@ -782,8 +806,8 @@ int HIPExecutor::execute_copy(PimBo* output, PimBo* pim_data, void* stream, bool
     return ret;
 }
 
-int HIPExecutor::execute_gemv_next_pim(PimBo* output, PimBo* operand0, PimBo* operand1, int is_gemv_add, void* stream,
-                                       bool block)
+int HipPimExecutor::execute_gemv_next_pim(PimBo* output, PimBo* operand0, PimBo* operand1, int is_gemv_add,
+                                          void* stream, bool block)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
@@ -806,10 +830,10 @@ int HIPExecutor::execute_gemv_next_pim(PimBo* output, PimBo* operand0, PimBo* op
     PIM_PROFILE_TICK(CreateCRFBin);
 
     /* TODO: check tile_accum crf bin */
-    uint8_t* crf_bin = find_crf(OP_GEMV, compute_size * sizeof(uint16_t));
+    uint8_t* crf_bin = pim_crf_generator_->find_crf(OP_GEMV, compute_size * sizeof(uint16_t));
     int crf_size = 32;
     if (crf_bin == nullptr) {
-        crf_bin = (uint8_t*)make_crf_bin(OP_GEMV, compute_size * sizeof(uint16_t));
+        crf_bin = (uint8_t*)pim_crf_generator_->make_crf_bin(OP_GEMV, compute_size * sizeof(uint16_t));
     }
     PIM_PROFILE_TOCK(CreateCRFBin);
 
@@ -836,22 +860,22 @@ int HIPExecutor::execute_gemv_next_pim(PimBo* output, PimBo* operand0, PimBo* op
     return ret;
 }
 
-int HIPExecutor::execute_bn(PimBo* output, PimBo* pim_data, PimBo* beta, PimBo* gamma, PimBo* mean, PimBo* variance,
-                            double epsilon, void* stream, bool block)
+int HipPimExecutor::execute_bn(PimBo* output, PimBo* pim_data, PimBo* beta, PimBo* gamma, PimBo* mean, PimBo* variance,
+                               double epsilon, void* stream, bool block)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
     int output_size = output->size;
 
-    uint8_t* crf_bin = find_crf(OP_BN, output_size);
+    uint8_t* crf_bin = pim_crf_generator_->find_crf(OP_BN, output_size);
     int crf_size = 64;
     if (crf_bin == nullptr) {
-        crf_bin = (uint8_t*)make_crf_bin(OP_BN, output_size);
+        crf_bin = (uint8_t*)pim_crf_generator_->make_crf_bin(OP_BN, output_size);
     }
 
     uint8_t* srf_binary = new uint8_t[pbi_->num_pim_chan * pbi_->num_pim_rank * pbi_->trans_size];
     int srf_size = pbi_->num_pim_chan * pbi_->num_pim_rank * pbi_->trans_size;
-    preprocess_srf(beta, gamma, mean, variance, epsilon, srf_binary);
+    pim_crf_generator_->preprocess_srf(beta, gamma, mean, variance, epsilon, srf_binary);
 
     hipMemcpy((void*)d_srf_bin_buffer_, (void*)srf_binary, srf_size, hipMemcpyHostToDevice);
 
@@ -893,8 +917,8 @@ int HIPExecutor::execute_bn(PimBo* output, PimBo* pim_data, PimBo* beta, PimBo* 
     return ret;
 }
 
-int HIPExecutor::execute_custom_gemv(PimBo* output, PimBo* operand0, PimBo* operand1, bool is_gemv_add, void* stream,
-                                     bool block)
+int HipPimExecutor::execute_custom_gemv(PimBo* output, PimBo* operand0, PimBo* operand1, bool is_gemv_add, void* stream,
+                                        bool block)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
@@ -936,8 +960,8 @@ int HIPExecutor::execute_custom_gemv(PimBo* output, PimBo* operand0, PimBo* oper
     return ret;
 }
 
-int HIPExecutor::execute_custom_gemv_add(PimBo* output, PimBo* operand0, PimBo* operand1, PimBo* operand2, bool relu,
-                                         void* stream, bool block)
+int HipPimExecutor::execute_custom_gemv_add(PimBo* output, PimBo* operand0, PimBo* operand1, PimBo* operand2, bool relu,
+                                            void* stream, bool block)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
@@ -970,8 +994,8 @@ int HIPExecutor::execute_custom_gemv_add(PimBo* output, PimBo* operand0, PimBo* 
     return ret;
 }
 
-int HIPExecutor::execute_aligned_gemm_tile_accum(PimBo* output, PimBo* input, PimBo* weight, PimBo* bias,
-                                                 PimActFunc act_func, void* stream, bool block)
+int HipPimExecutor::execute_aligned_gemm_tile_accum(PimBo* output, PimBo* input, PimBo* weight, PimBo* bias,
+                                                    PimActFunc act_func, void* stream, bool block)
 {
     PIM_PROFILE_TICK(PrepareGemmKernel);
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
@@ -989,10 +1013,10 @@ int HIPExecutor::execute_aligned_gemm_tile_accum(PimBo* output, PimBo* input, Pi
     int is_bias = (bias != nullptr) ? 1 : 0;
     int is_relu = (act_func == ACT_RELU) ? 1 : 0;
 
-    uint8_t* crf_bin = find_crf(OP_GEMV, input->bshape.w * sizeof(uint16_t));
+    uint8_t* crf_bin = pim_crf_generator_->find_crf(OP_GEMV, input->bshape.w * sizeof(uint16_t));
     int crf_size = 32;
     if (crf_bin == nullptr) {
-        crf_bin = (uint8_t*)make_crf_bin(OP_GEMV, input->bshape.w * sizeof(uint16_t));
+        crf_bin = (uint8_t*)pim_crf_generator_->make_crf_bin(OP_GEMV, input->bshape.w * sizeof(uint16_t));
     }
     int device_id;
     hipGetDevice(&device_id);
@@ -1059,8 +1083,8 @@ int HIPExecutor::execute_aligned_gemm_tile_accum(PimBo* output, PimBo* input, Pi
     return ret;
 }
 
-int HIPExecutor::execute_chwise_gemm_tile_accum(PimBo* output, PimBo* input, PimBo* weight, PimBo* bias,
-                                                PimActFunc act_func, void* stream, bool block)
+int HipPimExecutor::execute_chwise_gemm_tile_accum(PimBo* output, PimBo* input, PimBo* weight, PimBo* bias,
+                                                   PimActFunc act_func, void* stream, bool block)
 {
     PIM_PROFILE_TICK(PrepareGemmKernel);
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
@@ -1079,10 +1103,10 @@ int HIPExecutor::execute_chwise_gemm_tile_accum(PimBo* output, PimBo* input, Pim
     int is_bias = (bias != nullptr) ? 1 : 0;
     int is_relu = (act_func == ACT_RELU) ? 1 : 0;
 
-    uint8_t* crf_bin = find_crf(OP_GEMV, input->bshape.w * sizeof(uint16_t));
+    uint8_t* crf_bin = pim_crf_generator_->find_crf(OP_GEMV, input->bshape.w * sizeof(uint16_t));
     int crf_size = 32;
     if (crf_bin == nullptr) {
-        crf_bin = (uint8_t*)make_crf_bin(OP_GEMV, input->bshape.w * sizeof(uint16_t));
+        crf_bin = (uint8_t*)pim_crf_generator_->make_crf_bin(OP_GEMV, input->bshape.w * sizeof(uint16_t));
     }
 
     void (*gemm_kernel)(volatile uint8_t * __restrict__, volatile uint8_t * __restrict__,
@@ -1150,8 +1174,8 @@ int HIPExecutor::execute_chwise_gemm_tile_accum(PimBo* output, PimBo* input, Pim
     return ret;
 }
 
-int HIPExecutor::execute_sync(void* stream) { return hipStreamSynchronize((hipStream_t)stream); }
-int HIPExecutor::execute_dummy(void)
+int HipPimExecutor::execute_sync(void* stream) { return hipStreamSynchronize((hipStream_t)stream); }
+int HipPimExecutor::execute_dummy(void)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;

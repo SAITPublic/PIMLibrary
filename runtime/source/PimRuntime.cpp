@@ -13,7 +13,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
-#include "executor/PimExecutor.h"
+#include "executor/IPimExecutor.h"
+#include "executor/PimExecutorFactory.h"
 #include "pim_runtime_api.h"
 #include "utility/pim_debug.hpp"
 #include "utility/pim_log.h"
@@ -28,7 +29,8 @@ PimRuntime::PimRuntime(PimRuntimeType rt_type, PimPrecision precision) : rt_type
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
 
     pim_manager_ = pim::runtime::manager::PimManager::get_instance(rt_type, precision);
-    pim_executor_ = pim::runtime::executor::PimExecutor::get_instance(rt_type, precision);
+    pim::runtime::executor::PimExecutorFactory executor_factory{};
+    pim_executor_ = executor_factory.getPimExecutor(pim_manager_, rt_type, precision);
 
     const char* env_k = std::getenv("PIM_KERNEL_TYPE");
     if (env_k != nullptr) {
@@ -43,6 +45,14 @@ PimRuntime::PimRuntime(PimRuntimeType rt_type, PimPrecision precision) : rt_type
                 kernel_type_ = OPTIMAL;
         }
     }
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+}
+
+PimRuntime::~PimRuntime(void)
+{
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
+    delete pim_executor_;
+    //    delete pim_manager_;
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
 }
 
