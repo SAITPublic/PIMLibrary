@@ -255,6 +255,7 @@ size_t PrecisionSize(const PimBo* bo)
     switch (bo->precision) {
         case PIM_FP16:
             ret = sizeof(half_float::half);
+            break;
         case PIM_INT8:
         default:
             ret = 1ul;
