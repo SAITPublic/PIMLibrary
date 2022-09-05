@@ -18,18 +18,6 @@
 #include "utility/pim_profile.h"
 #include "utility/pim_util.h"
 
-const char* source =
-    "#pragma OPENCL EXTENSION cl_khr_fp16 : enable              \n"
-    "__kernel void gpuAdd(__global half* a,                     \n"
-    "                     __global half* b,                     \n"
-    "                     __global half* output,                \n"
-    "                     const unsigned int n)                 \n"
-    "{                                                          \n"
-    "   int gid = get_global_id(0);                             \n"
-    "   if(gid < n)                                             \n"
-    "       output[gid] = a[gid] + b[gid];                      \n"
-    "}                                                          \n";
-
 namespace pim
 {
 namespace runtime
@@ -41,17 +29,126 @@ OclPimExecutor::OclPimExecutor(pim::runtime::manager::PimManager* pim_manager, P
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called ";
 
-    clGetPlatformIDs(1, &platform_, NULL);
-    clGetDeviceIDs(platform_, CL_DEVICE_TYPE_GPU, 1, &device_id_, NULL);
-    context_ = clCreateContext(NULL, 1, &device_id_, NULL, NULL, NULL);
-    queue_ = clCreateCommandQueue(context_, device_id_, 0, NULL);
-    program_ = clCreateProgramWithSource(context_, 1, (const char**)&source, NULL, NULL);
-    clBuildProgram(program_, 1, &device_id_, NULL, NULL, NULL);
+    int ret = 0;
+    ret = init_cl_device();
+    if (ret != 0) {
+        DLOG(ERROR) << "failt to create OclPimExecutor";
+        assert(0);
+    }
+
+    ret = check_cl_program_path();
+    if (ret == 0 /* source path */) {
+        build_cl_program_with_source();
+        save_cl_program_binary();
+    } else if (ret == 1 /* binary path */) {
+        build_cl_program_with_binary();
+    } else {
+        assert(0);
+    }
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
 }
 
 OclPimExecutor::~OclPimExecutor(void) {}
+
+int OclPimExecutor::init_cl_device(void)
+{
+    int ret = 0;
+
+    clGetPlatformIDs(1, &platform_, NULL);
+    clGetDeviceIDs(platform_, CL_DEVICE_TYPE_GPU, 1, &device_id_, NULL);
+    context_ = clCreateContext(NULL, 1, &device_id_, NULL, NULL, NULL);
+    queue_ = clCreateCommandQueue(context_, device_id_, 0, NULL);
+
+    return ret;
+}
+
+int OclPimExecutor::check_cl_program_path(void)
+{
+    cl_binary_path_ = CL_KERNEL_BINARY_PATH;
+    cl_binary_path_ += "ocl_pimk.bin";
+    std::ifstream cl_binary_file(cl_binary_path_, std::ios::in);
+
+    if (cl_binary_file.is_open()) {
+        // printf("cl binary is available\n");
+        cl_binary_file.close();
+        return 1;
+    }
+
+    cl_source_path_ = CL_KERNEL_SOURCE_PATH;
+    cl_source_path_ += "gpu_test.cl";
+    std::ifstream cl_source_file(cl_source_path_.c_str(), std::ios::in);
+
+    if (cl_source_file.is_open()) {
+        // printf("cl source is available\n");
+        cl_source_file.close();
+        return 0;
+    }
+
+    return -1;
+}
+
+int OclPimExecutor::build_cl_program_with_source(void)
+{
+    int ret = 0;
+    std::ifstream cl_source_file(cl_source_path_.c_str(), std::ios::in);
+    std::ostringstream oss;
+    const char* cl_source_ptr = nullptr;
+
+    oss << cl_source_file.rdbuf();
+    cl_source_ = oss.str();
+    cl_source_ptr = cl_source_.c_str();
+
+    program_ = clCreateProgramWithSource(context_, 1, (const char**)&cl_source_ptr, NULL, NULL);
+    clBuildProgram(program_, 1, &device_id_, NULL, NULL, NULL);
+
+    cl_source_file.close();
+
+    return ret;
+}
+
+int OclPimExecutor::save_cl_program_binary(void)
+{
+    int ret = 0;
+    cl_uint num_devices = 0;
+    std::string cl_binary_name = "ocl_pimk.bin";
+    const char* cl_binary_ptr = nullptr;
+    size_t cl_binary_size = 0;
+
+    clGetProgramInfo(program_, CL_PROGRAM_BINARY_SIZES, sizeof(size_t), &cl_binary_size, NULL);
+    cl_binary_ptr = new char[cl_binary_size];
+    clGetProgramInfo(program_, CL_PROGRAM_BINARIES, sizeof(char*), (char**)&cl_binary_ptr, NULL);
+
+    ofstream bf(cl_binary_name.c_str());
+    bf.write(cl_binary_ptr, cl_binary_size);
+
+    bf.close();
+    delete[] cl_binary_ptr;
+
+    return ret;
+}
+
+int OclPimExecutor::build_cl_program_with_binary(void)
+{
+    int ret = 0;
+    std::ifstream bf(cl_binary_path_.c_str(), ios::binary);
+    unsigned char* cl_binary_ptr = nullptr;
+    size_t cl_binary_size = 0;
+
+    bf.seekg(0, ios::end);
+    cl_binary_size = bf.tellg();
+    bf.seekg(0, ios::beg);
+    cl_binary_ptr = new unsigned char[cl_binary_size];
+    bf.read((char*)cl_binary_ptr, cl_binary_size);
+
+    program_ = clCreateProgramWithBinary(context_, 1, &device_id_, &cl_binary_size,
+                                         (const unsigned char**)&cl_binary_ptr, NULL, NULL);
+    clBuildProgram(program_, 1, &device_id_, NULL, NULL, NULL);
+
+    delete[] cl_binary_ptr;
+
+    return ret;
+}
 
 int OclPimExecutor::initialize(void)
 {
@@ -93,7 +190,7 @@ int OclPimExecutor::execute_add(PimBo* output, PimBo* operand0, PimBo* operand1,
     const size_t global_work_size = ceil(length / (float)local_work_size) * local_work_size;
     cl_uint exe_err = 0;
 
-    cl_kernel kernel = clCreateKernel(program_, "gpuAdd", NULL);
+    cl_kernel kernel = clCreateKernel(program_, "gpu_add_test", NULL);
     cl_ok(exe_err);
     exe_err = clSetKernelArg(kernel, 0, sizeof(cl_mem), (void*)&operand0->data);
     cl_ok(exe_err);

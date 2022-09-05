@@ -24,16 +24,25 @@ using namespace std;
 
 class PimFusedGemmTest
 {
-  public:
-    PimFusedGemmTest(unsigned n_, unsigned c_, unsigned h_, unsigned in_w0_, unsigned out_w0_, unsigned out_w1_, 
-                PimActFunc act0_, bool has_bias0_, PimActFunc act1_, bool has_bias1_):
-        n(n_), c(c_), h(h_), in_w0(in_w0_), out_w0(out_w0_), out_w1(out_w1_), act0(act0_), has_bias0(has_bias0_), act1(act1_), has_bias1(has_bias1_)
+   public:
+    PimFusedGemmTest(unsigned n_, unsigned c_, unsigned h_, unsigned in_w0_, unsigned out_w0_, unsigned out_w1_,
+                     PimActFunc act0_, bool has_bias0_, PimActFunc act1_, bool has_bias1_)
+        : n(n_),
+          c(c_),
+          h(h_),
+          in_w0(in_w0_),
+          out_w0(out_w0_),
+          out_w1(out_w1_),
+          act0(act0_),
+          has_bias0(has_bias0_),
+          act1(act1_),
+          has_bias1(has_bias1_)
     {
         if (!is_support_activation(act0) || !is_support_activation(act1)) {
             throw invalid_argument("Invalid activation type");
         }
 
-        in_w1 = out_w0; // in_w1 must be equal to out_w0
+        in_w1 = out_w0;  // in_w1 must be equal to out_w0
 
         in_size0 = n * c * h * in_w0;
         wgt_size0 = n * c * in_w0 * out_w0;
@@ -41,7 +50,7 @@ class PimFusedGemmTest
         in_size1 = n * c * h * in_w1;
         wgt_size1 = n * c * in_w1 * out_w1;
         out_size1 = n * c * h * out_w1;
- 
+
         desc0 = PimCreateGemmDesc(n, c, h, in_w0, out_w0, PIM_FP16);
         h_i0 = PimCreateBo(desc0, MEM_TYPE_HOST, GEMM_INPUT);
         h_w0 = PimCreateBo(desc0, MEM_TYPE_HOST, GEMM_WEIGHT);
@@ -65,10 +74,13 @@ class PimFusedGemmTest
         golden = PimCreateBo(desc1, MEM_TYPE_HOST, GEMM_OUTPUT);
     }
 
-    PimFusedGemmTest(unsigned n_, unsigned c_, unsigned h_, unsigned in_w0_, unsigned out_w0_, unsigned out_w1_):
-        PimFusedGemmTest(n_, c_, h_, in_w0_, out_w0_, out_w1_, ACT_RELU, true, ACT_RELU, true) {}
+    PimFusedGemmTest(unsigned n_, unsigned c_, unsigned h_, unsigned in_w0_, unsigned out_w0_, unsigned out_w1_)
+        : PimFusedGemmTest(n_, c_, h_, in_w0_, out_w0_, out_w1_, ACT_RELU, true, ACT_RELU, true)
+    {
+    }
 
-    ~PimFusedGemmTest() {
+    ~PimFusedGemmTest()
+    {
         PimDestroyBo(h_i0);
         PimDestroyBo(h_w0);
         PimDestroyBo(h_b0);
@@ -90,7 +102,8 @@ class PimFusedGemmTest
         PimDestroyBo(golden);
     }
 
-    void prepare(float alpha = 1.0f, float beta = 0.0f, float variation = 0.2f) {
+    void prepare(float alpha = 1.0f, float beta = 0.0f, float variation = 0.2f)
+    {
         set_rand_half_data((half*)h_i0->data, half(variation), in_size0);
         set_rand_half_data((half*)h_w0->data, half(variation), wgt_size0);
         set_rand_half_data((half*)h_b0->data, half(variation), out_size0);
@@ -151,10 +164,10 @@ class PimFusedGemmTest
         } else {
             d_b1 = nullptr;
         }
-
     }
 
-    void run(bool block = true, unsigned niter = 1) {
+    void run(bool block = true, unsigned niter = 1)
+    {
         for (unsigned i = 0; i < niter; ++i) {
             (void)PimExecuteGemm(d_o0, d_i0, d_w0, d_b0, act0, nullptr, false);
             (void)PimExecuteGemm(d_o1, d_o0, d_w1, d_b1, act1, nullptr, block);
@@ -163,14 +176,13 @@ class PimFusedGemmTest
         PimCopyMemory(h_o1, d_o1, DEVICE_TO_HOST);
     }
 
-    int validate(float epsilon = 1.0f) {
+    int validate(float epsilon = 1.0f)
+    {
         return compare_half_relative((half*)golden->data, (half*)h_o1->data, out_size1, epsilon);
     }
 
-  private:
-    bool is_support_activation(const PimActFunc& act) {
-        return (act == ACT_RELU || act == NONE) ? true : false;
-    }
+   private:
+    bool is_support_activation(const PimActFunc& act) { return (act == ACT_RELU || act == NONE) ? true : false; }
 
     // First  (n, c, h, in_w0) * (n, c, in_w0, out_w0) = (n, c, h, out_w0)
     // Second (n, c, h, out_w0) * (n, c, out_w0, out_w1) = (n, c, h, out_w1)
@@ -179,7 +191,7 @@ class PimFusedGemmTest
     unsigned h;
     unsigned in_w0;
     unsigned out_w0, out_w1;
-    unsigned in_w1; // must be same to out_w0
+    unsigned in_w1;  // must be same to out_w0
 
     PimActFunc act0;
     bool has_bias0;
@@ -190,39 +202,41 @@ class PimFusedGemmTest
     unsigned wgt_size0, wgt_size1;
     unsigned out_size0, out_size1;
 
-    PimGemmDesc* desc0, *desc1;
-    PimBo* h_i0, *h_w0, *h_b0, *h_o0; // input, weight, bias, output
-    PimBo* h_i1, *h_w1, *h_b1, *h_o1; // input, weight, bias, output
-    PimBo* d_i0, *d_w0, *d_b0, *d_o0;
-    PimBo* d_i1, *d_w1, *d_b1, *d_o1;
+    PimGemmDesc *desc0, *desc1;
+    PimBo *h_i0, *h_w0, *h_b0, *h_o0;  // input, weight, bias, output
+    PimBo *h_i1, *h_w1, *h_b1, *h_o1;  // input, weight, bias, output
+    PimBo *d_i0, *d_w0, *d_b0, *d_o0;
+    PimBo *d_i1, *d_w1, *d_b1, *d_o1;
     PimBo* golden;
 };
 
-
 class PimFusedGemmTestFixture : public ::testing::Test
 {
-  protected:
-    virtual void SetUp() override {
+   protected:
+    virtual void SetUp() override
+    {
         PimInitialize(RT_TYPE_HIP, PIM_FP16);
         PimExecuteDummy();
     }
-    virtual void TearDown() override {
-        PimDeinitialize();
-    }
+    virtual void TearDown() override { PimDeinitialize(); }
 
     int ExecuteTest(unsigned n, unsigned c, unsigned h, unsigned in_w0, unsigned out_w0, unsigned out_w1,
-                    bool has_bias0 = true, PimActFunc act0 = ACT_RELU, 
-                    bool has_bias1 = true, PimActFunc act1 = NONE, bool block = true) {
-        PimFusedGemmTest pimFusedGemmTest = PimFusedGemmTest(n, c, h, in_w0, out_w0, out_w1, act0, has_bias0, act1, has_bias1);
+                    bool has_bias0 = true, PimActFunc act0 = ACT_RELU, bool has_bias1 = true, PimActFunc act1 = NONE,
+                    bool block = true)
+    {
+        PimFusedGemmTest pimFusedGemmTest =
+            PimFusedGemmTest(n, c, h, in_w0, out_w0, out_w1, act0, has_bias0, act1, has_bias1);
         pimFusedGemmTest.prepare();
         pimFusedGemmTest.run(block);
         return pimFusedGemmTest.validate();
     }
 };
 
-TEST_F(PimFusedGemmTestFixture, pim_fused_gemm_bias_relu_4x1x1024_4x1024x4096_4x4096x1024) {
+TEST_F(PimFusedGemmTestFixture, pim_fused_gemm_bias_relu_4x1x1024_4x1024x4096_4x4096x1024)
+{
     EXPECT_TRUE(ExecuteTest(1, 4, 1, 1024, 4096, 1024, true, ACT_RELU, true, NONE) == 0);
 }
-TEST_F(PimFusedGemmTestFixture, pim_fused_gemm_bias_relu_8x1x1024_8x1024x4096_8x4096x1024) {
+TEST_F(PimFusedGemmTestFixture, pim_fused_gemm_bias_relu_8x1x1024_8x1024x4096_8x4096x1024)
+{
     EXPECT_TRUE(ExecuteTest(1, 8, 1, 1024, 4096, 1024, true, ACT_RELU, true, NONE) == 0);
 }

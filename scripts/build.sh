@@ -154,6 +154,13 @@ make_install_fn()
     sudo make install
 }
 
+make_install_opencl_binary()
+{
+    ./examples/OpenCLPimIntegrationTests --gtest_filter=*create_ocl_kernel_binary*
+    sudo cp ocl_pimk.bin ${ROCM_PATH}/opencl/bin/
+}
+
+
 uninstall_fn()
 {
     sudo rm -f ${ROCM_PATH}/lib/libPimRuntime.so
@@ -161,6 +168,7 @@ uninstall_fn()
     sudo rm -f ${ROCM_PATH}/include/pim_data_types.h
     sudo rm -f ${ROCM_PATH}/lib/libdramsim2.so
     sudo rm -rf ${ROCM_PATH}/include/dramsim2
+    sudo rm -f ${ROCM_PATH}/opencl/bin/ocl_pimk.bin
 }
 
 if [ $1 = "all" ]; then
@@ -169,6 +177,7 @@ if [ $1 = "all" ]; then
     cmake_fn
     make_fn
     make_install_fn
+    make_install_opencl_binary
 fi
 
 if [ $1 = "cmake" ]; then

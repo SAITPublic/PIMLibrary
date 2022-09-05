@@ -1,6 +1,0 @@
-#ifndef _GPU_ADD_KERNEL_PIMK_
-#define _GPU_ADD_KERNEL_PIMK_
-
-#include <stdio.h>
-
-#endif

@@ -68,11 +68,22 @@ class OclPimExecutor : public IPimExecutor
     void* createStream(void) { return nullptr; }
 
    private:
+    int init_cl_device(void);
+    int check_cl_program_path(void);
+    int build_cl_program_with_source(void);
+    int save_cl_program_binary(void);
+    int build_cl_program_with_binary(void);
+
+   private:
     pim::runtime::manager::PimManager* pim_manager_;
     pim::runtime::manager::PimDevice* pim_device_;
     PimPrecision precision_;
     PimBlockInfo* pbi_;
     int max_crf_size_;
+    std::string cl_source_path_;
+    std::string cl_source_;
+    std::string cl_binary_path_;
+    std::string cl_binary_;
 
     cl_platform_id platform_;
     cl_context context_;

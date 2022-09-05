@@ -24,9 +24,9 @@ using namespace std;
 
 class PimGemmTest
 {
-  public:
-    PimGemmTest(unsigned n_, unsigned c_, unsigned h_, unsigned in_w_, unsigned out_w_, PimActFunc act_, bool has_bias_):
-        n(n_), c(c_), h(h_), in_w(in_w_), out_w(out_w_), act(act_), has_bias(has_bias_)
+   public:
+    PimGemmTest(unsigned n_, unsigned c_, unsigned h_, unsigned in_w_, unsigned out_w_, PimActFunc act_, bool has_bias_)
+        : n(n_), c(c_), h(h_), in_w(in_w_), out_w(out_w_), act(act_), has_bias(has_bias_)
     {
         if (!is_support_activation(act)) {
             throw invalid_argument("Invalid activation type");
@@ -35,7 +35,7 @@ class PimGemmTest
         in_size = n * c * h * in_w;
         wgt_size = n * c * in_w * out_w;
         out_size = n * c * h * out_w;
- 
+
         desc = PimCreateGemmDesc(n, c, h, in_w, out_w, PIM_FP16);
         h_i = PimCreateBo(desc, MEM_TYPE_HOST, GEMM_INPUT);
         h_w = PimCreateBo(desc, MEM_TYPE_HOST, GEMM_WEIGHT);
@@ -48,10 +48,13 @@ class PimGemmTest
         golden = PimCreateBo(desc, MEM_TYPE_HOST, GEMM_OUTPUT);
     }
 
-    PimGemmTest(unsigned n_, unsigned c_, unsigned h_, unsigned in_w_, unsigned out_w_):
-        PimGemmTest(n_, c_, h_, in_w_, out_w_, ACT_RELU, true) {}
+    PimGemmTest(unsigned n_, unsigned c_, unsigned h_, unsigned in_w_, unsigned out_w_)
+        : PimGemmTest(n_, c_, h_, in_w_, out_w_, ACT_RELU, true)
+    {
+    }
 
-    ~PimGemmTest() {
+    ~PimGemmTest()
+    {
         PimDestroyBo(h_i);
         PimDestroyBo(h_w);
         PimDestroyBo(h_b);
@@ -63,7 +66,8 @@ class PimGemmTest
         PimDestroyBo(d_o);
     }
 
-    void prepare(float alpha = 1.0f, float beta = 0.0f, float variation = 0.2f) {
+    void prepare(float alpha = 1.0f, float beta = 0.0f, float variation = 0.2f)
+    {
         set_half_data((half*)golden->data, half(0.0), out_size);
         set_half_data((half*)h_o->data, half(0.0), out_size);
         set_rand_half_data((half*)h_i->data, half(variation), in_size);
@@ -96,7 +100,8 @@ class PimGemmTest
         }
     }
 
-    void run(bool block = true, unsigned niter = 1) {
+    void run(bool block = true, unsigned niter = 1)
+    {
         for (unsigned i = 0; i < niter; ++i) {
             (void)PimExecuteGemm(d_o, d_i, d_w, d_b, act, nullptr, block);
             if (!block) PimSynchronize();
@@ -104,21 +109,20 @@ class PimGemmTest
         PimCopyMemory(h_o, d_o, DEVICE_TO_HOST);
     }
 
-    int validate(float epsilon = 1.0f) {
+    int validate(float epsilon = 1.0f)
+    {
         return compare_half_relative((half*)golden->data, (half*)h_o->data, out_size, epsilon);
     }
 
-  private:
-    bool is_support_activation(const PimActFunc& act) {
-        return (act == ACT_RELU || act == NONE) ? true : false;
-    }
+   private:
+    bool is_support_activation(const PimActFunc& act) { return (act == ACT_RELU || act == NONE) ? true : false; }
 
     // (n, c, h, in_w) * (n, c, in_w, out_w) = (n, c, h, out_w)
     unsigned n;
     unsigned c;
     unsigned h;
     unsigned in_w;
-    unsigned out_w;  
+    unsigned out_w;
 
     PimActFunc act;
     bool has_bias;
@@ -128,25 +132,24 @@ class PimGemmTest
     unsigned out_size;
 
     PimGemmDesc* desc;
-    PimBo* h_i, *h_w, *h_b, *h_o; // input, weight, bias, output
-    PimBo* d_i, *d_w, *d_b, *d_o;
+    PimBo *h_i, *h_w, *h_b, *h_o;  // input, weight, bias, output
+    PimBo *d_i, *d_w, *d_b, *d_o;
     PimBo* golden;
 };
 
-
 class PimGemmTestFixture : public ::testing::Test
 {
-  protected:
-    virtual void SetUp() override {
+   protected:
+    virtual void SetUp() override
+    {
         PimInitialize(RT_TYPE_HIP, PIM_FP16);
         PimExecuteDummy();
     }
-    virtual void TearDown() override {
-        PimDeinitialize();
-    }
+    virtual void TearDown() override { PimDeinitialize(); }
 
-    int ExecuteTest(unsigned n, unsigned c, unsigned h, unsigned in_w, unsigned out_w,
-                    bool has_bias = true, bool block = true, PimActFunc act = ACT_RELU) {
+    int ExecuteTest(unsigned n, unsigned c, unsigned h, unsigned in_w, unsigned out_w, bool has_bias = true,
+                    bool block = true, PimActFunc act = ACT_RELU)
+    {
         PimGemmTest pimGemmTest = PimGemmTest(n, c, h, in_w, out_w, act, has_bias);
         pimGemmTest.prepare();
         pimGemmTest.run(block);
@@ -156,9 +159,24 @@ class PimGemmTestFixture : public ::testing::Test
 
 TEST_F(PimGemmTestFixture, pim_gemm_bias_relu_1x1024_1024x4096) { EXPECT_TRUE(ExecuteTest(1, 1, 1, 1024, 4096) == 0); }
 TEST_F(PimGemmTestFixture, pim_gemm_bias_relu_8x1024_1024x4096) { EXPECT_TRUE(ExecuteTest(1, 1, 8, 1024, 4096) == 0); }
-TEST_F(PimGemmTestFixture, pim_gemm_bias_relu_4x1x1024_4x1024x4096) { EXPECT_TRUE(ExecuteTest(1, 4, 1, 1024, 4096) == 0); }
-TEST_F(PimGemmTestFixture, pim_gemm_bias_relu_4x8x1024_4x1024x4096) { EXPECT_TRUE(ExecuteTest(1, 4, 8, 1024, 4096) == 0); }
+TEST_F(PimGemmTestFixture, pim_gemm_bias_relu_4x1x1024_4x1024x4096)
+{
+    EXPECT_TRUE(ExecuteTest(1, 4, 1, 1024, 4096) == 0);
+}
+TEST_F(PimGemmTestFixture, pim_gemm_bias_relu_4x8x1024_4x1024x4096)
+{
+    EXPECT_TRUE(ExecuteTest(1, 4, 8, 1024, 4096) == 0);
+}
 TEST_F(PimGemmTestFixture, pim_gemm_bias_relu_64x1x256_64x256x64) { EXPECT_TRUE(ExecuteTest(1, 64, 1, 256, 64) == 0); }
-TEST_F(PimGemmTestFixture, pim_gemm_bias_relu_64x1x1024_64x1024x64) { EXPECT_TRUE(ExecuteTest(1, 64, 1, 1024, 64) == 0); }
-TEST_F(PimGemmTestFixture, pim_gemm_bias_relu_4x1x4096_4x4096x1024) { EXPECT_TRUE(ExecuteTest(1, 4, 1, 4096, 1024) == 0); }
-TEST_F(PimGemmTestFixture, pim_gemm_bias_relu_8x1x4096_8x4096x1024) { EXPECT_TRUE(ExecuteTest(1, 8, 1, 4096, 1024) == 0); }
+TEST_F(PimGemmTestFixture, pim_gemm_bias_relu_64x1x1024_64x1024x64)
+{
+    EXPECT_TRUE(ExecuteTest(1, 64, 1, 1024, 64) == 0);
+}
+TEST_F(PimGemmTestFixture, pim_gemm_bias_relu_4x1x4096_4x4096x1024)
+{
+    EXPECT_TRUE(ExecuteTest(1, 4, 1, 4096, 1024) == 0);
+}
+TEST_F(PimGemmTestFixture, pim_gemm_bias_relu_8x1x4096_8x4096x1024)
+{
+    EXPECT_TRUE(ExecuteTest(1, 8, 1, 4096, 1024) == 0);
+}
