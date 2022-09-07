@@ -40,6 +40,9 @@ class PimEmulator
                        uint64_t pim_base_addr);
     int execute_relu(PimBo* output, PimBo* pim_data, PimMemTraceData* fmtd32, int fmtd32_size, uint64_t pim_base_addr);
     int execute_copy(PimBo* output, PimBo* pim_data, PimMemTraceData* fmtd32, int fmtd32_size, uint64_t pim_base_addr);
+    int execute_gemm_bias_act(PimBo* output, PimBo* pim_data, PimMemTraceData* fmtd32, int fmtd32_size,
+                              PimOpType op_type, uint64_t pim_base_addr, uint8_t* temp_buf, PimBo* bias,
+                              PimActFunc act_func);
     int execute_gemv_tile_accum(PimBo* output, PimBo* pim_data, PimMemTraceData* fmtd32, int fmtd32_size,
                                 PimOpType op_type, uint64_t pim_base_addr, uint8_t* temp_buf);
     int execute_gemv_add_tile_accum(PimBo* output, PimBo* pim_data, PimMemTraceData* fmtd32, int fmtd32_size,

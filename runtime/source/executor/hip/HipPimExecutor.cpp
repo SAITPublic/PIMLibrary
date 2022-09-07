@@ -1074,8 +1074,8 @@ int HipPimExecutor::execute_aligned_gemm_tile_accum(PimBo* output, PimBo* input,
         pim_emulator_->execute_gemv_add_tile_accum(output, weight, h_fmtd32_, h_fmtd32_size_[0], OP_GEMV,
                                                    g_pim_base_addr[device_id], pim_gemv_tmp_buffer_);
     else
-        pim_emulator_->execute_gemv_tile_accum(output, weight, h_fmtd32_, h_fmtd32_size_[0], OP_GEMV,
-                                               g_pim_base_addr[device_id], pim_gemv_tmp_buffer_);
+        pim_emulator_->execute_gemm_bias_act(output, weight, h_fmtd32_, h_fmtd32_size_[0], OP_GEMV,
+                                              g_pim_base_addr[device_id], pim_gemv_tmp_buffer_, bias, act_func);
 
     PIM_PROFILE_TOCK(RunGemmEmulation);
 #endif
@@ -1165,8 +1165,8 @@ int HipPimExecutor::execute_chwise_gemm_tile_accum(PimBo* output, PimBo* input, 
         pim_emulator_->execute_gemv_add_tile_accum(output, weight, h_fmtd32_, h_fmtd32_size_[0], OP_GEMV,
                                                    g_pim_base_addr[device_id], pim_gemv_tmp_buffer_);
     else
-        pim_emulator_->execute_gemv_tile_accum(output, weight, h_fmtd32_, h_fmtd32_size_[0], OP_GEMV,
-                                               g_pim_base_addr[device_id], pim_gemv_tmp_buffer_);
+        pim_emulator_->execute_gemm_bias_act(output, weight, h_fmtd32_, h_fmtd32_size_[0], OP_GEMV,
+                                              g_pim_base_addr[device_id], pim_gemv_tmp_buffer_, bias, act_func);
 
     PIM_PROFILE_TOCK(RunGemmEmulation);
 #endif

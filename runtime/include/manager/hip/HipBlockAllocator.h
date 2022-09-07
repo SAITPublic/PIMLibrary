@@ -38,7 +38,7 @@ class HipBlockAllocator
 
    private:
 #if EMULATOR
-    static const size_t block_size_ = 134217728;  // 128M Pim area
+    static const size_t block_size_ = 536870912;  // 512M Pim area
 #elif RADEON7
     static const size_t block_size_ = 8589934592;  // 8GB Pim area
 #else

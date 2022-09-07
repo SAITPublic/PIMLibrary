@@ -110,6 +110,58 @@ int PimEmulator::execute_gemv_tile_tree(PimBo* output, PimBo* pim_data, PimMemTr
     return ret;
 }
 
+int PimEmulator::execute_gemm_bias_act(PimBo* output, PimBo* pim_data, PimMemTraceData* fmtd32, int fmtd32_size,
+                                       PimOpType op_type, uint64_t pim_base_addr, uint8_t* temp_buf, PimBo* bias,
+                                       PimActFunc act_func)
+{
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
+    int ret = 0;
+    int offset = 0;
+    int offset_r = 0;
+
+    int is_bias = (bias != nullptr) ? 1 : 0;
+    int is_relu = (act_func == ACT_RELU) ? 1 : 0;
+
+    uint16_t* sim_output = nullptr;
+    int out_dim = output->bshape.n * output->bshape.c * output->bshape.h * output->bshape.w;
+    sim_output = new uint16_t[out_dim];
+    uint64_t tmp_data_addr = reinterpret_cast<uint64_t>(temp_buf);
+    uint64_t pim_data_addr = reinterpret_cast<uint64_t>(pim_data->data);
+
+    pim_sim_.preload_data_with_addr(pim_data_addr - pim_base_addr, pim_data->data, pim_data->size);
+    pim_sim_.execute_kernel((void*)fmtd32, fmtd32_size);
+    pim_sim_.read_result_gemv(sim_output, tmp_data_addr - pim_base_addr, out_dim);
+
+    if (output->mem_type != MEM_TYPE_HOST) {
+        for (int n = 0; n < output->bshape.n; n++) {
+            for (int c = 0; c < output->bshape.c; c++) {
+                offset = n * output->bshape.c * output->bshape.h * output->bshape.w;
+                offset += c * output->bshape.h * output->bshape.w;
+                offset_r = n * output->bshape_r.c * output->bshape_r.h * output->bshape_r.w;
+                offset_r += c * output->bshape_r.h * output->bshape_r.w;
+                hipMemcpy((half*)output->data + offset_r, (half*)sim_output + offset,
+                          pim_data->bshape_r.w * output->bshape_r.h * sizeof(half), hipMemcpyHostToDevice);
+            }
+        }
+    }
+
+    if (is_bias) {
+        for (int i = 0; i < out_dim; i++) {
+            ((half_float::half*)output->data)[i] += ((half_float::half*)bias->data)[i];
+        }
+    }
+
+    if (is_relu) {
+        for (int i = 0; i < out_dim; i++) {
+            if (((half_float::half*)output->data)[i] < 0) ((half_float::half*)output->data)[i] = 0;
+        }
+    }
+
+    delete sim_output;
+
+    return ret;
+}
+
 int PimEmulator::execute_gemv_tile_accum(PimBo* output, PimBo* pim_data, PimMemTraceData* fmtd32, int fmtd32_size,
                                          PimOpType op_type, uint64_t pim_base_addr, uint8_t* temp_buf)
 {
@@ -134,9 +186,8 @@ int PimEmulator::execute_gemv_tile_accum(PimBo* output, PimBo* pim_data, PimMemT
                 offset += c * output->bshape.h * output->bshape.w;
                 offset_r = n * output->bshape_r.c * output->bshape_r.h * output->bshape_r.w;
                 offset_r += c * output->bshape_r.h * output->bshape_r.w;
-
                 hipMemcpy((half*)output->data + offset_r, (half*)sim_output + offset,
-                          pim_data->bshape_r.w * sizeof(half), hipMemcpyHostToDevice);
+                          pim_data->bshape_r.w * output->bshape_r.h * sizeof(half), hipMemcpyHostToDevice);
             }
         }
     }
