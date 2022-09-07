@@ -18,7 +18,7 @@
 
 using namespace pim::runtime;
 
-PimRuntime* pim_runtime = nullptr;
+std::unique_ptr<PimRuntime> pim_runtime;
 static bool log_initialized = false;
 static bool pim_initialized = false;
 bool pim_alloc_done[10] = {false};
@@ -41,8 +41,7 @@ int PimInitialize(PimRuntimeType rt_type, PimPrecision precision)
     if (!pim_initialized) {
         DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
         PIM_PROFILE_TICK(Initialize);
-        if (pim_runtime == nullptr) pim_runtime = new PimRuntime(rt_type, precision);
-
+        pim_runtime = std::make_unique<PimRuntime>(rt_type, precision);
         ret = pim_runtime->initialize();
         pim_initialized = true;
         PIM_PROFILE_TOCK(Initialize);
@@ -60,12 +59,10 @@ int PimDeinitialize(void)
     PIM_PROFILE_TICK(Deinitialize);
     int ret = 0;
 
-    if (pim_runtime != nullptr) {
-        ret = pim_runtime->deinitialize();
-        delete pim_runtime;
-        pim_runtime = nullptr;
-        pim_initialized = false;
-    }
+    ret = pim_runtime->deinitialize();
+    pim_runtime.reset();
+    pim_initialized = false;
+
     PIM_PROFILE_TOCK(Deinitialize);
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
