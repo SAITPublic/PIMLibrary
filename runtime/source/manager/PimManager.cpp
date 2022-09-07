@@ -28,8 +28,7 @@ PimManager::PimManager(PimRuntimeType rt_type, PimPrecision precision) : rt_type
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     pim_device_ = new PimDevice();
-    PimMemoryManagerFactory memory_manager_factory{};
-    pim_memory_manager_ = memory_manager_factory.getPimMemoryManager(pim_device_, rt_type_, precision_);
+    pim_memory_manager_ = PimMemoryManagerFactory::getPimMemoryManager(pim_device_, rt_type_, precision_);
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
 }
 
@@ -37,7 +36,7 @@ PimManager::~PimManager(void)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     delete pim_device_;
-    delete pim_memory_manager_;
+    pim_memory_manager_.reset();
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
 }
 

@@ -27,18 +27,15 @@ namespace manager
 class PimMemoryManagerFactory
 {
    public:
-    IPimMemoryManager* getPimMemoryManager(PimDevice* pim_device, PimRuntimeType rt_type, PimPrecision precision)
+    static std::shared_ptr<IPimMemoryManager> getPimMemoryManager(PimDevice* pim_device, PimRuntimeType rt_type, PimPrecision precision)
     {
-        IPimMemoryManager* mem_manager = nullptr;
-
         if (rt_type == RT_TYPE_HIP) {
-            mem_manager = new HipMemoryManager(pim_device, precision);
+            return std::make_shared<HipMemoryManager>(pim_device, precision);
         } else if (rt_type == RT_TYPE_OPENCL) {
-            mem_manager = new OclMemoryManager(pim_device, precision);
+            return std::make_shared<OclMemoryManager>(pim_device, precision);
         } else {
             throw std::invalid_argument("invalid type of runtime");
         }
-        return mem_manager;
     }
 };
 }  // namespace manager

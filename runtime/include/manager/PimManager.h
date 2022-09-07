@@ -46,7 +46,7 @@ class PimManager
 
    private:
     PimManager(PimRuntimeType rt_type, PimPrecision precision);
-    IPimMemoryManager* pim_memory_manager_;
+    std::shared_ptr<IPimMemoryManager> pim_memory_manager_;
     PimDevice* pim_device_;
 
     PimRuntimeType rt_type_;
