@@ -28,9 +28,8 @@ PimRuntime::PimRuntime(PimRuntimeType rt_type, PimPrecision precision) : rt_type
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
 
-    pim_manager_ = pim::runtime::manager::PimManager::get_instance(rt_type, precision);
-    pim::runtime::executor::PimExecutorFactory executor_factory{};
-    pim_executor_ = executor_factory.getPimExecutor(pim_manager_, rt_type, precision);
+    pim_manager_  = manager::PimManager::get_instance(rt_type, precision);
+    pim_executor_ = executor::PimExecutorFactory::getPimExecutor(pim_manager_, rt_type, precision);
 
     const char* env_k = std::getenv("PIM_KERNEL_TYPE");
     if (env_k != nullptr) {
@@ -51,7 +50,7 @@ PimRuntime::PimRuntime(PimRuntimeType rt_type, PimPrecision precision) : rt_type
 PimRuntime::~PimRuntime(void)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
-    delete pim_executor_;
+    pim_executor_.reset();
     //    delete pim_manager_;
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
 }

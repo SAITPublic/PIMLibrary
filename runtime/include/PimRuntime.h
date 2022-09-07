@@ -65,7 +65,7 @@ class PimRuntime
     PimBo* get_preloaded_pim_gemm_weight(PimBo* dev_wei);
     pim::runtime::manager::PimManager* pim_manager_;
     pim::runtime::manager::PimDevice* pim_device_;
-    pim::runtime::executor::IPimExecutor* pim_executor_;
+    std::shared_ptr<executor::IPimExecutor> pim_executor_;
     PimRuntimeType rt_type_;
     PimPrecision precision_;
     std::unordered_map<uint32_t, PimBo*> weight_map_;

@@ -27,19 +27,16 @@ namespace executor
 class PimExecutorFactory
 {
    public:
-    IPimExecutor* getPimExecutor(pim::runtime::manager::PimManager* pim_manager, PimRuntimeType rt_type,
-                                 PimPrecision precision)
+    static std::shared_ptr<IPimExecutor> getPimExecutor(pim::runtime::manager::PimManager* pim_manager, PimRuntimeType rt_type,
+                                                 PimPrecision precision)
     {
-        IPimExecutor* pim_executor = nullptr;
-
         if (rt_type == RT_TYPE_HIP) {
-            pim_executor = new HipPimExecutor(pim_manager, precision);
+            return std::make_shared<HipPimExecutor>(pim_manager, precision);
         } else if (rt_type == RT_TYPE_OPENCL) {
-            pim_executor = new OclPimExecutor(pim_manager, precision);
+            return std::make_shared<OclPimExecutor>(pim_manager, precision);
         } else {
             throw std::invalid_argument("invalid type of runtime");
         }
-        return pim_executor;
     }
 };
 }  // namespace executor
