@@ -28,7 +28,7 @@ namespace manager
 class OclMemoryManager : public IPimMemoryManager
 {
    public:
-    OclMemoryManager(PimDevice* pim_device, PimPrecision precision);
+    OclMemoryManager(std::shared_ptr<PimDevice> pim_device, PimPrecision precision);
     virtual ~OclMemoryManager(void);
 
     int initialize(void);
@@ -46,7 +46,7 @@ class OclMemoryManager : public IPimMemoryManager
    private:
     std::vector<SimpleHeap<OclBlockAllocator>*> fragment_allocator_;
     int host_id_;
-    PimDevice* pim_device_;
+    std::shared_ptr<PimDevice> pim_device_;
     PimPrecision precision_;
     PimBlockInfo* pbi_;
 

@@ -58,6 +58,7 @@ HipPimExecutor::~HipPimExecutor(void)
 #ifdef EMULATOR
     delete pim_emulator_;
 #endif
+    pim_device_.reset();
 }
 
 int HipPimExecutor::initialize(void)

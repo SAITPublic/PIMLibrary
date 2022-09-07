@@ -69,7 +69,7 @@ class HipPimExecutor : public IPimExecutor
 
    private:
     pim::runtime::manager::PimManager* pim_manager_;
-    pim::runtime::manager::PimDevice* pim_device_;
+    std::shared_ptr<pim::runtime::manager::PimDevice> pim_device_;
     PimCrfBinGen* pim_crf_generator_;
     PimPrecision precision_;
     PimBlockInfo* pbi_;

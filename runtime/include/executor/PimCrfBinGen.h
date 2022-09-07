@@ -45,7 +45,7 @@ class PimCrfBinGen
 
    private:
     pim::runtime::manager::PimManager* pim_manager_;
-    pim::runtime::manager::PimDevice* pim_device_;
+    std::shared_ptr<pim::runtime::manager::PimDevice> pim_device_;
     std::vector<PimCommand> cmds_;
     std::map<std::pair<PimOpType, int>, uint8_t*> crf_lut_;
     PimBlockInfo* pbi_;

@@ -42,12 +42,12 @@ class PimManager
 
     uint8_t* get_crf_binary(void);
     int get_crf_size(void);
-    PimDevice* get_pim_device(void) { return pim_device_; }
+    std::shared_ptr<PimDevice> get_pim_device(void) { return pim_device_; }
 
    private:
     PimManager(PimRuntimeType rt_type, PimPrecision precision);
     std::shared_ptr<IPimMemoryManager> pim_memory_manager_;
-    PimDevice* pim_device_;
+    std::shared_ptr<PimDevice> pim_device_;
 
     PimRuntimeType rt_type_;
     PimPrecision precision_;

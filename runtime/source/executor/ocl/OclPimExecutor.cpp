@@ -49,7 +49,11 @@ OclPimExecutor::OclPimExecutor(pim::runtime::manager::PimManager* pim_manager, P
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
 }
 
-OclPimExecutor::~OclPimExecutor(void) {}
+OclPimExecutor::~OclPimExecutor(void)
+{
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called ";
+    pim_device_.reset();
+}
 
 int OclPimExecutor::init_cl_device(void)
 {

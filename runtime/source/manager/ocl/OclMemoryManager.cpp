@@ -31,7 +31,7 @@ namespace runtime
 {
 namespace manager
 {
-OclMemoryManager::OclMemoryManager(PimDevice* pim_device, PimPrecision precision)
+OclMemoryManager::OclMemoryManager(std::shared_ptr<PimDevice> pim_device, PimPrecision precision)
     : pim_device_(pim_device), precision_(precision)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called ";
@@ -44,7 +44,12 @@ OclMemoryManager::OclMemoryManager(PimDevice* pim_device, PimPrecision precision
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
 }
 
-OclMemoryManager::~OclMemoryManager() { DLOG(INFO) << "[START] " << __FUNCTION__ << " called"; }
+OclMemoryManager::~OclMemoryManager()
+{
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
+    pim_device_.reset();
+}
+
 int OclMemoryManager::initialize(void)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";

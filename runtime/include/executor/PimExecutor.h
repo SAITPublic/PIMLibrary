@@ -71,7 +71,7 @@ class PimExecutor
    protected:
     int max_crf_size_;
     pim::runtime::manager::PimManager* pim_manager_;
-    pim::runtime::manager::PimDevice* pim_device_;
+    std::shared_ptr<pim::runtime::manager::PimDevice> pim_device_;
     std::map<std::pair<PimOpType, int>, uint8_t*> crf_lut_;
 
     PimRuntimeType rt_type_;

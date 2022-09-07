@@ -30,6 +30,7 @@ PimCrfBinGen::~PimCrfBinGen(void)
         pim_manager_->free_memory((void*)it->second, MEM_TYPE_DEVICE);
     }
     crf_lut_.clear();
+    pim_device_.reset();
 }
 
 void PimCrfBinGen::gen_binary_with_loop(PimOpType op_type, int lc, uint8_t* bin_buf, int* crf_sz)

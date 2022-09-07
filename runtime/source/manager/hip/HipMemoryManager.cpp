@@ -59,12 +59,16 @@ inline std::list<int> get_env(const char* key)
     return hip_devices;
 }
 
-HipMemoryManager::HipMemoryManager(PimDevice* pim_device, PimPrecision precision)
+HipMemoryManager::HipMemoryManager(std::shared_ptr<PimDevice> pim_device, PimPrecision precision)
     : pim_device_(pim_device), precision_(precision)
 {
 }
 
-HipMemoryManager::~HipMemoryManager(void) { DLOG(INFO) << "[START] " << __FUNCTION__ << " called"; }
+HipMemoryManager::~HipMemoryManager(void)
+{
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
+    pim_device_.reset();
+}
 
 int HipMemoryManager::initialize(void)
 {

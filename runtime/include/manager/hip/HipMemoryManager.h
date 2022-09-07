@@ -30,7 +30,7 @@ namespace manager
 class HipMemoryManager : public IPimMemoryManager
 {
    public:
-    HipMemoryManager(PimDevice* pim_device, PimPrecision precision);
+    HipMemoryManager(std::shared_ptr<PimDevice> pim_device, PimPrecision precision);
     virtual ~HipMemoryManager(void);
 
     int initialize(void);
@@ -55,7 +55,7 @@ class HipMemoryManager : public IPimMemoryManager
     std::vector<SimpleHeap<HipBlockAllocator>*> fragment_allocator_;
     int num_gpu_devices_;
     int host_id_;
-    PimDevice* pim_device_;
+    std::shared_ptr<PimDevice> pim_device_;
     PimPrecision precision_;
     PimBlockInfo* pbi_;
 };

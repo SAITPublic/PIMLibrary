@@ -27,7 +27,7 @@ namespace manager
 PimManager::PimManager(PimRuntimeType rt_type, PimPrecision precision) : rt_type_(rt_type), precision_(precision)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
-    pim_device_ = new PimDevice();
+    pim_device_ = std::make_shared<PimDevice>();
     pim_memory_manager_ = PimMemoryManagerFactory::getPimMemoryManager(pim_device_, rt_type_, precision_);
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
 }
@@ -35,7 +35,7 @@ PimManager::PimManager(PimRuntimeType rt_type, PimPrecision precision) : rt_type
 PimManager::~PimManager(void)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
-    delete pim_device_;
+    pim_device_.reset();
     pim_memory_manager_.reset();
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
 }

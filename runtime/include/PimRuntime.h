@@ -64,7 +64,7 @@ class PimRuntime
    private:
     PimBo* get_preloaded_pim_gemm_weight(PimBo* dev_wei);
     pim::runtime::manager::PimManager* pim_manager_;
-    pim::runtime::manager::PimDevice* pim_device_;
+    std::shared_ptr<pim::runtime::manager::PimDevice> pim_device_;
     std::shared_ptr<executor::IPimExecutor> pim_executor_;
     PimRuntimeType rt_type_;
     PimPrecision precision_;
