@@ -73,6 +73,7 @@ class OclPimExecutor : public IPimExecutor
     int build_cl_program_with_source(void);
     int save_cl_program_binary(void);
     int build_cl_program_with_binary(void);
+    std::string load_cl_file(std::string filename);
 
    private:
     pim::runtime::manager::PimManager* pim_manager_;
@@ -80,8 +81,6 @@ class OclPimExecutor : public IPimExecutor
     PimPrecision precision_;
     PimBlockInfo* pbi_;
     int max_crf_size_;
-    std::string cl_source_path_;
-    std::string cl_source_;
     std::string cl_binary_path_;
     std::string cl_binary_;
 

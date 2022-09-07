@@ -1,5 +1,6 @@
 
 #pragma OPENCL EXTENSION cl_khr_fp16 : enable
+
 __kernel void gpu_add_test(__global half* a,
                            __global half* b,
                            __global half* output,

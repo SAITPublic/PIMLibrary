@@ -75,9 +75,10 @@ int OclPimExecutor::check_cl_program_path(void)
         return 1;
     }
 
-    cl_source_path_ = CL_KERNEL_SOURCE_PATH;
-    cl_source_path_ += "gpu_test.cl";
-    std::ifstream cl_source_file(cl_source_path_.c_str(), std::ios::in);
+    std::string cl_source_path;
+    cl_source_path = CL_KERNEL_SOURCE_PATH;
+    cl_source_path += "pim_op_kernels.cl";
+    std::ifstream cl_source_file(cl_source_path.c_str(), std::ios::in);
 
     if (cl_source_file.is_open()) {
         // printf("cl source is available\n");
@@ -88,21 +89,36 @@ int OclPimExecutor::check_cl_program_path(void)
     return -1;
 }
 
+std::string OclPimExecutor::load_cl_file(std::string filename)
+{
+    std::string result;
+
+    std::string cl_source_path = CL_KERNEL_SOURCE_PATH;
+    cl_source_path += filename;
+    std::ifstream cl_source_file(cl_source_path.c_str(), std::ios::in);
+    std::ostringstream oss;
+
+    oss << cl_source_file.rdbuf();
+    result = oss.str();
+
+    cl_source_file.close();
+
+    return result;
+}
+
 int OclPimExecutor::build_cl_program_with_source(void)
 {
     int ret = 0;
-    std::ifstream cl_source_file(cl_source_path_.c_str(), std::ios::in);
-    std::ostringstream oss;
+    std::string cl_source;
     const char* cl_source_ptr = nullptr;
 
-    oss << cl_source_file.rdbuf();
-    cl_source_ = oss.str();
-    cl_source_ptr = cl_source_.c_str();
+    cl_source = load_cl_file("pim_op_kernels.cl");
+    cl_source += load_cl_file("gpu_op_kernels.cl");
+    cl_source_ptr = cl_source.c_str();
 
     program_ = clCreateProgramWithSource(context_, 1, (const char**)&cl_source_ptr, NULL, NULL);
     clBuildProgram(program_, 1, &device_id_, NULL, NULL, NULL);
 
-    cl_source_file.close();
 
     return ret;
 }
@@ -190,7 +206,7 @@ int OclPimExecutor::execute_add(PimBo* output, PimBo* operand0, PimBo* operand1,
     const size_t global_work_size = ceil(length / (float)local_work_size) * local_work_size;
     cl_uint exe_err = 0;
 
-    cl_kernel kernel = clCreateKernel(program_, "gpu_add_test", NULL);
+    cl_kernel kernel = clCreateKernel(program_, "pim_add_test", NULL);
     cl_ok(exe_err);
     exe_err = clSetKernelArg(kernel, 0, sizeof(cl_mem), (void*)&operand0->data);
     cl_ok(exe_err);
