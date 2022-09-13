@@ -28,7 +28,7 @@ PimRuntime::PimRuntime(PimRuntimeType rt_type, PimPrecision precision) : rt_type
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
 
-    pim_manager_  = manager::PimManager::get_instance(rt_type, precision);
+    pim_manager_ = manager::PimManager::get_instance(rt_type, precision);
     pim_executor_ = executor::PimExecutorFactory::getPimExecutor(pim_manager_, rt_type, precision);
 
     const char* env_k = std::getenv("PIM_KERNEL_TYPE");
@@ -255,81 +255,6 @@ int PimRuntime::execute_gemm(PimBo* output, PimBo* input, PimBo* weight, PimBo* 
     return ret;
 }
 
-int PimRuntime::execute_gemv(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream, bool block)
-{
-    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
-    int ret = 0;
-
-    if (kernel_type_ == CUSTOM_GPU) {
-        ret = pim_executor_->execute_custom_gemv(output, operand0, operand1, false, stream, block);
-    } else if (kernel_type_ == PIM) {
-        PimBo* pim_wei = get_preloaded_pim_weight(operand1);
-        ret = pim_executor_->execute_gemv(output, operand0, pim_wei, stream, block);
-    } else {
-        if (is_pim_available(output, operand0, operand1, OP_GEMV)) {
-            PimBo* pim_wei = get_preloaded_pim_weight(operand1);
-            ret = pim_executor_->execute_gemv(output, operand0, pim_wei, stream, block);
-        } else {
-            ret = pim_executor_->execute_custom_gemv(output, operand0, operand1, false, stream, block);
-        }
-    }
-
-    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
-    return ret;
-}
-
-int PimRuntime::execute_gemv_add(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream, bool block)
-{
-    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
-    int ret = 0;
-
-    if (kernel_type_ == CUSTOM_GPU) {
-        ret = pim_executor_->execute_custom_gemv(output, operand0, operand1, true, stream, block);
-    } else if (kernel_type_ == PIM) {
-        PimBo* pim_wei = get_preloaded_pim_weight(operand1);
-        ret = pim_executor_->execute_gemv_add(output, operand0, pim_wei, stream, block);
-    } else {
-        if (is_pim_available(output, operand0, operand1, OP_GEMV)) {
-            PimBo* pim_wei = get_preloaded_pim_weight(operand1);
-            ret = pim_executor_->execute_gemv_add(output, operand0, pim_wei, stream, block);
-        } else {
-            ret = pim_executor_->execute_custom_gemv(output, operand0, operand1, true, stream, block);
-        }
-    }
-
-    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
-    return ret;
-}
-
-int PimRuntime::execute_gemv_add(PimBo* output, PimBo* operand0, PimBo* operand1, PimBo* operand2, bool relu,
-                                 void* stream, bool block)
-{
-    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
-    int ret = 0;
-
-    ret = pim_executor_->execute_custom_gemv_add(output, operand0, operand1, operand2, relu, stream, block);
-
-    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
-    return ret;
-}
-
-int PimRuntime::execute_gemv_list(PimBo* output, PimBo* vector, PimBo* matrix, void* stream, bool block)
-{
-    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
-    int ret = 0;
-
-    if (!is_pim_gemv_list_available(output, vector, matrix)) {
-        DLOG(ERROR) << "Invalid GEMV list dimension";
-        return -1;
-    }
-
-    PimBo* pim_wei = get_preloaded_pim_weight_for_list(matrix);
-    ret = pim_executor_->execute_gemv_list(output, vector, pim_wei, stream, block);
-
-    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
-    return ret;
-}
-
 int PimRuntime::execute_relu(PimBo* output, PimBo* pim_data, void* stream, bool block)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
@@ -441,7 +366,7 @@ PimBo* PimRuntime::get_preloaded_pim_gemm_weight(PimBo* dev_wei)
 
         host_reordered_weight = PimCreateBo(bshape->n, bshape->c, bshape->h, bshape->w, PIM_FP16, MEM_TYPE_HOST);
         pre_wei = PimCreateBo(bshape->n, bshape->c, bshape->h, bshape->w, PIM_FP16, MEM_TYPE_PIM);
-        pim_manager_->convert_data_layout(host_reordered_weight, host_weight, OP_GEMM);
+        pim_manager_->convert_data_layout(host_reordered_weight, host_weight);
         PimCopyMemory(pre_wei, host_reordered_weight, HOST_TO_PIM);
         insert_preloaded_pim_weight(dev_wei, pre_wei);
         PimDestroyBo(host_reordered_weight);
@@ -449,70 +374,6 @@ PimBo* PimRuntime::get_preloaded_pim_gemm_weight(PimBo* dev_wei)
         if (host_weight != dev_wei) {
             PimDestroyBo(host_weight);
         }
-    }
-
-    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
-    return pre_wei;
-}
-
-PimBo* PimRuntime::get_preloaded_pim_weight(PimBo* dev_wei)
-{
-    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
-    PimBo* pre_wei = find_preloaded_pim_weight(dev_wei);
-
-    if (pre_wei == nullptr) {
-        PimDesc* pim_desc =
-            PimCreateDesc(dev_wei->bshape_r.n, 1, dev_wei->bshape_r.h, dev_wei->bshape_r.w, PIM_FP16, OP_GEMV);
-        PimBo* host_weight = nullptr;
-
-        if (dev_wei->data == nullptr) {
-            PimDestroyDesc(pim_desc);
-            DLOG(ERROR) << "[END] " << __FUNCTION__ << " called";
-            return nullptr;
-        }
-        if (dev_wei->mem_type == MEM_TYPE_HOST) {
-            host_weight = dev_wei;
-        } else if (dev_wei->mem_type == MEM_TYPE_DEVICE || dev_wei->mem_type == MEM_TYPE_PIM) {
-            uint32_t w_size = dev_wei->bshape_r.h * dev_wei->bshape_r.w;
-            host_weight = PimCreateBo(pim_desc, MEM_TYPE_HOST, GEMV_WEIGHT);
-            hipMemcpy(host_weight->data, dev_wei->data, w_size * sizeof(uint16_t), hipMemcpyDeviceToHost);
-        }
-
-        PimBo* host_reordered_weight = PimCreateBo(pim_desc, MEM_TYPE_HOST, GEMV_WEIGHT);
-        pre_wei = PimCreateBo(pim_desc, MEM_TYPE_PIM, GEMV_WEIGHT);
-        pim_manager_->convert_data_layout(host_reordered_weight, host_weight, OP_GEMV);
-        PimCopyMemory(pre_wei, host_reordered_weight, HOST_TO_PIM);
-
-        insert_preloaded_pim_weight(dev_wei, pre_wei);
-
-        PimDestroyDesc(pim_desc);
-        PimDestroyBo(host_reordered_weight);
-
-        if (host_weight != dev_wei) {
-            PimDestroyBo(host_weight);
-        }
-    }
-
-    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
-    return pre_wei;
-}
-
-PimBo* PimRuntime::get_preloaded_pim_weight_for_list(PimBo* dev_wei)
-{
-    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
-    PimBo* pre_wei = find_preloaded_pim_weight(dev_wei);
-
-    if (pre_wei == nullptr) {
-        PimBo* host_reord_wei = PimCreateBo(dev_wei->bshape.n, dev_wei->bshape.c, dev_wei->bshape.h, dev_wei->bshape.w,
-                                            PIM_FP16, MEM_TYPE_HOST);
-        pre_wei = PimCreateBo(dev_wei->bshape.n, dev_wei->bshape.c, dev_wei->bshape.h, dev_wei->bshape.w, PIM_FP16,
-                              MEM_TYPE_PIM);
-        pim_manager_->convert_data_layout(host_reord_wei, dev_wei, OP_GEMV);
-        PimCopyMemory(pre_wei, host_reord_wei, HOST_TO_PIM);
-
-        insert_preloaded_pim_weight(dev_wei, pre_wei);
-
-        PimDestroyBo(host_reord_wei);
     }
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";

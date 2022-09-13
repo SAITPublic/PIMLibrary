@@ -42,7 +42,7 @@ class HipMemoryManager : public IPimMemoryManager
     int copy_memory(void* dst, void* src, size_t size, PimMemCpyType cpy_type);
     int copy_memory(PimBo* dst, PimBo* src, PimMemCpyType cpy_type);
     int copy_memory_3d(const PimCopy3D* copy_params);
-    int convert_data_layout(PimBo* dst, PimBo* src, PimOpType op_type);
+    int convert_data_layout(PimBo* dst, PimBo* src);
 
    private:
     int convert_data_layout_for_gemm_weight(PimBo* dst, PimBo* src);

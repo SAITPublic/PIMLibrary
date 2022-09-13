@@ -46,23 +46,6 @@ class OclPimExecutor : public IPimExecutor
     {
         return -1;
     }
-    int execute_gemv(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream, bool block) { return -1; }
-    int execute_gemv_add(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream, bool block) { return -1; }
-    int execute_gemv_list(PimBo* output, PimBo* input, PimBo* weight, void* stream, bool block) { return -1; }
-    int execute_gemv_list_normal(PimBo* output, PimBo* input, PimBo* weight, void* stream, bool block) { return -1; }
-    int execute_gemv_list_chwise(PimBo* output, PimBo* input, PimBo* weight, int ch_per_op, void* stream, bool block)
-    {
-        return -1;
-    }
-    int execute_custom_gemv(PimBo* output, PimBo* operand0, PimBo* operand1, bool is_gemv_add, void* stream, bool block)
-    {
-        return -1;
-    }
-    int execute_custom_gemv_add(PimBo* output, PimBo* operand0, PimBo* operand1, PimBo* operand2, bool relu,
-                                void* stream, bool block)
-    {
-        return -1;
-    }
     int execute_sync(void* stream) { return -1; }
     int execute_dummy(void) { return -1; }
     void* createStream(void) { return nullptr; }

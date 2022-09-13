@@ -11,6 +11,8 @@
 #ifndef _HOST_INFO_H_
 #define _HOST_INFO_H_
 
+#define MAX_NUM_GPUS 10
+
 typedef enum __HostType {
     AMDGPU,
     CPU,

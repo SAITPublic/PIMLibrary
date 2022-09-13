@@ -31,7 +31,7 @@ class IPimMemoryManager
     virtual int copy_memory(void* dst, void* src, size_t size, PimMemCpyType cpy_type) = 0;
     virtual int copy_memory(PimBo* dst, PimBo* src, PimMemCpyType cpy_type) = 0;
     virtual int copy_memory_3d(const PimCopy3D* copy_params) = 0;
-    virtual int convert_data_layout(PimBo* dst, PimBo* src, PimOpType op_type) = 0;
+    virtual int convert_data_layout(PimBo* dst, PimBo* src) = 0;
 };
 } /* namespace manager */
 } /* namespace runtime */

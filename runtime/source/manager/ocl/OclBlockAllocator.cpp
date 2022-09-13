@@ -15,7 +15,6 @@
 #include <iostream>
 #include <list>
 #include <map>
-#include "executor/PimExecutor.h"
 #include "manager/HostInfo.h"
 #include "utility/pim_debug.hpp"
 #include "utility/pim_util.h"

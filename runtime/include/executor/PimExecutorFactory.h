@@ -27,8 +27,8 @@ namespace executor
 class PimExecutorFactory
 {
    public:
-    static std::shared_ptr<IPimExecutor> getPimExecutor(pim::runtime::manager::PimManager* pim_manager, PimRuntimeType rt_type,
-                                                 PimPrecision precision)
+    static std::shared_ptr<IPimExecutor> getPimExecutor(pim::runtime::manager::PimManager* pim_manager,
+                                                        PimRuntimeType rt_type, PimPrecision precision)
     {
         if (rt_type == RT_TYPE_HIP) {
             return std::make_shared<HipPimExecutor>(pim_manager, precision);

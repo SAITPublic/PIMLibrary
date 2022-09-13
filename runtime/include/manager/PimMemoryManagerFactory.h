@@ -27,7 +27,8 @@ namespace manager
 class PimMemoryManagerFactory
 {
    public:
-    static std::shared_ptr<IPimMemoryManager> getPimMemoryManager(std::shared_ptr<PimDevice> pim_device, PimRuntimeType rt_type, PimPrecision precision)
+    static std::shared_ptr<IPimMemoryManager> getPimMemoryManager(std::shared_ptr<PimDevice> pim_device,
+                                                                  PimRuntimeType rt_type, PimPrecision precision)
     {
         if (rt_type == RT_TYPE_HIP) {
             return std::make_shared<HipMemoryManager>(pim_device, precision);

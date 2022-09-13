@@ -123,7 +123,6 @@ int OclPimExecutor::build_cl_program_with_source(void)
     program_ = clCreateProgramWithSource(context_, 1, (const char**)&cl_source_ptr, NULL, NULL);
     clBuildProgram(program_, 1, &device_id_, NULL, NULL, NULL);
 
-
     return ret;
 }
 

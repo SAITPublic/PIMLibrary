@@ -95,7 +95,7 @@ __PIM_API__ PimBo* PimCreateBo(int n, int c, int h, int w, PimPrecision precisio
  *
  * @param pim_desc pim descriptor
  * @param mem_type type of memory need to be allocated (pim/gpu/host)
- * @param mem_flag describes operation for which buffer is used for( element wise or gemv)
+ * @param mem_flag describes operation for which buffer is used for (element wise or gemm)
  * @param user_ptr external memory passed by user. if passed, bo is created with user pointer.
  *                 if nullptr, pim library does the allocation
  *
@@ -109,7 +109,7 @@ __PIM_API__ PimBo* PimCreateBo(PimDesc* pim_desc, PimMemType mem_type, PimMemFla
  *
  * @param pim_gemm_desc pim gemm descriptor
  * @param mem_type type of memory need to be allocated (pim/gpu/host)
- * @param mem_flag describes operation for which buffer is used for( element wise or gemv)
+ * @param mem_flag describes operation for which buffer is used for (element wise or gemm)
  * @param user_ptr external memory passed by user. if passed, bo is created with user pointer.
  *                 if nullptr, pim library does the allocation
  *
@@ -325,74 +325,6 @@ __PIM_API__ int PimExecuteMul(PimBo* output, void* scalar, PimBo* vector, void* 
  * @return success/failure
  */
 __PIM_API__ int PimExecuteRelu(PimBo* output, PimBo* pim_data, void* stream = nullptr, bool block = false);
-
-/**
- * @brief Executes PIM GEMV operation
- *
- * This API provides interface for PIM GEMV operations.
- * For PIM GemV operations, weights(kernel values) need to be preprocessed with Convert Data PIM API
- * Output values are placed in PIM area and need to be transfered to GPU or HOST memory as per requirements
- *
- * @param output output buffer object of gemv
- * @param operand0 input operand0(vector).
- * @param operand1 input opernad1(matrix).
- * @param stream void pointer to stream identifier. default=nullptr
- * @param block enable/disable synchronization. default=false
- *
- * @return success/failure
- */
-__PIM_API__ int PimExecuteGemv(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream = nullptr,
-                               bool block = false);
-
-/**
- * @brief Executes PIM GEMV + Add operation
- *
- * This API provides interface for PIM GEMV + Add operation.
- * It performs output = output + pim_gemv_result
- *
- * @param output output buffer object of gemv
- * @param operand0 input operand0(vector).
- * @param operand1 input operand1(matrix).
- *
- * @return success/failure
- */
-__PIM_API__ int PimExecuteGemvAdd(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream = nullptr,
-                                  bool block = false);
-
-/**
- * @brief Executes PIM GEMV + Add operation
- *
- * This API provides interface for PIM GEMV + Add operation.
- * It performs output = output + pim_gemv_result
- *
- * @param output output buffer object
- * @param operand0 input operand0(vector).
- * @param operand1 input operand1(matrix).
- * @param operand2 input vector to be added
- * @param relu fuse ReLU if comes after the operation.
- *
- * @return success/failure
- */
-__PIM_API__ int PimExecuteGemvAdd(PimBo* output, PimBo* operand0, PimBo* operand1, PimBo* operand2, bool relu,
-                                  void* stream = nullptr, bool block = false);
-
-/**
- * @brief Executes PIM GEMV list operation
- *
- * This API provides interface for PIM GEMV list operations.
- * For PIM GemV list operations, weights(kernel values) need to be preprocessed with Convert Data PIM API
- * Output values are placed in PIM area and need to be transfered to GPU or HOST memory as per requirements
- *
- * @param output output buffer object list of gemv
- * @param vector input vector list.
- * @param matrix input matrix list.
- * @param stream void pointer to stream identifier. default=nullptr
- * @param block enable/disable synchronization. default=false
- *
- * @return success/failure
- */
-__PIM_API__ int PimExecuteGemvList(PimBo* output, PimBo* vector, PimBo* matrix, void* stream = nullptr,
-                                   bool block = false);
 
 /**
  * @brief Executes PIM GEMM operation

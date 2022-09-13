@@ -12,12 +12,14 @@
  */
 #ifndef __PIMC_DRIVER_H__
 #define __PIMC_DRIVER_H__
+
 #include <hip/hip_runtime.h>
 #include <hip/hiprtc.h>
 #include <pim_compiler.h>
 #include <pim_runtime_api.h>
 #include <vector>
-#include "executor/PimExecutor.h"
+#include "manager/HostInfo.h"
+
 extern uint64_t g_pim_base_addr[MAX_NUM_GPUS];
 
 namespace pim
@@ -27,6 +29,7 @@ namespace runtime
 namespace pimc_driver
 {
 enum class DIMENSIONS { N, C, H, W };
+constexpr uint32_t compiler_env_value = PIM_COMPILER_ENABLE;
 
 template <class T>
 class Tensor
