@@ -71,6 +71,12 @@ typedef enum __PimPrecision {
     PIM_INT8,
 } PimPrecision;
 
+typedef enum __PimDataLayoutType {
+    RAW,
+    CHWISE_GEMM_WEIGHT,
+    ALIGNED_GEMM_WEIGHT,
+} PimDataLayoutType;
+
 typedef struct __PimBufferShape {
     uint32_t n;
     uint32_t c;
@@ -80,6 +86,7 @@ typedef struct __PimBufferShape {
 
 typedef struct __PimBufferObject {
     PimMemType mem_type;
+    PimDataLayoutType data_layout_type;
     PimBShape bshape;
     PimBShape bshape_r;
     PimPrecision precision;

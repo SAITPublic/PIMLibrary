@@ -120,6 +120,7 @@ void set_pimbo(PimGemmDesc* pim_gemm_desc, PimMemType mem_type, PimMemFlag mem_f
     pim_bo->size = size;
     pim_bo->mem_type = mem_type;
     pim_bo->precision = pim_gemm_desc->precision;
+    pim_bo->data_layout_type = PimDataLayoutType::RAW;
     pim_bo->bshape = *bshape;
     pim_bo->bshape_r = *bshape_r;
 }

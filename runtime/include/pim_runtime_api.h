@@ -381,6 +381,20 @@ __PIM_API__ int PimSynchronize(void* stream = nullptr);
  */
 __PIM_API__ int PimExecuteDummy(void);
 
+/**
+ * @brief Returns source buffer reordered to desired type
+ * 
+ * @param src source address of buffer
+ * @param result_type desired layout type for source buffer
+ * @param cache_reordered enable/disable caching.
+ *                        preferable for multiple usage of dst buffer.
+ *                        default=false
+ *
+ * @return reordered buffer
+ */
+__PIM_API__ PimBo* PimGenerateWeightBuffer(PimBo* src,
+                                           bool cache_reordered = false);
+
 /**@}*/
 
 #endif /* _PIM_RUNTIME_API_H_ */

@@ -136,6 +136,7 @@ PimBo* PimCreateBo(int n, int c, int h, int w, PimPrecision precision, PimMemTyp
     pim_bo->bshape_r = {(uint32_t)n, (uint32_t)c, (uint32_t)h, (uint32_t)w};
     pim_bo->mem_type = mem_type;
     pim_bo->precision = precision;
+    pim_bo->data_layout_type = PimDataLayoutType::RAW;
 
     ret = pim_runtime->alloc_memory(pim_bo, user_ptr);
     if (ret != 0) {
@@ -169,6 +170,7 @@ PimBo* PimCreateBo(PimDesc* pim_desc, PimMemType mem_type, PimMemFlag mem_flag, 
     pim_bo->size = size;
     pim_bo->mem_type = mem_type;
     pim_bo->precision = pim_desc->precision;
+    pim_bo->data_layout_type = PimDataLayoutType::RAW;
 
     ret = pim_runtime->alloc_memory(pim_bo, user_ptr);
     if (ret != 0) {
@@ -622,4 +624,28 @@ int PimExecuteDummy(void)
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
+}
+
+PimBo* PimGenerateWeightBuffer(PimBo* src,
+                               bool cache_reordered) {
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
+    PIM_PROFILE_TICK(PimGetReorderedBuffer);
+    int ret = 0;
+
+    if (pim_runtime == nullptr) {
+        DLOG(ERROR) << "PimRuntime is not initialized";
+        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+        return nullptr;
+    }
+    PimBo* dst = pim_runtime->generate_gemm_weight_from_buffer(src, cache_reordered);
+    if (dst == nullptr) {
+        DLOG(ERROR) << "Failed to reorder source buffer";
+        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+        return nullptr;
+    }
+    PIM_PROFILE_TOCK(PimGetReorderedBuffer);
+
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+    return dst;
+
 }

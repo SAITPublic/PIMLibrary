@@ -51,13 +51,13 @@ class PimRuntime
                    double epsilon, void* stream, bool block = false);
     int execute_sync(void* stream);
     int execute_dummy(void);
-    int insert_preloaded_pim_weight(PimBo* dev_wei, PimBo* pim_wei);
-    PimBo* find_preloaded_pim_weight(PimBo* dev_wei);
-    PimBo* get_preloaded_pim_weight(PimBo* dev_wei);
-    PimBo* get_preloaded_pim_weight_for_list(PimBo* dev_wei);
+    PimBo* generate_gemm_weight_from_buffer(PimBo* src,
+                                            bool cache_reordered = false);
 
    private:
-    PimBo* get_preloaded_pim_gemm_weight(PimBo* dev_wei);
+    PimBo* get_preloaded_pim_gemm_weight(PimBo* dev_wei, bool cache_reordered = true);
+    int insert_preloaded_pim_weight(PimBo* dev_wei, PimBo* pim_wei);
+    PimBo* find_preloaded_pim_weight(PimBo* dev_wei);
     pim::runtime::manager::PimManager* pim_manager_;
     std::shared_ptr<pim::runtime::manager::PimDevice> pim_device_;
     std::shared_ptr<executor::IPimExecutor> pim_executor_;

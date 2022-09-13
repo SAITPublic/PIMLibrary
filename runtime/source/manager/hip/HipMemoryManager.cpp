@@ -529,6 +529,7 @@ int HipMemoryManager::convert_data_layout_for_chwise_gemm_weight(PimBo* dst, Pim
         }
         data_offset += (src->bshape.h * PIM_GEMV_OUT_ALIGN * sizeof(half));
     }
+    dst->data_layout_type = PimDataLayoutType::CHWISE_GEMM_WEIGHT;
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
@@ -701,6 +702,7 @@ int HipMemoryManager::convert_data_layout_for_aligned_gemm_weight(PimBo* dst, Pi
         }
         data_offset += (src->bshape.h * src->bshape.w * sizeof(half));
     }
+    dst->data_layout_type = PimDataLayoutType::ALIGNED_GEMM_WEIGHT;
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;

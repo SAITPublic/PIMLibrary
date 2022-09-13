@@ -271,12 +271,14 @@ int HipPimExecutor::execute_gemm(PimBo* output, PimBo* input, PimBo* weight, Pim
                                  void* stream, bool block)
 {
     int ret = 0;
-    bool is_chwise = check_chwise_gemm_bo(weight);
 
-    if (is_chwise)
+    if (weight->data_layout_type == PimDataLayoutType::CHWISE_GEMM_WEIGHT)
         ret = execute_chwise_gemm_tile_accum(output, input, weight, bias, act_func, stream, block);
-    else
+    else if (weight->data_layout_type == PimDataLayoutType::ALIGNED_GEMM_WEIGHT)
         ret = execute_aligned_gemm_tile_accum(output, input, weight, bias, act_func, stream, block);
+    else
+        DLOG(ERROR) << "Provided layout is not supported in GEMM call";
+
     return ret;
 }
 

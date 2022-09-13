@@ -206,6 +206,7 @@ int PimRuntime::copy_memory(PimBo* dst, PimBo* src, PimMemCpyType cpy_type)
     } else {
         ret = pim_manager_->copy_memory(dst, src, cpy_type);
     }
+    dst->data_layout_type = src->data_layout_type;
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
@@ -248,7 +249,13 @@ int PimRuntime::execute_gemm(PimBo* output, PimBo* input, PimBo* weight, PimBo* 
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
 
-    PimBo* pim_wei = get_preloaded_pim_gemm_weight(weight);
+    PimBo* pim_wei;
+    if (weight->data_layout_type == PimDataLayoutType::RAW) {
+        pim_wei = get_preloaded_pim_gemm_weight(weight);
+    } else {
+        // Assume that user has provided correct layout
+        pim_wei = weight;
+    }
     ret = pim_executor_->execute_gemm(output, input, pim_wei, bias, act_func, stream, block);
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
@@ -343,7 +350,7 @@ int PimRuntime::insert_preloaded_pim_weight(PimBo* dev_wei, PimBo* pim_wei)
     return ret;
 }
 
-PimBo* PimRuntime::get_preloaded_pim_gemm_weight(PimBo* dev_wei)
+PimBo* PimRuntime::get_preloaded_pim_gemm_weight(PimBo* dev_wei, bool cache_reordered)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     PimBo* pre_wei = find_preloaded_pim_weight(dev_wei);
@@ -368,7 +375,9 @@ PimBo* PimRuntime::get_preloaded_pim_gemm_weight(PimBo* dev_wei)
         pre_wei = PimCreateBo(bshape->n, bshape->c, bshape->h, bshape->w, PIM_FP16, MEM_TYPE_PIM);
         pim_manager_->convert_data_layout(host_reordered_weight, host_weight);
         PimCopyMemory(pre_wei, host_reordered_weight, HOST_TO_PIM);
-        insert_preloaded_pim_weight(dev_wei, pre_wei);
+        if (cache_reordered) {
+            insert_preloaded_pim_weight(dev_wei, pre_wei);
+        }
         PimDestroyBo(host_reordered_weight);
 
         if (host_weight != dev_wei) {
@@ -378,6 +387,40 @@ PimBo* PimRuntime::get_preloaded_pim_gemm_weight(PimBo* dev_wei)
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return pre_wei;
+}
+
+PimBo* PimRuntime::generate_gemm_weight_from_buffer(PimBo* src,
+                                                    bool cache_reordered)
+{
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
+
+    PimBo* pre_weight = nullptr;
+    if (src->data_layout_type == PimDataLayoutType::RAW) {
+        pre_weight = get_preloaded_pim_gemm_weight(src, cache_reordered);
+    } else {
+        DLOG(ERROR) << "GEMM weight generation for provided layout is not supported yet";
+        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+        return nullptr;
+    }
+
+    PimBo* pim_reordered_buff;
+    // Make sure reordered data are stored on the PIM memory
+    if (pre_weight->mem_type == MEM_TYPE_PIM) {
+        pim_reordered_buff = pre_weight;
+    } else {
+        auto direction = pre_weight->mem_type == MEM_TYPE_HOST ? HOST_TO_PIM : DEVICE_TO_PIM;
+        pim_reordered_buff = PimCreateBo(pre_weight->bshape.n,
+                                         pre_weight->bshape.c,
+                                         pre_weight->bshape.h,
+                                         pre_weight->bshape.w,
+                                         pre_weight->precision,
+                                         MEM_TYPE_PIM);
+        PimCopyMemory(pim_reordered_buff, pre_weight, direction);
+        if (pre_weight != src) { PimDestroyBo(pre_weight); }
+    }
+
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+    return pim_reordered_buff;
 }
 
 } /* namespace runtime */
