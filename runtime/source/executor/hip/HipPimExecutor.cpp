@@ -56,9 +56,6 @@ HipPimExecutor::HipPimExecutor(pim::runtime::manager::PimManager* pim_manager, P
 HipPimExecutor::~HipPimExecutor(void)
 {
     delete pim_crf_generator_;
-#ifdef EMULATOR
-    delete pim_emulator_;
-#endif
     pim_device_.reset();
 }
 
