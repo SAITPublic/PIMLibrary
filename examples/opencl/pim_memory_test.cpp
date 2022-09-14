@@ -177,24 +177,27 @@ bool test_memcpy_bw_device_pim()
 
     /* __PIM_API__ call : Create PIM Buffer Object */
     PimBo* host_input = PimCreateBo(BATCH_DIM, 1, 1, IN_LENGTH, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* device_buffer = PimCreateBo(BATCH_DIM, 1, 1, IN_LENGTH, PIM_FP16, MEM_TYPE_DEVICE);
+    PimBo* device_buffer_src = PimCreateBo(BATCH_DIM, 1, 1, IN_LENGTH, PIM_FP16, MEM_TYPE_DEVICE);
+    PimBo* device_buffer_dst = PimCreateBo(BATCH_DIM, 1, 1, IN_LENGTH, PIM_FP16, MEM_TYPE_DEVICE);
     PimBo* pim_buffer = PimCreateBo(BATCH_DIM, 1, 1, IN_LENGTH, PIM_FP16, MEM_TYPE_PIM);
     PimBo* host_output = PimCreateBo(BATCH_DIM, 1, 1, IN_LENGTH, PIM_FP16, MEM_TYPE_HOST);
     fill_uniform_random_values<half_float::half>(host_input->data, IN_LENGTH, (half_float::half)0.0,
                                                  (half_float::half)0.5);
 
-    PimCopyMemory(device_buffer, host_input, HOST_TO_DEVICE);
-    PimCopyMemory(pim_buffer, device_buffer, DEVICE_TO_PIM);
-    PimCopyMemory(host_output, pim_buffer, PIM_TO_HOST);
+    PimCopyMemory(device_buffer_src, host_input, HOST_TO_DEVICE);
+    PimCopyMemory(pim_buffer, device_buffer_src, DEVICE_TO_PIM);
+    PimCopyMemory(device_buffer_dst, pim_buffer, PIM_TO_DEVICE);
+    PimCopyMemory(host_output, device_buffer_dst, DEVICE_TO_HOST);
 
-    ret = compare_half_relative((half_float::half*)host_input->data, (half_float::half*)host_output->data, IN_LENGTH);
+    ret = compare_half_relative((half_float::half*)host_output->data, (half_float::half*)host_input->data, IN_LENGTH);
     if (ret != 0) {
         std::cout << "data is different" << std::endl;
         return false;
     }
 
     PimFreeMemory(host_input);
-    PimFreeMemory(device_buffer);
+    PimFreeMemory(device_buffer_src);
+    PimFreeMemory(device_buffer_dst);
     PimFreeMemory(pim_buffer);
     PimFreeMemory(host_output);
 
@@ -304,8 +307,8 @@ TEST(UnitTest, simplePimAllocFree) { EXPECT_TRUE(simple_pim_alloc_free()); }
 TEST(UnitTest, PimRepeatAllocateFree) { EXPECT_TRUE(pim_repeat_allocate_free()); }
 TEST(UnitTest, PimMemCopyHostAndDeviceTest) { EXPECT_TRUE(test_memcpy_bw_host_device()); }
 TEST(UnitTest, PimMemCopyDeviceAndDeviceTest) { EXPECT_TRUE(test_memcpy_bw_device_device()); }
-// TEST(UnitTest, PimMemCopyHostAndPimTest) { EXPECT_TRUE(test_memcpy_bw_host_pim()); }
-// TEST(UnitTest, PimMemCopyDeviceAndPimTest) { EXPECT_TRUE(test_memcpy_bw_device_pim()); } /* currently failing */
+TEST(UnitTest, PimMemCopyHostAndPimTest) { EXPECT_TRUE(test_memcpy_bw_host_pim()); }
+TEST(UnitTest, PimMemCopyDeviceAndPimTest) { EXPECT_TRUE(test_memcpy_bw_device_pim()); } /* currently failing */
 /* experimental tests */
 // TEST(UnitTest, PimMemCopyDeviceAndPimTest_1) { EXPECT_TRUE(test_memcpy_bw_host_pim_device_host()); }
 // TEST(UnitTest, PimMemCopyExp) { EXPECT_TRUE(test_memcpy_exp()); }

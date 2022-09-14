@@ -228,17 +228,49 @@ int OclMemoryManager::copy_memory(void* dst, void* src, size_t size, PimMemCpyTy
 
     cl_mem src_buff = (cl_mem)src;
     cl_mem dst_buff = (cl_mem)dst;
-    if (cpy_type == HOST_TO_PIM || cpy_type == HOST_TO_DEVICE) {
-        err = clEnqueueWriteBuffer(queue, dst_buff, CL_TRUE, 0, size, (void*)src, 0, NULL, NULL);
-        cl_ok(err);
-    } else if (cpy_type == PIM_TO_HOST || cpy_type == DEVICE_TO_HOST) {
-        err = clEnqueueReadBuffer(queue, src_buff, CL_TRUE, 0, size, (void*)dst, 0, NULL, NULL);
-        cl_ok(err);
-    } else if (cpy_type == DEVICE_TO_PIM || cpy_type == PIM_TO_DEVICE || cpy_type == DEVICE_TO_DEVICE) {
-        err = clEnqueueCopyBuffer(queue, src_buff, dst_buff, 0, 0, size, 0, NULL, NULL);
-        cl_ok(err);
-    } else if (cpy_type == HOST_TO_HOST) {
-        memcpy(dst, src, size);
+
+    uint64_t src_addr, dst_addr;
+    switch (cpy_type) {
+        case HOST_TO_PIM:
+            src_addr = (uint64_t)src;
+            dst_addr = ((OclBufferObj*)dst)->host_addr;
+            memcpy((void*)dst_addr, (void*)src_addr, size);
+            break;
+        case HOST_TO_DEVICE:
+            err = clEnqueueWriteBuffer(queue, dst_buff, CL_TRUE, 0, size, src, 0, NULL, NULL);
+            cl_ok(err);
+            break;
+        case PIM_TO_HOST:
+            src_addr = ((OclBufferObj*)src)->host_addr;
+            dst_addr = (uint64_t)dst;
+            memcpy((void*)dst_addr, (void*)src_addr, size);
+            break;
+        case DEVICE_TO_HOST:
+            err = clEnqueueReadBuffer(queue, src_buff, CL_TRUE, 0, size, dst, 0, NULL, NULL);
+            cl_ok(err);
+            break;
+        case DEVICE_TO_PIM:
+            err = clEnqueueReadBuffer(queue, src_buff, CL_TRUE, 0, size, (void*)((OclBufferObj*)dst_buff)->host_addr, 0,
+                                      NULL, NULL);
+            cl_ok(err);
+            break;
+        case PIM_TO_DEVICE:
+            err = clEnqueueWriteBuffer(queue, dst_buff, CL_TRUE, 0, size, (void*)((OclBufferObj*)src_buff)->host_addr,
+                                       0, NULL, NULL);
+            cl_ok(err);
+            break;
+        case DEVICE_TO_DEVICE:
+            err = clEnqueueCopyBuffer(queue, src_buff, dst_buff, 0, 0, size, 0, NULL, NULL);
+            cl_ok(err);
+            err = clFinish(queue);
+            cl_ok(err);
+            break;
+        case HOST_TO_HOST:
+            memcpy(dst, src, size);
+            break;
+        default:
+            DLOG(ERROR) << "Invalid copy type";
+            break;
     }
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
@@ -252,21 +284,52 @@ int OclMemoryManager::copy_memory(PimBo* dst, PimBo* src, PimMemCpyType cpy_type
     int err = 0;
 
     size_t size = dst->size;
+    uint64_t src_addr, dst_addr;
+
     cl_mem src_buff = (cl_mem)src->data;
     cl_mem dst_buff = (cl_mem)dst->data;
-    if (cpy_type == HOST_TO_PIM || cpy_type == HOST_TO_DEVICE) {
-        err = clEnqueueWriteBuffer(queue, dst_buff, CL_TRUE, 0, size, src->data, 0, NULL, NULL);
-        cl_ok(err);
-    } else if (cpy_type == PIM_TO_HOST || cpy_type == DEVICE_TO_HOST) {
-        err = clEnqueueReadBuffer(queue, src_buff, CL_TRUE, 0, size, dst->data, 0, NULL, NULL);
-        cl_ok(err);
-    } else if (cpy_type == DEVICE_TO_PIM || cpy_type == PIM_TO_DEVICE || cpy_type == DEVICE_TO_DEVICE) {
-        err = clEnqueueCopyBuffer(queue, src_buff, dst_buff, 0, 0, size, 0, NULL, NULL);
-        cl_ok(err);
-        err = clFinish(queue);
-        cl_ok(err);
-    } else if (cpy_type == HOST_TO_HOST) {
-        memcpy(dst->data, src->data, size);
+
+    switch (cpy_type) {
+        case HOST_TO_PIM:
+            src_addr = (uint64_t)src->data;
+            dst_addr = ((OclBufferObj*)dst->data)->host_addr;
+            memcpy((void*)dst_addr, (void*)src_addr, size);
+            break;
+        case HOST_TO_DEVICE:
+            err = clEnqueueWriteBuffer(queue, dst_buff, CL_TRUE, 0, size, src->data, 0, NULL, NULL);
+            cl_ok(err);
+            break;
+        case PIM_TO_HOST:
+            src_addr = ((OclBufferObj*)src->data)->host_addr;
+            dst_addr = (uint64_t)dst->data;
+            memcpy((void*)dst_addr, (void*)src_addr, size);
+            break;
+        case DEVICE_TO_HOST:
+            err = clEnqueueReadBuffer(queue, src_buff, CL_TRUE, 0, size, dst->data, 0, NULL, NULL);
+            cl_ok(err);
+            break;
+        case DEVICE_TO_PIM:
+            err = clEnqueueReadBuffer(queue, src_buff, CL_TRUE, 0, size, (void*)((OclBufferObj*)dst_buff)->host_addr, 0,
+                                      NULL, NULL);
+            cl_ok(err);
+            break;
+        case PIM_TO_DEVICE:
+            err = clEnqueueWriteBuffer(queue, dst_buff, CL_TRUE, 0, size, (void*)((OclBufferObj*)src_buff)->host_addr,
+                                       0, NULL, NULL);
+            cl_ok(err);
+            break;
+        case DEVICE_TO_DEVICE:
+            err = clEnqueueCopyBuffer(queue, src_buff, dst_buff, 0, 0, size, 0, NULL, NULL);
+            cl_ok(err);
+            err = clFinish(queue);
+            cl_ok(err);
+            break;
+        case HOST_TO_HOST:
+            memcpy(dst->data, src->data, size);
+            break;
+        default:
+            DLOG(ERROR) << "Invalid copy type";
+            break;
     }
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
