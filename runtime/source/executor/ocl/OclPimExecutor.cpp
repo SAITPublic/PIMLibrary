@@ -22,6 +22,11 @@ namespace pim
 {
 namespace runtime
 {
+extern cl_platform_id platform;
+extern cl_context context;
+extern cl_device_id device_id;
+extern cl_command_queue queue;
+
 namespace executor
 {
 OclPimExecutor::OclPimExecutor(pim::runtime::manager::PimManager* pim_manager, PimPrecision precision)
@@ -30,11 +35,6 @@ OclPimExecutor::OclPimExecutor(pim::runtime::manager::PimManager* pim_manager, P
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called ";
 
     int ret = 0;
-    ret = init_cl_device();
-    if (ret != 0) {
-        DLOG(ERROR) << "failt to create OclPimExecutor";
-        assert(0);
-    }
 
     ret = check_cl_program_path();
     if (ret == 0 /* source path */) {
@@ -53,18 +53,6 @@ OclPimExecutor::~OclPimExecutor(void)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called ";
     pim_device_.reset();
-}
-
-int OclPimExecutor::init_cl_device(void)
-{
-    int ret = 0;
-
-    clGetPlatformIDs(1, &platform_, NULL);
-    clGetDeviceIDs(platform_, CL_DEVICE_TYPE_GPU, 1, &device_id_, NULL);
-    context_ = clCreateContext(NULL, 1, &device_id_, NULL, NULL, NULL);
-    queue_ = clCreateCommandQueue(context_, device_id_, 0, NULL);
-
-    return ret;
 }
 
 int OclPimExecutor::check_cl_program_path(void)
@@ -120,8 +108,8 @@ int OclPimExecutor::build_cl_program_with_source(void)
     cl_source += load_cl_file("gpu_op_kernels.cl");
     cl_source_ptr = cl_source.c_str();
 
-    program_ = clCreateProgramWithSource(context_, 1, (const char**)&cl_source_ptr, NULL, NULL);
-    clBuildProgram(program_, 1, &device_id_, NULL, NULL, NULL);
+    program_ = clCreateProgramWithSource(context, 1, (const char**)&cl_source_ptr, NULL, NULL);
+    clBuildProgram(program_, 1, &device_id, NULL, NULL, NULL);
 
     return ret;
 }
@@ -160,9 +148,9 @@ int OclPimExecutor::build_cl_program_with_binary(void)
     cl_binary_ptr = new unsigned char[cl_binary_size];
     bf.read((char*)cl_binary_ptr, cl_binary_size);
 
-    program_ = clCreateProgramWithBinary(context_, 1, &device_id_, &cl_binary_size,
-                                         (const unsigned char**)&cl_binary_ptr, NULL, NULL);
-    clBuildProgram(program_, 1, &device_id_, NULL, NULL, NULL);
+    program_ = clCreateProgramWithBinary(context, 1, &device_id, &cl_binary_size, (const unsigned char**)&cl_binary_ptr,
+                                         NULL, NULL);
+    clBuildProgram(program_, 1, &device_id, NULL, NULL, NULL);
 
     delete[] cl_binary_ptr;
 
@@ -178,7 +166,7 @@ int OclPimExecutor::initialize(void)
 
     pim_manager_->alloc_memory((void**)&d_srf_bin_buffer_, max_srf_size * 2, MEM_TYPE_DEVICE);
     pim_manager_->alloc_memory((void**)&zero_buffer_, 32 * 2, MEM_TYPE_DEVICE);
-    clEnqueueFillBuffer(queue_, zero_buffer_, (void*)&zero, sizeof(int), 0, 32 * 2, 0, NULL, NULL);
+    clEnqueueFillBuffer(queue, zero_buffer_, (void*)&zero, sizeof(int), 0, 32 * 2, 0, NULL, NULL);
 
     /* PIM HW can generate only gemv output without reduction sum */
     /* so PimExecutor needs to maintain intermediate output buffer for gemv op */
@@ -220,9 +208,9 @@ int OclPimExecutor::execute_add(PimBo* output, PimBo* operand0, PimBo* operand1,
     exe_err = clSetKernelArg(kernel, 3, sizeof(unsigned int), (void*)&length);
     cl_ok(exe_err);
 
-    exe_err = clEnqueueNDRangeKernel(queue_, kernel, 1, NULL, &global_work_size, &local_work_size, 0, NULL, NULL);
+    exe_err = clEnqueueNDRangeKernel(queue, kernel, 1, NULL, &global_work_size, &local_work_size, 0, NULL, NULL);
     cl_ok(exe_err);
-    clFinish(queue_);
+    clFinish(queue);
     return ret;
 }
 }  // namespace executor

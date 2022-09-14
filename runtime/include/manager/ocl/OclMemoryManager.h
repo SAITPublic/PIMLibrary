@@ -42,7 +42,6 @@ class OclMemoryManager : public IPimMemoryManager
     int copy_memory_3d(const PimCopy3D* copy_params);
     int get_physical_id(void);
     int convert_data_layout(PimBo* dst, PimBo* src) { return -1; };
-
    private:
     std::vector<SimpleHeap<OclBlockAllocator>*> fragment_allocator_;
     int host_id_;
@@ -50,10 +49,6 @@ class OclMemoryManager : public IPimMemoryManager
     PimPrecision precision_;
     PimBlockInfo* pbi_;
 
-    cl_platform_id platform_;
-    cl_device_id device_id_;
-    cl_command_queue queue_;
-    cl_context context_;
     cl_uint num_gpu_devices_;
 };
 }  // namespace manager

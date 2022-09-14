@@ -49,9 +49,7 @@ class OclPimExecutor : public IPimExecutor
     int execute_sync(void* stream) { return -1; }
     int execute_dummy(void) { return -1; }
     void* createStream(void) { return nullptr; }
-
    private:
-    int init_cl_device(void);
     int check_cl_program_path(void);
     int build_cl_program_with_source(void);
     int save_cl_program_binary(void);
@@ -67,12 +65,7 @@ class OclPimExecutor : public IPimExecutor
     std::string cl_binary_path_;
     std::string cl_binary_;
 
-    cl_platform_id platform_;
-    cl_context context_;
     cl_program program_;
-    cl_device_id device_id_;
-    cl_command_queue queue_;
-
     cl_mem d_srf_bin_buffer_;
     cl_mem pim_gemv_tmp_buffer_;
     cl_mem zero_buffer_;
