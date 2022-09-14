@@ -79,6 +79,7 @@ class SimpleHeap
     };
 
     Allocator block_allocator_;
+    void* pim_base_;
 
     std::multimap<size_t, uintptr_t> free_list_;
     std::map<uintptr_t, std::map<uintptr_t, Fragment_T>> block_list_;
@@ -118,6 +119,8 @@ class SimpleHeap
     SimpleHeap& operator=(const SimpleHeap& rhs) = delete;
     SimpleHeap& operator=(SimpleHeap&& rhs) = delete;
 
+    void set_pim_base(void* pim_base) { pim_base_ = pim_base; }
+    void* get_pim_base() { return pim_base_; }
     void* alloc(size_t bytes, const int device_id)
     {
         size_t aligned_bytes = get_aligned_bytes(bytes);
@@ -171,6 +174,8 @@ class SimpleHeap
                 DLOG(ERROR) << "device id for allocating PIM memory is invalid ";
             }
             void* ptr = block_allocator_.alloc(aligned_bytes, size, device_id);
+            set_pim_base(block_allocator_.get_pim_base());
+
             base = reinterpret_cast<uintptr_t>(ptr);
             if (ptr == nullptr) return ptr;
         }

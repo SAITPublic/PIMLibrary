@@ -11,6 +11,7 @@
 #ifndef _OCL_BLOCK_ALLOCATOR_H_
 #define _OCL_BLOCK_ALLOCATOR_H_
 
+#include "CL/cl.h"
 #include "manager/PimInfo.h"
 #include "pim_data_types.h"
 
@@ -31,17 +32,15 @@ class OclBlockAllocator
 
    public:
     explicit OclBlockAllocator(void) {}
-    void* alloc(size_t request_size, size_t& allocated_size, int host_id) const;
-    void free(void* ptr, size_t length) const;
-    uint64_t allocate_pim_block(size_t request_size, int host_id) const;
+    void* alloc(size_t request_size, size_t& allocated_size, int host_id);
+    void free(void* ptr, size_t length);
+    uint64_t allocate_pim_block(size_t request_size, int host_id);
     size_t block_size(void) const { return block_size_; }
-
+    void* get_pim_base() { return (void*)base_address_memobject_; };
    private:
-#if EMULATOR
+    cl_mem base_address_memobject_;
+    void* base_host_address_;
     static const size_t block_size_ = 134217728;  // 128M Pim area
-#else
-    static const size_t block_size_ = 17179869184;  // 16GB Pim area
-#endif
 };
 
 }  // namespace manager

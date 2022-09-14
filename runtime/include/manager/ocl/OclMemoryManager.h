@@ -25,6 +25,14 @@ namespace runtime
 {
 namespace manager
 {
+typedef struct __OclBufferObject {
+    // stores the host mapped address for the opencl buffer alloc call.
+    uint64_t host_addr;
+    // stores the sub buffer allocated in the host mapped opencl PIM space from host mapped buff addr.
+    cl_mem dev_addr;
+    size_t size;
+} OclBufferObj;
+
 class OclMemoryManager : public IPimMemoryManager
 {
    public:

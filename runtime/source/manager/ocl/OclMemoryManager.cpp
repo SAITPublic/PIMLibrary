@@ -14,16 +14,15 @@
 #include <stdlib.h>
 #include <string.h>
 #include <iostream>
+#include "manager/HostInfo.h"
 #include "utility/assert_cl.h"
 #include "utility/pim_util.h"
-
-#define cl(...) cl_assert((cl##__VA_ARGS__), __FILE__, __LINE__, true);
-#define cl_ok(err) cl_assert(err, __FILE__, __LINE__, true);
 
 /*
 TODO: currently we are using default device id (0) for compilation purposes.
 we need to figure out how to make use of cl_device_id struct for physical id.
 */
+extern uint64_t g_pim_base_addr[MAX_NUM_GPUS];
 
 namespace pim
 {
@@ -95,13 +94,28 @@ int OclMemoryManager::alloc_memory(void** ptr, size_t size, PimMemType mem_type)
     } else if (mem_type == MEM_TYPE_HOST) {
         *ptr = (void*)malloc(size);
     } else if (mem_type == MEM_TYPE_PIM) {
-#if 0
-        *ptr = fragment_allocator_[get_physical_id()]->alloc(size, get_physical_id());
-        cl_mem pim_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR, size, *ptr, &err);
+        // it uses fragment allocator to :
+        // 1. either allocates a pim block of block size if pim_alloc_done is false and returns the base address as the
+        // requested buffer address.
+        // 2. else return a virtual address of the buffer in the above allocated region which has to be then allocted as
+        // Subbuffer of above buffer in opencl.
+        // Note: get_cl_mem_obj return a base buffer in device address space and fragment allocator returns host mapped
+        // address.
+        void* local_buffer = fragment_allocator_[get_physical_id()]->alloc(size, get_physical_id());
+
+        // create sub buffer object in host mapped device addres space.
+        cl_mem base_buffer = (cl_mem)fragment_allocator_[0]->get_pim_base();
+        cl_buffer_region sub_buffer_region = {(uint64_t)local_buffer - g_pim_base_addr[get_physical_id()], size};
+        cl_mem sub_buffer = clCreateSubBuffer(base_buffer, CL_MEM_READ_WRITE, CL_BUFFER_CREATE_TYPE_REGION,
+                                              (void*)&sub_buffer_region, &err);
         cl_ok(err);
-        *ptr = (void*)pim_buffer;
-#else
-#endif
+
+        OclBufferObj* buffer = new OclBufferObj;
+        buffer->host_addr = (uint64_t)local_buffer;
+        buffer->dev_addr = sub_buffer;
+        buffer->size = size;
+
+        *ptr = (void*)buffer;
     }
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
@@ -124,13 +138,29 @@ int OclMemoryManager::alloc_memory(PimBo* pim_bo)
         */
         pim_bo->data = (void*)malloc(pim_bo->size);
     } else if (pim_bo->mem_type == MEM_TYPE_PIM) {
-#if 0
-        pim_bo->data = fragment_allocator_[get_physical_id()]->alloc(pim_bo->size, get_physical_id());
-        cl_mem pim_buffer =
-            clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR, pim_bo->size, pim_bo->data, &err);
+        // it uses fragment allocator to :
+        // 1. either allocates a pim block of block size if pim_alloc_done is false and returns the base address as the
+        // requested buffer address.
+        // 2. else return a virtual address of the buffer in the above allocated region which has to be then allocted as
+        // Subbuffer of above buffer in opencl.
+        // Note: get_cl_mem_obj return a base buffer in device address space and fragment allocator returns host mapped
+        // address.
+        void* local_buffer = fragment_allocator_[get_physical_id()]->alloc(pim_bo->size, get_physical_id());
+
+        // create sub buffer object in host mapped device addres space.
+        cl_mem base_buffer = (cl_mem)fragment_allocator_[0]->get_pim_base();
+        cl_buffer_region sub_buffer_region = {(uint64_t)local_buffer - g_pim_base_addr[get_physical_id()],
+                                              pim_bo->size};
+        cl_mem sub_buffer = clCreateSubBuffer(base_buffer, CL_MEM_READ_WRITE, CL_BUFFER_CREATE_TYPE_REGION,
+                                              (void*)&sub_buffer_region, &err);
         cl_ok(err);
-        pim_bo->data = (void*)pim_buffer;
-#endif
+
+        OclBufferObj* buffer = new OclBufferObj;
+        buffer->host_addr = (uint64_t)local_buffer;
+        buffer->dev_addr = sub_buffer;
+        buffer->size = pim_bo->size;
+
+        pim_bo->data = (void*)buffer;
     }
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
@@ -149,9 +179,14 @@ int OclMemoryManager::free_memory(void* ptr, PimMemType mem_type)
     if (mem_type == MEM_TYPE_HOST) {
         free(ptr);
     } else if (mem_type == MEM_TYPE_PIM) {
-#if 0
-        return fragment_allocator_[get_physical_id()]->free(ptr);
-#endif
+        OclBufferObj* buffer = (OclBufferObj*)ptr;
+
+        fragment_allocator_[get_physical_id()]->free((void*)buffer->host_addr);
+        cl_mem cl_buffer_obj = (cl_mem)buffer->dev_addr;
+
+        clReleaseMemObject(cl_buffer_obj);
+        free(buffer);
+        ptr = nullptr;
     }
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
@@ -171,9 +206,14 @@ int OclMemoryManager::free_memory(PimBo* pim_bo)
     } else if (pim_bo->mem_type == MEM_TYPE_HOST) {
         free(pim_bo->data);
     } else if (pim_bo->mem_type == MEM_TYPE_PIM) {
-#if 0
-        return fragment_allocator_[get_physical_id()]->free(pim_bo->data);
-#endif
+        OclBufferObj* buffer = (OclBufferObj*)pim_bo->data;
+
+        fragment_allocator_[get_physical_id()]->free((void*)buffer->host_addr);
+        cl_mem cl_buffer_obj = (cl_mem)buffer->dev_addr;
+
+        clReleaseMemObject(cl_buffer_obj);
+        free(buffer);
+        pim_bo->data = nullptr;
     }
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;

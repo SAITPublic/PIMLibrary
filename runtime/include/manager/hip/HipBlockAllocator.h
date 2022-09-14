@@ -35,7 +35,7 @@ class HipBlockAllocator
     void free(void* ptr, size_t length) const;
     uint64_t allocate_pim_block(size_t request_size, int host_id) const;
     size_t block_size(void) const { return block_size_; }
-
+    void* get_pim_base() { return nullptr; }
    private:
 #if EMULATOR
     static const size_t block_size_ = 536870912;  // 512M Pim area
