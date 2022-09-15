@@ -91,6 +91,7 @@ typedef struct __PimBufferObject {
     PimBShape bshape_r;
     PimPrecision precision;
     size_t size;
+    size_t size_r;
     void *data;
     bool use_user_ptr;
 } PimBo;

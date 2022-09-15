@@ -365,7 +365,7 @@ PimBo* PimRuntime::get_preloaded_pim_gemm_weight(PimBo* dev_wei, bool save_for_r
             DLOG(ERROR) << "[END] " << __FUNCTION__ << " called";
             return nullptr;
         }
-        uint32_t w_size = dev_wei->size;
+        uint32_t w_size = dev_wei->size_r;
         host_weight = PimCreateBo(bshape->n, bshape->c, bshape->h, bshape->w, PIM_FP16, MEM_TYPE_HOST);
         host_weight_t = PimCreateBo(bshape->n, bshape->c, bshape->h, bshape->w, PIM_FP16, MEM_TYPE_HOST);
         hipMemcpy(host_weight_t->data, dev_wei->data, w_size, hipMemcpyDeviceToHost);

@@ -88,6 +88,7 @@ size_t get_aligned_size(PimDesc* pim_desc, PimMemFlag mem_flag, PimBo* pim_bo)
 void set_pimbo(PimGemmDesc* pim_gemm_desc, PimMemType mem_type, PimMemFlag mem_flag, PimBo* pim_bo)
 {
     size_t size = 0;
+    size_t size_r = 0;
 
     PimBShape* bshape = nullptr;
     PimBShape* bshape_r = nullptr;
@@ -113,11 +114,15 @@ void set_pimbo(PimGemmDesc* pim_gemm_desc, PimMemType mem_type, PimMemFlag mem_f
             printf("fail to get aligned buffer size");
             return;
     }
-
+    size_r = bshape_r->n * bshape_r->c * bshape_r->h * bshape_r->w;
     size = bshape->n * bshape->c * bshape->h * bshape->w;
-    if (pim_gemm_desc->precision == PIM_FP16) size *= 2;
+    if (pim_gemm_desc->precision == PIM_FP16) {
+        size *= 2;
+        size_r *= 2;
+    }
 
     pim_bo->size = size;
+    pim_bo->size_r = size_r;
     pim_bo->mem_type = mem_type;
     pim_bo->precision = pim_gemm_desc->precision;
     pim_bo->data_layout_type = PimDataLayoutType::RAW;
