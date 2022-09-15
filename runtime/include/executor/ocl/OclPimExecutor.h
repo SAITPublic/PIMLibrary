@@ -14,6 +14,7 @@
 #include <CL/cl.h>
 #include "emulator/PimEmulator.h"
 #include "executor/IPimExecutor.h"
+#include "executor/PimCrfBinGen.h"
 #include "manager/PimInfo.h"
 #include "manager/PimManager.h"
 #include "pim_data_types.h"
@@ -60,6 +61,7 @@ class OclPimExecutor : public IPimExecutor
     pim::runtime::manager::PimManager* pim_manager_;
     std::shared_ptr<pim::runtime::manager::PimDevice> pim_device_;
     PimPrecision precision_;
+    std::shared_ptr<PimCrfBinGen> pim_crf_generator_;
     PimBlockInfo* pbi_;
     int max_crf_size_;
     std::string cl_binary_path_;
@@ -69,6 +71,26 @@ class OclPimExecutor : public IPimExecutor
     cl_mem d_srf_bin_buffer_;
     cl_mem pim_gemv_tmp_buffer_;
     cl_mem zero_buffer_;
+
+#ifdef EMULATOR
+    PimMemTraceData* d_fmtd16_;
+    int* d_fmtd16_size_;
+    pim::runtime::emulator::PimEmulator* pim_emulator_;
+    PimMemTraceData* h_fmtd16_;
+    PimMemTraceData* h_fmtd32_;
+    PimMemTracer* d_emulator_trace_;
+    cl_mem cl_d_fmtd16_;
+    cl_mem cl_d_fmtd16_size_;
+    cl_mem cl_d_fmtd32_;
+    cl_mem cl_d_fmtd32_size_;
+    cl_mem cl_d_emulator_trace_;
+
+    size_t* h_fmtd16_size_;
+    size_t* h_fmtd32_size_;
+    int fmtd_size_per_ch_;
+    int max_block_size_;
+    int max_fmtd_size_;
+#endif
 };
 }  // namespace executor
 }  // namespace runtime

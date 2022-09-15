@@ -27,11 +27,16 @@ class PimEmulator
    public:
     PimEmulator();
     virtual ~PimEmulator(void) {}
-
     static PimEmulator* get_instance(void);
 
     int initialize(void);
     int deinitialize(void);
+    int set_rttype(PimRuntimeType rtType)
+    {
+        rt_type_ = rtType;
+        return 0;
+    }
+
     int convert_mem_trace_from_16B_to_32B(PimMemTraceData* fmtd32, int* fmtd32_size, PimMemTraceData* fmtd16,
                                           int fmtd16_size, PimOpType op_type);
     int execute_bn(PimBo* output, PimBo* pim_data, PimMemTraceData* fmtd32, int fmtd32_size, uint64_t pim_base_addr,
@@ -53,6 +58,8 @@ class PimEmulator
    private:
     PimBlockInfo fbi_;
     PimSimulator pim_sim_;
+
+    PimRuntimeType rt_type_;
 };
 
 } /* namespace emulator */

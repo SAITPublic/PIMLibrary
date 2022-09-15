@@ -50,6 +50,7 @@ class OclMemoryManager : public IPimMemoryManager
     int copy_memory_3d(const PimCopy3D* copy_params);
     int get_physical_id(void);
     int convert_data_layout(PimBo* dst, PimBo* src) { return -1; };
+    void* get_base_memobj() { return fragment_allocator_[0]->get_pim_base(); }
    private:
     std::vector<SimpleHeap<OclBlockAllocator>*> fragment_allocator_;
     int host_id_;

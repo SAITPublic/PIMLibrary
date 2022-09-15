@@ -21,7 +21,7 @@
 #include "utility/pim_debug.hpp"
 #include "utility/pim_util.h"
 
-#define IN_LENGTH 256
+#define IN_LENGTH 256 * 1024
 
 using namespace std;
 
@@ -43,7 +43,7 @@ void calculate_add(half_float::half* inp1, half_float::half* inp2, half_float::h
     }
 }
 
-bool gpu_add()
+bool pim_eltwise_add()
 {
     int ret = 0;
 
@@ -53,9 +53,9 @@ bool gpu_add()
     PimBo* host_opr2 = PimCreateBo(IN_LENGTH, 1, 1, 1, PIM_FP16, MEM_TYPE_HOST);
     PimBo* host_out = PimCreateBo(IN_LENGTH, 1, 1, 1, PIM_FP16, MEM_TYPE_HOST);
     PimBo* ref_out = PimCreateBo(IN_LENGTH, 1, 1, 1, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* device_opr1 = PimCreateBo(IN_LENGTH, 1, 1, 1, PIM_FP16, MEM_TYPE_DEVICE);
-    PimBo* device_opr2 = PimCreateBo(IN_LENGTH, 1, 1, 1, PIM_FP16, MEM_TYPE_DEVICE);
-    PimBo* device_output = PimCreateBo(IN_LENGTH, 1, 1, 1, PIM_FP16, MEM_TYPE_DEVICE);
+    PimBo* device_opr1 = PimCreateBo(IN_LENGTH, 1, 1, 1, PIM_FP16, MEM_TYPE_PIM);
+    PimBo* device_opr2 = PimCreateBo(IN_LENGTH, 1, 1, 1, PIM_FP16, MEM_TYPE_PIM);
+    PimBo* device_output = PimCreateBo(IN_LENGTH, 1, 1, 1, PIM_FP16, MEM_TYPE_PIM);
 
     fill_uniform_random_values<half_float::half>(host_opr1->data, IN_LENGTH, (half_float::half)0.0,
                                                  (half_float::half)0.5);
@@ -64,11 +64,11 @@ bool gpu_add()
 
     calculate_add((half_float::half*)host_opr1->data, (half_float::half*)host_opr2->data,
                   (half_float::half*)ref_out->data);
-    PimCopyMemory(device_opr1, host_opr1, HOST_TO_DEVICE);
-    PimCopyMemory(device_opr2, host_opr2, HOST_TO_DEVICE);
+    PimCopyMemory(device_opr1, host_opr1, HOST_TO_PIM);
+    PimCopyMemory(device_opr2, host_opr2, HOST_TO_PIM);
 
     PimExecuteAdd(device_output, device_opr1, device_opr2, nullptr, false);
-    PimCopyMemory(host_out, device_output, DEVICE_TO_HOST);
+    PimCopyMemory(host_out, device_output, PIM_TO_HOST);
     ret = compare_half_relative((half_float::half*)host_out->data, (half_float::half*)ref_out->data, IN_LENGTH);
     if (ret != 0) {
         return false;
@@ -76,4 +76,4 @@ bool gpu_add()
     return true;
 }
 
-TEST(UnitTest, gpuAdd) { EXPECT_TRUE(gpu_add()); }
+TEST(UnitTest, PimEltWiseAdd) { EXPECT_TRUE(pim_eltwise_add()); }
