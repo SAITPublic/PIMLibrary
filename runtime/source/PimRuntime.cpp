@@ -350,7 +350,7 @@ int PimRuntime::insert_preloaded_pim_weight(PimBo* dev_wei, PimBo* pim_wei)
     return ret;
 }
 
-PimBo* PimRuntime::get_preloaded_pim_gemm_weight(PimBo* dev_wei, bool cache_reordered)
+PimBo* PimRuntime::get_preloaded_pim_gemm_weight(PimBo* dev_wei, bool save_for_reuse)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     PimBo* pre_wei = find_preloaded_pim_weight(dev_wei);
@@ -375,7 +375,7 @@ PimBo* PimRuntime::get_preloaded_pim_gemm_weight(PimBo* dev_wei, bool cache_reor
         pre_wei = PimCreateBo(bshape->n, bshape->c, bshape->h, bshape->w, PIM_FP16, MEM_TYPE_PIM);
         pim_manager_->convert_data_layout(host_reordered_weight, host_weight);
         PimCopyMemory(pre_wei, host_reordered_weight, HOST_TO_PIM);
-        if (cache_reordered) {
+        if (save_for_reuse) {
             insert_preloaded_pim_weight(dev_wei, pre_wei);
         }
         PimDestroyBo(host_reordered_weight);
@@ -389,14 +389,13 @@ PimBo* PimRuntime::get_preloaded_pim_gemm_weight(PimBo* dev_wei, bool cache_reor
     return pre_wei;
 }
 
-PimBo* PimRuntime::generate_gemm_weight_from_buffer(PimBo* src,
-                                                    bool cache_reordered)
+PimBo* PimRuntime::generate_gemm_weight_from_buffer(PimBo* src, bool save_for_reuse)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
 
     PimBo* pre_weight = nullptr;
     if (src->data_layout_type == PimDataLayoutType::RAW) {
-        pre_weight = get_preloaded_pim_gemm_weight(src, cache_reordered);
+        pre_weight = get_preloaded_pim_gemm_weight(src, save_for_reuse);
     } else {
         DLOG(ERROR) << "GEMM weight generation for provided layout is not supported yet";
         DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
@@ -408,15 +407,13 @@ PimBo* PimRuntime::generate_gemm_weight_from_buffer(PimBo* src,
     if (pre_weight->mem_type == MEM_TYPE_PIM) {
         pim_reordered_buff = pre_weight;
     } else {
-        auto direction = pre_weight->mem_type == MEM_TYPE_HOST ? HOST_TO_PIM : DEVICE_TO_PIM;
-        pim_reordered_buff = PimCreateBo(pre_weight->bshape.n,
-                                         pre_weight->bshape.c,
-                                         pre_weight->bshape.h,
-                                         pre_weight->bshape.w,
-                                         pre_weight->precision,
-                                         MEM_TYPE_PIM);
+        const auto direction = pre_weight->mem_type == MEM_TYPE_HOST ? HOST_TO_PIM : DEVICE_TO_PIM;
+        pim_reordered_buff = PimCreateBo(pre_weight->bshape.n, pre_weight->bshape.c, pre_weight->bshape.h,
+                                         pre_weight->bshape.w, pre_weight->precision, MEM_TYPE_PIM);
         PimCopyMemory(pim_reordered_buff, pre_weight, direction);
-        if (pre_weight != src) { PimDestroyBo(pre_weight); }
+        if (pre_weight != src) {
+            PimDestroyBo(pre_weight);
+        }
     }
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";

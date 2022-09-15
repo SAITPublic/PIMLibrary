@@ -626,18 +626,17 @@ int PimExecuteDummy(void)
     return ret;
 }
 
-PimBo* PimGenerateWeightBuffer(PimBo* src,
-                               bool cache_reordered) {
+PimBo* PimConvertGemmWeight(PimBo* src, bool save_for_reuse)
+{
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     PIM_PROFILE_TICK(PimGetReorderedBuffer);
-    int ret = 0;
 
     if (pim_runtime == nullptr) {
         DLOG(ERROR) << "PimRuntime is not initialized";
         DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
         return nullptr;
     }
-    PimBo* dst = pim_runtime->generate_gemm_weight_from_buffer(src, cache_reordered);
+    PimBo* dst = pim_runtime->generate_gemm_weight_from_buffer(src, save_for_reuse);
     if (dst == nullptr) {
         DLOG(ERROR) << "Failed to reorder source buffer";
         DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
@@ -647,5 +646,4 @@ PimBo* PimGenerateWeightBuffer(PimBo* src,
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return dst;
-
 }

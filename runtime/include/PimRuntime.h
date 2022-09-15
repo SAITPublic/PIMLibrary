@@ -51,11 +51,10 @@ class PimRuntime
                    double epsilon, void* stream, bool block = false);
     int execute_sync(void* stream);
     int execute_dummy(void);
-    PimBo* generate_gemm_weight_from_buffer(PimBo* src,
-                                            bool cache_reordered = false);
+    PimBo* generate_gemm_weight_from_buffer(PimBo* src, bool save_for_reuse = false);
 
    private:
-    PimBo* get_preloaded_pim_gemm_weight(PimBo* dev_wei, bool cache_reordered = true);
+    PimBo* get_preloaded_pim_gemm_weight(PimBo* dev_wei, bool save_for_reuse = true);
     int insert_preloaded_pim_weight(PimBo* dev_wei, PimBo* pim_wei);
     PimBo* find_preloaded_pim_weight(PimBo* dev_wei);
     pim::runtime::manager::PimManager* pim_manager_;

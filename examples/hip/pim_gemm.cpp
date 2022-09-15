@@ -113,7 +113,10 @@ class PimGemmTest
     {
         auto* w_to_reorder = use_device_weight ? d_w : h_w;
         for (unsigned i = 0; i < niter; ++i) {
-            auto* reordered_pim_w = PimGenerateWeightBuffer(w_to_reorder);
+            auto* reordered_pim_w = PimConvertGemmWeight(w_to_reorder);
+            // Ignore return value here to avoid extra branches.
+            // Please check the success of the API call in logs.
+            // Results are verified further.
             (void)PimExecuteGemm(d_o, d_i, reordered_pim_w, d_b, act, nullptr, block);
             if (!block) PimSynchronize();
             PimDestroyBo(reordered_pim_w);
@@ -168,8 +171,8 @@ class PimGemmTestFixture : public ::testing::Test
         return pimGemmTest.validate();
     }
     int ExecuteTestExplicitReordering(unsigned n, unsigned c, unsigned h, unsigned in_w, unsigned out_w,
-                                      bool use_device_weight, bool has_bias = true,
-                    bool block = true, PimActFunc act = ACT_RELU)
+                                      bool use_device_weight, bool has_bias = true, bool block = true,
+                                      PimActFunc act = ACT_RELU)
     {
         PimGemmTest pimGemmTest = PimGemmTest(n, c, h, in_w, out_w, act, has_bias);
         pimGemmTest.prepare();
@@ -202,8 +205,14 @@ TEST_F(PimGemmTestFixture, pim_gemm_bias_relu_8x1x4096_8x4096x1024)
     EXPECT_TRUE(ExecuteTest(1, 8, 1, 4096, 1024) == 0);
 }
 
-TEST_F(PimGemmTestFixture, pim_gemm_bias_relu_1x1024_1024x4096_reordering_from_device) { EXPECT_TRUE(ExecuteTestExplicitReordering(1, 1, 1, 1024, 4096, true) == 0); }
-TEST_F(PimGemmTestFixture, pim_gemm_bias_relu_8x1024_1024x4096_reordering_from_device) { EXPECT_TRUE(ExecuteTestExplicitReordering(1, 1, 8, 1024, 4096, true) == 0); }
+TEST_F(PimGemmTestFixture, pim_gemm_bias_relu_1x1024_1024x4096_reordering_from_device)
+{
+    EXPECT_TRUE(ExecuteTestExplicitReordering(1, 1, 1, 1024, 4096, true) == 0);
+}
+TEST_F(PimGemmTestFixture, pim_gemm_bias_relu_8x1024_1024x4096_reordering_from_device)
+{
+    EXPECT_TRUE(ExecuteTestExplicitReordering(1, 1, 8, 1024, 4096, true) == 0);
+}
 TEST_F(PimGemmTestFixture, pim_gemm_bias_relu_4x1x1024_4x1024x4096_reordering_from_device)
 {
     EXPECT_TRUE(ExecuteTestExplicitReordering(1, 4, 1, 1024, 4096, true) == 0);
@@ -212,7 +221,10 @@ TEST_F(PimGemmTestFixture, pim_gemm_bias_relu_4x8x1024_4x1024x4096_reordering_fr
 {
     EXPECT_TRUE(ExecuteTestExplicitReordering(1, 4, 8, 1024, 4096, true) == 0);
 }
-TEST_F(PimGemmTestFixture, pim_gemm_bias_relu_64x1x256_64x256x64_reordering_from_device) { EXPECT_TRUE(ExecuteTest(1, 64, 1, 256, 64, true) == 0); }
+TEST_F(PimGemmTestFixture, pim_gemm_bias_relu_64x1x256_64x256x64_reordering_from_device)
+{
+    EXPECT_TRUE(ExecuteTest(1, 64, 1, 256, 64, true) == 0);
+}
 TEST_F(PimGemmTestFixture, pim_gemm_bias_relu_64x1x1024_64x1024x64_reordering_from_device)
 {
     EXPECT_TRUE(ExecuteTestExplicitReordering(1, 64, 1, 1024, 64, true) == 0);
@@ -226,8 +238,14 @@ TEST_F(PimGemmTestFixture, pim_gemm_bias_relu_8x1x4096_8x4096x1024_reordering_fr
     EXPECT_TRUE(ExecuteTestExplicitReordering(1, 8, 1, 4096, 1024, true) == 0);
 }
 
-TEST_F(PimGemmTestFixture, pim_gemm_bias_relu_1x1024_1024x4096_reordering_from_host) { EXPECT_TRUE(ExecuteTestExplicitReordering(1, 1, 1, 1024, 4096, false) == 0); }
-TEST_F(PimGemmTestFixture, pim_gemm_bias_relu_8x1024_1024x4096_reordering_from_host) { EXPECT_TRUE(ExecuteTestExplicitReordering(1, 1, 8, 1024, 4096, false) == 0); }
+TEST_F(PimGemmTestFixture, pim_gemm_bias_relu_1x1024_1024x4096_reordering_from_host)
+{
+    EXPECT_TRUE(ExecuteTestExplicitReordering(1, 1, 1, 1024, 4096, false) == 0);
+}
+TEST_F(PimGemmTestFixture, pim_gemm_bias_relu_8x1024_1024x4096_reordering_from_host)
+{
+    EXPECT_TRUE(ExecuteTestExplicitReordering(1, 1, 8, 1024, 4096, false) == 0);
+}
 TEST_F(PimGemmTestFixture, pim_gemm_bias_relu_4x1x1024_4x1024x4096_reordering_from_host)
 {
     EXPECT_TRUE(ExecuteTestExplicitReordering(1, 4, 1, 1024, 4096, false) == 0);
@@ -236,7 +254,10 @@ TEST_F(PimGemmTestFixture, pim_gemm_bias_relu_4x8x1024_4x1024x4096_reordering_fr
 {
     EXPECT_TRUE(ExecuteTestExplicitReordering(1, 4, 8, 1024, 4096, false) == 0);
 }
-TEST_F(PimGemmTestFixture, pim_gemm_bias_relu_64x1x256_64x256x64_reordering_from_host) { EXPECT_TRUE(ExecuteTestExplicitReordering(1, 64, 1, 256, 64, false) == 0); }
+TEST_F(PimGemmTestFixture, pim_gemm_bias_relu_64x1x256_64x256x64_reordering_from_host)
+{
+    EXPECT_TRUE(ExecuteTestExplicitReordering(1, 64, 1, 256, 64, false) == 0);
+}
 TEST_F(PimGemmTestFixture, pim_gemm_bias_relu_64x1x1024_64x1024x64_reordering_from_host)
 {
     EXPECT_TRUE(ExecuteTestExplicitReordering(1, 64, 1, 1024, 64, false) == 0);

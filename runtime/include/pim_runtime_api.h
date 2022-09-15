@@ -383,17 +383,16 @@ __PIM_API__ int PimExecuteDummy(void);
 
 /**
  * @brief Returns source buffer reordered to desired type
- * 
+ *
  * @param src source address of buffer
  * @param result_type desired layout type for source buffer
- * @param cache_reordered enable/disable caching.
- *                        preferable for multiple usage of dst buffer.
- *                        default=false
+ * @param save_for_reuse enable/disable caching.
+ *                       preferable for multiple usage of dst buffer.
+ *                       default=false
  *
  * @return reordered buffer
  */
-__PIM_API__ PimBo* PimGenerateWeightBuffer(PimBo* src,
-                                           bool cache_reordered = false);
+__PIM_API__ PimBo* PimConvertGemmWeight(PimBo* src, bool save_for_reuse = false);
 
 /**@}*/
 
