@@ -96,6 +96,14 @@ uint64_t addr_gen_(uint32_t chan, uint32_t rank, uint32_t bankgroup, uint32_t ba
     addr &= mask;
 #endif
 
+#ifndef EMULATOR
+    // only for TARGET.
+    // currently for opencl, memory is not mapped for control registers, so this
+    //  address reduction is done for performance check on MI50 hardware.(32GB - > 1GB)
+    uint64_t mask = 0x3FFFFFFF;
+    addr &= mask;
+#endif
+
     return addr;
 }
 
@@ -181,26 +189,31 @@ void _B_CMD(int type, __global PimMemTracer* __restrict__ emulator_trace)
 
 #else  /* TARGET */
 
+// dummy command to send address via load/ read call in opencl.
 void _R_CMD(__global volatile uint8_t* __restrict__ addr)
 {
-    // asm volatile("global_load_dwordx4 v[84:87], %0, off, glc, slc" ::"v"(addr) : "v84", "v85", "v86", "v87");
-    ((__global int4*)addr)[0] = 0;
+    float4 read_data;
+    read_data = vload4(0, (__global float*)addr);
 }
 
+// dummy command to send address via store/ write call in opencl.
 void _W_CMD(__global volatile uint8_t* __restrict__ addr)
 {
-    // asm volatile("global_store_dwordx4 %0, v[80:83], off, glc, slc" ::"v"(addr) : "v80", "v81", "v82", "v83");
-    ((__global int4*)addr)[0] = 0;
+    float4 write_src;
+    vstore4(write_src, 0, (__global float*)addr);
 }
 
+// reading the data from src and writing it to addr using load and store calls.
 void _W_CMD_R(__global volatile uint8_t* __restrict__ addr, __global volatile uint8_t* __restrict__ src)
 {
-    ((__global int4*)addr)[0] = ((__global int4*)src)[0];
+    int4 write_data = vload4(0, (__global int*)src);
+    vstore4(write_data, 0, (__global int*)addr);
 }
 
 void _W_CMD_R_C(__global volatile uint8_t* __restrict__ addr, __constant volatile uint8_t* __restrict__ src)
 {
-    ((__global int4*)addr)[0] = ((__constant int4*)src)[0];
+    int4 write_data = vload4(0, (__constant int*)src);
+    vstore4(write_data, 0, (__global int*)addr);
 }
 
 void _B_CMD(int type)

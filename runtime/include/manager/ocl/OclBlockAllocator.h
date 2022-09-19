@@ -40,8 +40,10 @@ class OclBlockAllocator
    private:
     cl_mem base_address_memobject_;
     void* base_host_address_;
-    // static const size_t block_size_ = 2 * 134217728;  // 128M Pim area
-    static const size_t block_size_ = 1 * 1024 * 1024 * 1024;  // 128M Pim area
+    // static const size_t block_size_ = 134217728;  // 128M Pim area
+
+    // target mode space.
+    static const size_t block_size_ = 1073741824;  // 1GB PIM area
 };
 
 }  // namespace manager

@@ -142,6 +142,9 @@ int OclPimExecutor::build_cl_program_with_source(void)
 #ifdef EMULATOR
     options += " -DEMULATOR";
 #endif
+    // to disable the kernel opt while compliling binary so that it does not remove the dummy read calls meant for PIM.
+    options += "-cl-opt-disable";
+
     ret = clBuildProgram(program_, 1, &device_id, options.c_str(), NULL, NULL);
     if (ret != CL_SUCCESS) {
         size_t len;
@@ -353,14 +356,12 @@ int OclPimExecutor::execute_eltwise(PimOpType eltop, PimBo* output, PimBo* opera
     cl_ok(exec_err);
 
 #endif
-#ifdef EMULATOR
-    // ToDo : Execution disable for target mode due to memfault. Enable after fix
     exec_err =
         clEnqueueNDRangeKernel(queue, eltwise_kernel_, 1, NULL, &global_work_size, &local_work_size, 0, NULL, NULL);
     cl_ok(exec_err);
 
     clFinish(queue);
-#endif
+
 #ifdef EMULATOR
     h_fmtd16_size_[0] = 0;
     pim_manager_->copy_memory((void*)h_fmtd16_size_, (void*)cl_d_fmtd16_size_, sizeof(size_t), DEVICE_TO_HOST);
