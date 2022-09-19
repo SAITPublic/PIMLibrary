@@ -49,20 +49,18 @@ void PimCrfBinGen::create_pim_cmd(PimOpType op_type, int lc)
         std::vector<PimCommand> tmp_cmds{
             PimCommand(PimCmdType::FILL, PimOpdType::GRF_A, PimOpdType::EVEN_BANK),
             PimCommand(PimCmdType::ADD, PimOpdType::GRF_A, PimOpdType::GRF_A, PimOpdType::EVEN_BANK, 1),
-            PimCommand(PimCmdType::NOP, 23),
-            PimCommand(PimCmdType::FILL, PimOpdType::GRF_B, PimOpdType::ODD_BANK),
+            PimCommand(PimCmdType::NOP, 23), PimCommand(PimCmdType::FILL, PimOpdType::GRF_B, PimOpdType::ODD_BANK),
             PimCommand(PimCmdType::ADD, PimOpdType::GRF_B, PimOpdType::GRF_B, PimOpdType::ODD_BANK, 1),
-            PimCommand(PimCmdType::NOP, 23)/*,
+            PimCommand(PimCmdType::NOP, 23) /*,
             PimCommand(PimCmdType::NOP, 0)*/};
         cmds_.assign(tmp_cmds.begin(), tmp_cmds.end());
     } else if (op_type == OP_ELT_MUL) {
         std::vector<PimCommand> tmp_cmds{
             PimCommand(PimCmdType::FILL, PimOpdType::GRF_A, PimOpdType::EVEN_BANK),
             PimCommand(PimCmdType::MUL, PimOpdType::GRF_A, PimOpdType::GRF_A, PimOpdType::EVEN_BANK, 1),
-            PimCommand(PimCmdType::NOP, 23),
-            PimCommand(PimCmdType::FILL, PimOpdType::GRF_B, PimOpdType::ODD_BANK),
+            PimCommand(PimCmdType::NOP, 23), PimCommand(PimCmdType::FILL, PimOpdType::GRF_B, PimOpdType::ODD_BANK),
             PimCommand(PimCmdType::MUL, PimOpdType::GRF_B, PimOpdType::GRF_B, PimOpdType::ODD_BANK, 1),
-            PimCommand(PimCmdType::NOP, 23)/*,
+            PimCommand(PimCmdType::NOP, 23) /*,
             PimCommand(PimCmdType::NOP, 0)*/};
         cmds_.assign(tmp_cmds.begin(), tmp_cmds.end());
     } else if (op_type == OP_RELU) {
@@ -101,19 +99,17 @@ void PimCrfBinGen::create_pim_cmd(PimOpType op_type, int lc)
             cmds_.assign(tmp_cmds.begin(), tmp_cmds.end());
         }
     } else if (op_type == OP_BN) {
-        std::vector<PimCommand> tmp_cmds{PimCommand(PimCmdType::MAD, PimOpdType::GRF_A, PimOpdType::EVEN_BANK,
-                                                    PimOpdType::SRF_M, PimOpdType::SRF_A, 1, 0, 0, 0),
-                                         PimCommand(PimCmdType::NOP, 7),
-                                         PimCommand(PimCmdType::MAD, PimOpdType::GRF_A, PimOpdType::GRF_A,
-                                                    PimOpdType::SRF_M, PimOpdType::SRF_A, 1, 0, 0, 1),
-                                         PimCommand(PimCmdType::NOP, 7),
-                                         PimCommand(PimCmdType::MAD, PimOpdType::GRF_B, PimOpdType::ODD_BANK,
-                                                    PimOpdType::SRF_M, PimOpdType::SRF_A, 1, 0, 0, 0),
-                                         PimCommand(PimCmdType::NOP, 7),
-                                         PimCommand(PimCmdType::MAD, PimOpdType::GRF_B, PimOpdType::GRF_B,
-                                                    PimOpdType::SRF_M, PimOpdType::SRF_A, 1, 0, 0, 1),
-                                         PimCommand(PimCmdType::NOP, 23)
-                                         /*PimCommand(PimCmdType::NOP, 0)*/};
+        std::vector<PimCommand> tmp_cmds{
+            PimCommand(PimCmdType::MAD, PimOpdType::GRF_A, PimOpdType::EVEN_BANK, PimOpdType::SRF_M, PimOpdType::SRF_A,
+                       1, 0, 0, 0),
+            PimCommand(PimCmdType::NOP, 7), PimCommand(PimCmdType::MAD, PimOpdType::GRF_A, PimOpdType::GRF_A,
+                                                       PimOpdType::SRF_M, PimOpdType::SRF_A, 1, 0, 0, 1),
+            PimCommand(PimCmdType::NOP, 7), PimCommand(PimCmdType::MAD, PimOpdType::GRF_B, PimOpdType::ODD_BANK,
+                                                       PimOpdType::SRF_M, PimOpdType::SRF_A, 1, 0, 0, 0),
+            PimCommand(PimCmdType::NOP, 7), PimCommand(PimCmdType::MAD, PimOpdType::GRF_B, PimOpdType::GRF_B,
+                                                       PimOpdType::SRF_M, PimOpdType::SRF_A, 1, 0, 0, 1),
+            PimCommand(PimCmdType::NOP, 23)
+            /*PimCommand(PimCmdType::NOP, 0)*/};
         cmds_.assign(tmp_cmds.begin(), tmp_cmds.end());
     }
 
@@ -143,7 +139,6 @@ void PimCrfBinGen::change_to_binary(uint8_t* crf_binary, int* crf_size)
 }
 
 void PimCrfBinGen::set_gemv_tile_tree(bool is_gemv_tile_tree) { is_gemv_tile_tree_ = is_gemv_tile_tree; }
-
 int PimCrfBinGen::preprocess_srf(PimBo* beta, PimBo* gamma, PimBo* mean, PimBo* variance, double epsilon,
                                  uint8_t* srf_binary)
 {
@@ -218,7 +213,7 @@ void* PimCrfBinGen::make_crf_bin(PimOpType op_type, int data_size)
 
     pim_manager_->copy_memory((void*)d_crf, (void*)h_crf, max_crf_size_, HOST_TO_DEVICE);
     crf_lut_.insert(std::make_pair(std::make_pair(op_type, data_size), d_crf));
-    free(h_crf);
+    delete[] h_crf;
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return (void*)d_crf;

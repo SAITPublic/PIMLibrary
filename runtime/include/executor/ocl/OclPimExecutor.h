@@ -34,8 +34,8 @@ class OclPimExecutor : public IPimExecutor
     int initialize(void);
     int deinitialize(void);
     int execute_add(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream, bool block);
-    int execute_mul(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream, bool block) { return -1; }
-    int execute_relu(PimBo* output, PimBo* pim_data, void* stream, bool block) { return -1; }
+    int execute_mul(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream, bool block);
+    int execute_relu(PimBo* output, PimBo* pim_data, void* stream, bool block);
     int execute_copy(PimBo* output, PimBo* pim_data, void* stream, bool block) { return -1; }
     int execute_bn(PimBo* output, PimBo* pim_data, PimBo* beta, PimBo* gamma, PimBo* mean, PimBo* variance,
                    double epsilon, void* stream, bool block)
@@ -56,6 +56,7 @@ class OclPimExecutor : public IPimExecutor
     int save_cl_program_binary(void);
     int build_cl_program_with_binary(void);
     std::string load_cl_file(std::string filename);
+    int execute_eltwise(PimOpType eltop, PimBo* output, PimBo* operand0, PimBo* operand1, void* stream, bool block);
 
    private:
     pim::runtime::manager::PimManager* pim_manager_;
@@ -66,6 +67,7 @@ class OclPimExecutor : public IPimExecutor
     int max_crf_size_;
     std::string cl_binary_path_;
     std::string cl_binary_;
+    void* base_address_;
 
     cl_program program_;
     cl_mem d_srf_bin_buffer_;

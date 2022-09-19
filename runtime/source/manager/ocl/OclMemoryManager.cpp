@@ -46,6 +46,9 @@ OclMemoryManager::OclMemoryManager(std::shared_ptr<PimDevice> pim_device, PimPre
     context = clCreateContext(NULL, 1, &device_id, NULL, NULL, NULL);
     queue = clCreateCommandQueue(context, device_id, 0, NULL);
 
+    for (int device = 0; device < num_gpu_devices_; device++) {
+        fragment_allocator_.push_back(new SimpleHeap<OclBlockAllocator>);
+    }
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
 }
 
@@ -53,6 +56,11 @@ OclMemoryManager::~OclMemoryManager()
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     pim_device_.reset();
+    clReleaseCommandQueue(queue);
+    clReleaseContext(context);
+
+    for (auto it = fragment_allocator_.begin(); it != fragment_allocator_.end(); ++it) delete *it;
+    fragment_allocator_.clear();
 }
 
 int OclMemoryManager::initialize(void)
@@ -60,16 +68,13 @@ int OclMemoryManager::initialize(void)
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
 
-    for (int device = 0; device < num_gpu_devices_; device++) {
-        fragment_allocator_.push_back(new SimpleHeap<OclBlockAllocator>);
-    }
-
     return ret;
 }
 
 int OclMemoryManager::deinitialize(void)
 {
     int ret = 0;
+
     return ret;
 }
 

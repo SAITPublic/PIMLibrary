@@ -306,14 +306,9 @@ int PimEmulator::execute_elt_op(PimBo* output, PimBo* operand0, PimBo* operand1,
     pim_sim_.execute_kernel((void*)fmtd32, (size_t)fmtd32_size);
     pim_sim_.read_result(sim_output, output_addr - pim_base_addr, output->size);
 
-    if (output->mem_type != MEM_TYPE_HOST) {
-        if (output->mem_type == MEM_TYPE_PIM && rt_type_ == RT_TYPE_OPENCL) {
-            memcpy((void*)output_addr, sim_output, output->size);
-        } else {
-            memcpy(output->data, sim_output, output->size);
-        }
-    }
-    delete sim_output;
+    memcpy((void*)output_addr, sim_output, output->size);
+
+    delete[] sim_output;
 
     return ret;
 }
@@ -327,17 +322,39 @@ int PimEmulator::execute_relu(PimBo* output, PimBo* pim_data, PimMemTraceData* f
     uint16_t* sim_output = nullptr;
     num_element = output->size / sizeof(uint16_t);
     sim_output = new uint16_t[num_element];
-    uint64_t pim_data_addr = reinterpret_cast<uint64_t>(pim_data->data);
-    uint64_t output_addr = reinterpret_cast<uint64_t>(output->data);
 
-    pim_sim_.preload_data_with_addr(pim_data_addr - pim_base_addr, pim_data->data, pim_data->size);
+    uint64_t input_addr, output_addr;
+    void* input_data;
+
+    if (rt_type_ == RT_TYPE_OPENCL) {
+        if (pim_data->mem_type == MEM_TYPE_PIM) {
+            input_addr = ((manager::OclBufferObj*)pim_data->data)->host_addr;
+        } else {
+            input_addr = reinterpret_cast<uint64_t>(pim_data->data);
+        }
+        if (output->mem_type == MEM_TYPE_PIM) {
+            output_addr = ((manager::OclBufferObj*)output->data)->host_addr;
+        } else {
+            output_addr = reinterpret_cast<uint64_t>(output->data);
+        }
+    } else {
+        input_addr = reinterpret_cast<uint64_t>(pim_data->data);
+        output_addr = reinterpret_cast<uint64_t>(output->data);
+    }
+
+    if (rt_type_ == RT_TYPE_OPENCL) {
+        input_data = (void*)(((manager::OclBufferObj*)pim_data->data)->host_addr);
+    } else {
+        input_data = pim_data->data;
+    }
+
+    pim_sim_.preload_data_with_addr(input_addr - pim_base_addr, pim_data->data, pim_data->size);
     pim_sim_.execute_kernel((void*)fmtd32, (size_t)fmtd32_size);
     pim_sim_.read_result(sim_output, output_addr - pim_base_addr, output->size);
 
-    if (output->mem_type != MEM_TYPE_HOST)
-        hipMemcpy((void*)output->data, (void*)sim_output, output->size, hipMemcpyHostToDevice);
+    memcpy((void*)output_addr, sim_output, output->size);
 
-    delete sim_output;
+    delete[] sim_output;
 
     return ret;
 }

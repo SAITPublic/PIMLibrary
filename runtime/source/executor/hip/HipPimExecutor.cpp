@@ -37,7 +37,6 @@ HipPimExecutor::HipPimExecutor(pim::runtime::manager::PimManager* pim_manager, P
     pbi_ = pim_device_->get_pim_block_info();
 #ifdef EMULATOR
     pim_emulator_ = pim::runtime::emulator::PimEmulator::get_instance();
-    pim_emulator_->set_rttype(RT_TYPE_HIP);
 
     fmtd_size_per_ch_ = 100000;
     max_block_size_ = pbi_->num_pim_chan;
@@ -89,6 +88,8 @@ int HipPimExecutor::initialize(void)
 
 #ifdef EMULATOR
     int reserved_fmtd_size = max_fmtd_size_ * sizeof(PimMemTraceData);
+    pim_emulator_->set_rttype(RT_TYPE_HIP);
+
     hipMalloc((void**)&d_fmtd16_, reserved_fmtd_size);
     hipMalloc((void**)&d_fmtd16_size_, sizeof(int));
     hipHostMalloc((void**)&d_emulator_trace_, sizeof(PimMemTracer));

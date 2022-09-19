@@ -36,16 +36,16 @@ void fill_uniform_random_values(void* data, uint32_t count, T start, T end)
     for (int i = 0; i < count; i++) ((T*)data)[i] = dist(mt);
 }
 
-void calculate_add(half_float::half* inp1, half_float::half* inp2, half_float::half* output)
+void calculate_mul(half_float::half* inp1, half_float::half* inp2, half_float::half* output)
 {
     for (int i = 0; i < IN_LENGTH; i++) {
-        output[i] = inp1[i] + inp2[i];
+        output[i] = inp1[i] * inp2[i];
     }
 }
 
-bool pim_eltwise_add()
+bool pim_eltwise_mul_sync()
 {
-    int ret = 0;
+    bool ret = true;
 
     PimInitialize(RT_TYPE_OPENCL, PIM_FP16);
 
@@ -62,18 +62,30 @@ bool pim_eltwise_add()
     fill_uniform_random_values<half_float::half>(host_opr2->data, IN_LENGTH, (half_float::half)0.0,
                                                  (half_float::half)0.5);
 
-    calculate_add((half_float::half*)host_opr1->data, (half_float::half*)host_opr2->data,
+    calculate_mul((half_float::half*)host_opr1->data, (half_float::half*)host_opr2->data,
                   (half_float::half*)ref_out->data);
     PimCopyMemory(device_opr1, host_opr1, HOST_TO_PIM);
     PimCopyMemory(device_opr2, host_opr2, HOST_TO_PIM);
 
-    PimExecuteAdd(device_output, device_opr1, device_opr2, nullptr, false);
+    PimExecuteMul(device_output, device_opr1, device_opr2, nullptr, true);
     PimCopyMemory(host_out, device_output, PIM_TO_HOST);
-    ret = compare_half_relative((half_float::half*)host_out->data, (half_float::half*)ref_out->data, IN_LENGTH);
-    if (ret != 0) {
-        return false;
+    int compare_res =
+        compare_half_relative((half_float::half*)host_out->data, (half_float::half*)ref_out->data, IN_LENGTH);
+    if (compare_res != 0) {
+        ret = false;
     }
-    return true;
+
+    PimDestroyBo(host_opr1);
+    PimDestroyBo(host_opr2);
+    PimDestroyBo(host_out);
+    PimDestroyBo(ref_out);
+    PimDestroyBo(device_opr1);
+    PimDestroyBo(device_opr2);
+    PimDestroyBo(device_output);
+
+    PimDeinitialize();
+
+    return ret;
 }
 
-TEST(UnitTest, PimEltWiseAdd) { EXPECT_TRUE(pim_eltwise_add()); }
+TEST(OCLPimIntegrationTest, PimEltWiseMulSync) { EXPECT_TRUE(pim_eltwise_mul_sync()); }
