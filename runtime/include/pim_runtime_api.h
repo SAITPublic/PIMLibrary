@@ -163,7 +163,8 @@ __PIM_API__ int PimDestroyDesc(PimDesc* pim_desc);
  *
  * @return PimGemmDesc structure
  */
-__PIM_API__ PimGemmDesc* PimCreateGemmDesc(int n, int c, int inout_h, int in_w, int out_w, PimPrecision precision);
+__PIM_API__ PimGemmDesc* PimCreateGemmDesc(int n, int c, int inout_h, int in_w, int out_w, PimPrecision precision,
+                                           bool transposed = false);
 
 /**
  * @brief Destroy PIM GEMM descriptor

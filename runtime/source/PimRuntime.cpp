@@ -248,15 +248,41 @@ int PimRuntime::execute_gemm(PimBo* output, PimBo* input, PimBo* weight, PimBo* 
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
-
-    PimBo* pim_wei;
-    if (weight->data_layout_type == PimDataLayoutType::RAW) {
-        pim_wei = get_preloaded_pim_gemm_weight(weight);
+    if (kernel_type_ == CUSTOM_GPU) {
+        if (bias == nullptr) {
+            ret = pim_executor_->execute_custom_gemv(output, input, weight, false, stream, block);
+        } else {
+            bool relu = false;
+            if (act_func == PimActFunc::ACT_RELU) relu = true;
+            ret = pim_executor_->execute_custom_gemv_add(output, input, weight, bias, relu, stream, block);
+        }
+    } else if (kernel_type_ == PIM && !weight->transposed) {
+        PimBo* pim_wei;
+        if (weight->data_layout_type == PimDataLayoutType::RAW) {
+            pim_wei = get_preloaded_pim_gemm_weight(weight);
+        } else {
+            // Assume that user has provided correct layout
+            pim_wei = weight;
+        }
+        ret = pim_executor_->execute_gemm(output, input, pim_wei, bias, act_func, stream, block);
     } else {
-        // Assume that user has provided correct layout
-        pim_wei = weight;
+        if (is_pim_available(weight)) {
+            PimBo* pim_wei;
+            if (weight->data_layout_type == PimDataLayoutType::RAW) {
+                pim_wei = get_preloaded_pim_gemm_weight(weight);
+            } else {
+                // Assume that user has provided correct layout
+                pim_wei = weight;
+            }
+            ret = pim_executor_->execute_gemm(output, input, pim_wei, bias, act_func, stream, block);
+        } else if (bias == nullptr) {
+            ret = pim_executor_->execute_custom_gemv(output, input, weight, false, stream, block);
+        } else {
+            bool relu = false;
+            if (act_func == PimActFunc::ACT_RELU) relu = true;
+            ret = pim_executor_->execute_custom_gemv_add(output, input, weight, bias, relu, stream, block);
+        }
     }
-    ret = pim_executor_->execute_gemm(output, input, pim_wei, bias, act_func, stream, block);
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;

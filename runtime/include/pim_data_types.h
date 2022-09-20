@@ -94,6 +94,7 @@ typedef struct __PimBufferObject {
     size_t size_r;
     void *data;
     bool use_user_ptr;
+    bool transposed;
 } PimBo;
 
 typedef struct __PimGemmDescriptor {
@@ -106,6 +107,7 @@ typedef struct __PimGemmDescriptor {
     PimBShape out_bshape;
     PimBShape out_bshape_r;
     PimPrecision precision;
+    bool transposed;
 } PimGemmDesc;
 
 typedef struct __PimDescriptor {

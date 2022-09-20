@@ -370,7 +370,6 @@ int HipPimExecutor::execute_bn(PimBo* output, PimBo* pim_data, PimBo* beta, PimB
     return ret;
 }
 
-#if 0
 int HipPimExecutor::execute_custom_gemv(PimBo* output, PimBo* operand0, PimBo* operand1, bool is_gemv_add, void* stream,
                                         bool block)
 {
@@ -401,10 +400,17 @@ int HipPimExecutor::execute_custom_gemv(PimBo* output, PimBo* operand0, PimBo* o
     float alpha = 1.0f;
     float beta = is_gemv_add ? 1.0f : 0.0f;
 
-    m = operand1->bshape_r.w;
-    k = operand1->bshape_r.h;
-    n = 1;
-    rocblas_gemv_fp16_Axy(mat, vec, out, m, n, k, alpha, beta, (hipStream_t)stream);
+    if (operand1->transposed) {
+        m = operand1->bshape_r.w;
+        k = operand1->bshape_r.h;
+        n = 1;
+        rocblas_gemv_fp16_Axy(mat, vec, out, m, n, k, alpha, beta, (hipStream_t)stream);
+    } else {
+        m = 1;
+        k = operand1->bshape_r.h;
+        n = operand1->bshape_r.w;
+        rocblas_gemv_fp16_xAy(vec, mat, out, m, n, k, alpha, beta, (hipStream_t)stream);
+    }
 
     if (copy_to_device) {
         PimDestroyBo(operand1);
@@ -435,19 +441,25 @@ int HipPimExecutor::execute_custom_gemv_add(PimBo* output, PimBo* operand0, PimB
     float alpha = 1.0f;
     float beta = 0.0f;
 
-    m = operand1->bshape_r.h;
-    k = operand1->bshape_r.w;
-    n = 1;
-    if (m == 32317) {
-        rocblas_addmv_fp16_Axy_large(in, mat, vec, out, m, n, k, alpha, beta, relu, (hipStream_t)stream);
+    if (operand1->transposed) {
+        m = operand1->bshape_r.w;
+        k = operand1->bshape_r.h;
+        n = 1;
+        if (m == 32317) {
+            rocblas_addmv_fp16_Axy_large(in, mat, vec, out, m, n, k, alpha, beta, relu, (hipStream_t)stream);
+        } else {
+            rocblas_addmv_fp16_Axy(in, mat, vec, out, m, n, k, alpha, beta, relu, (hipStream_t)stream);
+        }
     } else {
-        rocblas_addmv_fp16_Axy(in, mat, vec, out, m, n, k, alpha, beta, relu, (hipStream_t)stream);
+        m = 1;
+        k = operand1->bshape_r.h;
+        n = operand1->bshape_r.w;
+        rocblas_addmv_fp16_xAy(in, vec, mat, out, m, n, k, alpha, beta, relu, (hipStream_t)stream);
     }
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
-#endif
 
 int HipPimExecutor::execute_aligned_gemm_tile_accum(PimBo* output, PimBo* input, PimBo* weight, PimBo* bias,
                                                     PimActFunc act_func, void* stream, bool block)

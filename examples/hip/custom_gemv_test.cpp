@@ -316,9 +316,6 @@ int custom_addmv_xAy(bool relu)
 
 int custom_gemv_Axy_api(bool block)
 {
-#if 1
-    return 0;
-#else
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_real_distribution<> dis(-1.0, 1.0);
@@ -371,13 +368,13 @@ int custom_gemv_Axy_api(bool block)
     PimInitialize(RT_TYPE_HIP, PIM_FP16);
 
     /* __PIM_API__ call : Create PIM Buffer Object */
-    PimDesc* pim_desc = PimCreateDesc(1, 1, in_size, out_size, PIM_FP16, OP_GEMV);
-    PimBo* device_input = PimCreateBo(pim_desc, MEM_TYPE_DEVICE, GEMV_INPUT, input0_d);
-    PimBo* device_weight = PimCreateBo(pim_desc, MEM_TYPE_DEVICE, GEMV_WEIGHT, input1_d);
-    PimBo* device_output = PimCreateBo(pim_desc, MEM_TYPE_DEVICE, GEMV_OUTPUT, output_d);
+    PimGemmDesc* pim_desc = PimCreateGemmDesc(1, 1, 1, in_size, out_size, PIM_FP16, true);
+    PimBo* device_input = PimCreateBo(pim_desc, MEM_TYPE_DEVICE, GEMM_INPUT, input0_d);
+    PimBo* device_weight = PimCreateBo(pim_desc, MEM_TYPE_DEVICE, GEMM_WEIGHT, input1_d);
+    PimBo* device_output = PimCreateBo(pim_desc, MEM_TYPE_DEVICE, GEMM_OUTPUT, output_d);
 
-    /* __PIM_API__ call : Execute GEMV */
-    PimExecuteGemv(device_output, device_input, device_weight, nullptr, block);
+    /* __PIM_API__ call : Execute GEMM */
+    PimExecuteGemm(device_output, device_input, device_weight, nullptr, PimActFunc::NONE, nullptr, block);
 
     hipMemcpy(output1_h, device_output->data, out_bytes, hipMemcpyDeviceToHost);
 
@@ -387,7 +384,7 @@ int custom_gemv_Axy_api(bool block)
     PimDestroyBo(device_input);
     PimDestroyBo(device_weight);
     PimDestroyBo(device_output);
-    PimDestroyDesc(pim_desc);
+    PimDestroyGemmDesc(pim_desc);
 
     /* __PIM_API__ call : Deinitialize PimRuntime */
     PimDeinitialize();
@@ -402,14 +399,10 @@ int custom_gemv_Axy_api(bool block)
     free(output1_h);
 
     return ret;
-#endif
 }
 
 int custom_addmv_Axy_api(bool relu)
 {
-#if 1
-    return 0;
-#else
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_real_distribution<> dis(-1.0, 1.0);
@@ -420,6 +413,7 @@ int custom_addmv_Axy_api(bool relu)
     int in_bytes = in_size * sizeof(half);
     int wei_bytes = in_size * out_size * sizeof(half);
     int out_bytes = out_size * sizeof(half);
+    PimActFunc act = PimActFunc::NONE;
 
     float alpha = 1.0f;
     float beta = 0.0f;
@@ -468,6 +462,7 @@ int custom_addmv_Axy_api(bool relu)
         for (int i = 0; i < out_size; i++) {
             output0_h[i] = output0_h[i] > 0.f ? output0_h[i] : 0.f;
         }
+        act = PimActFunc::ACT_RELU;
     }
 
     transposeCPU(input1_h, input1_h_t, in_size, out_size);
@@ -480,14 +475,14 @@ int custom_addmv_Axy_api(bool relu)
     PimInitialize(RT_TYPE_HIP, PIM_FP16);
 
     /* __PIM_API__ call : Create PIM Buffer Object */
-    PimDesc* pim_desc = PimCreateDesc(1, 1, out_size, in_size, PIM_FP16, OP_GEMV);
-    PimBo* device_vec = PimCreateBo(pim_desc, MEM_TYPE_DEVICE, GEMV_INPUT, input0_d);
-    PimBo* device_mat = PimCreateBo(pim_desc, MEM_TYPE_DEVICE, GEMV_WEIGHT, input1_d);
-    PimBo* device_in = PimCreateBo(pim_desc, MEM_TYPE_DEVICE, GEMV_INPUT, input2_d);
-    PimBo* device_out = PimCreateBo(pim_desc, MEM_TYPE_DEVICE, GEMV_OUTPUT, output_d);
+    PimGemmDesc* pim_desc = PimCreateGemmDesc(1, 1, 1, in_size, out_size, PIM_FP16, true);
+    PimBo* device_vec = PimCreateBo(pim_desc, MEM_TYPE_DEVICE, GEMM_INPUT, input0_d);
+    PimBo* device_mat = PimCreateBo(pim_desc, MEM_TYPE_DEVICE, GEMM_WEIGHT, input1_d);
+    PimBo* device_in = PimCreateBo(pim_desc, MEM_TYPE_DEVICE, GEMM_BIAS, input2_d);
+    PimBo* device_out = PimCreateBo(pim_desc, MEM_TYPE_DEVICE, GEMM_OUTPUT, output_d);
 
-    /* __PIM_API__ call : Execute GEMV ADD*/
-    PimExecuteGemvAdd(device_out, device_vec, device_mat, device_in, relu, nullptr, false);
+    /* __PIM_API__ call : Execute GEMM ADD*/
+    PimExecuteGemm(device_out, device_vec, device_mat, device_in, act, nullptr, false);
 
     hipMemcpy(output1_h, device_out->data, out_bytes, hipMemcpyDeviceToHost);
 
@@ -498,7 +493,7 @@ int custom_addmv_Axy_api(bool relu)
     PimDestroyBo(device_vec);
     PimDestroyBo(device_mat);
     PimDestroyBo(device_out);
-    PimDestroyDesc(pim_desc);
+    PimDestroyGemmDesc(pim_desc);
 
     /* __PIM_API__ call : Deinitialize PimRuntime */
     PimDeinitialize();
@@ -515,7 +510,6 @@ int custom_addmv_Axy_api(bool relu)
     free(output1_h);
 
     return ret;
-#endif
 }
 
 TEST(HIPIntegrationTest, CustomGemvAxyTest) { EXPECT_TRUE(custom_gemv_Axy(true) == 0); }

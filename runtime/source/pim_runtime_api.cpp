@@ -215,7 +215,7 @@ PimBo* PimCreateBo(PimGemmDesc* pim_gemm_desc, PimMemType mem_type, PimMemFlag m
     return pim_bo;
 }
 
-PimGemmDesc* PimCreateGemmDesc(int n, int c, int inout_h, int in_w, int out_w, PimPrecision precision)
+PimGemmDesc* PimCreateGemmDesc(int n, int c, int inout_h, int in_w, int out_w, PimPrecision precision, bool transposed)
 {
     DLOG(INFO) << "called";
 
@@ -227,6 +227,7 @@ PimGemmDesc* PimCreateGemmDesc(int n, int c, int inout_h, int in_w, int out_w, P
     PimGemmDesc* pim_gemm_desc = new PimGemmDesc;
 
     pim_gemm_desc->precision = precision;
+    pim_gemm_desc->transposed = transposed;
     pim_gemm_desc->in_bshape_r = {(uint32_t)n, (uint32_t)c, (uint32_t)inout_h, (uint32_t)in_w};
     pim_gemm_desc->wei_bshape_r = {(uint32_t)n, (uint32_t)c, (uint32_t)in_w, (uint32_t)out_w};
     pim_gemm_desc->bias_bshape_r = {(uint32_t)n, (uint32_t)c, (uint32_t)inout_h, (uint32_t)out_w};

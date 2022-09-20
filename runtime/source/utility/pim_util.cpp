@@ -121,6 +121,7 @@ void set_pimbo(PimGemmDesc* pim_gemm_desc, PimMemType mem_type, PimMemFlag mem_f
         size_r *= 2;
     }
 
+    pim_bo->transposed = pim_gemm_desc->transposed;
     pim_bo->size = size;
     pim_bo->size_r = size_r;
     pim_bo->mem_type = mem_type;
@@ -219,25 +220,10 @@ bool check_chwise_gemm_bo(PimBo* bo)
     return ret;
 }
 
-bool is_pim_available(PimBo* out, PimBo* op0, PimBo* op1, PimOpType op_type)
-{
-    bool ret = false;
-
-    switch (op_type) {
-        case OP_GEMV:
-            ret = is_pim_gemv_available(op1);
-            break;
-        default:
-            ret = false;
-    }
-
-    return ret;
-}
-
-bool is_pim_gemv_available(PimBo* bo)
+bool is_pim_available(PimBo* wei)
 {
     /* TODO: find optimal shape to execute PIM ops */
-    if (bo->bshape_r.n * bo->bshape_r.c * bo->bshape_r.w >= DIM_OUT_PIM)
+    if (wei->bshape_r.n * wei->bshape_r.c * wei->bshape_r.w >= DIM_OUT_PIM && !wei->transposed)
         return true;
     else
         return false;
