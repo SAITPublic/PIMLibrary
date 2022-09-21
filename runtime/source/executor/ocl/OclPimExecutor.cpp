@@ -57,10 +57,10 @@ OclPimExecutor::OclPimExecutor(pim::runtime::manager::PimManager* pim_manager, P
     pim_crf_generator_ = std::make_shared<PimCrfBinGen>(pim_manager_);
     pim_device_ = pim_manager_->get_pim_device();
     pbi_ = pim_device_->get_pim_block_info();
+    base_address_ = nullptr;
 
 #ifdef EMULATOR
-    pim_emulator_ = pim::runtime::emulator::PimEmulator::get_instance();
-
+    pim_emulator_ = std::make_shared<pim::runtime::emulator::PimEmulator>();
     fmtd_size_per_ch_ = 100000;
     max_block_size_ = pbi_->num_pim_chan;
     max_fmtd_size_ = fmtd_size_per_ch_ * max_block_size_;
@@ -72,6 +72,7 @@ OclPimExecutor::~OclPimExecutor(void)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called ";
     pim_device_.reset();
+
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called ";
 }
 
@@ -233,7 +234,7 @@ int OclPimExecutor::initialize(void)
     /* PIM HW can generate only gemv output without reduction sum */
     /* so PimExecutor needs to maintain intermediate output buffer for gemv op */
     pim_manager_->alloc_memory((void**)&pim_gemv_tmp_buffer_, 8 * 2 * 1024 * 1024, MEM_TYPE_PIM);
-    base_address_ = pim_manager_->get_pim_manager()->get_base_memobj();
+    if (!base_address_) base_address_ = pim_manager_->get_pim_manager()->get_base_memobj();
 
 #ifdef EMULATOR
     cl_int exec_err;
@@ -247,10 +248,15 @@ int OclPimExecutor::initialize(void)
     h_fmtd32_size_ = (size_t*)malloc(sizeof(size_t));
 
     cl_d_fmtd16_ = clCreateBuffer(context, CL_MEM_READ_WRITE, reserved_fmtd_size, nullptr, &exec_err);
+    clEnqueueFillBuffer(queue, cl_d_fmtd16_, (void*)&zero, sizeof(int), 0, reserved_fmtd_size, 0, NULL, NULL);
     cl_ok(exec_err);
+
     cl_d_fmtd16_size_ = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(size_t), nullptr, &exec_err);
+    clEnqueueFillBuffer(queue, cl_d_fmtd16_size_, (void*)&zero, sizeof(int), 0, sizeof(size_t), 0, NULL, NULL);
     cl_ok(exec_err);
+
     cl_d_emulator_trace_ = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(PimMemTracer), nullptr, &exec_err);
+    clEnqueueFillBuffer(queue, cl_d_emulator_trace_, (void*)&zero, sizeof(int), 0, sizeof(PimMemTracer), 0, NULL, NULL);
     cl_ok(exec_err);
 #endif
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
@@ -261,9 +267,9 @@ int OclPimExecutor::deinitialize(void)
 {
     DLOG(INFO) << " [START] " << __FUNCTION__ << " called";
     int ret = 0;
-    clReleaseMemObject(d_srf_bin_buffer_);
-    clReleaseMemObject(zero_buffer_);
-    pim_manager_->free_memory((void*)pim_gemv_tmp_buffer_, MEM_TYPE_PIM);
+    ret = pim_manager_->free_memory((void*)pim_gemv_tmp_buffer_, MEM_TYPE_PIM);
+    ret |= pim_manager_->free_memory((void*)d_srf_bin_buffer_, MEM_TYPE_DEVICE);
+    ret |= pim_manager_->free_memory((void*)zero_buffer_, MEM_TYPE_DEVICE);
 
 #ifdef EMULATOR
     clReleaseMemObject(cl_d_fmtd16_);
@@ -325,7 +331,6 @@ int OclPimExecutor::execute_eltwise(PimOpType eltop, PimBo* output, PimBo* opera
     cl_ok(exec_err);
 
 #ifdef EMULATOR
-    d_emulator_trace_->g_fmtd16 = d_fmtd16_;
     exec_err = clSetKernelArg(kernel, 7, sizeof(cl_mem), (void*)&cl_d_fmtd16_);
     cl_ok(exec_err);
 
@@ -445,6 +450,7 @@ int OclPimExecutor::execute_relu(PimBo* output, PimBo* pim_data, void* stream, b
     }
     h_fmtd16_size_[0] *= block_size;
     int h_fmtd32_size = 0;
+    pim_emulator_->set_rttype(RT_TYPE_OPENCL);
     pim_emulator_->convert_mem_trace_from_16B_to_32B(h_fmtd32_, &h_fmtd32_size, h_fmtd16_, (int)h_fmtd16_size_[0],
                                                      OP_RELU);
     pim_emulator_->execute_relu(output, pim_data, h_fmtd32_, h_fmtd32_size, g_pim_base_addr[0]);

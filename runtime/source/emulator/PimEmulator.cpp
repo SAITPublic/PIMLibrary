@@ -36,7 +36,7 @@ PimEmulator::PimEmulator(void)
 PimEmulator* PimEmulator::get_instance(void)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
-    static PimEmulator* instance_ = new PimEmulator();
+    PimEmulator* instance_ = new PimEmulator();
 
     return instance_;
 }

@@ -61,7 +61,7 @@ class HipPimExecutor : public IPimExecutor
    private:
     pim::runtime::manager::PimManager* pim_manager_;
     std::shared_ptr<pim::runtime::manager::PimDevice> pim_device_;
-    PimCrfBinGen* pim_crf_generator_;
+    std::shared_ptr<PimCrfBinGen> pim_crf_generator_;
     PimPrecision precision_;
     PimBlockInfo* pbi_;
     PimGemvType pim_gemv_type_;
@@ -74,7 +74,7 @@ class HipPimExecutor : public IPimExecutor
 #ifdef EMULATOR
     PimMemTraceData* d_fmtd16_;
     int* d_fmtd16_size_;
-    pim::runtime::emulator::PimEmulator* pim_emulator_;
+    std::shared_ptr<pim::runtime::emulator::PimEmulator> pim_emulator_;
     PimMemTraceData* h_fmtd16_;
     PimMemTraceData* h_fmtd32_;
     PimMemTracer* d_emulator_trace_;

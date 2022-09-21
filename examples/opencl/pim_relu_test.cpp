@@ -23,17 +23,6 @@
 using namespace std;
 using half_float::half;
 
-template <class T>
-void fill_uniform_random_values(void* data, uint32_t count, T start, T end)
-{
-    std::random_device rd;
-    std::mt19937 mt(rd());
-
-    std::uniform_real_distribution<double> dist(start, end);
-
-    for (int i = 0; i < count; i++) ((T*)data)[i] = dist(mt);
-}
-
 void calculate_relu(half_float::half* input, half_float::half* output, int input_len)
 {
     for (int i = 0; i < input_len; i++) {
@@ -57,10 +46,9 @@ bool pim_relu_sync(bool block, uint32_t input_len)
     PimBo* pim_input = PimCreateBo(pim_desc, MEM_TYPE_PIM);
     PimBo* device_output = PimCreateBo(pim_desc, MEM_TYPE_PIM);
 
-    fill_uniform_random_values<half_float::half>(host_input->data, input_len, (half_float::half)(-1 * 0.5),
-                                                 (half_float::half)0.5);
-
+    set_rand_half_data((half_float::half*)host_input->data, (half_float::half)0.5, input_len);
     calculate_relu((half_float::half*)host_input->data, (half_float::half*)golden_output->data, input_len);
+
     PimCopyMemory(pim_input, host_input, HOST_TO_PIM);
     PimExecuteRelu(device_output, pim_input, nullptr, true);
     PimCopyMemory(host_output, device_output, PIM_TO_HOST);

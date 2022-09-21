@@ -112,6 +112,20 @@ inline void addBiasCPU(half_float::half* output, half_float::half* bias, int siz
     }
 }
 
+inline void addCPU(half_float::half* inp1, half_float::half* inp2, half_float::half* output, int length)
+{
+    for (int i = 0; i < length; i++) {
+        output[i] = inp1[i] + inp2[i];
+    }
+}
+
+inline void mulCPU(half_float::half* inp1, half_float::half* inp2, half_float::half* output, int length)
+{
+    for (int i = 0; i < length; i++) {
+        output[i] = inp1[i] * inp2[i];
+    }
+}
+
 inline void reluCPU(half_float::half* data, int size)
 {
     for (int i = 0; i < size; i++) {

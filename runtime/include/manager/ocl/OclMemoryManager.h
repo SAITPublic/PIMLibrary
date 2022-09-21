@@ -53,7 +53,6 @@ class OclMemoryManager : public IPimMemoryManager
     void* get_base_memobj() { return fragment_allocator_[0]->get_pim_base(); }
    private:
     std::vector<SimpleHeap<OclBlockAllocator>*> fragment_allocator_;
-    int host_id_;
     std::shared_ptr<PimDevice> pim_device_;
     PimPrecision precision_;
     PimBlockInfo* pbi_;

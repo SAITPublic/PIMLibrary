@@ -32,11 +32,11 @@ HipPimExecutor::HipPimExecutor(pim::runtime::manager::PimManager* pim_manager, P
     : pim_manager_(pim_manager), precision_(precision)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called ";
-    pim_crf_generator_ = new PimCrfBinGen(pim_manager_);
+    pim_crf_generator_ = std::make_shared<PimCrfBinGen>(pim_manager_);
     pim_device_ = pim_manager_->get_pim_device();
     pbi_ = pim_device_->get_pim_block_info();
 #ifdef EMULATOR
-    pim_emulator_ = pim::runtime::emulator::PimEmulator::get_instance();
+    pim_emulator_ = std::make_shared<pim::runtime::emulator::PimEmulator>();
 
     fmtd_size_per_ch_ = 100000;
     max_block_size_ = pbi_->num_pim_chan;
@@ -54,12 +54,7 @@ HipPimExecutor::HipPimExecutor(pim::runtime::manager::PimManager* pim_manager, P
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
 }
 
-HipPimExecutor::~HipPimExecutor(void)
-{
-    delete pim_crf_generator_;
-    pim_device_.reset();
-}
-
+HipPimExecutor::~HipPimExecutor(void) { pim_device_.reset(); }
 int HipPimExecutor::initialize(void)
 {
     DLOG(INFO) << "[START]" << __FUNCTION__ << "Initializing ";

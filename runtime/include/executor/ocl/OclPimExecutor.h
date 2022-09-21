@@ -77,14 +77,12 @@ class OclPimExecutor : public IPimExecutor
 #ifdef EMULATOR
     PimMemTraceData* d_fmtd16_;
     int* d_fmtd16_size_;
-    pim::runtime::emulator::PimEmulator* pim_emulator_;
+    std::shared_ptr<pim::runtime::emulator::PimEmulator> pim_emulator_;
     PimMemTraceData* h_fmtd16_;
     PimMemTraceData* h_fmtd32_;
     PimMemTracer* d_emulator_trace_;
     cl_mem cl_d_fmtd16_;
     cl_mem cl_d_fmtd16_size_;
-    cl_mem cl_d_fmtd32_;
-    cl_mem cl_d_fmtd32_size_;
     cl_mem cl_d_emulator_trace_;
 
     size_t* h_fmtd16_size_;
