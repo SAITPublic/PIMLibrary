@@ -17,6 +17,7 @@
 #include "executor/PimCrfBinGen.h"
 #include "manager/PimInfo.h"
 #include "manager/PimManager.h"
+#include "manager/ocl/OclMemoryManager.h"
 #include "pim_data_types.h"
 
 namespace pim
@@ -43,10 +44,7 @@ class OclPimExecutor : public IPimExecutor
         return -1;
     }
     int execute_gemm(PimBo* output, PimBo* input, PimBo* weight, PimBo* bias, PimActFunc act_func, void* stream,
-                     bool block)
-    {
-        return -1;
-    }
+                     bool block);
     int execute_custom_gemv(PimBo* output, PimBo* operand0, PimBo* operand1, bool is_gemv_add, void* stream, bool block)
     {
         return -1;
@@ -66,23 +64,36 @@ class OclPimExecutor : public IPimExecutor
     int build_cl_program_with_binary(void);
     std::string load_cl_file(std::string filename);
     int execute_eltwise(PimOpType eltop, PimBo* output, PimBo* operand0, PimBo* operand1, void* stream, bool block);
+    int execute_aligned_gemm_tile_accum(PimBo* output, PimBo* input, PimBo* weight, PimBo* bias, PimActFunc act_func,
+                                        void* stream, bool block);
+    int execute_chwise_gemm_tile_accum(PimBo* output, PimBo* input, PimBo* weight, PimBo* bias, PimActFunc act_func,
+                                       void* stream, bool block);
 
    private:
+    cl_int exec_err_;
+
     pim::runtime::manager::PimManager* pim_manager_;
     std::shared_ptr<pim::runtime::manager::PimDevice> pim_device_;
     std::shared_ptr<PimCrfBinGen> pim_crf_generator_;
     PimBlockInfo* pbi_;
+    PimGemvType pim_gemv_type_;
+
     std::string cl_binary_path_;
     std::string cl_binary_;
     void* base_address_;
 
     cl_program program_;
     cl_mem d_srf_bin_buffer_;
-    cl_mem pim_gemv_tmp_buffer_;
+    manager::OclBufferObj* pim_gemv_tmp_buffer_;
     cl_mem zero_buffer_;
 
     cl_kernel eltwise_kernel_;
     cl_kernel relu_kernel_;
+    cl_kernel pim_aligned_gemm_bias_relu_8tile_fp16_;
+    cl_kernel pim_aligned_gemm_bias_relu_fp16_;
+    cl_kernel pim_chwise_gemm_bias_relu_32tile_fp16_;
+    cl_kernel pim_chwise_gemm_bias_relu_fp16_;
+
 #ifdef EMULATOR
     std::shared_ptr<pim::runtime::emulator::PimEmulator> pim_emulator_;
     PimMemTraceData* h_fmtd16_;

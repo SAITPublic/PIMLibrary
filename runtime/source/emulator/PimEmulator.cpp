@@ -16,14 +16,16 @@
 #include <iostream>
 #include "half.hpp"
 #include "hip/hip_runtime.h"
+#include "utility/assert_cl.h"
 #include "utility/pim_debug.hpp"
 #include "utility/pim_log.h"
 #include "utility/pim_util.h"
-
 namespace pim
 {
 namespace runtime
 {
+extern cl_command_queue queue;
+
 namespace emulator
 {
 PimEmulator::PimEmulator(void)
@@ -70,7 +72,6 @@ int PimEmulator::convert_mem_trace_from_16B_to_32B(PimMemTraceData* fmtd32, int*
     trace_converter.coalesce_trace(fmtd32, fmtd32_size, fmtd16, fmtd16_size);
 #ifdef DEBUG_PIM
     const char* op_str = get_pim_op_string(op_type);
-    const char* test_vector_path = TEST_VECTORS_DATA;
     std::string dump_data = TEST_VECTORS_DATA;
     dump_data.append("dump/");
     dump_data.append(op_str);
@@ -127,8 +128,15 @@ int PimEmulator::execute_gemm_bias_act(PimBo* output, PimBo* pim_data, PimMemTra
     uint16_t* sim_output = nullptr;
     int out_dim = output->bshape.n * output->bshape.c * output->bshape.h * output->bshape.w;
     sim_output = new uint16_t[out_dim];
-    uint64_t tmp_data_addr = reinterpret_cast<uint64_t>(temp_buf);
-    uint64_t pim_data_addr = reinterpret_cast<uint64_t>(pim_data->data);
+    uint64_t tmp_data_addr, pim_data_addr;
+
+    if (rt_type_ == RT_TYPE_OPENCL) {
+        tmp_data_addr = ((manager::OclBufferObj*)temp_buf)->host_addr;
+        pim_data_addr = ((manager::OclBufferObj*)pim_data->data)->host_addr;
+    } else {
+        tmp_data_addr = reinterpret_cast<uint64_t>(temp_buf);
+        pim_data_addr = reinterpret_cast<uint64_t>(pim_data->data);
+    }
 
     pim_sim_.preload_data_with_addr(pim_data_addr - pim_base_addr, pim_data->data, pim_data->size);
     pim_sim_.execute_kernel((void*)fmtd32, fmtd32_size);
@@ -141,8 +149,22 @@ int PimEmulator::execute_gemm_bias_act(PimBo* output, PimBo* pim_data, PimMemTra
                 offset += c * output->bshape.h * output->bshape.w;
                 offset_r = n * output->bshape_r.c * output->bshape_r.h * output->bshape_r.w;
                 offset_r += c * output->bshape_r.h * output->bshape_r.w;
-                hipMemcpy((half*)output->data + offset_r, (half*)sim_output + offset,
-                          pim_data->bshape_r.w * output->bshape_r.h * sizeof(half), hipMemcpyHostToDevice);
+                if (rt_type_ == RT_TYPE_HIP) {
+                    hipMemcpy((half*)output->data + offset_r, (half*)sim_output + offset,
+                              pim_data->bshape_r.w * output->bshape_r.h * sizeof(half), hipMemcpyHostToDevice);
+                } else if (rt_type_ == RT_TYPE_OPENCL) {
+                    cl_int err_ret;
+                    void* host_addr =
+                        clEnqueueMapBuffer(queue, (cl_mem)output->data, CL_TRUE, CL_MAP_READ | CL_MAP_WRITE, 0,
+                                           output->size, 0, NULL, NULL, &err_ret);
+                    cl_ok(err_ret);
+                    memcpy((half*)host_addr + offset_r, (half*)sim_output + offset,
+                           pim_data->bshape_r.w * output->bshape_r.h * sizeof(half));
+                    cl_ok(clEnqueueUnmapMemObject(queue, (cl_mem)output->data, host_addr, 0, NULL, NULL));
+                    clFinish(queue);
+                } else {
+                    DLOG(ERROR) << "Invalid Runtime" << __FUNCTION__;
+                }
             }
         }
     }
@@ -159,7 +181,7 @@ int PimEmulator::execute_gemm_bias_act(PimBo* output, PimBo* pim_data, PimMemTra
         }
     }
 
-    delete sim_output;
+    delete[] sim_output;
 
     return ret;
 }
@@ -348,7 +370,7 @@ int PimEmulator::execute_relu(PimBo* output, PimBo* pim_data, PimMemTraceData* f
         input_data = pim_data->data;
     }
 
-    pim_sim_.preload_data_with_addr(input_addr - pim_base_addr, pim_data->data, pim_data->size);
+    pim_sim_.preload_data_with_addr(input_addr - pim_base_addr, input_data, pim_data->size);
     pim_sim_.execute_kernel((void*)fmtd32, (size_t)fmtd32_size);
     pim_sim_.read_result(sim_output, output_addr - pim_base_addr, output->size);
 
