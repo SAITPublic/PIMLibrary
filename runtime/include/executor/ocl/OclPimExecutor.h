@@ -61,10 +61,8 @@ class OclPimExecutor : public IPimExecutor
    private:
     pim::runtime::manager::PimManager* pim_manager_;
     std::shared_ptr<pim::runtime::manager::PimDevice> pim_device_;
-    PimPrecision precision_;
     std::shared_ptr<PimCrfBinGen> pim_crf_generator_;
     PimBlockInfo* pbi_;
-    int max_crf_size_;
     std::string cl_binary_path_;
     std::string cl_binary_;
     void* base_address_;
@@ -74,9 +72,9 @@ class OclPimExecutor : public IPimExecutor
     cl_mem pim_gemv_tmp_buffer_;
     cl_mem zero_buffer_;
 
+    cl_kernel eltwise_kernel_;
+    cl_kernel relu_kernel_;
 #ifdef EMULATOR
-    PimMemTraceData* d_fmtd16_;
-    int* d_fmtd16_size_;
     std::shared_ptr<pim::runtime::emulator::PimEmulator> pim_emulator_;
     PimMemTraceData* h_fmtd16_;
     PimMemTraceData* h_fmtd32_;

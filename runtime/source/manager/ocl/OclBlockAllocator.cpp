@@ -54,7 +54,7 @@ void OclBlockAllocator::free(void* ptr, size_t length)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     cl_int cl_err;
-    clEnqueueUnmapMemObject(queue, base_address_memobject_, base_host_address_, NULL, NULL, NULL);
+    clEnqueueUnmapMemObject(queue, base_address_memobject_, base_host_address_, 0, NULL, NULL);
     cl_err = clReleaseMemObject(base_address_memobject_);
     cl_ok(cl_err);
 

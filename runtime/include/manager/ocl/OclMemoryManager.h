@@ -52,10 +52,8 @@ class OclMemoryManager : public IPimMemoryManager
     int convert_data_layout(PimBo* dst, PimBo* src) { return -1; };
     void* get_base_memobj() { return fragment_allocator_[0]->get_pim_base(); }
    private:
-    std::vector<SimpleHeap<OclBlockAllocator>*> fragment_allocator_;
+    std::vector<std::shared_ptr<SimpleHeap<OclBlockAllocator>>> fragment_allocator_;
     std::shared_ptr<PimDevice> pim_device_;
-    PimPrecision precision_;
-    PimBlockInfo* pbi_;
 
     cl_uint num_gpu_devices_;
 };

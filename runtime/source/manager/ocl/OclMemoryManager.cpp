@@ -36,7 +36,7 @@ cl_command_queue queue;
 namespace manager
 {
 OclMemoryManager::OclMemoryManager(std::shared_ptr<PimDevice> pim_device, PimPrecision precision)
-    : pim_device_(pim_device), precision_(precision)
+    : pim_device_(pim_device)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called ";
 
@@ -47,7 +47,7 @@ OclMemoryManager::OclMemoryManager(std::shared_ptr<PimDevice> pim_device, PimPre
     queue = clCreateCommandQueue(context, device_id, 0, NULL);
 
     for (int device = 0; device < num_gpu_devices_; device++) {
-        fragment_allocator_.push_back(new SimpleHeap<OclBlockAllocator>);
+        fragment_allocator_.push_back(std::make_shared<SimpleHeap<OclBlockAllocator>>());
     }
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
 }
@@ -59,7 +59,6 @@ OclMemoryManager::~OclMemoryManager()
     clReleaseCommandQueue(queue);
     clReleaseContext(context);
 
-    for (auto it = fragment_allocator_.begin(); it != fragment_allocator_.end(); ++it) delete *it;
     fragment_allocator_.clear();
 }
 

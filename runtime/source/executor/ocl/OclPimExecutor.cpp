@@ -34,7 +34,7 @@ extern cl_command_queue queue;
 namespace executor
 {
 OclPimExecutor::OclPimExecutor(pim::runtime::manager::PimManager* pim_manager, PimPrecision precision)
-    : pim_manager_(pim_manager), precision_(precision), max_crf_size_(128)
+    : pim_manager_(pim_manager)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called ";
 
@@ -59,6 +59,12 @@ OclPimExecutor::OclPimExecutor(pim::runtime::manager::PimManager* pim_manager, P
     pbi_ = pim_device_->get_pim_block_info();
     base_address_ = nullptr;
 
+    cl_int exec_err = 0;
+    eltwise_kernel_ = clCreateKernel(program_, "elt_op_pim", &exec_err);
+    cl_ok(exec_err);
+    relu_kernel_ = clCreateKernel(program_, "relu_pim_operation", &exec_err);
+    cl_ok(exec_err);
+
 #ifdef EMULATOR
     pim_emulator_ = std::make_shared<pim::runtime::emulator::PimEmulator>();
     fmtd_size_per_ch_ = 100000;
@@ -72,6 +78,8 @@ OclPimExecutor::~OclPimExecutor(void)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called ";
     pim_device_.reset();
+    clReleaseKernel(eltwise_kernel_);
+    clReleaseKernel(relu_kernel_);
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called ";
 }
@@ -306,47 +314,49 @@ int OclPimExecutor::execute_eltwise(PimOpType eltop, PimBo* output, PimBo* opera
     if (crf_bin == nullptr) {
         crf_bin = (uint8_t*)pim_crf_generator_->make_crf_bin(eltop, output_size);
     }
-    cl_kernel kernel = clCreateKernel(program_, "elt_op_pim", &exec_err);
+
+    exec_err = clSetKernelArg(eltwise_kernel_, 0, sizeof(cl_mem),
+                              (void*)&(((manager::OclBufferObj*)operand0->data)->dev_addr));
     cl_ok(exec_err);
 
-    exec_err = clSetKernelArg(kernel, 0, sizeof(cl_mem), (void*)&(((manager::OclBufferObj*)operand0->data)->dev_addr));
+    exec_err = clSetKernelArg(eltwise_kernel_, 1, sizeof(cl_mem),
+                              (void*)&(((manager::OclBufferObj*)operand1->data)->dev_addr));
     cl_ok(exec_err);
 
-    exec_err = clSetKernelArg(kernel, 1, sizeof(cl_mem), (void*)&(((manager::OclBufferObj*)operand1->data)->dev_addr));
+    exec_err =
+        clSetKernelArg(eltwise_kernel_, 2, sizeof(cl_mem), (void*)&(((manager::OclBufferObj*)output->data)->dev_addr));
     cl_ok(exec_err);
 
-    exec_err = clSetKernelArg(kernel, 2, sizeof(cl_mem), (void*)&(((manager::OclBufferObj*)output->data)->dev_addr));
+    exec_err = clSetKernelArg(eltwise_kernel_, 3, sizeof(cl_mem), (void*)&base_address_);
     cl_ok(exec_err);
 
-    exec_err = clSetKernelArg(kernel, 3, sizeof(cl_mem), (void*)&base_address_);
+    exec_err = clSetKernelArg(eltwise_kernel_, 4, sizeof(cl_int), (void*)&num_tile);
     cl_ok(exec_err);
 
-    exec_err = clSetKernelArg(kernel, 4, sizeof(cl_int), (void*)&num_tile);
+    exec_err = clSetKernelArg(eltwise_kernel_, 5, sizeof(cl_mem), (void*)&crf_bin);
     cl_ok(exec_err);
 
-    exec_err = clSetKernelArg(kernel, 5, sizeof(cl_mem), (void*)&crf_bin);
-    cl_ok(exec_err);
-
-    exec_err = clSetKernelArg(kernel, 6, sizeof(cl_int), (void*)&crf_size);
+    exec_err = clSetKernelArg(eltwise_kernel_, 6, sizeof(cl_int), (void*)&crf_size);
     cl_ok(exec_err);
 
 #ifdef EMULATOR
-    exec_err = clSetKernelArg(kernel, 7, sizeof(cl_mem), (void*)&cl_d_fmtd16_);
+    exec_err = clSetKernelArg(eltwise_kernel_, 7, sizeof(cl_mem), (void*)&cl_d_fmtd16_);
     cl_ok(exec_err);
 
-    exec_err = clSetKernelArg(kernel, 8, sizeof(cl_mem), (void*)&cl_d_fmtd16_size_);
+    exec_err = clSetKernelArg(eltwise_kernel_, 8, sizeof(cl_mem), (void*)&cl_d_fmtd16_size_);
     cl_ok(exec_err);
 
-    exec_err = clSetKernelArg(kernel, 9, sizeof(cl_int), (void*)&fmtd_size_per_ch_);
+    exec_err = clSetKernelArg(eltwise_kernel_, 9, sizeof(cl_int), (void*)&fmtd_size_per_ch_);
     cl_ok(exec_err);
 
-    exec_err = clSetKernelArg(kernel, 10, sizeof(cl_mem), (void*)&cl_d_emulator_trace_);
+    exec_err = clSetKernelArg(eltwise_kernel_, 10, sizeof(cl_mem), (void*)&cl_d_emulator_trace_);
     cl_ok(exec_err);
 
 #endif
 #ifdef EMULATOR
     // ToDo : Execution disable for target mode due to memfault. Enable after fix
-    exec_err = clEnqueueNDRangeKernel(queue, kernel, 1, NULL, &global_work_size, &local_work_size, 0, NULL, NULL);
+    exec_err =
+        clEnqueueNDRangeKernel(queue, eltwise_kernel_, 1, NULL, &global_work_size, &local_work_size, 0, NULL, NULL);
     cl_ok(exec_err);
 
     clFinish(queue);
@@ -396,44 +406,43 @@ int OclPimExecutor::execute_relu(PimBo* output, PimBo* pim_data, void* stream, b
     int align_size = (131072 << 1);
     int aligned_outsize = ((output->size + align_size - 1) / align_size);
 
-    cl_kernel kernel = clCreateKernel(program_, "relu_pim_operation", &exec_err);
+    exec_err =
+        clSetKernelArg(relu_kernel_, 0, sizeof(cl_mem), (void*)&(((manager::OclBufferObj*)pim_data->data)->dev_addr));
     cl_ok(exec_err);
 
-    exec_err = clSetKernelArg(kernel, 0, sizeof(cl_mem), (void*)&(((manager::OclBufferObj*)pim_data->data)->dev_addr));
+    exec_err =
+        clSetKernelArg(relu_kernel_, 1, sizeof(cl_mem), (void*)&(((manager::OclBufferObj*)output->data)->dev_addr));
     cl_ok(exec_err);
 
-    exec_err = clSetKernelArg(kernel, 1, sizeof(cl_mem), (void*)&(((manager::OclBufferObj*)output->data)->dev_addr));
+    exec_err = clSetKernelArg(relu_kernel_, 2, sizeof(cl_mem), (void*)&base_address_);
     cl_ok(exec_err);
 
-    exec_err = clSetKernelArg(kernel, 2, sizeof(cl_mem), (void*)&base_address_);
+    exec_err = clSetKernelArg(relu_kernel_, 3, sizeof(cl_int), (void*)&aligned_outsize);
     cl_ok(exec_err);
 
-    exec_err = clSetKernelArg(kernel, 3, sizeof(cl_int), (void*)&aligned_outsize);
+    exec_err = clSetKernelArg(relu_kernel_, 4, sizeof(cl_mem), (void*)&crf_bin);
     cl_ok(exec_err);
 
-    exec_err = clSetKernelArg(kernel, 4, sizeof(cl_mem), (void*)&crf_bin);
-    cl_ok(exec_err);
-
-    exec_err = clSetKernelArg(kernel, 5, sizeof(cl_int), (void*)&crf_size);
+    exec_err = clSetKernelArg(relu_kernel_, 5, sizeof(cl_int), (void*)&crf_size);
     cl_ok(exec_err);
 
 #ifdef EMULATOR
-    exec_err = clSetKernelArg(kernel, 6, sizeof(cl_mem), (void*)&cl_d_fmtd16_);
+    exec_err = clSetKernelArg(relu_kernel_, 6, sizeof(cl_mem), (void*)&cl_d_fmtd16_);
     cl_ok(exec_err);
 
-    exec_err = clSetKernelArg(kernel, 7, sizeof(cl_mem), (void*)&cl_d_fmtd16_size_);
+    exec_err = clSetKernelArg(relu_kernel_, 7, sizeof(cl_mem), (void*)&cl_d_fmtd16_size_);
     cl_ok(exec_err);
 
-    exec_err = clSetKernelArg(kernel, 8, sizeof(cl_int), (void*)&fmtd_size_per_ch_);
+    exec_err = clSetKernelArg(relu_kernel_, 8, sizeof(cl_int), (void*)&fmtd_size_per_ch_);
     cl_ok(exec_err);
 
-    exec_err = clSetKernelArg(kernel, 9, sizeof(cl_mem), (void*)&cl_d_emulator_trace_);
+    exec_err = clSetKernelArg(relu_kernel_, 9, sizeof(cl_mem), (void*)&cl_d_emulator_trace_);
     cl_ok(exec_err);
 #endif
 
 #ifdef EMULATOR
     // ToDo : Execution disable for target mode due to memfault. Enable after fix
-    exec_err = clEnqueueNDRangeKernel(queue, kernel, 1, NULL, &global_work_size, &local_work_size, 0, NULL, NULL);
+    exec_err = clEnqueueNDRangeKernel(queue, relu_kernel_, 1, NULL, &global_work_size, &local_work_size, 0, NULL, NULL);
     cl_ok(exec_err);
     clFinish(queue);
 #endif

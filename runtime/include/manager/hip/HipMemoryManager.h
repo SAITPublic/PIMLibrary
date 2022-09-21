@@ -52,7 +52,7 @@ class HipMemoryManager : public IPimMemoryManager
     int convert_data_layout_for_gemv_weight(PimBo* dst, PimBo* src, int data_offset, int ch_per_op);
 
    private:
-    std::vector<SimpleHeap<HipBlockAllocator>*> fragment_allocator_;
+    std::vector<std::shared_ptr<SimpleHeap<HipBlockAllocator>>> fragment_allocator_;
     int num_gpu_devices_;
     int host_id_;
     std::shared_ptr<PimDevice> pim_device_;

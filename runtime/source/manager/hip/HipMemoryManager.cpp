@@ -62,19 +62,7 @@ inline std::list<int> get_env(const char* key)
 HipMemoryManager::HipMemoryManager(std::shared_ptr<PimDevice> pim_device, PimPrecision precision)
     : pim_device_(pim_device), precision_(precision)
 {
-}
-
-HipMemoryManager::~HipMemoryManager(void)
-{
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
-    pim_device_.reset();
-}
-
-int HipMemoryManager::initialize(void)
-{
-    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
-    int ret = 0;
-
     pbi_ = pim_device_->get_pim_block_info();
 
     int max_topology = 32;
@@ -82,13 +70,12 @@ int HipMemoryManager::initialize(void)
     char path[256];
     uint32_t gpu_id;
     int host_cnt = 0;
-    int num_gpu_devices = 0;
     std::list<int> hip_visible_devices = get_env("HIP_VISIBLE_DEVICES");
-    hipGetDeviceCount(&num_gpu_devices);
+    hipGetDeviceCount(&num_gpu_devices_);
 
     // if hip_device is not set , then assume all devices are visible
     if (hip_visible_devices.empty()) {
-        for (int device = 0; device < num_gpu_devices; device++) {
+        for (int device = 0; device < num_gpu_devices_; device++) {
             hip_visible_devices.push_back(device);
         }
     }
@@ -122,20 +109,35 @@ int HipMemoryManager::initialize(void)
     }
 
     if (host_cnt == 0) {
-        ret = -1;
         DLOG(ERROR) << "AMDGPU device not found " << __FUNCTION__ << " called";
+        return;
     }
 
-    hipGetDeviceCount(&num_gpu_devices_);
     if (host_cnt != num_gpu_devices_) {
-        ret = -1;
         DLOG(ERROR) << "Number of GPU Ids and Device Count doesn't match" << __FUNCTION__ << " called";
+        return;
     }
 
     for (int device = 0; device < num_gpu_devices_; device++) {
-        fragment_allocator_.push_back(new SimpleHeap<HipBlockAllocator>);
+        fragment_allocator_.push_back(std::make_shared<SimpleHeap<HipBlockAllocator>>());
     }
     hipGetDevice(&host_id_);
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+}
+
+HipMemoryManager::~HipMemoryManager(void)
+{
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
+    pim_device_.reset();
+    fragment_allocator_.clear();
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+}
+
+int HipMemoryManager::initialize(void)
+{
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
+    int ret = 0;
+
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
