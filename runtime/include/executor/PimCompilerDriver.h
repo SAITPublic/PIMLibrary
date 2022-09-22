@@ -13,12 +13,14 @@
 #ifndef __PIMC_DRIVER_H__
 #define __PIMC_DRIVER_H__
 
+#include <pim_runtime_api.h>
+#include "manager/HostInfo.h"
+//#include <pim_compiler.h>
+
 #include <hip/hip_runtime.h>
 #include <hip/hiprtc.h>
-#include <pim_compiler.h>
-#include <pim_runtime_api.h>
+
 #include <vector>
-#include "manager/HostInfo.h"
 
 extern uint64_t g_pim_base_addr[MAX_NUM_GPUS];
 
@@ -31,6 +33,7 @@ namespace pimc_driver
 enum class DIMENSIONS { N, C, H, W };
 constexpr uint32_t compiler_env_value = PIM_COMPILER_ENABLE;
 
+#if PIM_COMPILER_ENABLE == 1
 template <class T>
 class Tensor
 {
@@ -49,7 +52,7 @@ class Tensor
     pimc::TensorDesc desc_;
     T *data_;
 };
-
+#endif
 class KernelArgs
 {
    public:
@@ -74,7 +77,6 @@ class KernelArgs
 
     virtual void **get_kconfig() = 0;
     hipFunction_t get_kernel() { return kernel_; }
-
    protected:
     size_t size_;
     std::string crf_binary_host_;
@@ -85,6 +87,7 @@ class KernelArgs
                        HIP_LAUNCH_PARAM_END};
 };
 
+#if PIM_COMPILER_ENABLE == 1
 template <class T>
 class GemvKArgs : public KernelArgs
 {
@@ -148,123 +151,7 @@ class GemvKArgs : public KernelArgs
 
     kArgs args_;
 };
-
-template <class T>
-class EltArgs : public KernelArgs
-{
-   public:
-    ~EltArgs() = default;
-    EltArgs(EltArgs &&) = default;
-    EltArgs(const EltArgs &) = default;
-    EltArgs &operator=(EltArgs &&) = default;
-    EltArgs &operator=(const EltArgs &) = default;
-
-    EltArgs() : KernelArgs(&args_, sizeof(args_)) { hipMalloc((void **)&crf_binary_device_, 128); }
-    EltArgs(Tensor<T> *in1, Tensor<T> *in2, Tensor<T> *out, std::string crf_binary, hipFunction_t kernel)
-        : KernelArgs(&args_, sizeof(args_), crf_binary, kernel),
-          input_vector0_(in1),
-          input_vector1_(in2),
-          output_vector_(out)
-    {
-    }
-
-    void set_input_vectors(Tensor<T> *input_vector0, Tensor<T> *input_vector1)
-    {
-        input_vector0_ = input_vector0;
-        input_vector1_ = input_vector1;
-    }
-
-    void set_output_vector(Tensor<T> *output_vector) { output_vector_ = output_vector; }
-    std::vector<Tensor<T> *> get_input_vectors()
-    {
-        std::vector<Tensor<T> *> ret{input_vector0_, input_vector1_};
-        return ret;
-    }
-
-    Tensor<T> *get_output_vector() { return output_vector_; }
-    void **get_kconfig()
-    {
-        args_.input0_ = (uint8_t *)input_vector0_->get_data();
-        args_.input1_ = (uint8_t *)input_vector1_->get_data();
-        args_.g_pim_base_addr_ = (uint8_t *)g_pim_base_addr[0];
-        args_.output_ = (uint8_t *)output_vector_->get_data();
-        args_.num_tile_ = (output_vector_->get_desc().get_dim(3)) / (131072);
-
-        hipMemcpy((void *)crf_binary_device_, (uint8_t *)(crf_binary_host_.c_str()), crf_binary_host_.size(),
-                  hipMemcpyHostToDevice);
-        args_.crf_binary_ = crf_binary_device_;
-        return reinterpret_cast<void **>(&config);
-    }
-
-   private:
-    Tensor<T> *input_vector0_;
-    Tensor<T> *input_vector1_;
-    Tensor<T> *output_vector_;
-
-    struct kArgs {
-        uint8_t *input0_;
-        uint8_t *input1_;
-        uint8_t *g_pim_base_addr_;
-        uint8_t *output_;
-        uint32_t num_tile_;
-        uint8_t *crf_binary_;
-    };
-
-    kArgs args_;
-};
-
-template <class T>
-class ReluArgs : public KernelArgs
-{
-   public:
-    ~ReluArgs() = default;
-    ReluArgs(ReluArgs &&) = default;
-    ReluArgs(const ReluArgs &) = default;
-    ReluArgs &operator=(ReluArgs &&) = default;
-    ReluArgs &operator=(const ReluArgs &) = default;
-
-    ReluArgs() : KernelArgs(&args_, sizeof(args_)) {}
-    ReluArgs(Tensor<T> *in, Tensor<T> *out, std::string crf_binary, hipFunction_t kernel)
-        : KernelArgs(&args_, sizeof(args_), crf_binary, kernel), input_vector_(in), output_vector_(out)
-    {
-    }
-
-    void set_input_vectors(Tensor<T> *input_vector) { input_vector_ = input_vector; }
-    void set_output_vector(Tensor<T> *output_vector) { output_vector_ = output_vector; }
-    void set_num_tile(uint32_t num_tile) { args_.num_tile_ = num_tile; }
-    std::vector<Tensor<T> *> get_input_vectors()
-    {
-        std::vector<Tensor<T> *> ret{input_vector_};
-        return ret;
-    }
-
-    Tensor<T> *get_output_vector() { return output_vector_; }
-    void **get_kconfig()
-    {
-        args_.input_ = (uint8_t *)input_vector_->get_data();
-        args_.g_pim_base_addr_ = (uint8_t *)g_pim_base_addr;
-        args_.output_ = (uint8_t *)output_vector_->get_data();
-
-        hipMemcpy((void *)crf_binary_device_, (uint8_t *)(crf_binary_host_.c_str()), crf_binary_host_.size(),
-                  hipMemcpyHostToDevice);
-        args_.crf_binary_ = crf_binary_device_;
-        return reinterpret_cast<void **>(&config);
-    }
-
-   private:
-    Tensor<T> *input_vector_;
-    Tensor<T> *output_vector_;
-
-    struct kArgs {
-        uint8_t *input_;
-        uint8_t *g_pim_base_addr_;
-        uint8_t *output_;
-        uint32_t num_tile_;
-        uint8_t *crf_binary_;
-    };
-
-    kArgs args_;
-};
+#endif
 /**
  * @brief Base class for Executors
  */
@@ -277,17 +164,13 @@ class Executor
      * @param pim_op object returned from compiler along with buffers from PIMLibrary
      */
     Executor() = default;
-    pimc::PimCCompiled *get_pim_op() { return pim_op_; }
-    void set_pim_op(pimc::PimCCompiled *pim_op) { pim_op_ = pim_op; }
-    virtual bool execute(PimOpType op_type) = 0;
+    virtual bool execute() = 0;
 
    private:
     Executor(Executor &&) = delete;
     Executor(const Executor &) = delete;
     Executor &operator=(Executor &&) = delete;
     Executor &operator=(const Executor &) = delete;
-
-    pimc::PimCCompiled *pim_op_;
 };
 
 /**
@@ -304,7 +187,7 @@ class HIPExecutor : public Executor
     HIPExecutor() { kargs_ = nullptr; };
     ~HIPExecutor() {}
     void set_kernel_args(KernelArgs *kargs) { kargs_ = kargs; }
-    bool execute(PimOpType op_type);
+    bool execute();
 
    private:
     HIPExecutor(HIPExecutor &&) = delete;
@@ -319,20 +202,13 @@ class HIPCodegen
 {
    public:
     HIPCodegen() = default;
-    bool execute(PimOpType op, pimc::PimDeviceConfig device_config);
-    pimc::PimCCompiled *get_pim_op() { return pim_op_; }
-    void set_input_desc(std::vector<pimc::TensorDesc> input_list) { input_list_ = input_list; }
-    void set_output_desc(std::vector<pimc::TensorDesc> output_list) { output_list_ = output_list; }
+    bool execute();
 
    private:
     HIPCodegen(HIPCodegen &&) = delete;
     HIPCodegen(const HIPCodegen &) = delete;
     HIPCodegen &operator=(HIPCodegen &&) = delete;
     HIPCodegen &operator=(const HIPCodegen &) = delete;
-
-    std::string get_pim_program(PimOpType op);
-    pimc::PimCCompiled *pim_op_;
-    std::vector<pimc::TensorDesc> input_list_, output_list_;
 };
 
 /**
@@ -348,16 +224,16 @@ class HIPCompiler
      */
     HIPCompiler() {}
     ~HIPCompiler() {}
-    void execute(pimc::PimCCompiled *pim_op);
+    void execute();
     hipFunction_t get_kernel_function() { return kernel_; }
-
    private:
     HIPCompiler(HIPCompiler &&) = delete;
     HIPCompiler(const HIPCompiler &) = delete;
     HIPCompiler &operator=(HIPCompiler &&) = delete;
     HIPCompiler &operator=(const HIPCompiler &) = delete;
 
-    hipModule_t module_;
+    // supress warnings for now
+    // hipModule_t module_;
     hipFunction_t kernel_;
 };
 
@@ -370,32 +246,14 @@ class PimCDriver
     PimCDriver &operator=(PimCDriver &&) = delete;
     PimCDriver &operator=(const PimCDriver &) = delete;
 
-    pimc::PimCCompiled *generate_code(PimOpType op, std::vector<pimc::TensorDesc> input_list,
-                                      std::vector<pimc::TensorDesc> output_list);
     hipFunction_t compile_code();
     bool execute_code(KernelArgs *kargs);
 
     // todo:: Pass HW information from user
-    pimc::PimDeviceConfig create_device_config()
-    {
-        // Define memory configuration and mapping
-        pimc::PimMemoryMap hbm2_memorymap(1, 14, 3, 2, 1, 1, 6, 1, 5);
-        pimc::PimDeviceInfo vega20_pim_device(8, 8, 8, 4, 128, 16384, 8, 16, 4, 1, 64, 16, 32, 4);
-
-        return pimc::PimDeviceConfig(hbm2_memorymap, vega20_pim_device);
-    }
-
-    pimc::TensorDesc create_tensor_desc(std::vector<uint32_t> dims)
-    {
-        uint32_t num_dims = dims.size();
-        return pimc::TensorDesc(num_dims, dims);
-    }
 
    private:
-    HIPCodegen codegen_;
     HIPCompiler compile_;
     HIPExecutor executor_;
-    PimOpType curr_op_type_;
 };
 }  // namespace pimc_driver
 }  // namespace runtime

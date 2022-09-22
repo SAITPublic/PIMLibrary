@@ -15,48 +15,10 @@ namespace runtime
 {
 namespace pimc_driver
 {
-std::string HIPCodegen::get_pim_program(PimOpType op)
+bool HIPCodegen::execute() { return false; }
+void HIPCompiler::execute()
 {
-    std::string pim_pnemonic_program;
-
-    pim_pnemonic_program = "PARK_IN\n SB_TO_HAB\n PROGRAM_CRF\n";
-    if (op == OP_ELT_ADD)
-        pim_pnemonic_program += "HAB_TO_HABPIM\n ADD_VECTOR\n HABPIM_TO_HAB\n";
-    else if (op == OP_ELT_MUL)
-        pim_pnemonic_program += "HAB_TO_HABPIM\n MUL_VECTOR\n HABPIM_TO_HAB\n";
-    else if (op == OP_RELU)
-        pim_pnemonic_program += "HAB_TO_HABPIM\n RELU\n HABPIM_TO_HAB\n";
-    else if (op == OP_GEMV)
-        pim_pnemonic_program += "GEMV\n";
-    else {
-        DLOG(INFO) << "Invalid operation" << __FUNCTION__;
-        return "";
-    }
-    pim_pnemonic_program += "HAB_TO_SB\n PARK_OUT";
-    return pim_pnemonic_program;
-}
-
-bool HIPCodegen::execute(PimOpType op, pimc::PimDeviceConfig device_config)
-{
-#ifdef RADEON7
-    auto target = pimc::CreatePimTarget(pimc::Runtime::PIMC_HIP, device_config, pimc::DeviceAttr::AMD_RADEON7);
-#else
-    auto target = pimc::CreatePimTarget(pimc::Runtime::PIMC_HIP, device_config, pimc::DeviceAttr::AMD_MI50);
-#endif
-    pimc::OpDesc op_desc(input_list_, output_list_);
-
-    // Define pim program for elementwise
-    std::string program = get_pim_program(op);
-
-    // Generate hip kernel and corresponding pim kernel
-    pim_op_ = pimc::BuildPimProgramFromSource(target, op_desc, program);
-
-    pimc::DeletePimTarget(target);
-    return true;
-}
-
-void HIPCompiler::execute(pimc::PimCCompiled *pim_op)
-{
+#if PIM_COMPILER_ENABLE == 1
     std::string hip_kernel = pim_op->get_gpu_kernel();
 
     if (const char *env_p = std::getenv("SAVE_GENERATED_KERNEL")) {
@@ -75,7 +37,7 @@ void HIPCompiler::execute(pimc::PimCCompiled *pim_op)
     const char *options[] = {compile_opts.c_str()};
 
     hiprtcProgram prog;
-    hiprtcCreateProgram(&prog, hip_kernel.c_str(), "genereated_pim_source.cu", 0, nullptr, nullptr);
+    hiprtcCreateProgram(&prog, hip_kernel.c_str(), "generated_pim_source.cu", 0, nullptr, nullptr);
     hiprtcResult compileResult{hiprtcCompileProgram(prog, 1, options)};
 
     size_t logSize;
@@ -109,10 +71,12 @@ void HIPCompiler::execute(pimc::PimCCompiled *pim_op)
     if (err != hipSuccess) {
         DLOG(INFO) << "Falied to Load function Err: " << err << std::endl;
     }
+#endif
 }
 
-bool HIPExecutor::execute(PimOpType op_type)
+bool HIPExecutor::execute()
 {
+#if PIM_COMPILER_ENABLE == 1
     unsigned blocks = 64;
     switch (op_type) {
         case OP_ELT_ADD:
@@ -140,33 +104,22 @@ bool HIPExecutor::execute(PimOpType op_type)
     }
     hipStreamSynchronize(nullptr);
     return true;
-}
-
-pimc::PimCCompiled *PimCDriver::generate_code(PimOpType op, std::vector<pimc::TensorDesc> input_list,
-                                              std::vector<pimc::TensorDesc> output_list)
-{
-    auto device_config = create_device_config();
-    curr_op_type_ = op;
-
-    codegen_.set_input_desc(input_list);
-    codegen_.set_output_desc(output_list);
-    codegen_.execute(op, device_config);
-
-    return codegen_.get_pim_op();
+#endif
+    return false;
 }
 
 hipFunction_t PimCDriver::compile_code()
 {
-    compile_.execute(codegen_.get_pim_op());
+    compile_.execute();
     return compile_.get_kernel_function();
 }
 
 bool PimCDriver::execute_code(KernelArgs *kargs)
 {
-    executor_.set_pim_op(codegen_.get_pim_op());
     executor_.set_kernel_args(kargs);
-    return executor_.execute(curr_op_type_);
+    return executor_.execute();
 }
+
 }  // namespace pimc_driver
 }  // namespace runtime
 }  // namespace pim
