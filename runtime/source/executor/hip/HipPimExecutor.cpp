@@ -129,68 +129,44 @@ int HipPimExecutor::execute_add(PimBo* output, PimBo* operand0, PimBo* operand1,
     DLOG(INFO) << "called";
     int ret = 0;
 
-    if (compiler_env_value == 1) {
-        pimc_driver::PimCDriver elt_op_execute;
+    int output_size = output->size;
 
-        std::vector<uint32_t> dims{output->bshape.n, output->bshape.c, output->bshape.h, output->bshape.w};
-        pimc_driver::Tensor<half_float::half> input0_t(elt_op_execute.create_tensor_desc(dims),
-                                                       (half_float::half*)operand0->data);
-        pimc_driver::Tensor<half_float::half> input1_t(elt_op_execute.create_tensor_desc(dims),
-                                                       (half_float::half*)operand1->data);
-        pimc_driver::Tensor<half_float::half> output_t(elt_op_execute.create_tensor_desc(dims),
-                                                       (half_float::half*)output->data);
-
-        std::vector<pimc::TensorDesc> inputs{input0_t.get_desc(), input1_t.get_desc()};
-        std::vector<pimc::TensorDesc> outputs{output_t.get_desc()};
-
-        auto pim_op = elt_op_execute.generate_code(OP_ELT_ADD, inputs, outputs);
-        auto kernel = elt_op_execute.compile_code();
-
-        pimc_driver::EltArgs<half_float::half> kargs(&input0_t, &input1_t, &output_t, pim_op->get_crf_binary(), kernel);
-
-        elt_op_execute.execute_code(&kargs);
-        if (block) hipStreamSynchronize(nullptr);
-    } else {
-        int output_size = output->size;
-
-        uint8_t* crf_bin = pim_crf_generator_->find_crf(OP_ELT_ADD, output_size);
-        int crf_size = 32;
-        if (crf_bin == nullptr) {
-            crf_bin = (uint8_t*)pim_crf_generator_->make_crf_bin(OP_ELT_ADD, output_size);
-        }
-
-        int align_size = (131072 << 1);
-        int num_tile = (output_size + align_size - 1) / align_size;
-
-        unsigned blocks = 64;
-        unsigned threads_per_block = 32;
-        int device_id;
-        hipGetDevice(&device_id);
-        hipLaunchKernelGGL(
-            elt_op_pim, dim3(blocks), dim3(threads_per_block), 0, (hipStream_t)stream, (uint8_t*)operand0->data,
-            (uint8_t*)operand1->data, (uint8_t*)(g_pim_base_addr[device_id]), (uint8_t*)output->data, num_tile,
-#ifdef EMULATOR
-            (PimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_, (PimMemTracer*)d_emulator_trace_,
-#endif
-            (uint8_t*)crf_bin, crf_size);
-#ifdef EMULATOR
-        hipStreamSynchronize((hipStream_t)stream);
-        hipMemcpy((void*)h_fmtd16_size_, (void*)d_fmtd16_size_, sizeof(int), hipMemcpyDeviceToHost);
-        hipMemcpy((void*)h_fmtd16_, (void*)d_fmtd16_, sizeof(PimMemTraceData) * max_fmtd_size_, hipMemcpyDeviceToHost);
-
-        for (size_t i = 1; i < blocks; i++) {
-            memcpy(&h_fmtd16_[i * h_fmtd16_size_[0]], &h_fmtd16_[i * fmtd_size_per_ch_],
-                   h_fmtd16_size_[0] * sizeof(PimMemTraceData));
-        }
-        h_fmtd16_size_[0] *= blocks;
-        pim_emulator_->convert_mem_trace_from_16B_to_32B(h_fmtd32_, h_fmtd32_size_, h_fmtd16_, h_fmtd16_size_[0],
-                                                         OP_ELT_ADD);
-        pim_emulator_->execute_elt_op(output, operand0, operand1, h_fmtd32_, h_fmtd32_size_[0],
-                                      g_pim_base_addr[device_id]);
-#else
-        if (block) hipStreamSynchronize((hipStream_t)stream);
-#endif
+    uint8_t* crf_bin = pim_crf_generator_->find_crf(OP_ELT_ADD, output_size);
+    int crf_size = 32;
+    if (crf_bin == nullptr) {
+        crf_bin = (uint8_t*)pim_crf_generator_->make_crf_bin(OP_ELT_ADD, output_size);
     }
+
+    int align_size = (131072 << 1);
+    int num_tile = (output_size + align_size - 1) / align_size;
+
+    unsigned blocks = 64;
+    unsigned threads_per_block = 32;
+    int device_id;
+    hipGetDevice(&device_id);
+    hipLaunchKernelGGL(
+        elt_op_pim, dim3(blocks), dim3(threads_per_block), 0, (hipStream_t)stream, (uint8_t*)operand0->data,
+        (uint8_t*)operand1->data, (uint8_t*)(g_pim_base_addr[device_id]), (uint8_t*)output->data, num_tile,
+#ifdef EMULATOR
+        (PimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_, (PimMemTracer*)d_emulator_trace_,
+#endif
+        (uint8_t*)crf_bin, crf_size);
+#ifdef EMULATOR
+    hipStreamSynchronize((hipStream_t)stream);
+    hipMemcpy((void*)h_fmtd16_size_, (void*)d_fmtd16_size_, sizeof(int), hipMemcpyDeviceToHost);
+    hipMemcpy((void*)h_fmtd16_, (void*)d_fmtd16_, sizeof(PimMemTraceData) * max_fmtd_size_, hipMemcpyDeviceToHost);
+
+    for (size_t i = 1; i < blocks; i++) {
+        memcpy(&h_fmtd16_[i * h_fmtd16_size_[0]], &h_fmtd16_[i * fmtd_size_per_ch_],
+               h_fmtd16_size_[0] * sizeof(PimMemTraceData));
+    }
+    h_fmtd16_size_[0] *= blocks;
+    pim_emulator_->convert_mem_trace_from_16B_to_32B(h_fmtd32_, h_fmtd32_size_, h_fmtd16_, h_fmtd16_size_[0],
+                                                     OP_ELT_ADD);
+    pim_emulator_->execute_elt_op(output, operand0, operand1, h_fmtd32_, h_fmtd32_size_[0], g_pim_base_addr[device_id]);
+#else
+    if (block) hipStreamSynchronize((hipStream_t)stream);
+#endif
     return ret;
 }
 
@@ -199,69 +175,45 @@ int HipPimExecutor::execute_mul(PimBo* output, PimBo* operand0, PimBo* operand1,
     DLOG(INFO) << "called";
     int ret = 0;
 
-    if (compiler_env_value == 1) {
-        pimc_driver::PimCDriver elt_op_execute;
+    int output_size = output->size;
 
-        std::vector<uint32_t> dims{output->bshape.n, output->bshape.c, output->bshape.h, output->bshape.w};
-        pimc_driver::Tensor<half_float::half> input0_t(elt_op_execute.create_tensor_desc(dims),
-                                                       (half_float::half*)operand0->data);
-        pimc_driver::Tensor<half_float::half> input1_t(elt_op_execute.create_tensor_desc(dims),
-                                                       (half_float::half*)operand1->data);
-        pimc_driver::Tensor<half_float::half> output_t(elt_op_execute.create_tensor_desc(dims),
-                                                       (half_float::half*)output->data);
-
-        std::vector<pimc::TensorDesc> inputs{input0_t.get_desc(), input1_t.get_desc()};
-        std::vector<pimc::TensorDesc> outputs{output_t.get_desc()};
-
-        auto pim_op = elt_op_execute.generate_code(OP_ELT_MUL, inputs, outputs);
-        auto kernel = elt_op_execute.compile_code();
-
-        pimc_driver::EltArgs<half_float::half> kargs(&input0_t, &input1_t, &output_t, pim_op->get_crf_binary(), kernel);
-
-        elt_op_execute.execute_code(&kargs);
-        if (block) hipStreamSynchronize(nullptr);
-    } else {
-        int output_size = output->size;
-
-        uint8_t* crf_bin = pim_crf_generator_->find_crf(OP_ELT_MUL, output->size);
-        int crf_size = 32;
-        if (crf_bin == nullptr) {
-            crf_bin = (uint8_t*)pim_crf_generator_->make_crf_bin(OP_ELT_MUL, output->size);
-        }
-
-        int align_size = (131072 << 1);
-        int num_tile = (output_size + align_size - 1) / align_size;
-
-        unsigned blocks = 64;
-        unsigned threads_per_block = 32;
-        int device_id;
-        hipGetDevice(&device_id);
-        hipLaunchKernelGGL(
-            elt_op_pim, dim3(blocks), dim3(threads_per_block), 0, (hipStream_t)stream, (uint8_t*)operand0->data,
-            (uint8_t*)operand1->data, (uint8_t*)(g_pim_base_addr[device_id]), (uint8_t*)output->data, num_tile,
-#ifdef EMULATOR
-            (PimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_, (PimMemTracer*)d_emulator_trace_,
-#endif
-            (uint8_t*)crf_bin, crf_size);
-
-#ifdef EMULATOR
-        hipStreamSynchronize((hipStream_t)stream);
-        hipMemcpy((void*)h_fmtd16_size_, (void*)d_fmtd16_size_, sizeof(int), hipMemcpyDeviceToHost);
-        hipMemcpy((void*)h_fmtd16_, (void*)d_fmtd16_, sizeof(PimMemTraceData) * max_fmtd_size_, hipMemcpyDeviceToHost);
-
-        for (size_t i = 1; i < blocks; i++) {
-            memcpy(&h_fmtd16_[i * h_fmtd16_size_[0]], &h_fmtd16_[i * fmtd_size_per_ch_],
-                   h_fmtd16_size_[0] * sizeof(PimMemTraceData));
-        }
-        h_fmtd16_size_[0] *= blocks;
-        pim_emulator_->convert_mem_trace_from_16B_to_32B(h_fmtd32_, h_fmtd32_size_, h_fmtd16_, h_fmtd16_size_[0],
-                                                         OP_ELT_MUL);
-        pim_emulator_->execute_elt_op(output, operand0, operand1, h_fmtd32_, h_fmtd32_size_[0],
-                                      g_pim_base_addr[device_id]);
-#else
-        if (block) hipStreamSynchronize((hipStream_t)stream);
-#endif
+    uint8_t* crf_bin = pim_crf_generator_->find_crf(OP_ELT_MUL, output->size);
+    int crf_size = 32;
+    if (crf_bin == nullptr) {
+        crf_bin = (uint8_t*)pim_crf_generator_->make_crf_bin(OP_ELT_MUL, output->size);
     }
+
+    int align_size = (131072 << 1);
+    int num_tile = (output_size + align_size - 1) / align_size;
+
+    unsigned blocks = 64;
+    unsigned threads_per_block = 32;
+    int device_id;
+    hipGetDevice(&device_id);
+    hipLaunchKernelGGL(
+        elt_op_pim, dim3(blocks), dim3(threads_per_block), 0, (hipStream_t)stream, (uint8_t*)operand0->data,
+        (uint8_t*)operand1->data, (uint8_t*)(g_pim_base_addr[device_id]), (uint8_t*)output->data, num_tile,
+#ifdef EMULATOR
+        (PimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_, (PimMemTracer*)d_emulator_trace_,
+#endif
+        (uint8_t*)crf_bin, crf_size);
+
+#ifdef EMULATOR
+    hipStreamSynchronize((hipStream_t)stream);
+    hipMemcpy((void*)h_fmtd16_size_, (void*)d_fmtd16_size_, sizeof(int), hipMemcpyDeviceToHost);
+    hipMemcpy((void*)h_fmtd16_, (void*)d_fmtd16_, sizeof(PimMemTraceData) * max_fmtd_size_, hipMemcpyDeviceToHost);
+
+    for (size_t i = 1; i < blocks; i++) {
+        memcpy(&h_fmtd16_[i * h_fmtd16_size_[0]], &h_fmtd16_[i * fmtd_size_per_ch_],
+               h_fmtd16_size_[0] * sizeof(PimMemTraceData));
+    }
+    h_fmtd16_size_[0] *= blocks;
+    pim_emulator_->convert_mem_trace_from_16B_to_32B(h_fmtd32_, h_fmtd32_size_, h_fmtd16_, h_fmtd16_size_[0],
+                                                     OP_ELT_MUL);
+    pim_emulator_->execute_elt_op(output, operand0, operand1, h_fmtd32_, h_fmtd32_size_[0], g_pim_base_addr[device_id]);
+#else
+    if (block) hipStreamSynchronize((hipStream_t)stream);
+#endif
     return ret;
 }
 
@@ -285,62 +237,38 @@ int HipPimExecutor::execute_relu(PimBo* output, PimBo* pim_data, void* stream, b
     DLOG(INFO) << "called";
     int ret = 0;
 
-    if (compiler_env_value == 1) {
-        pimc_driver::PimCDriver relu_execute;
-
-        std::vector<uint32_t> dims{output->bshape.n, output->bshape.c, output->bshape.h, output->bshape.w};
-        pimc_driver::Tensor<half_float::half> input_t(relu_execute.create_tensor_desc(dims),
-                                                      (half_float::half*)pim_data->data);
-        pimc_driver::Tensor<half_float::half> output_t(relu_execute.create_tensor_desc(dims),
-                                                       (half_float::half*)output->data);
-
-        std::vector<pimc::TensorDesc> inputs{input_t.get_desc()};
-        std::vector<pimc::TensorDesc> outputs{output_t.get_desc()};
-
-        auto pim_op = relu_execute.generate_code(OP_RELU, inputs, outputs);
-        auto kernel = relu_execute.compile_code();
-
-        pimc_driver::ReluArgs<half_float::half> kargs(&input_t, &output_t, pim_op->get_crf_binary(), kernel);
-        auto out_dim = (output_t.get_desc().get_dim(3) * sizeof(half_float::half)) / 32;
-        uint32_t num_tile = out_dim / ((pbi_->num_pim_blocks * pbi_->num_pim_chan * pbi_->num_grf) / 2);
-        kargs.set_num_tile(num_tile);
-
-        relu_execute.execute_code(&kargs);
-    } else {
-        uint8_t* crf_bin = pim_crf_generator_->find_crf(OP_RELU, output->size);
-        int crf_size = 32;
-        if (crf_bin == nullptr) {
-            crf_bin = (uint8_t*)pim_crf_generator_->make_crf_bin(OP_RELU, output->size);
-        }
-
-        unsigned blocks = pbi_->num_pim_chan;
-        unsigned threads_per_block = 32;
-        int device_id;
-        hipGetDevice(&device_id);
-        hipLaunchKernelGGL(
-            relu_pim, dim3(blocks), dim3(threads_per_block), 0, (hipStream_t)stream, (uint8_t*)pim_data->data,
-            (uint8_t*)(g_pim_base_addr[device_id]), (uint8_t*)output->data, (int)output->size,
-#ifdef EMULATOR
-            (PimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_, (PimMemTracer*)d_emulator_trace_,
-#endif
-            (uint8_t*)crf_bin, crf_size);
-#ifdef EMULATOR
-        hipStreamSynchronize((hipStream_t)stream);
-        hipMemcpy((void*)h_fmtd16_size_, (void*)d_fmtd16_size_, sizeof(int), hipMemcpyDeviceToHost);
-        hipMemcpy((void*)h_fmtd16_, (void*)d_fmtd16_, sizeof(PimMemTraceData) * max_fmtd_size_, hipMemcpyDeviceToHost);
-
-        for (size_t i = 1; i < blocks; i++) {
-            memcpy(&h_fmtd16_[i * h_fmtd16_size_[0]], &h_fmtd16_[i * fmtd_size_per_ch_],
-                   h_fmtd16_size_[0] * sizeof(PimMemTraceData));
-        }
-        h_fmtd16_size_[0] *= blocks;
-        pim_emulator_->convert_mem_trace_from_16B_to_32B(h_fmtd32_, h_fmtd32_size_, h_fmtd16_, h_fmtd16_size_[0],
-                                                         OP_RELU);
-        pim_emulator_->execute_relu(output, pim_data, h_fmtd32_, h_fmtd32_size_[0], g_pim_base_addr[device_id]);
-#else
-        if (block) hipStreamSynchronize((hipStream_t)stream);
-#endif
+    uint8_t* crf_bin = pim_crf_generator_->find_crf(OP_RELU, output->size);
+    int crf_size = 32;
+    if (crf_bin == nullptr) {
+        crf_bin = (uint8_t*)pim_crf_generator_->make_crf_bin(OP_RELU, output->size);
     }
+
+    unsigned blocks = pbi_->num_pim_chan;
+    unsigned threads_per_block = 32;
+    int device_id;
+    hipGetDevice(&device_id);
+    hipLaunchKernelGGL(
+        relu_pim, dim3(blocks), dim3(threads_per_block), 0, (hipStream_t)stream, (uint8_t*)pim_data->data,
+        (uint8_t*)(g_pim_base_addr[device_id]), (uint8_t*)output->data, (int)output->size,
+#ifdef EMULATOR
+        (PimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_, (PimMemTracer*)d_emulator_trace_,
+#endif
+        (uint8_t*)crf_bin, crf_size);
+#ifdef EMULATOR
+    hipStreamSynchronize((hipStream_t)stream);
+    hipMemcpy((void*)h_fmtd16_size_, (void*)d_fmtd16_size_, sizeof(int), hipMemcpyDeviceToHost);
+    hipMemcpy((void*)h_fmtd16_, (void*)d_fmtd16_, sizeof(PimMemTraceData) * max_fmtd_size_, hipMemcpyDeviceToHost);
+
+    for (size_t i = 1; i < blocks; i++) {
+        memcpy(&h_fmtd16_[i * h_fmtd16_size_[0]], &h_fmtd16_[i * fmtd_size_per_ch_],
+               h_fmtd16_size_[0] * sizeof(PimMemTraceData));
+    }
+    h_fmtd16_size_[0] *= blocks;
+    pim_emulator_->convert_mem_trace_from_16B_to_32B(h_fmtd32_, h_fmtd32_size_, h_fmtd16_, h_fmtd16_size_[0], OP_RELU);
+    pim_emulator_->execute_relu(output, pim_data, h_fmtd32_, h_fmtd32_size_[0], g_pim_base_addr[device_id]);
+#else
+    if (block) hipStreamSynchronize((hipStream_t)stream);
+#endif
     return ret;
 }
 
@@ -349,44 +277,39 @@ int HipPimExecutor::execute_copy(PimBo* output, PimBo* pim_data, void* stream, b
     DLOG(INFO) << "called";
     int ret = 0;
 
-    if (compiler_env_value == 1) {
-        DLOG(ERROR) << "PIM compiler path is not supported yet";
-    } else {
-        uint8_t* crf_bin = pim_crf_generator_->find_crf(OP_COPY, output->size);
-        int crf_size = 32;
-        if (crf_bin == nullptr) {
-            crf_bin = (uint8_t*)pim_crf_generator_->make_crf_bin(OP_COPY, output->size);
-        }
-
-        unsigned blocks = pbi_->num_pim_chan;
-        unsigned threads_per_block = 32;
-
-        int device_id;
-        hipGetDevice(&device_id);
-        hipLaunchKernelGGL(
-            copy_pim, dim3(blocks), dim3(threads_per_block), 0, (hipStream_t)stream, (uint8_t*)pim_data->data,
-            (uint8_t*)g_pim_base_addr[device_id], (uint8_t*)output->data, (int)output->size,
-#ifdef EMULATOR
-            (PimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_, (PimMemTracer*)d_emulator_trace_,
-#endif
-            (uint8_t*)crf_bin, crf_size);
-#ifdef EMULATOR
-        hipStreamSynchronize((hipStream_t)stream);
-        hipMemcpy((void*)h_fmtd16_size_, (void*)d_fmtd16_size_, sizeof(int), hipMemcpyDeviceToHost);
-        hipMemcpy((void*)h_fmtd16_, (void*)d_fmtd16_, sizeof(PimMemTraceData) * max_fmtd_size_, hipMemcpyDeviceToHost);
-
-        for (size_t i = 1; i < blocks; i++) {
-            memcpy(&h_fmtd16_[i * h_fmtd16_size_[0]], &h_fmtd16_[i * fmtd_size_per_ch_],
-                   h_fmtd16_size_[0] * sizeof(PimMemTraceData));
-        }
-        h_fmtd16_size_[0] *= blocks;
-        pim_emulator_->convert_mem_trace_from_16B_to_32B(h_fmtd32_, h_fmtd32_size_, h_fmtd16_, h_fmtd16_size_[0],
-                                                         OP_RELU);
-        pim_emulator_->execute_copy(output, pim_data, h_fmtd32_, h_fmtd32_size_[0], g_pim_base_addr[device_id]);
-#else
-        if (block) hipStreamSynchronize((hipStream_t)stream);
-#endif
+    uint8_t* crf_bin = pim_crf_generator_->find_crf(OP_COPY, output->size);
+    int crf_size = 32;
+    if (crf_bin == nullptr) {
+        crf_bin = (uint8_t*)pim_crf_generator_->make_crf_bin(OP_COPY, output->size);
     }
+
+    unsigned blocks = pbi_->num_pim_chan;
+    unsigned threads_per_block = 32;
+
+    int device_id;
+    hipGetDevice(&device_id);
+    hipLaunchKernelGGL(
+        copy_pim, dim3(blocks), dim3(threads_per_block), 0, (hipStream_t)stream, (uint8_t*)pim_data->data,
+        (uint8_t*)g_pim_base_addr[device_id], (uint8_t*)output->data, (int)output->size,
+#ifdef EMULATOR
+        (PimMemTraceData*)d_fmtd16_, (int*)d_fmtd16_size_, fmtd_size_per_ch_, (PimMemTracer*)d_emulator_trace_,
+#endif
+        (uint8_t*)crf_bin, crf_size);
+#ifdef EMULATOR
+    hipStreamSynchronize((hipStream_t)stream);
+    hipMemcpy((void*)h_fmtd16_size_, (void*)d_fmtd16_size_, sizeof(int), hipMemcpyDeviceToHost);
+    hipMemcpy((void*)h_fmtd16_, (void*)d_fmtd16_, sizeof(PimMemTraceData) * max_fmtd_size_, hipMemcpyDeviceToHost);
+
+    for (size_t i = 1; i < blocks; i++) {
+        memcpy(&h_fmtd16_[i * h_fmtd16_size_[0]], &h_fmtd16_[i * fmtd_size_per_ch_],
+               h_fmtd16_size_[0] * sizeof(PimMemTraceData));
+    }
+    h_fmtd16_size_[0] *= blocks;
+    pim_emulator_->convert_mem_trace_from_16B_to_32B(h_fmtd32_, h_fmtd32_size_, h_fmtd16_, h_fmtd16_size_[0], OP_RELU);
+    pim_emulator_->execute_copy(output, pim_data, h_fmtd32_, h_fmtd32_size_[0], g_pim_base_addr[device_id]);
+#else
+    if (block) hipStreamSynchronize((hipStream_t)stream);
+#endif
     return ret;
 }
 
