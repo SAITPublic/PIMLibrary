@@ -11,6 +11,7 @@
 #ifndef _HIP_PIM_EXECUTOR_H_
 #define _HIP_PIM_EXECUTOR_H_
 
+#include "PimRuntime.h"
 #include "emulator/PimEmulator.h"
 #include "executor/IPimExecutor.h"
 #include "executor/PimCrfBinGen.h"
@@ -29,7 +30,8 @@ namespace executor
 class HipPimExecutor : public IPimExecutor
 {
    public:
-    HipPimExecutor(pim::runtime::manager::PimManager* pim_manager, PimPrecision precision);
+    HipPimExecutor(pim::runtime::manager::PimManager* pim_manager, pim::runtime::PimRuntime* pim_runtime,
+                   PimPrecision precision);
     virtual ~HipPimExecutor(void);
 
     int initialize(void);
@@ -42,6 +44,8 @@ class HipPimExecutor : public IPimExecutor
                    double epsilon, void* stream, bool block);
     int execute_gemm(PimBo* output, PimBo* input, PimBo* weight, PimBo* bias, PimActFunc act_func, void* stream,
                      bool block);
+    int execute_hip_gemm(PimBo* output, PimBo* input, PimBo* weight, PimBo* bias, PimActFunc act_func, void* stream,
+                         bool block);
     int execute_custom_gemv(PimBo* output, PimBo* operand0, PimBo* operand1, bool is_gemv_add, void* stream,
                             bool block);
     int execute_custom_gemv_add(PimBo* output, PimBo* operand0, PimBo* operand1, PimBo* operand2, bool relu,
@@ -64,6 +68,7 @@ class HipPimExecutor : public IPimExecutor
 
    private:
     pim::runtime::manager::PimManager* pim_manager_;
+    pim::runtime::PimRuntime* pim_runtime_;
     std::shared_ptr<pim::runtime::manager::PimDevice> pim_device_;
     std::shared_ptr<PimCrfBinGen> pim_crf_generator_;
     PimPrecision precision_;
@@ -74,6 +79,7 @@ class HipPimExecutor : public IPimExecutor
     uint8_t* pim_gemv_tmp_buffer_;
     uint8_t* zero_buffer_;
     hipDeviceProp_t dev_prop_;
+    PimKrnlType kernel_type_;
 
 #ifdef EMULATOR
     PimMemTraceData* d_fmtd16_;

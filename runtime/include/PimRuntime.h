@@ -52,9 +52,9 @@ class PimRuntime
     int execute_sync(void* stream);
     int execute_dummy(void);
     PimBo* generate_gemm_weight_from_buffer(PimBo* src, bool save_for_reuse = false);
+    PimBo* get_preloaded_pim_gemm_weight(PimBo* dev_wei, bool save_for_reuse = true);
 
    private:
-    PimBo* get_preloaded_pim_gemm_weight(PimBo* dev_wei, bool save_for_reuse = true);
     int insert_preloaded_pim_weight(PimBo* dev_wei, PimBo* pim_wei);
     PimBo* find_preloaded_pim_weight(PimBo* dev_wei);
     pim::runtime::manager::PimManager* pim_manager_;
@@ -63,7 +63,6 @@ class PimRuntime
     PimRuntimeType rt_type_;
     PimPrecision precision_;
     std::unordered_map<uint32_t, PimBo*> weight_map_;
-    PimKrnlType kernel_type_;
 };
 
 } /* namespace runtime */

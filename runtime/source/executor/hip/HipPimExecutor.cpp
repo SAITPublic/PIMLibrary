@@ -28,8 +28,9 @@ namespace runtime
 {
 namespace executor
 {
-HipPimExecutor::HipPimExecutor(pim::runtime::manager::PimManager* pim_manager, PimPrecision precision)
-    : pim_manager_(pim_manager), precision_(precision)
+HipPimExecutor::HipPimExecutor(pim::runtime::manager::PimManager* pim_manager, pim::runtime::PimRuntime* pim_runtime,
+                               PimPrecision precision)
+    : pim_manager_(pim_manager), pim_runtime_(pim_runtime), precision_(precision)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called ";
     pim_crf_generator_ = std::make_shared<PimCrfBinGen>(pim_manager_);
@@ -51,6 +52,21 @@ HipPimExecutor::HipPimExecutor(pim::runtime::manager::PimManager* pim_manager, P
             std::cout << "NEXT_PIM(GEMV) is enabled" << std::endl;
         }
     }
+
+    const char* env_k = std::getenv("PIM_KERNEL_TYPE");
+    if (env_k != nullptr) {
+        switch (*env_k) {
+            case '1':
+                kernel_type_ = PIM;
+                break;
+            case '2':
+                kernel_type_ = CUSTOM_GPU;
+                break;
+            default:
+                kernel_type_ = OPTIMAL;
+        }
+    }
+
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
 }
 
@@ -219,6 +235,48 @@ int HipPimExecutor::execute_mul(PimBo* output, PimBo* operand0, PimBo* operand1,
 
 int HipPimExecutor::execute_gemm(PimBo* output, PimBo* input, PimBo* weight, PimBo* bias, PimActFunc act_func,
                                  void* stream, bool block)
+{
+    int ret = 0;
+    if (kernel_type_ == CUSTOM_GPU) {
+        if (bias == nullptr) {
+            ret = this->execute_custom_gemv(output, input, weight, false, stream, block);
+        } else {
+            bool relu = false;
+            if (act_func == PimActFunc::ACT_RELU) relu = true;
+            ret = this->execute_custom_gemv_add(output, input, weight, bias, relu, stream, block);
+        }
+    } else if (kernel_type_ == PIM && is_pim_available(weight)) {
+        PimBo* pim_wei;
+        if (weight->data_layout_type == PimDataLayoutType::RAW) {
+            pim_wei = pim_runtime_->get_preloaded_pim_gemm_weight(weight);
+        } else {
+            // Assume that user has provided correct layout
+            pim_wei = weight;
+        }
+        ret = this->execute_hip_gemm(output, input, pim_wei, bias, act_func, stream, block);
+    } else {
+        if (is_pim_available(weight)) {
+            PimBo* pim_wei;
+            if (weight->data_layout_type == PimDataLayoutType::RAW) {
+                pim_wei = pim_runtime_->get_preloaded_pim_gemm_weight(weight);
+            } else {
+                // Assume that user has provided correct layout
+                pim_wei = weight;
+            }
+            ret = this->execute_hip_gemm(output, input, pim_wei, bias, act_func, stream, block);
+        } else if (bias == nullptr) {
+            ret = this->execute_custom_gemv(output, input, weight, false, stream, block);
+        } else {
+            bool relu = false;
+            if (act_func == PimActFunc::ACT_RELU) relu = true;
+            ret = this->execute_custom_gemv_add(output, input, weight, bias, relu, stream, block);
+        }
+    }
+    return ret;
+}
+
+int HipPimExecutor::execute_hip_gemm(PimBo* output, PimBo* input, PimBo* weight, PimBo* bias, PimActFunc act_func,
+                                     void* stream, bool block)
 {
     int ret = 0;
 
@@ -488,10 +546,9 @@ int HipPimExecutor::execute_aligned_gemm_tile_accum(PimBo* output, PimBo* input,
     int device_id;
     hipGetDevice(&device_id);
 
-    void (*gemm_kernel)(volatile uint8_t * __restrict__, volatile uint8_t * __restrict__,
-                        volatile uint8_t * __restrict__, volatile uint8_t * __restrict__,
-                        volatile uint8_t * __restrict__, volatile uint8_t * __restrict__, int, int, int, int, int, int,
-                        int, int,
+    void (*gemm_kernel)(volatile uint8_t* __restrict__, volatile uint8_t* __restrict__, volatile uint8_t* __restrict__,
+                        volatile uint8_t* __restrict__, volatile uint8_t* __restrict__, volatile uint8_t* __restrict__,
+                        int, int, int, int, int, int, int, int,
 #ifdef EMULATOR
                         PimMemTraceData*, int*, int, PimMemTracer*,
 #endif
@@ -576,10 +633,9 @@ int HipPimExecutor::execute_chwise_gemm_tile_accum(PimBo* output, PimBo* input, 
         crf_bin = (uint8_t*)pim_crf_generator_->make_crf_bin(OP_GEMV, input->bshape.w * sizeof(uint16_t));
     }
 
-    void (*gemm_kernel)(volatile uint8_t * __restrict__, volatile uint8_t * __restrict__,
-                        volatile uint8_t * __restrict__, volatile uint8_t * __restrict__,
-                        volatile uint8_t * __restrict__, volatile uint8_t * __restrict__, int, int, int, int, int, int,
-                        int, int,
+    void (*gemm_kernel)(volatile uint8_t* __restrict__, volatile uint8_t* __restrict__, volatile uint8_t* __restrict__,
+                        volatile uint8_t* __restrict__, volatile uint8_t* __restrict__, volatile uint8_t* __restrict__,
+                        int, int, int, int, int, int, int, int,
 #ifdef EMULATOR
                         PimMemTraceData*, int*, int, PimMemTracer*,
 #endif
