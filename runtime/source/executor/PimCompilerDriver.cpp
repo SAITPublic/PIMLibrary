@@ -16,10 +16,10 @@ namespace runtime
 namespace pimc_driver
 {
 bool HIPCodegen::execute() { return false; }
-void HIPCompiler::execute()
+void HIPCompiler::execute(std::string hip_kernel, std::string crf_binary)
 {
 #if PIM_COMPILER_ENABLE == 1
-    std::string hip_kernel = pim_op->get_gpu_kernel();
+    //std::string hip_kernel = pim_op->get_gpu_kernel();
 
     if (const char *env_p = std::getenv("SAVE_GENERATED_KERNEL")) {
         int value = *((int *)env_p);
@@ -29,7 +29,7 @@ void HIPCompiler::execute()
             hip_file.close();
 
             std::ofstream crf_file("output_crf_binary.txt");
-            crf_file << pim_op->get_crf_binary();
+            crf_file << crf_binary;
             crf_file.close();
         }
     }
@@ -76,7 +76,7 @@ void HIPCompiler::execute()
 
 bool HIPExecutor::execute()
 {
-#if PIM_COMPILER_ENABLE == 1
+/*#if PIM_COMPILER_ENABLE == 1
     unsigned blocks = 64;
     switch (op_type) {
         case OP_ELT_ADD:
@@ -104,13 +104,13 @@ bool HIPExecutor::execute()
     }
     hipStreamSynchronize(nullptr);
     return true;
-#endif
+#endif*/
     return false;
 }
 
-hipFunction_t PimCDriver::compile_code()
+hipFunction_t PimCDriver::compile_code(std::string kernel, std::string crf_binary)
 {
-    compile_.execute();
+    compile_.execute(kernel, crf_binary);
     return compile_.get_kernel_function();
 }
 

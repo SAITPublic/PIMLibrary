@@ -13,6 +13,8 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <vector>
+#include <unordered_map>
 
 #define __PIM_API__
 
@@ -20,6 +22,10 @@ typedef enum __PimRuntimeType {
     RT_TYPE_HIP,
     RT_TYPE_OPENCL,
 } PimRuntimeType;
+
+typedef enum __PimDevice {
+    GPU,
+} PimDevice;
 
 typedef enum __PimMemType {
     MEM_TYPE_HOST,
@@ -96,6 +102,24 @@ typedef struct __PimBufferObject {
     bool use_user_ptr;
     bool transposed;
 } PimBo;
+
+typedef struct __PimTarget {
+    PimRuntimeType runtime;
+    PimDevice device;
+    PimPrecision precision;
+} PimTarget;
+
+typedef struct __PimCompiledObject {
+    PimBo* output_pimbo;
+    std::vector<PimBo*> input_pimbo;
+    std::vector<PimBo*> new_pimbo;
+    std::string kernel;
+    std::string crf_binary;
+    uint32_t num_blocks;
+    uint32_t num_threads;
+    std::vector<std::string> op_order;
+    std::unordered_map<std::string, PimBo*> pimbo_map;
+} PimCompiledObj;
 
 typedef struct __PimGemmDescriptor {
     PimBShape in_bshape;

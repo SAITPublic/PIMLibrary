@@ -12,6 +12,7 @@
 #define _PIM_RUNTIME_API_H_
 
 #include "pim_data_types.h"
+#include <api/pim_compiler.h>
 
 /** @mainpage PIM SDK
  *
@@ -400,4 +401,9 @@ __PIM_API__ PimBo* PimConvertGemmWeight(PimBo* src, bool save_for_reuse = false)
 
 /**@}*/
 
+__PIM_API__ PimTarget PimCreateTarget(PimRuntimeType rt_type, PimPrecision precision, PimDevice device);
+
+__PIM_API__ PimCompiledObj* PimCustomCompile(pimc::frontend::Var output, std::vector<pimc::frontend::Buffer> inputs, int n, int c, PimTarget target, std::string compile_opts);
+
+PimBo* PimExecuteCustom(PimCompiledObj* obj, PimTarget target, std::string launch_opts);
 #endif /* _PIM_RUNTIME_API_H_ */

@@ -225,7 +225,7 @@ class HIPCompiler
      */
     HIPCompiler() {}
     ~HIPCompiler() {}
-    void execute();
+    void execute(std::string hip_kernel, std::string crf_binary);
     hipFunction_t get_kernel_function() { return kernel_; }
 
    private:
@@ -234,8 +234,7 @@ class HIPCompiler
     HIPCompiler &operator=(HIPCompiler &&) = delete;
     HIPCompiler &operator=(const HIPCompiler &) = delete;
 
-    // supress warnings for now
-    // hipModule_t module_;
+    hipModule_t module_;
     hipFunction_t kernel_;
 };
 
@@ -248,7 +247,7 @@ class PimCDriver
     PimCDriver &operator=(PimCDriver &&) = delete;
     PimCDriver &operator=(const PimCDriver &) = delete;
 
-    hipFunction_t compile_code();
+    hipFunction_t compile_code(std::string kernel, std::string crf_binary);
     bool execute_code(KernelArgs *kargs);
 
     // todo:: Pass HW information from user
