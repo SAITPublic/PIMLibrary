@@ -115,7 +115,8 @@ int PimGetDevice(uint32_t* device_id)
     return ret;
 }
 
-PimBo* PimCreateBo(int n, int c, int h, int w, PimPrecision precision, PimMemType mem_type, void* user_ptr)
+PimBo* PimCreateBo(int n, int c, int h, int w, PimPrecision precision, PimMemType mem_type, void* user_ptr,
+                   bool transposed)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     PIM_PROFILE_TICK(CreateBo);
@@ -136,6 +137,7 @@ PimBo* PimCreateBo(int n, int c, int h, int w, PimPrecision precision, PimMemTyp
     pim_bo->bshape_r = {(uint32_t)n, (uint32_t)c, (uint32_t)h, (uint32_t)w};
     pim_bo->mem_type = mem_type;
     pim_bo->precision = precision;
+    pim_bo->transposed = transposed;
     pim_bo->data_layout_type = PimDataLayoutType::RAW;
 
     ret = pim_runtime->alloc_memory(pim_bo, user_ptr);

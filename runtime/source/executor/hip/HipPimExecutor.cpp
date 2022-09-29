@@ -245,7 +245,7 @@ int HipPimExecutor::execute_gemm(PimBo* output, PimBo* input, PimBo* weight, Pim
             if (act_func == PimActFunc::ACT_RELU) relu = true;
             ret = this->execute_custom_gemv_add(output, input, weight, bias, relu, stream, block);
         }
-    } else if (kernel_type_ == PIM && is_pim_applicable(weight)) {
+    } else if (kernel_type_ == PIM && !is_transposed(weight)) {
         PimBo* pim_wei;
         if (weight->data_layout_type == PimDataLayoutType::RAW) {
             pim_wei = pim_runtime_->get_preloaded_pim_gemm_weight(weight);

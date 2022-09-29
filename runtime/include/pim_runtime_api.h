@@ -88,7 +88,7 @@ __PIM_API__ int PimGetDevice(uint32_t* device_id);
  * @return Pointer to buffer object.
  */
 __PIM_API__ PimBo* PimCreateBo(int n, int c, int h, int w, PimPrecision precision, PimMemType mem_type,
-                               void* user_ptr = nullptr);
+                               void* user_ptr = nullptr, bool transposed = false);
 
 /**
  * @brief create pim buffer object with pim descriptor

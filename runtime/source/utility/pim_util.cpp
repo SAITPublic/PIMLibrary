@@ -220,6 +220,11 @@ bool check_chwise_gemm_bo(PimBo* bo)
     return ret;
 }
 
+bool is_transposed(PimBo* wei)
+{
+    return wei->transposed;
+}
+
 bool is_pim_applicable(PimBo* wei)
 {
     if (wei->data_layout_type != PimDataLayoutType::RAW) {
@@ -227,7 +232,7 @@ bool is_pim_applicable(PimBo* wei)
         return true;
     }
     /* TODO: find optimal shape to execute PIM ops */
-    if (wei->bshape_r.n * wei->bshape_r.c * wei->bshape_r.w >= DIM_OUT_PIM && !wei->transposed)
+    if (wei->bshape_r.n * wei->bshape_r.c * wei->bshape_r.w >= DIM_OUT_PIM && !is_transposed(wei))
         return true;
     else
         return false;

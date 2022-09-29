@@ -388,8 +388,9 @@ PimBo* PimRuntime::generate_gemm_weight_from_buffer(PimBo* src, bool save_for_re
         pim_reordered_buff = pre_weight;
     } else {
         const auto direction = pre_weight->mem_type == MEM_TYPE_HOST ? HOST_TO_PIM : DEVICE_TO_PIM;
-        pim_reordered_buff = PimCreateBo(pre_weight->bshape.n, pre_weight->bshape.c, pre_weight->bshape.h,
-                                         pre_weight->bshape.w, pre_weight->precision, MEM_TYPE_PIM);
+        pim_reordered_buff =
+            PimCreateBo(pre_weight->bshape.n, pre_weight->bshape.c, pre_weight->bshape.h, pre_weight->bshape.w,
+                        pre_weight->precision, MEM_TYPE_PIM, nullptr, pre_weight->transposed);
         PimCopyMemory(pim_reordered_buff, pre_weight, direction);
         if (pre_weight != src) {
             PimDestroyBo(pre_weight);
