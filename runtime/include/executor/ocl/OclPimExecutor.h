@@ -39,10 +39,7 @@ class OclPimExecutor : public IPimExecutor
     int execute_relu(PimBo* output, PimBo* pim_data, void* stream, bool block);
     int execute_copy(PimBo* output, PimBo* pim_data, void* stream, bool block);
     int execute_bn(PimBo* output, PimBo* pim_data, PimBo* beta, PimBo* gamma, PimBo* mean, PimBo* variance,
-                   double epsilon, void* stream, bool block)
-    {
-        return -1;
-    }
+                   double epsilon, void* stream, bool block);
     int execute_gemm(PimBo* output, PimBo* input, PimBo* weight, PimBo* bias, PimActFunc act_func, void* stream,
                      bool block);
     int execute_custom_gemv(PimBo* output, PimBo* operand0, PimBo* operand1, bool is_gemv_add, void* stream, bool block)
@@ -95,6 +92,7 @@ class OclPimExecutor : public IPimExecutor
     cl_kernel eltwise_kernel_;
     cl_kernel relu_kernel_;
     cl_kernel copy_kernel_;
+    cl_kernel bn_kernel_;
     cl_kernel pim_aligned_gemm_bias_relu_8tile_fp16_;
     cl_kernel pim_aligned_gemm_bias_relu_fp16_;
     cl_kernel pim_chwise_gemm_bias_relu_32tile_fp16_;

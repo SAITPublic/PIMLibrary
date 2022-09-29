@@ -65,6 +65,8 @@ OclPimExecutor::OclPimExecutor(pim::runtime::manager::PimManager* pim_manager, P
     cl_ok(exec_err_);
     copy_kernel_ = clCreateKernel(program_, "copy_pim", &exec_err_);
     cl_ok(exec_err_);
+    bn_kernel_ = clCreateKernel(program_, "bn_pim_nr_sip", &exec_err_);
+    cl_ok(exec_err_);
     pim_aligned_gemm_bias_relu_8tile_fp16_ =
         clCreateKernel(program_, "pim_aligned_gemm_bias_relu_8tile_fp16", &exec_err_);
     cl_ok(exec_err_);
@@ -94,6 +96,7 @@ OclPimExecutor::~OclPimExecutor(void)
     clReleaseKernel(eltwise_kernel_);
     clReleaseKernel(relu_kernel_);
     clReleaseKernel(copy_kernel_);
+    clReleaseKernel(bn_kernel_);
     clReleaseKernel(pim_aligned_gemm_bias_relu_8tile_fp16_);
     clReleaseKernel(pim_aligned_gemm_bias_relu_fp16_);
     clReleaseKernel(pim_chwise_gemm_bias_relu_32tile_fp16_);
@@ -155,6 +158,7 @@ int OclPimExecutor::build_cl_program_with_source(void)
     cl_source += load_cl_file("pim_op_kernels.cl");
     cl_source += load_cl_file("pim_gemm.cl");
     cl_source += load_cl_file("pim_copy.cl");
+    cl_source += load_cl_file("pim_bn.cl");
     cl_source_ptr = cl_source.c_str();
 
     program_ = clCreateProgramWithSource(context, 1, (const char**)&cl_source_ptr, NULL, NULL);
@@ -531,6 +535,55 @@ int OclPimExecutor::execute_copy(PimBo* output, PimBo* pim_data, void* stream, b
     return ret;
 }
 
+int OclPimExecutor::execute_bn(PimBo* output, PimBo* pim_data, PimBo* beta, PimBo* gamma, PimBo* mean, PimBo* variance,
+                               double epsilon, void* stream, bool block)
+{
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
+    int ret = 0;
+    const size_t block_size = pbi_->num_pim_chan;
+    const size_t local_work_size = 32;
+    const size_t global_work_size = block_size * local_work_size;
+    size_t output_size = output->size;
+    uint8_t* crf_bin = get_crf_bin(OP_BN, output_size);
+    int crf_size = 2 * CRF_BIN_SIZE;
+    int align_size = (131072 << 1);
+    int num_tile = ((output->size + align_size - 1) / align_size);
+
+    uint8_t* srf_binary = new uint8_t[pbi_->num_pim_chan * pbi_->num_pim_rank * pbi_->trans_size];
+    int srf_size = pbi_->num_pim_chan * pbi_->num_pim_rank * pbi_->trans_size;
+
+    pim_crf_generator_->preprocess_srf(beta, gamma, mean, variance, epsilon, srf_binary);
+    pim_manager_->copy_memory((void*)d_srf_bin_buffer_, (void*)srf_binary, srf_size, HOST_TO_DEVICE);
+
+    PIM_PROFILE_TICK(RunBNKernel);
+    cl_ok(clSetKernelArg(bn_kernel_, 0, sizeof(cl_mem), (void*)&(((manager::OclBufferObj*)pim_data->data)->dev_addr)));
+    cl_ok(clSetKernelArg(bn_kernel_, 1, sizeof(cl_mem), (void*)&(((manager::OclBufferObj*)output->data)->dev_addr)));
+    cl_ok(clSetKernelArg(bn_kernel_, 2, sizeof(cl_mem), (void*)&base_address_));
+    cl_ok(clSetKernelArg(bn_kernel_, 3, sizeof(cl_int), (void*)&num_tile));
+    cl_ok(clSetKernelArg(bn_kernel_, 4, sizeof(cl_mem), (void*)&crf_bin));
+    cl_ok(clSetKernelArg(bn_kernel_, 5, sizeof(cl_int), (void*)&crf_size));
+    cl_ok(clSetKernelArg(bn_kernel_, 6, sizeof(cl_mem), (void*)&d_srf_bin_buffer_));
+    cl_ok(clSetKernelArg(bn_kernel_, 7, sizeof(cl_int), (void*)&srf_size));
+
+#ifdef EMULATOR
+    cl_ok(clSetKernelArg(bn_kernel_, 8, sizeof(cl_mem), (void*)&cl_d_fmtd16_));
+    cl_ok(clSetKernelArg(bn_kernel_, 9, sizeof(cl_mem), (void*)&cl_d_fmtd16_size_));
+    cl_ok(clSetKernelArg(bn_kernel_, 10, sizeof(cl_int), (void*)&fmtd_size_per_ch_));
+    cl_ok(clSetKernelArg(bn_kernel_, 11, sizeof(cl_mem), (void*)&cl_d_emulator_trace_));
+#endif
+    cl_ok(clEnqueueNDRangeKernel(queue, bn_kernel_, 1, NULL, &global_work_size, &local_work_size, 0, NULL, NULL));
+    clFinish(queue);
+    PIM_PROFILE_TOCK(RunBNKernel);
+
+#ifdef EMULATOR
+    emulator_trace_gen(block_size, OP_BN);
+    pim_emulator_->execute_bn(output, pim_data, h_fmtd32_, h_fmtd32_size_[0], g_pim_base_addr[0], nullptr);
+#endif
+    delete[] srf_binary;
+
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+    return ret;
+}
 int OclPimExecutor::execute_aligned_gemm_tile_accum(PimBo* output, PimBo* input, PimBo* weight, PimBo* bias,
                                                     PimActFunc act_func, void* stream, bool block)
 {
