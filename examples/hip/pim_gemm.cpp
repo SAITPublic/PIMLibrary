@@ -64,6 +64,7 @@ class PimGemmTest
         PimDestroyBo(d_w);
         PimDestroyBo(d_b);
         PimDestroyBo(d_o);
+        PimDestroyGemmDesc(desc);
     }
 
     void prepare(float alpha = 1.0f, float beta = 0.0f, float variation = 0.2f)

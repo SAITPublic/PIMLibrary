@@ -238,13 +238,7 @@ int HipPimExecutor::execute_gemm(PimBo* output, PimBo* input, PimBo* weight, Pim
 {
     int ret = 0;
     if (kernel_type_ == CUSTOM_GPU) {
-        if (bias == nullptr) {
-            ret = this->execute_custom_gemv(output, input, weight, false, stream, block);
-        } else {
-            bool relu = false;
-            if (act_func == PimActFunc::ACT_RELU) relu = true;
-            ret = this->execute_custom_gemv_add(output, input, weight, bias, relu, stream, block);
-        }
+        ret = this->execute_gemv(output, input, weight, bias, act_func, stream, block);
     } else if (kernel_type_ == PIM && !is_transposed(weight)) {
         PimBo* pim_wei;
         if (weight->data_layout_type == PimDataLayoutType::RAW) {
@@ -264,12 +258,8 @@ int HipPimExecutor::execute_gemm(PimBo* output, PimBo* input, PimBo* weight, Pim
                 pim_wei = weight;
             }
             ret = this->execute_hip_gemm(output, input, pim_wei, bias, act_func, stream, block);
-        } else if (bias == nullptr) {
-            ret = this->execute_custom_gemv(output, input, weight, false, stream, block);
         } else {
-            bool relu = false;
-            if (act_func == PimActFunc::ACT_RELU) relu = true;
-            ret = this->execute_custom_gemv_add(output, input, weight, bias, relu, stream, block);
+            ret = this->execute_gemv(output, input, weight, bias, act_func, stream, block);
         }
     }
     return ret;
@@ -287,6 +277,21 @@ int HipPimExecutor::execute_hip_gemm(PimBo* output, PimBo* input, PimBo* weight,
     else
         DLOG(ERROR) << "Provided layout is not supported in GEMM call";
 
+    return ret;
+}
+
+int HipPimExecutor::execute_gemv(PimBo* output, PimBo* input, PimBo* weight, PimBo* bias, PimActFunc act_func,
+                                 void* stream, bool block)
+{
+    int ret = 0;
+    if (bias == nullptr) {
+        ret = this->execute_custom_gemv(output, input, weight, false, stream, block);
+    } else if (output->data == bias->data) {
+        ret = this->execute_custom_gemv(output, input, weight, true, stream, block);
+    } else {
+        bool relu = act_func == PimActFunc::ACT_RELU ? true : false;
+        ret = this->execute_custom_gemv_add(output, input, weight, bias, relu, stream, block);
+    }
     return ret;
 }
 
