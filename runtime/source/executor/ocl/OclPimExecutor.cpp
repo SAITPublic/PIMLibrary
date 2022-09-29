@@ -364,70 +364,34 @@ int OclPimExecutor::execute_eltwise(PimOpType eltop, PimBo* output, PimBo* opera
     int align_size = (131072 << 1);
     int num_tile = (output_size + align_size - 1) / align_size;
 
-    uint8_t* crf_bin = pim_crf_generator_->find_crf(eltop, output_size);
-    int crf_size = 32;
-    if (crf_bin == nullptr) {
-        crf_bin = (uint8_t*)pim_crf_generator_->make_crf_bin(eltop, output_size);
-    }
+    uint8_t* crf_bin = get_crf_bin(eltop, output->size);
+    int crf_size = CRF_BIN_SIZE;
 
-    exec_err_ = clSetKernelArg(eltwise_kernel_, 0, sizeof(cl_mem),
-                               (void*)&(((manager::OclBufferObj*)operand0->data)->dev_addr));
-    cl_ok(exec_err_);
-
-    exec_err_ = clSetKernelArg(eltwise_kernel_, 1, sizeof(cl_mem),
-                               (void*)&(((manager::OclBufferObj*)operand1->data)->dev_addr));
-    cl_ok(exec_err_);
-
-    exec_err_ =
-        clSetKernelArg(eltwise_kernel_, 2, sizeof(cl_mem), (void*)&(((manager::OclBufferObj*)output->data)->dev_addr));
-    cl_ok(exec_err_);
-
-    exec_err_ = clSetKernelArg(eltwise_kernel_, 3, sizeof(cl_mem), (void*)&base_address_);
-    cl_ok(exec_err_);
-
-    exec_err_ = clSetKernelArg(eltwise_kernel_, 4, sizeof(cl_int), (void*)&num_tile);
-    cl_ok(exec_err_);
-
-    exec_err_ = clSetKernelArg(eltwise_kernel_, 5, sizeof(cl_mem), (void*)&crf_bin);
-    cl_ok(exec_err_);
-
-    exec_err_ = clSetKernelArg(eltwise_kernel_, 6, sizeof(cl_int), (void*)&crf_size);
-    cl_ok(exec_err_);
+    cl_ok(clSetKernelArg(eltwise_kernel_, 0, sizeof(cl_mem),
+                         (void*)&(((manager::OclBufferObj*)operand0->data)->dev_addr)));
+    cl_ok(clSetKernelArg(eltwise_kernel_, 1, sizeof(cl_mem),
+                         (void*)&(((manager::OclBufferObj*)operand1->data)->dev_addr)));
+    cl_ok(
+        clSetKernelArg(eltwise_kernel_, 2, sizeof(cl_mem), (void*)&(((manager::OclBufferObj*)output->data)->dev_addr)));
+    cl_ok(clSetKernelArg(eltwise_kernel_, 3, sizeof(cl_mem), (void*)&base_address_));
+    cl_ok(clSetKernelArg(eltwise_kernel_, 4, sizeof(cl_int), (void*)&num_tile));
+    cl_ok(clSetKernelArg(eltwise_kernel_, 5, sizeof(cl_mem), (void*)&crf_bin));
+    cl_ok(clSetKernelArg(eltwise_kernel_, 6, sizeof(cl_int), (void*)&crf_size));
 
 #ifdef EMULATOR
-    exec_err_ = clSetKernelArg(eltwise_kernel_, 7, sizeof(cl_mem), (void*)&cl_d_fmtd16_);
-    cl_ok(exec_err_);
-
-    exec_err_ = clSetKernelArg(eltwise_kernel_, 8, sizeof(cl_mem), (void*)&cl_d_fmtd16_size_);
-    cl_ok(exec_err_);
-
-    exec_err_ = clSetKernelArg(eltwise_kernel_, 9, sizeof(cl_int), (void*)&fmtd_size_per_ch_);
-    cl_ok(exec_err_);
-
-    exec_err_ = clSetKernelArg(eltwise_kernel_, 10, sizeof(cl_mem), (void*)&cl_d_emulator_trace_);
-    cl_ok(exec_err_);
+    cl_ok(clSetKernelArg(eltwise_kernel_, 7, sizeof(cl_mem), (void*)&cl_d_fmtd16_));
+    cl_ok(clSetKernelArg(eltwise_kernel_, 8, sizeof(cl_mem), (void*)&cl_d_fmtd16_size_));
+    cl_ok(clSetKernelArg(eltwise_kernel_, 9, sizeof(cl_int), (void*)&fmtd_size_per_ch_));
+    cl_ok(clSetKernelArg(eltwise_kernel_, 10, sizeof(cl_mem), (void*)&cl_d_emulator_trace_));
 
 #endif
     exec_err_ =
         clEnqueueNDRangeKernel(queue, eltwise_kernel_, 1, NULL, &global_work_size, &local_work_size, 0, NULL, NULL);
-    cl_ok(exec_err_);
 
     clFinish(queue);
 
 #ifdef EMULATOR
-    h_fmtd16_size_[0] = 0;
-    pim_manager_->copy_memory((void*)h_fmtd16_size_, (void*)cl_d_fmtd16_size_, sizeof(size_t), DEVICE_TO_HOST);
-    pim_manager_->copy_memory((void*)h_fmtd16_, (void*)cl_d_fmtd16_, sizeof(PimMemTraceData) * max_fmtd_size_,
-                              DEVICE_TO_HOST);
-
-    for (size_t i = 1; i < block_size; i++) {
-        memcpy(&h_fmtd16_[i * h_fmtd16_size_[0]], &h_fmtd16_[i * fmtd_size_per_ch_],
-               h_fmtd16_size_[0] * sizeof(PimMemTraceData));
-    }
-    h_fmtd16_size_[0] *= block_size;
-    pim_emulator_->set_rttype(RT_TYPE_OPENCL);
-    pim_emulator_->convert_mem_trace_from_16B_to_32B(h_fmtd32_, (int*)h_fmtd32_size_, h_fmtd16_, (int)h_fmtd16_size_[0],
-                                                     OP_ELT_ADD);
+    emulator_trace_gen(block_size, OP_ELT_ADD);
     pim_emulator_->execute_elt_op(output, operand0, operand1, h_fmtd32_, (int)h_fmtd32_size_[0], g_pim_base_addr[0]);
 #endif
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
@@ -601,11 +565,9 @@ int OclPimExecutor::execute_aligned_gemm_tile_accum(PimBo* output, PimBo* input,
     int is_bias = (bias != nullptr) ? 1 : 0;
     int is_relu = (act_func == ACT_RELU) ? 1 : 0;
 
-    uint8_t* crf_bin = pim_crf_generator_->find_crf(OP_GEMV, input->bshape.w * sizeof(uint16_t));
-    int crf_size = 32;
-    if (crf_bin == nullptr) {
-        crf_bin = (uint8_t*)pim_crf_generator_->make_crf_bin(OP_GEMV, input->bshape.w * sizeof(uint16_t));
-    }
+    uint8_t* crf_bin = get_crf_bin(OP_GEMV, input->bshape.w * sizeof(uint16_t));
+    int crf_size = CRF_BIN_SIZE;
+
     cl_kernel gemm_kernel;
 
     switch (n_in_tile) {
@@ -649,19 +611,7 @@ int OclPimExecutor::execute_aligned_gemm_tile_accum(PimBo* output, PimBo* input,
 #ifdef EMULATOR
 
     PIM_PROFILE_TICK(RunGemmEmulation);
-    h_fmtd16_size_[0] = 0;
-    pim_manager_->copy_memory((void*)h_fmtd16_size_, (void*)cl_d_fmtd16_size_, sizeof(size_t), DEVICE_TO_HOST);
-    pim_manager_->copy_memory((void*)h_fmtd16_, (void*)cl_d_fmtd16_, sizeof(PimMemTraceData) * max_fmtd_size_,
-                              DEVICE_TO_HOST);
-
-    for (size_t i = 1; i < block_size; i++) {
-        memcpy(&h_fmtd16_[i * h_fmtd16_size_[0]], &h_fmtd16_[i * fmtd_size_per_ch_],
-               h_fmtd16_size_[0] * sizeof(PimMemTraceData));
-    }
-    h_fmtd16_size_[0] *= block_size;
-    pim_emulator_->set_rttype(RT_TYPE_OPENCL);
-    pim_emulator_->convert_mem_trace_from_16B_to_32B(h_fmtd32_, (int*)h_fmtd32_size_, h_fmtd16_, (int)h_fmtd16_size_[0],
-                                                     OP_GEMV);
+    emulator_trace_gen(block_size, OP_GEMV);
     pim_emulator_->execute_gemm_bias_act(output, weight, h_fmtd32_, h_fmtd32_size_[0], OP_GEMV, g_pim_base_addr[0],
                                          (uint8_t*)pim_gemv_tmp_buffer_->host_addr, bias, act_func);
 
@@ -677,6 +627,7 @@ int OclPimExecutor::execute_chwise_gemm_tile_accum(PimBo* output, PimBo* input, 
     PIM_PROFILE_TICK(PrepareGemmKernel);
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
+    size_t output_size = output->size;
     const size_t block_size = pbi_->num_pim_chan;
     const size_t local_work_size = 64;
     const size_t global_work_size = block_size * local_work_size;
@@ -688,11 +639,8 @@ int OclPimExecutor::execute_chwise_gemm_tile_accum(PimBo* output, PimBo* input, 
     int is_bias = (bias != nullptr) ? 1 : 0;
     int is_relu = (act_func == ACT_RELU) ? 1 : 0;
 
-    uint8_t* crf_bin = pim_crf_generator_->find_crf(OP_GEMV, input->bshape.w * sizeof(uint16_t));
-    int crf_size = 32;
-    if (crf_bin == nullptr) {
-        crf_bin = (uint8_t*)pim_crf_generator_->make_crf_bin(OP_GEMV, input->bshape.w * sizeof(uint16_t));
-    }
+    uint8_t* crf_bin = get_crf_bin(OP_GEMV, input->bshape.w * sizeof(uint16_t));
+    int crf_size = CRF_BIN_SIZE;
 
     cl_kernel gemm_kernel;
     switch (n_in_tile) {
@@ -737,19 +685,7 @@ int OclPimExecutor::execute_chwise_gemm_tile_accum(PimBo* output, PimBo* input, 
     PIM_PROFILE_TOCK(RunGemmKernel);
 #ifdef EMULATOR
     PIM_PROFILE_TICK(RunGemmEmulation);
-    h_fmtd16_size_[0] = 0;
-    pim_manager_->copy_memory((void*)h_fmtd16_size_, (void*)cl_d_fmtd16_size_, sizeof(size_t), DEVICE_TO_HOST);
-    pim_manager_->copy_memory((void*)h_fmtd16_, (void*)cl_d_fmtd16_, sizeof(PimMemTraceData) * max_fmtd_size_,
-                              DEVICE_TO_HOST);
-
-    for (size_t i = 1; i < block_size; i++) {
-        memcpy(&h_fmtd16_[i * h_fmtd16_size_[0]], &h_fmtd16_[i * fmtd_size_per_ch_],
-               h_fmtd16_size_[0] * sizeof(PimMemTraceData));
-    }
-    h_fmtd16_size_[0] *= block_size;
-    pim_emulator_->set_rttype(RT_TYPE_OPENCL);
-    pim_emulator_->convert_mem_trace_from_16B_to_32B(h_fmtd32_, (int*)h_fmtd32_size_, h_fmtd16_, (int)h_fmtd16_size_[0],
-                                                     OP_GEMV);
+    emulator_trace_gen(block_size, OP_GEMV);
     pim_emulator_->execute_gemm_bias_act(output, weight, h_fmtd32_, h_fmtd32_size_[0], OP_GEMV, g_pim_base_addr[0],
                                          (uint8_t*)pim_gemv_tmp_buffer_->host_addr, bias, act_func);
 
