@@ -32,7 +32,7 @@ int pim_copy_up_to_256KB(bool block, uint32_t input_len)
     int ret = 0;
 
     /* __PIM_API__ call : Initialize PimRuntime */
-    PimInitialize(RT_TYPE_HIP, PIM_FP16);
+    PimInitialize(RT_TYPE_OPENCL, PIM_FP16);
 
     PimDesc* pim_desc = PimCreateDesc(1, 1, 1, input_len, PIM_FP16);
 
@@ -62,8 +62,9 @@ int pim_copy_up_to_256KB(bool block, uint32_t input_len)
 
         PimCopyMemory(host_output, device_output, PIM_TO_HOST);
 
-        ret = compare_half_relative((half*)golden_output->data, (half*)host_output->data, input_len);
+        ret = compare_half_relative((half*)host_output->data, (half*)golden_output->data, input_len);
     }
+    //    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
 
     /* __PIM_API__ call : Free memory */
     PimDestroyBo(host_input);
@@ -78,4 +79,4 @@ int pim_copy_up_to_256KB(bool block, uint32_t input_len)
     return ret;
 }
 
-TEST(HIPIntegrationTest, PimCopy1Sync) { EXPECT_TRUE(pim_copy_up_to_256KB(true, 128 * 1024) == 0); }
+TEST(OCLPimIntegrationTest, PimCopy1Sync) { EXPECT_TRUE(pim_copy_up_to_256KB(true, 128 * 1024) == 0); }

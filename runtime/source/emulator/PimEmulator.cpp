@@ -335,8 +335,8 @@ int PimEmulator::execute_elt_op(PimBo* output, PimBo* operand0, PimBo* operand1,
     return ret;
 }
 
-int PimEmulator::execute_relu(PimBo* output, PimBo* pim_data, PimMemTraceData* fmtd32, int fmtd32_size,
-                              uint64_t pim_base_addr)
+int PimEmulator::execute_relu_bn_copy(PimBo* output, PimBo* pim_data, PimMemTraceData* fmtd32, int fmtd32_size,
+                                      uint64_t pim_base_addr)
 {
     DLOG(INFO) << "called";
     int ret = 0;
@@ -381,31 +381,17 @@ int PimEmulator::execute_relu(PimBo* output, PimBo* pim_data, PimMemTraceData* f
     return ret;
 }
 
-// FIXME(sgwoo) : this function is same with relu and bn function.
+int PimEmulator::execute_relu(PimBo* output, PimBo* pim_data, PimMemTraceData* fmtd32, int fmtd32_size,
+                              uint64_t pim_base_addr)
+{
+    return execute_relu_bn_copy(output, pim_data, fmtd32, fmtd32_size, pim_base_addr);
+}
+
 int PimEmulator::execute_copy(PimBo* output, PimBo* pim_data, PimMemTraceData* fmtd32, int fmtd32_size,
                               uint64_t pim_base_addr)
 {
-    DLOG(INFO) << "called";
-    int ret = 0;
-    int num_element = 0;
-    uint16_t* sim_output = nullptr;
-    num_element = output->size / sizeof(uint16_t);
-    sim_output = new uint16_t[num_element];
-    uint64_t pim_data_addr = reinterpret_cast<uint64_t>(pim_data->data);
-    uint64_t output_addr = reinterpret_cast<uint64_t>(output->data);
-
-    pim_sim_.preload_data_with_addr(pim_data_addr - pim_base_addr, pim_data->data, pim_data->size);
-    pim_sim_.execute_kernel((void*)fmtd32, (size_t)fmtd32_size);
-    pim_sim_.read_result(sim_output, output_addr - pim_base_addr, output->size);
-
-    if (output->mem_type != MEM_TYPE_HOST)
-        hipMemcpy((void*)output->data, (void*)sim_output, output->size, hipMemcpyHostToDevice);
-
-    delete sim_output;
-
-    return ret;
+    return execute_relu_bn_copy(output, pim_data, fmtd32, fmtd32_size, pim_base_addr);
 }
-
 } /* namespace emulator */
 } /* namespace runtime */
 } /* namespace pim */

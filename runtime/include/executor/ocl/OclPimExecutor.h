@@ -37,7 +37,7 @@ class OclPimExecutor : public IPimExecutor
     int execute_add(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream, bool block);
     int execute_mul(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream, bool block);
     int execute_relu(PimBo* output, PimBo* pim_data, void* stream, bool block);
-    int execute_copy(PimBo* output, PimBo* pim_data, void* stream, bool block) { return -1; }
+    int execute_copy(PimBo* output, PimBo* pim_data, void* stream, bool block);
     int execute_bn(PimBo* output, PimBo* pim_data, PimBo* beta, PimBo* gamma, PimBo* mean, PimBo* variance,
                    double epsilon, void* stream, bool block)
     {
@@ -69,6 +69,10 @@ class OclPimExecutor : public IPimExecutor
     int execute_chwise_gemm_tile_accum(PimBo* output, PimBo* input, PimBo* weight, PimBo* bias, PimActFunc act_func,
                                        void* stream, bool block);
 
+    uint8_t* get_crf_bin(PimOpType op_type, int output_size);
+#ifdef EMULATOR
+    void emulator_trace_gen(unsigned int block_size, PimOpType op_type);
+#endif
    private:
     cl_int exec_err_;
 
@@ -89,6 +93,7 @@ class OclPimExecutor : public IPimExecutor
 
     cl_kernel eltwise_kernel_;
     cl_kernel relu_kernel_;
+    cl_kernel copy_kernel_;
     cl_kernel pim_aligned_gemm_bias_relu_8tile_fp16_;
     cl_kernel pim_aligned_gemm_bias_relu_fp16_;
     cl_kernel pim_chwise_gemm_bias_relu_32tile_fp16_;

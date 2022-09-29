@@ -56,6 +56,10 @@ class PimEmulator
                                PimOpType op_type, uint64_t pim_base_addr, uint8_t* temp_buf);
 
    private:
+    int execute_relu_bn_copy(PimBo* output, PimBo* pim_data, PimMemTraceData* fmtd32, int fmtd32_size,
+                             uint64_t pim_base_addr);
+
+   private:
     PimBlockInfo fbi_;
     PimSimulator pim_sim_;
 

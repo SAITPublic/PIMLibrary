@@ -363,7 +363,7 @@ int HipPimExecutor::execute_copy(PimBo* output, PimBo* pim_data, void* stream, b
                h_fmtd16_size_[0] * sizeof(PimMemTraceData));
     }
     h_fmtd16_size_[0] *= blocks;
-    pim_emulator_->convert_mem_trace_from_16B_to_32B(h_fmtd32_, h_fmtd32_size_, h_fmtd16_, h_fmtd16_size_[0], OP_RELU);
+    pim_emulator_->convert_mem_trace_from_16B_to_32B(h_fmtd32_, h_fmtd32_size_, h_fmtd16_, h_fmtd16_size_[0], OP_COPY);
     pim_emulator_->execute_copy(output, pim_data, h_fmtd32_, h_fmtd32_size_[0], g_pim_base_addr[device_id]);
 #else
     if (block) hipStreamSynchronize((hipStream_t)stream);
@@ -546,9 +546,10 @@ int HipPimExecutor::execute_aligned_gemm_tile_accum(PimBo* output, PimBo* input,
     int device_id;
     hipGetDevice(&device_id);
 
-    void (*gemm_kernel)(volatile uint8_t* __restrict__, volatile uint8_t* __restrict__, volatile uint8_t* __restrict__,
-                        volatile uint8_t* __restrict__, volatile uint8_t* __restrict__, volatile uint8_t* __restrict__,
-                        int, int, int, int, int, int, int, int,
+    void (*gemm_kernel)(volatile uint8_t * __restrict__, volatile uint8_t * __restrict__,
+                        volatile uint8_t * __restrict__, volatile uint8_t * __restrict__,
+                        volatile uint8_t * __restrict__, volatile uint8_t * __restrict__, int, int, int, int, int, int,
+                        int, int,
 #ifdef EMULATOR
                         PimMemTraceData*, int*, int, PimMemTracer*,
 #endif
@@ -633,9 +634,10 @@ int HipPimExecutor::execute_chwise_gemm_tile_accum(PimBo* output, PimBo* input, 
         crf_bin = (uint8_t*)pim_crf_generator_->make_crf_bin(OP_GEMV, input->bshape.w * sizeof(uint16_t));
     }
 
-    void (*gemm_kernel)(volatile uint8_t* __restrict__, volatile uint8_t* __restrict__, volatile uint8_t* __restrict__,
-                        volatile uint8_t* __restrict__, volatile uint8_t* __restrict__, volatile uint8_t* __restrict__,
-                        int, int, int, int, int, int, int, int,
+    void (*gemm_kernel)(volatile uint8_t * __restrict__, volatile uint8_t * __restrict__,
+                        volatile uint8_t * __restrict__, volatile uint8_t * __restrict__,
+                        volatile uint8_t * __restrict__, volatile uint8_t * __restrict__, int, int, int, int, int, int,
+                        int, int,
 #ifdef EMULATOR
                         PimMemTraceData*, int*, int, PimMemTracer*,
 #endif

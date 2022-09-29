@@ -63,6 +63,8 @@ OclPimExecutor::OclPimExecutor(pim::runtime::manager::PimManager* pim_manager, P
     cl_ok(exec_err_);
     relu_kernel_ = clCreateKernel(program_, "relu_pim_operation", &exec_err_);
     cl_ok(exec_err_);
+    copy_kernel_ = clCreateKernel(program_, "copy_pim", &exec_err_);
+    cl_ok(exec_err_);
     pim_aligned_gemm_bias_relu_8tile_fp16_ =
         clCreateKernel(program_, "pim_aligned_gemm_bias_relu_8tile_fp16", &exec_err_);
     cl_ok(exec_err_);
@@ -91,6 +93,7 @@ OclPimExecutor::~OclPimExecutor(void)
     pim_device_.reset();
     clReleaseKernel(eltwise_kernel_);
     clReleaseKernel(relu_kernel_);
+    clReleaseKernel(copy_kernel_);
     clReleaseKernel(pim_aligned_gemm_bias_relu_8tile_fp16_);
     clReleaseKernel(pim_aligned_gemm_bias_relu_fp16_);
     clReleaseKernel(pim_chwise_gemm_bias_relu_32tile_fp16_);
@@ -151,6 +154,7 @@ int OclPimExecutor::build_cl_program_with_source(void)
     cl_source = load_cl_file("PimInfo.cl");
     cl_source += load_cl_file("pim_op_kernels.cl");
     cl_source += load_cl_file("pim_gemm.cl");
+    cl_source += load_cl_file("pim_copy.cl");
     cl_source_ptr = cl_source.c_str();
 
     program_ = clCreateProgramWithSource(context, 1, (const char**)&cl_source_ptr, NULL, NULL);
@@ -315,6 +319,34 @@ int OclPimExecutor::deinitialize(void)
     return ret;
 }
 
+uint8_t* OclPimExecutor::get_crf_bin(PimOpType op_type, int output_size)
+{
+    uint8_t* crf_bin = pim_crf_generator_->find_crf(op_type, output_size);
+    if (crf_bin == nullptr) {
+        crf_bin = (uint8_t*)pim_crf_generator_->make_crf_bin(op_type, output_size);
+    }
+    return crf_bin;
+}
+
+#ifdef EMULATOR
+void OclPimExecutor::emulator_trace_gen(unsigned int block_size, PimOpType op_type)
+{
+    h_fmtd16_size_[0] = 0;
+    pim_manager_->copy_memory((void*)h_fmtd16_size_, (void*)cl_d_fmtd16_size_, sizeof(size_t), DEVICE_TO_HOST);
+    pim_manager_->copy_memory((void*)h_fmtd16_, (void*)cl_d_fmtd16_, sizeof(PimMemTraceData) * max_fmtd_size_,
+                              DEVICE_TO_HOST);
+
+    for (size_t i = 1; i < block_size; i++) {
+        memcpy(&h_fmtd16_[i * h_fmtd16_size_[0]], &h_fmtd16_[i * fmtd_size_per_ch_],
+               h_fmtd16_size_[0] * sizeof(PimMemTraceData));
+    }
+    h_fmtd16_size_[0] *= block_size;
+    pim_emulator_->set_rttype(RT_TYPE_OPENCL);
+    pim_emulator_->convert_mem_trace_from_16B_to_32B(h_fmtd32_, (int*)h_fmtd32_size_, h_fmtd16_, (int)h_fmtd16_size_[0],
+                                                     op_type);
+}
+#endif
+
 int OclPimExecutor::execute_eltwise(PimOpType eltop, PimBo* output, PimBo* operand0, PimBo* operand1, void* stream,
                                     bool block)
 {
@@ -409,17 +441,13 @@ int OclPimExecutor::execute_mul(PimBo* output, PimBo* operand0, PimBo* operand1,
 
 int OclPimExecutor::execute_relu(PimBo* output, PimBo* pim_data, void* stream, bool block)
 {
-    uint8_t* crf_bin = pim_crf_generator_->find_crf(OP_RELU, output->size);
-    int crf_size = 32;
-    if (crf_bin == nullptr) {
-        crf_bin = (uint8_t*)pim_crf_generator_->make_crf_bin(OP_RELU, output->size);
-    }
-
     const size_t block_size = pbi_->num_pim_chan;
     const size_t local_work_size = 32;
     const size_t global_work_size = block_size * local_work_size;
     int align_size = (131072 << 1);
     int aligned_outsize = ((output->size + align_size - 1) / align_size);
+    uint8_t* crf_bin = get_crf_bin(OP_RELU, output->size);
+    int crf_size = CRF_BIN_SIZE;
 
     exec_err_ =
         clSetKernelArg(relu_kernel_, 0, sizeof(cl_mem), (void*)&(((manager::OclBufferObj*)pim_data->data)->dev_addr));
@@ -460,23 +488,47 @@ int OclPimExecutor::execute_relu(PimBo* output, PimBo* pim_data, void* stream, b
     clFinish(queue);
 
 #ifdef EMULATOR
-    h_fmtd16_size_[0] = 0;
-    pim_manager_->copy_memory((void*)h_fmtd16_size_, (void*)cl_d_fmtd16_size_, sizeof(size_t), DEVICE_TO_HOST);
-    pim_manager_->copy_memory((void*)h_fmtd16_, (void*)cl_d_fmtd16_, sizeof(PimMemTraceData) * max_fmtd_size_,
-                              DEVICE_TO_HOST);
-
-    for (size_t i = 1; i < block_size; i++) {
-        memcpy(&h_fmtd16_[i * h_fmtd16_size_[0]], &h_fmtd16_[i * fmtd_size_per_ch_],
-               h_fmtd16_size_[0] * sizeof(PimMemTraceData));
-    }
-    h_fmtd16_size_[0] *= block_size;
-    int h_fmtd32_size = 0;
-    pim_emulator_->set_rttype(RT_TYPE_OPENCL);
-    pim_emulator_->convert_mem_trace_from_16B_to_32B(h_fmtd32_, &h_fmtd32_size, h_fmtd16_, (int)h_fmtd16_size_[0],
-                                                     OP_RELU);
-    pim_emulator_->execute_relu(output, pim_data, h_fmtd32_, h_fmtd32_size, g_pim_base_addr[0]);
+    emulator_trace_gen(block_size, OP_RELU);
+    pim_emulator_->execute_relu(output, pim_data, h_fmtd32_, h_fmtd32_size_[0], g_pim_base_addr[0]);
 #endif
     return exec_err_;
+}
+
+int OclPimExecutor::execute_copy(PimBo* output, PimBo* pim_data, void* stream, bool block)
+{
+    DLOG(INFO) << "called";
+    int ret = 0;
+    const size_t block_size = pbi_->num_pim_chan;
+    const size_t local_work_size = 32;
+    const size_t global_work_size = block_size * local_work_size;
+    size_t output_size = output->size;
+    uint8_t* crf_bin = get_crf_bin(OP_COPY, output_size);
+    int crf_size = CRF_BIN_SIZE;
+
+    PIM_PROFILE_TICK(RunCopyKernel);
+    cl_ok(
+        clSetKernelArg(copy_kernel_, 0, sizeof(cl_mem), (void*)&(((manager::OclBufferObj*)pim_data->data)->dev_addr)));
+    cl_ok(clSetKernelArg(copy_kernel_, 1, sizeof(cl_mem), (void*)&(((manager::OclBufferObj*)output->data)->dev_addr)));
+    cl_ok(clSetKernelArg(copy_kernel_, 2, sizeof(cl_mem), (void*)&base_address_));
+    cl_ok(clSetKernelArg(copy_kernel_, 3, sizeof(cl_int), (void*)&output_size));
+    cl_ok(clSetKernelArg(copy_kernel_, 4, sizeof(cl_mem), (void*)&crf_bin));
+    cl_ok(clSetKernelArg(copy_kernel_, 5, sizeof(cl_int), (void*)&crf_size));
+
+#ifdef EMULATOR
+    cl_ok(clSetKernelArg(copy_kernel_, 6, sizeof(cl_mem), (void*)&cl_d_fmtd16_));
+    cl_ok(clSetKernelArg(copy_kernel_, 7, sizeof(cl_mem), (void*)&cl_d_fmtd16_size_));
+    cl_ok(clSetKernelArg(copy_kernel_, 8, sizeof(cl_int), (void*)&fmtd_size_per_ch_));
+    cl_ok(clSetKernelArg(copy_kernel_, 9, sizeof(cl_mem), (void*)&cl_d_emulator_trace_));
+#endif
+    cl_ok(clEnqueueNDRangeKernel(queue, copy_kernel_, 1, NULL, &global_work_size, &local_work_size, 0, NULL, NULL));
+    clFinish(queue);
+    PIM_PROFILE_TOCK(RunCopyKernel);
+
+#ifdef EMULATOR
+    emulator_trace_gen(block_size, OP_COPY);
+    pim_emulator_->execute_copy(output, pim_data, h_fmtd32_, h_fmtd32_size_[0], g_pim_base_addr[0]);
+#endif
+    return ret;
 }
 
 int OclPimExecutor::execute_aligned_gemm_tile_accum(PimBo* output, PimBo* input, PimBo* weight, PimBo* bias,

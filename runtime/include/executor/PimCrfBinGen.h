@@ -24,6 +24,8 @@ namespace runtime
 {
 namespace executor
 {
+#define CRF_BIN_SIZE 32
+
 class PimCrfBinGen
 {
    public:
