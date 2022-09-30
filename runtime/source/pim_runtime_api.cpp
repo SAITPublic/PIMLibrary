@@ -656,25 +656,60 @@ PimBo* PimConvertGemmWeight(PimBo* src, bool save_for_reuse)
     return dst;
 }
 
-PimCompiledObj* PimCompileCustom(pimc::frontend::Var output, std::vector<pimc::frontend::Buffer> inputs, PimTarget target, std::string compile_opts = "O0") {
 #if PIM_COMPILER_ENABLE == 1
+PimTarget* PimCreateTarget(PimRuntimeType rt_type = PimRuntimeType::RT_TYPE_HIP, PimPrecision precision = PimPrecision::PIM_FP16, PimDevice device = PimDevice::GPU) {
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
+    PIM_PROFILE_TICK(CreateTarget);
+
+    if (pim_runtime == nullptr) {
+        DLOG(ERROR) << "PimRuntime is not initialized";
+        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+        return nullptr;
+    }
+    PimTarget* target = new PimTarget;
+    target->runtime = rt_type;
+    target->precision = precision;
+    target->device = device;
+
+    PIM_PROFILE_TOCK(CreateTarget);
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+    return target;
+}
+
+int PimDestroyTarget(PimTarget* target){
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
+    PIM_PROFILE_TICK(DestroyTarget);
+    int ret = 0;
+
+    if (pim_runtime == nullptr) {
+        DLOG(ERROR) << "PimRuntime is not initialized";
+        return -1;
+    }
+    delete target;
+
+    PIM_PROFILE_TOCK(DestroyTarget);
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+    return ret;
+}
+
+PimCompiledObj* PimBuildProgram(pimc::frontend::Var output, std::vector<pimc::frontend::Buffer> inputs,
+                                std::vector<PimBo*> input_pimbo, PimTarget target, std::string compile_opts){
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
+    //PIM_PROFILE_TICK();
+
+    if (pim_runtime == nullptr) {
+        DLOG(ERROR) << "PimRuntime is not initialized";
+        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+        return nullptr;
+    }
+    // TODO keep it in a seperate file
+    /*
     //HIP implementation
     //Create input PimBos
-    std::vector<PimBo*> input_pimbo, new_pimbo;
+    std::vector<PimBo*> temp_pimbo;
     PimBo* output_pimbo;
     std::unordered_map<std::string, PimBo*> pimbo_map;
-    int n = 1, c = 1, h =1, w = 1;
     for (auto buf : inputs) {
-        uint32_t num_dims = buf.get_num_dims();
-        if (num_dims > 0)
-            w = buf.get_dimension(num_dims - 1);
-        if (num_dims > 1)
-            h = buf.get_dimension(num_dims - 2);
-        if (num_dims > 2)
-            c = buf.get_dimension(num_dims - 3);
-        if (num_dims > 3)
-            n = buf.get_dimension(num_dims - 4);
-        auto pimbo = PimCreateBo(n, c, h, w, PimPrecision::PIM_FP16, PimMemType::MEM_TYPE_PIM);
         pimbo_map[buf.get_name()] = pimbo;
         input_pimbo.push_back(pimbo);
     }
@@ -695,7 +730,7 @@ PimCompiledObj* PimCompileCustom(pimc::frontend::Var output, std::vector<pimc::f
     pimbo_map[output.name()] = output_pimbo;
 
     //Compile code
-    output.generate_code(/*target*/); //can be added to below function
+    output.generate_code(target); //can be added to below function
     auto compiled_obj = pimc::get_compiled_object(output, compile_opts);
     //Create extra PimBos
     for (auto buf : compiled_obj->get_extra_buffers()) {
@@ -717,13 +752,22 @@ PimCompiledObj* PimCompileCustom(pimc::frontend::Var output, std::vector<pimc::f
     pim_co->num_threads = compiled_obj->get_number_of_threads();
     pim_co->op_order = compiled_obj->get_op_order();
     pim_co->pimbo_map = pimbo_map;
-    return pim_co;
-#endif
-    return NULL;
+    */
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+    //return pim_co;
 }
 
-PimBo* PimExecuteCustom(PimCompiledObj* obj, PimTarget target, std::string launch_opts = "") {
-#if PIM_COMPILER_ENABLE == 1
+PimBo* PimExecuteProgram(PimCompiledObj* obj, PimTarget target, std::string launch_opts = "") {
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
+    //PIM_PROFILE_TICK();
+
+    if (pim_runtime == nullptr) {
+        DLOG(ERROR) << "PimRuntime is not initialized";
+        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+        return nullptr;
+    }
+    // TODO keep it in a seperate file
+    /*
     pimc_driver::PimCDriver pimc_driver;
     auto kernel = pimc_driver.compile_code(obj->kernel, obj->crf_binary);
     struct kArgs {
@@ -744,15 +788,32 @@ PimBo* PimExecuteCustom(PimCompiledObj* obj, PimTarget target, std::string launc
     void *config[5] = {HIP_LAUNCH_PARAM_BUFFER_POINTER, nullptr, HIP_LAUNCH_PARAM_BUFFER_SIZE, &size, HIP_LAUNCH_PARAM_END};
     config[1] = static_cast<void*>(kernel_args);
     hipModuleLaunchKernel(kernel, obj->num_blocks, 1, 1, obj->num_threads, 1, 1, 0, nullptr, NULL, reinterpret_cast<void **>(&config));
-    return obj->output_pimbo;
-#endif
-    return NULL;
+    */
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+    //return obj->output_pimbo;
+
 }
 
-PimTarget PimCreateTarget(PimRuntimeType rt_type = PimRuntimeType::RT_TYPE_HIP, PimPrecision precision = PimPrecision::PIM_FP16, PimDevice device = PimDevice::GPU) {
-    PimTarget target;
-    target.runtime = rt_type;
-    target.precision = precision;
-    target.device = device;
-    return target;
+int PimDestroyProgram(PimCompiledObj* obj){
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
+    PIM_PROFILE_TICK(DestroyProgram);
+    int ret = 0;
+
+    if (pim_runtime == nullptr) {
+        DLOG(ERROR) << "PimRuntime is not initialized";
+        return -1;
+    }
+    obj->input_pimbo.clear();
+    obj->input_pimbo.shrink_to_fit();
+    obj->temp_pimbo.clear();
+    obj->temp_pimbo.shrink_to_fit();
+    obj->op_order.clear();
+    obj->op_order.shrink_to_fit();
+    obj->pimbo_map.clear();
+    delete obj;
+
+    PIM_PROFILE_TOCK(DestroyProgram);
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+    return ret;
 }
+#endif

@@ -110,9 +110,10 @@ typedef struct __PimTarget {
 } PimTarget;
 
 typedef struct __PimCompiledObject {
+    int32_t return_val;
     PimBo* output_pimbo;
     std::vector<PimBo*> input_pimbo;
-    std::vector<PimBo*> new_pimbo;
+    std::vector<PimBo*> temp_pimbo;
     std::string kernel;
     std::string crf_binary;
     uint32_t num_blocks;

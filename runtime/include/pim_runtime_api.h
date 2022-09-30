@@ -399,11 +399,17 @@ __PIM_API__ int PimExecuteDummy(void);
  */
 __PIM_API__ PimBo* PimConvertGemmWeight(PimBo* src, bool save_for_reuse = false);
 
+// TODO documentation
+__PIM_API__ PimTarget* PimCreateTarget(PimRuntimeType rt_type, PimPrecision precision, PimDevice device);
+
+__PIM_API__ PimTarget* PimDestroyTarget(PimTarget* target);
+
+__PIM_API__ PimCompiledObj* PimBuildProgram(pimc::frontend::Var output, std::vector<pimc::frontend::Buffer> inputs,
+                                            std::vector<PimBo*> input_pimbo, PimTarget target, std::string compile_opts);
+
+__PIM_API__ PimBo* PimExecuteProgram(PimCompiledObj* obj, PimTarget target, std::string launch_opts);
+
+__PIM_API__ int PimDestroyProgram(PimCompiledObj* obj);
 /**@}*/
 
-__PIM_API__ PimTarget PimCreateTarget(PimRuntimeType rt_type, PimPrecision precision, PimDevice device);
-
-__PIM_API__ PimCompiledObj* PimCustomCompile(pimc::frontend::Var output, std::vector<pimc::frontend::Buffer> inputs, int n, int c, PimTarget target, std::string compile_opts);
-
-PimBo* PimExecuteCustom(PimCompiledObj* obj, PimTarget target, std::string launch_opts);
 #endif /* _PIM_RUNTIME_API_H_ */
