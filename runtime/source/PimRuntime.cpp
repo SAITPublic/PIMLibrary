@@ -374,7 +374,7 @@ PimBo* PimRuntime::generate_gemm_weight_from_buffer(PimBo* src, bool save_for_re
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
 
     PimBo* pre_weight = nullptr;
-    if (src->data_layout_type == PimDataLayoutType::RAW) {
+    if (src->data_layout_type == PimDataLayoutType::RAW && is_pim_applicable(src)) {
         pre_weight = get_preloaded_pim_gemm_weight(src, save_for_reuse);
     } else {
         DLOG(ERROR) << "GEMM weight generation for provided layout is not supported yet";

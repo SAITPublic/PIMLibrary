@@ -29,7 +29,7 @@ void pad_data(void* input, int in_size, int in_nsize, int batch_size, PimMemFlag
 void pad_data(void* input, PimDesc* pim_desc, PimMemType mem_type, PimMemFlag mem_flag);
 void align_shape(PimDesc* pim_desc, PimOpType op_type);
 void align_gemm_shape(PimGemmDesc* pim_gemm_desc);
-bool is_pim_available(PimBo* wei);
+bool is_pim_applicable(PimBo* wei);
 bool is_pim_gemv_list_available(PimBo* output, PimBo* vector, PimBo* matrix);
 bool check_chwise_gemm_bo(PimBo* bo);
 size_t PrecisionSize(const PimBo* bo);

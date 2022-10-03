@@ -245,7 +245,7 @@ int HipPimExecutor::execute_gemm(PimBo* output, PimBo* input, PimBo* weight, Pim
             if (act_func == PimActFunc::ACT_RELU) relu = true;
             ret = this->execute_custom_gemv_add(output, input, weight, bias, relu, stream, block);
         }
-    } else if (kernel_type_ == PIM && is_pim_available(weight)) {
+    } else if (kernel_type_ == PIM && is_pim_applicable(weight)) {
         PimBo* pim_wei;
         if (weight->data_layout_type == PimDataLayoutType::RAW) {
             pim_wei = pim_runtime_->get_preloaded_pim_gemm_weight(weight);
@@ -255,7 +255,7 @@ int HipPimExecutor::execute_gemm(PimBo* output, PimBo* input, PimBo* weight, Pim
         }
         ret = this->execute_hip_gemm(output, input, pim_wei, bias, act_func, stream, block);
     } else {
-        if (is_pim_available(weight)) {
+        if (is_pim_applicable(weight)) {
             PimBo* pim_wei;
             if (weight->data_layout_type == PimDataLayoutType::RAW) {
                 pim_wei = pim_runtime_->get_preloaded_pim_gemm_weight(weight);
@@ -436,7 +436,9 @@ int HipPimExecutor::execute_custom_gemv(PimBo* output, PimBo* operand0, PimBo* o
 
     uint32_t m, n, k;
 
-    if (operand0->bshape_r.n != 1) {
+    if (operand0->bshape_r.n != 1 ||
+        operand1->data_layout_type != PimDataLayoutType::RAW ||
+        operand0->data_layout_type != PimDataLayoutType::RAW) {
         std::cout << "[Error] " << __FUNCTION__ << ": GEMM is not supported" << std::endl;
         return -1;
     }
@@ -486,7 +488,9 @@ int HipPimExecutor::execute_custom_gemv_add(PimBo* output, PimBo* operand0, PimB
 
     uint32_t m, n, k;
 
-    if (operand0->bshape_r.n != 1) {
+    if (operand0->bshape_r.n != 1 ||
+        operand1->data_layout_type != PimDataLayoutType::RAW ||
+        operand0->data_layout_type != PimDataLayoutType::RAW) {
         std::cout << "[Error] " << __FUNCTION__ << ": GEMM is not supported" << std::endl;
         return 1;
     }
