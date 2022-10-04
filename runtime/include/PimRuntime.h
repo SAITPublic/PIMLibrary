@@ -18,6 +18,7 @@
 #include "manager/PimInfo.h"
 #include "manager/PimManager.h"
 #include "pim_data_types.h"
+#include <api/pim_compiler.h>
 
 namespace pim
 {
@@ -53,6 +54,8 @@ class PimRuntime
     int execute_dummy(void);
     PimBo* generate_gemm_weight_from_buffer(PimBo* src, bool save_for_reuse = false);
     PimBo* get_preloaded_pim_gemm_weight(PimBo* dev_wei, bool save_for_reuse = true);
+    PimCompiledObj* build_program(pimc::frontend::Var output, std::vector<pimc::frontend::Buffer> inputs, std::vector<PimBo*> input_pimbo, PimTarget target, std::string compile_opts);
+    PimBo* execute_program(PimCompiledObj* obj, PimTarget target, std::string launch_opts);
 
    private:
     int insert_preloaded_pim_weight(PimBo* dev_wei, PimBo* pim_wei);

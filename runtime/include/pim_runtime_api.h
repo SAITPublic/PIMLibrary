@@ -399,16 +399,64 @@ __PIM_API__ int PimExecuteDummy(void);
  */
 __PIM_API__ PimBo* PimConvertGemmWeight(PimBo* src, bool save_for_reuse = false);
 
-// TODO documentation
+/**
+ * @brief Create PIM Target
+ *
+ * This call create the target with Runtime type (HIP/OpenCL), precision and device (GPU)
+ *
+ * @param Runtime type (HIP/OpenCL)
+ * @param PimPrecision FP16
+ * @param PimDevice (GPU)
+ *
+ * @return Return Target object
+ */
 __PIM_API__ PimTarget* PimCreateTarget(PimRuntimeType rt_type, PimPrecision precision, PimDevice device);
 
-__PIM_API__ PimTarget* PimDestroyTarget(PimTarget* target);
+/**
+ * @brief Destroy Target object
+ *
+ * @param PimTarget object pointer to be destroyed.
+ *
+ * @return successs/failure
+ */
+__PIM_API__ int PimDestroyTarget(PimTarget* target);
 
+/**
+ * @brief Build PIM Program, compile code
+ *
+ * This call builds PIM program using PIM Compiler to get compiled code gpu kernel, CRF Binary
+ *
+ * @param Output Var
+ * @param vector of input buffers
+ * @param vector of input PIM Buffer Objects
+ * @param PimTarget object
+ * @param compile options
+ *
+ * @return Return PIM Compiled Object
+ */
 __PIM_API__ PimCompiledObj* PimBuildProgram(pimc::frontend::Var output, std::vector<pimc::frontend::Buffer> inputs,
                                             std::vector<PimBo*> input_pimbo, PimTarget target, std::string compile_opts);
 
+/**
+ * @brief Execute PIM Program
+ *
+ * This call executes the compiled code, launches the target kernel
+ *
+ * @param PIM Compiled object- CRF Binary, kernel
+ * @param PimTarget object
+ * @param launch options
+ *
+ * @return Return output PIM Buffer Object
+ */
 __PIM_API__ PimBo* PimExecuteProgram(PimCompiledObj* obj, PimTarget target, std::string launch_opts);
 
+/**
+ * @brief Destroy Program
+ *
+ * @param PimCompiledObj object pointer to be destroyed.
+ *
+ * @return successs/failure
+ */
 __PIM_API__ int PimDestroyProgram(PimCompiledObj* obj);
 /**@}*/
 

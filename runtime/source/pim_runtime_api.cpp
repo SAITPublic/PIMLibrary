@@ -18,7 +18,6 @@
 #include "executor/PimCompilerDriver.h"
 
 using namespace pim::runtime;
-using namespace pim::runtime::pimc_driver;
 
 std::unique_ptr<PimRuntime> pim_runtime;
 static bool log_initialized = false;
@@ -693,105 +692,46 @@ int PimDestroyTarget(PimTarget* target){
 }
 
 PimCompiledObj* PimBuildProgram(pimc::frontend::Var output, std::vector<pimc::frontend::Buffer> inputs,
-                                std::vector<PimBo*> input_pimbo, PimTarget target, std::string compile_opts){
+                                std::vector<PimBo*> input_pimbo, PimTarget target, std::string compile_opts = "-O0"){
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
-    //PIM_PROFILE_TICK();
+    PIM_PROFILE_TICK(PimBuildProgram);
 
     if (pim_runtime == nullptr) {
         DLOG(ERROR) << "PimRuntime is not initialized";
         DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
         return nullptr;
     }
-    // TODO keep it in a seperate file
-    /*
-    //HIP implementation
-    //Create input PimBos
-    std::vector<PimBo*> temp_pimbo;
-    PimBo* output_pimbo;
-    std::unordered_map<std::string, PimBo*> pimbo_map;
-    for (auto buf : inputs) {
-        pimbo_map[buf.get_name()] = pimbo;
-        input_pimbo.push_back(pimbo);
+    PimCompiledObj* pim_co = pim_runtime->build_program(output, inputs, input_pimbo, target, compile_opts);
+    if (pim_co == nullptr) {
+        DLOG(ERROR) << "Failed to build program, compile";
+        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+        return nullptr;
     }
+    PIM_PROFILE_TOCK(PimBuildProgram);
 
-    //Create output pimbo
-    auto indices = output.get_indices();
-    n = 1; c = 1; h = 1; w = 1;
-    uint32_t num = indices.size();
-    if (num > 0)
-        w = indices[num - 1]->get_stop() - indices[num - 1]->get_start();
-    if (num > 1)
-        h = indices[num - 2]->get_stop() - indices[num - 2]->get_start();
-    if (num > 2)
-        c = indices[num - 3]->get_stop() - indices[num - 3]->get_start();
-    if (num > 3)
-        n = indices[num - 4]->get_stop() - indices[num - 4]->get_start();
-    output_pimbo = PimCreateBo(w, h, c, n, PimPrecision::PIM_FP16, PimMemType::MEM_TYPE_PIM);
-    pimbo_map[output.name()] = output_pimbo;
-
-    //Compile code
-    output.generate_code(target); //can be added to below function
-    auto compiled_obj = pimc::get_compiled_object(output, compile_opts);
-    //Create extra PimBos
-    for (auto buf : compiled_obj->get_extra_buffers()) {
-        auto pimbo = PimCreateBo(buf->size(), 1, c, n, PimPrecision::PIM_FP16, PimMemType::MEM_TYPE_PIM);
-        pimbo_map[buf->name()] = pimbo;
-        new_pimbo.push_back(pimbo);
-    }
-
-    //TODO Reorder weights
-
-    //Wrap in PimCompiledObj
-    PimCompiledObj *pim_co = new PimCompiledObj;
-    pim_co->output_pimbo = output_pimbo;
-    pim_co->input_pimbo = input_pimbo;
-    pim_co->new_pimbo = new_pimbo;
-    pim_co->kernel = compiled_obj->get_gpu_kernel();
-    pim_co->crf_binary = compiled_obj->get_crf_binary();
-    pim_co->num_blocks = compiled_obj->get_number_of_blocks();
-    pim_co->num_threads = compiled_obj->get_number_of_threads();
-    pim_co->op_order = compiled_obj->get_op_order();
-    pim_co->pimbo_map = pimbo_map;
-    */
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
-    //return pim_co;
+    return pim_co;
 }
 
 PimBo* PimExecuteProgram(PimCompiledObj* obj, PimTarget target, std::string launch_opts = "") {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
-    //PIM_PROFILE_TICK();
+    PIM_PROFILE_TICK(PimExecuteProgram);
 
     if (pim_runtime == nullptr) {
         DLOG(ERROR) << "PimRuntime is not initialized";
         DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
         return nullptr;
     }
-    // TODO keep it in a seperate file
-    /*
-    pimc_driver::PimCDriver pimc_driver;
-    auto kernel = pimc_driver.compile_code(obj->kernel, obj->crf_binary);
-    struct kArgs {
-        std::vector<void*> args;
-    };
-    kArgs *kernel_args = new kArgs;
-    for (auto op : obj->op_order) {
-        if (obj->pimbo_map.find(op) != obj->pimbo_map.end())
-            kernel_args->args.push_back(obj->pimbo_map[op]);
-        else if (op == "crf_binary")
-            kernel_args->args.push_back(static_cast<void*>(&obj->crf_binary));
-        else {
-            std::cout<<"PimBo not found in map";
-            assert(false);
-        }
+    PimBo* output_pimbo = pim_runtime->execute_program(obj, target, launch_opts);
+    if (output_pimbo == nullptr) {
+        DLOG(ERROR) << "Failed to execute program";
+        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+        return nullptr;
     }
-    size_t size = sizeof(*kernel_args);
-    void *config[5] = {HIP_LAUNCH_PARAM_BUFFER_POINTER, nullptr, HIP_LAUNCH_PARAM_BUFFER_SIZE, &size, HIP_LAUNCH_PARAM_END};
-    config[1] = static_cast<void*>(kernel_args);
-    hipModuleLaunchKernel(kernel, obj->num_blocks, 1, 1, obj->num_threads, 1, 1, 0, nullptr, NULL, reinterpret_cast<void **>(&config));
-    */
-    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
-    //return obj->output_pimbo;
+    PIM_PROFILE_TOCK(PimExecuteProgram);
 
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+    return output_pimbo;
 }
 
 int PimDestroyProgram(PimCompiledObj* obj){
@@ -805,8 +745,8 @@ int PimDestroyProgram(PimCompiledObj* obj){
     }
     obj->input_pimbo.clear();
     obj->input_pimbo.shrink_to_fit();
-    obj->temp_pimbo.clear();
-    obj->temp_pimbo.shrink_to_fit();
+    obj->new_pimbo.clear();
+    obj->new_pimbo.shrink_to_fit();
     obj->op_order.clear();
     obj->op_order.shrink_to_fit();
     obj->pimbo_map.clear();
