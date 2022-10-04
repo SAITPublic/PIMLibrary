@@ -436,8 +436,7 @@ int HipPimExecutor::execute_custom_gemv(PimBo* output, PimBo* operand0, PimBo* o
 
     uint32_t m, n, k;
 
-    if (operand0->bshape_r.n != 1 ||
-        operand1->data_layout_type != PimDataLayoutType::RAW ||
+    if (operand0->bshape_r.n != 1 || operand1->data_layout_type != PimDataLayoutType::RAW ||
         operand0->data_layout_type != PimDataLayoutType::RAW) {
         std::cout << "[Error] " << __FUNCTION__ << ": GEMM is not supported" << std::endl;
         return -1;
@@ -488,8 +487,7 @@ int HipPimExecutor::execute_custom_gemv_add(PimBo* output, PimBo* operand0, PimB
 
     uint32_t m, n, k;
 
-    if (operand0->bshape_r.n != 1 ||
-        operand1->data_layout_type != PimDataLayoutType::RAW ||
+    if (operand0->bshape_r.n != 1 || operand1->data_layout_type != PimDataLayoutType::RAW ||
         operand0->data_layout_type != PimDataLayoutType::RAW) {
         std::cout << "[Error] " << __FUNCTION__ << ": GEMM is not supported" << std::endl;
         return 1;

@@ -37,6 +37,7 @@ class OclBlockAllocator
     uint64_t allocate_pim_block(size_t request_size, int host_id);
     size_t block_size(void) const { return block_size_; }
     void* get_pim_base() { return (void*)base_address_memobject_; };
+
    private:
     cl_mem base_address_memobject_;
     void* base_host_address_;

@@ -51,6 +51,7 @@ class OclMemoryManager : public IPimMemoryManager
     int get_physical_id(void);
     int convert_data_layout(PimBo* dst, PimBo* src);
     void* get_base_memobj() { return fragment_allocator_[0]->get_pim_base(); }
+
    private:
     uint32_t mask_by_bit(uint32_t value, uint32_t start, uint32_t end);
     uint64_t addr_gen(uint32_t chan, uint32_t rank, uint32_t bankgroup, uint32_t bank, uint32_t row, uint32_t col);

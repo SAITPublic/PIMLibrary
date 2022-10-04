@@ -99,17 +99,19 @@ void PimCrfBinGen::create_pim_cmd(PimOpType op_type, int lc)
             cmds_.assign(tmp_cmds.begin(), tmp_cmds.end());
         }
     } else if (op_type == OP_BN) {
-        std::vector<PimCommand> tmp_cmds{
-            PimCommand(PimCmdType::MAD, PimOpdType::GRF_A, PimOpdType::EVEN_BANK, PimOpdType::SRF_M, PimOpdType::SRF_A,
-                       1, 0, 0, 0),
-            PimCommand(PimCmdType::NOP, 7), PimCommand(PimCmdType::MAD, PimOpdType::GRF_A, PimOpdType::GRF_A,
-                                                       PimOpdType::SRF_M, PimOpdType::SRF_A, 1, 0, 0, 1),
-            PimCommand(PimCmdType::NOP, 7), PimCommand(PimCmdType::MAD, PimOpdType::GRF_B, PimOpdType::ODD_BANK,
-                                                       PimOpdType::SRF_M, PimOpdType::SRF_A, 1, 0, 0, 0),
-            PimCommand(PimCmdType::NOP, 7), PimCommand(PimCmdType::MAD, PimOpdType::GRF_B, PimOpdType::GRF_B,
-                                                       PimOpdType::SRF_M, PimOpdType::SRF_A, 1, 0, 0, 1),
-            PimCommand(PimCmdType::NOP, 23)
-            /*PimCommand(PimCmdType::NOP, 0)*/};
+        std::vector<PimCommand> tmp_cmds{PimCommand(PimCmdType::MAD, PimOpdType::GRF_A, PimOpdType::EVEN_BANK,
+                                                    PimOpdType::SRF_M, PimOpdType::SRF_A, 1, 0, 0, 0),
+                                         PimCommand(PimCmdType::NOP, 7),
+                                         PimCommand(PimCmdType::MAD, PimOpdType::GRF_A, PimOpdType::GRF_A,
+                                                    PimOpdType::SRF_M, PimOpdType::SRF_A, 1, 0, 0, 1),
+                                         PimCommand(PimCmdType::NOP, 7),
+                                         PimCommand(PimCmdType::MAD, PimOpdType::GRF_B, PimOpdType::ODD_BANK,
+                                                    PimOpdType::SRF_M, PimOpdType::SRF_A, 1, 0, 0, 0),
+                                         PimCommand(PimCmdType::NOP, 7),
+                                         PimCommand(PimCmdType::MAD, PimOpdType::GRF_B, PimOpdType::GRF_B,
+                                                    PimOpdType::SRF_M, PimOpdType::SRF_A, 1, 0, 0, 1),
+                                         PimCommand(PimCmdType::NOP, 23)
+                                         /*PimCommand(PimCmdType::NOP, 0)*/};
         cmds_.assign(tmp_cmds.begin(), tmp_cmds.end());
     }
 

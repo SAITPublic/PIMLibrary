@@ -77,6 +77,7 @@ class KernelArgs
 
     virtual void **get_kconfig() = 0;
     hipFunction_t get_kernel() { return kernel_; }
+
    protected:
     size_t size_;
     std::string crf_binary_host_;
@@ -226,6 +227,7 @@ class HIPCompiler
     ~HIPCompiler() {}
     void execute();
     hipFunction_t get_kernel_function() { return kernel_; }
+
    private:
     HIPCompiler(HIPCompiler &&) = delete;
     HIPCompiler(const HIPCompiler &) = delete;
