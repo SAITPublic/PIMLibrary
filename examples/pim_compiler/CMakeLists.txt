@@ -8,13 +8,9 @@ link_directories(${ROCM_PATH}/opencl/lib)
 link_directories(${ROCM_PATH}/opencl/lib/x86_64/)
 
 file(GLOB HIP_SOURCES hip/*.cpp)
-file(GLOB OPENCL_SOURCES opencl/*.cpp)
+#file(GLOB BLAS_HIP_SOURCES hip/blas_1/*.cpp)
 
-add_subdirectory(monitor/opencl_sample)
-add_executable(PimIntegrationTests ${HIP_SOURCES})
-add_executable(OpenCLPimIntegrationTests ${OPENCL_SOURCES})
+add_executable(PimCompilerIntegrationTests ${HIP_SOURCES})
+#add_executable(PimCompilerIntegrationTests ${HIP_SOURCES} ${BLAS_HIP_SOURCES})
 
-target_link_libraries(PimIntegrationTests gtest PimRuntime)
-target_link_libraries(OpenCLPimIntegrationTests gtest_main gtest PimRuntime OpenCL)
-
-add_subdirectory(pim_compiler)
+target_link_libraries(PimCompilerIntegrationTests gtest PimRuntime pimcompiler codegen)
