@@ -404,7 +404,7 @@ PimBo* PimRuntime::generate_gemm_weight_from_buffer(PimBo* src, bool save_for_re
     return pim_reordered_buff;
 }
 
-PimCompiledObj* PimRuntime::build_program(pimc::frontend::Var output, std::vector<pimc::frontend::Buffer> inputs, std::vector<PimBo*> input_pimbo, PimTarget target, std::string compile_opts)
+PimCompiledObj* PimRuntime::build_program(pimc::frontend::Var output, std::vector<pimc::frontend::Buffer> inputs, std::vector<PimBo*> input_pimbo, PimTarget* target, std::string compile_opts)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
 
@@ -469,7 +469,7 @@ PimCompiledObj* PimRuntime::build_program(pimc::frontend::Var output, std::vecto
     return pim_co;
 }
 
-PimBo* PimRuntime::execute_program(PimCompiledObj* obj, PimTarget target, std::string launch_opts) {
+PimBo* PimRuntime::execute_program(PimCompiledObj* obj, PimTarget* target, std::string launch_opts) {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     pimc_driver::PimCDriver pimc_driver;
     auto kernel = pimc_driver.compile_code(obj->kernel, obj->crf_binary);

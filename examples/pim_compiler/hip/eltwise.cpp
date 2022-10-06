@@ -1,11 +1,12 @@
 #include "iostream"
 #include "pim_runtime_api.h"
-#include "pim_compiler.h"
+#include "api/pim_compiler.h"
+
+#include "gtest/gtest.h"
 
 using namespace std;
 using namespace pimc;
 using namespace pimc::frontend;
-using half_float::half;
 
 int pimc_eltwise_add(int h, int w){
 
@@ -39,8 +40,8 @@ int pimc_eltwise_add(int h, int w){
     D[i][j] = C[i][j] + B[i][j];
 
     //Run
-    PimTarget target = PimCreateTarget(RT_TYPE_HIP, PIM_FP16, GPU);
-    PimCompileObj* obj = PimBuildProgram(D, {B, C}, {pim_input0, pim_input1}, target);
+    PimTarget* target = PimCreateTarget(RT_TYPE_HIP, PIM_FP16, GPU);
+    PimCompiledObj* obj = PimBuildProgram(D, {B, C}, {pim_input0, pim_input1}, target);
     PimBo* device_output = PimExecuteProgram(obj, target);
     PimCopyMemory(host_output, device_output, PIM_TO_HOST);
     PimDeinitialize();
@@ -53,10 +54,8 @@ int pimc_eltwise_add(int h, int w){
     PimDestroyBo(pim_input0);
     PimDestroyBo(pim_input1);
     PimDestroyDesc(pim_desc);
-    return 0;
+    return ret;
 }
 
-
-}
 
 TEST(PimcompilerIntegrationTest, EltAdd) { EXPECT_TRUE(pimc_eltwise_add(256, 1024) == 0); }

@@ -435,7 +435,7 @@ __PIM_API__ int PimDestroyTarget(PimTarget* target);
  * @return Return PIM Compiled Object
  */
 __PIM_API__ PimCompiledObj* PimBuildProgram(pimc::frontend::Var output, std::vector<pimc::frontend::Buffer> inputs,
-                                            std::vector<PimBo*> input_pimbo, PimTarget target, std::string compile_opts);
+                                            std::vector<PimBo*> input_pimbo, PimTarget* target, std::string compile_opts = "-O0");
 
 /**
  * @brief Execute PIM Program
@@ -448,7 +448,7 @@ __PIM_API__ PimCompiledObj* PimBuildProgram(pimc::frontend::Var output, std::vec
  *
  * @return Return output PIM Buffer Object
  */
-__PIM_API__ PimBo* PimExecuteProgram(PimCompiledObj* obj, PimTarget target, std::string launch_opts);
+__PIM_API__ PimBo* PimExecuteProgram(PimCompiledObj* obj, PimTarget* target, std::string launch_opts = "");
 
 /**
  * @brief Destroy Program

@@ -1,4 +1,4 @@
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 #include "hip/hip_runtime.h"
 
 int main(int argc, char** argv)
@@ -15,6 +15,7 @@ int main(int argc, char** argv)
     }
     // Always default to 0 for now
     hipError_t deviceSet = hipSetDevice(0);
+    int device_id = 0;
     if (hipSuccess != deviceSet) {
         std::cout << "Failed to set device " << deviceSet << "Device ID: " << device_id << std::endl;
         return result;

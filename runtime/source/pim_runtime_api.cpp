@@ -692,7 +692,7 @@ int PimDestroyTarget(PimTarget* target){
 }
 
 PimCompiledObj* PimBuildProgram(pimc::frontend::Var output, std::vector<pimc::frontend::Buffer> inputs,
-                                std::vector<PimBo*> input_pimbo, PimTarget target, std::string compile_opts = "-O0"){
+                                std::vector<PimBo*> input_pimbo, PimTarget* target, std::string compile_opts){
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     PIM_PROFILE_TICK(PimBuildProgram);
 
@@ -713,7 +713,7 @@ PimCompiledObj* PimBuildProgram(pimc::frontend::Var output, std::vector<pimc::fr
     return pim_co;
 }
 
-PimBo* PimExecuteProgram(PimCompiledObj* obj, PimTarget target, std::string launch_opts = "") {
+PimBo* PimExecuteProgram(PimCompiledObj* obj, PimTarget* target, std::string launch_opts) {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     PIM_PROFILE_TICK(PimExecuteProgram);
 

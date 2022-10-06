@@ -13,4 +13,4 @@ file(GLOB HIP_SOURCES hip/*.cpp)
 add_executable(PimCompilerIntegrationTests ${HIP_SOURCES})
 #add_executable(PimCompilerIntegrationTests ${HIP_SOURCES} ${BLAS_HIP_SOURCES})
 
-target_link_libraries(PimCompilerIntegrationTests gtest PimRuntime pimcompiler codegen)
+target_link_libraries(PimCompilerIntegrationTests gtest PimRuntime PimC pimcompiler codegen)
