@@ -84,6 +84,8 @@ __PIM_API__ int PimGetDevice(uint32_t* device_id);
  * @param w width of buffer object
  * @param precision precision of buffer object (PIM_INT8, PIM_FP16)
  * @param mem_type  type of memory (PIM/GPU/HOST)
+ * @param user_ptr pointer indicating user pre-allocated buffer (optional)
+ * @param transposed representing whether the content has been transposed or not (optional)
  *
  * @return Pointer to buffer object.
  */
@@ -160,6 +162,7 @@ __PIM_API__ int PimDestroyDesc(PimDesc* pim_desc);
  * @param in_w width of input buffer and height of weight buffer
  * @param out_w width of weight and output buffer
  * @param precision precision of buffer
+ * @param transposed representing whether the content has been transposed or not (optional)
  *
  * @return PimGemmDesc structure
  */
