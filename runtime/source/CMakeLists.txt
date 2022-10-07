@@ -34,7 +34,7 @@ else()
 endif()
 
 if(PIM_COMPILER)
-    target_link_libraries(PimRuntime PimC)
+    target_link_libraries(PimRuntime PimC pimcompiler codegen)
 endif()
 
 install ( TARGETS PimRuntime LIBRARY DESTINATION ${ROCM_PATH}/lib/)
