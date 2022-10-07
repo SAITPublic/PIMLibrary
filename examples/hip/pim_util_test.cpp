@@ -46,25 +46,38 @@ int gpu_reduce_sum(void)
     int reduce_size = 16;
     half* in;
     half* out;
+    half* golden_out;
+    for (int i = 0; i < in_size; i++) in[i] = 1;
+    for (int i = 0; i < out_size; i++) out[i] = 0;
+    for (int i = 0; i < out_size; i++) golden_out[i] = 16.0;
 
     hipHostMalloc((void**)&in, in_size * sizeof(half));
     hipHostMalloc((void**)&out, out_size * sizeof(half));
+    hipHostMalloc((void**)&golden_out, out_size * sizeof(half));
 
     unsigned max_threads = 64;
     unsigned blocks = 64;
 
     for (int threads = 1; threads <= max_threads; threads *= 2) {
-        for (int i = 0; i < in_size; i++) in[i] = 1;
-        for (int i = 0; i < out_size; i++) out[i] = 0;
+        half* in_d;
+        half* out_d;
+        hipMalloc((void**)&in_d, in_size * sizeof(half));
+        hipMalloc((void**)&out_d, out_size * sizeof(half));
+        hipMemcpy(in_d, in, in_size * sizeof(half), hipMemcpyHostToDevice);
+        hipMemcpy(out_d, out, out_size * sizeof(half), hipMemcpyHostToDevice);
 
-        hipLaunchKernelGGL(reduce_sum, dim3(blocks), dim3(threads), 0, 0, out, in, out_size, reduce_size);
+        hipLaunchKernelGGL(reduce_sum, dim3(blocks), dim3(threads), 0, 0, out_d, in_d, out_size, reduce_size);
         hipStreamSynchronize(NULL);
 
+        hipMemcpy(out, out_d, out_size * sizeof(half), hipMemcpyDeviceToHost);
+
         for (int i = 0; i < out_size; i++) {
-            if (16.0 != __half2float(out[i])) {
+            if (__half2float(golden_out[i]) != __half2float(out[i])) {
                 return -1;
             }
         }
+        hipFree(in_d);
+        hipFree(out_d);
     }
 #if 0
     for (int i = 0; i < out_size; i++) {
@@ -74,6 +87,7 @@ int gpu_reduce_sum(void)
 
     hipHostFree(in);
     hipHostFree(out);
+    hipHostFree(golden_out);
 
     return 0;
 }
