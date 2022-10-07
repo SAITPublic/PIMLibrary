@@ -51,9 +51,9 @@ void HIPCompiler::execute(std::string hip_kernel, std::string crf_binary)
     }
 
     if (compileResult != HIPRTC_SUCCESS)
-        DLOG(INFO) << "Compilation failed.";
+        std::cout << "Compilation failed." << std::endl;
     else
-        DLOG(INFO) << "Compilation successfull";
+        std::cout << "Compilation successfull" << std::endl;
 
     size_t codeSize;
     hiprtcGetCodeSize(prog, &codeSize);

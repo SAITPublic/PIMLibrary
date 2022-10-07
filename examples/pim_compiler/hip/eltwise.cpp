@@ -44,7 +44,6 @@ int pimc_eltwise_add(int h, int w){
     PimCompiledObj* obj = PimBuildProgram(D, {B, C}, {pim_input0, pim_input1}, target);
     PimBo* device_output = PimExecuteProgram(obj, target);
     PimCopyMemory(host_output, device_output, PIM_TO_HOST);
-    PimDeinitialize();
 
     PimDestroyBo(host_input0);
     PimDestroyBo(host_input1);
@@ -54,8 +53,10 @@ int pimc_eltwise_add(int h, int w){
     PimDestroyBo(pim_input0);
     PimDestroyBo(pim_input1);
     PimDestroyDesc(pim_desc);
+
+    PimDeinitialize();
     return ret;
 }
 
 
-TEST(PimcompilerIntegrationTest, EltAdd) { EXPECT_TRUE(pimc_eltwise_add(256, 1024) == 0); }
+TEST(PimcompilerIntegrationTest, EltAdd) { EXPECT_TRUE(pimc_eltwise_add(2, 1024) == 0); }

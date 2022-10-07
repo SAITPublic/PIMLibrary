@@ -504,6 +504,7 @@ int PimExecuteAdd(PimBo* output, void* scalar, PimBo* vector, void* stream, bool
     PIM_PROFILE_TOCK(ExecuteAdd);
 
     PimDestroyBo(padded_scalar);
+    std::cout<<"PimDestryBo called in "<<__FUNCTION__<<std::endl;
     return ret;
 }
 
@@ -543,6 +544,7 @@ int PimExecuteMul(PimBo* output, void* scalar, PimBo* vector, void* stream, bool
     PIM_PROFILE_TOCK(ExecuteMul);
 
     PimDestroyBo(padded_scalar);
+    std::cout<<"PimDestryBo called in "<<__FUNCTION__<<std::endl;
     return ret;
 }
 
