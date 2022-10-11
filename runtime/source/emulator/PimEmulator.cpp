@@ -129,16 +129,18 @@ int PimEmulator::execute_gemm_bias_act(PimBo* output, PimBo* pim_data, PimMemTra
     int out_dim = output->bshape.n * output->bshape.c * output->bshape.h * output->bshape.w;
     sim_output = new uint16_t[out_dim];
     uint64_t tmp_data_addr, pim_data_addr;
+    void* input_data;
 
     if (rt_type_ == RT_TYPE_OPENCL) {
         tmp_data_addr = ((manager::OclBufferObj*)temp_buf)->host_addr;
         pim_data_addr = ((manager::OclBufferObj*)pim_data->data)->host_addr;
+        input_data = (void*)(((manager::OclBufferObj*)pim_data->data)->host_addr);
     } else {
         tmp_data_addr = reinterpret_cast<uint64_t>(temp_buf);
         pim_data_addr = reinterpret_cast<uint64_t>(pim_data->data);
+        input_data = pim_data->data;
     }
-
-    pim_sim_.preload_data_with_addr(pim_data_addr - pim_base_addr, pim_data->data, pim_data->size);
+    pim_sim_.preload_data_with_addr(pim_data_addr - pim_base_addr, input_data, pim_data->size);
     pim_sim_.execute_kernel((void*)fmtd32, fmtd32_size);
     pim_sim_.read_result_gemv(sim_output, tmp_data_addr - pim_base_addr, out_dim);
 

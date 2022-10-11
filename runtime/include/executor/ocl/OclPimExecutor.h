@@ -12,6 +12,7 @@
 #define _OCL_PIM_EXECUTOR_H_
 
 #include <CL/cl.h>
+#include "PimRuntime.h"
 #include "emulator/PimEmulator.h"
 #include "executor/IPimExecutor.h"
 #include "executor/PimCrfBinGen.h"
@@ -29,7 +30,8 @@ namespace executor
 class OclPimExecutor : public IPimExecutor
 {
    public:
-    OclPimExecutor(pim::runtime::manager::PimManager* pim_manager, PimPrecision precision);
+    OclPimExecutor(pim::runtime::manager::PimManager* pim_manager, pim::runtime::PimRuntime* pim_runtime_,
+                   PimPrecision precision);
     virtual ~OclPimExecutor(void);
 
     int initialize(void);
@@ -42,30 +44,30 @@ class OclPimExecutor : public IPimExecutor
                    double epsilon, void* stream, bool block);
     int execute_gemm(PimBo* output, PimBo* input, PimBo* weight, PimBo* bias, PimActFunc act_func, void* stream,
                      bool block);
-    int execute_custom_gemv(PimBo* output, PimBo* operand0, PimBo* operand1, bool is_gemv_add, void* stream, bool block)
-    {
-        return -1;
-    }
+    int execute_custom_gemv(PimBo* output, PimBo* operand0, PimBo* operand1, bool is_gemv_add, void* stream,
+                            bool block);
     int execute_custom_gemv_add(PimBo* output, PimBo* operand0, PimBo* operand1, PimBo* operand2, bool relu,
-                                void* stream, bool block)
-    {
-        return -1;
-    }
+                                void* stream, bool block);
+
     int execute_sync(void* stream) { return -1; }
     int execute_dummy(void) { return -1; }
     void* createStream(void) { return nullptr; }
-
    private:
     int check_cl_program_path(void);
     int build_cl_program_with_source(void);
     int save_cl_program_binary(void);
     int build_cl_program_with_binary(void);
     std::string load_cl_file(std::string filename);
+
     int execute_eltwise(PimOpType eltop, PimBo* output, PimBo* operand0, PimBo* operand1, void* stream, bool block);
     int execute_aligned_gemm_tile_accum(PimBo* output, PimBo* input, PimBo* weight, PimBo* bias, PimActFunc act_func,
                                         void* stream, bool block);
     int execute_chwise_gemm_tile_accum(PimBo* output, PimBo* input, PimBo* weight, PimBo* bias, PimActFunc act_func,
                                        void* stream, bool block);
+    int execute_ocl_gemm(PimBo* output, PimBo* input, PimBo* weight, PimBo* bias, PimActFunc act_func, void* stream,
+                         bool block);
+    int execute_gemv(PimBo* output, PimBo* input, PimBo* weight, PimBo* bias, PimActFunc act_func, void* stream,
+                     bool block);
 
     uint8_t* get_crf_bin(PimOpType op_type, int output_size);
 #ifdef EMULATOR
@@ -75,10 +77,12 @@ class OclPimExecutor : public IPimExecutor
     cl_int exec_err_;
 
     pim::runtime::manager::PimManager* pim_manager_;
+    pim::runtime::PimRuntime* pim_runtime_;
     std::shared_ptr<pim::runtime::manager::PimDevice> pim_device_;
     std::shared_ptr<PimCrfBinGen> pim_crf_generator_;
     PimBlockInfo* pbi_;
     PimGemvType pim_gemv_type_;
+    PimKrnlType kernel_type_;
 
     std::string cl_binary_path_;
     std::string cl_binary_;

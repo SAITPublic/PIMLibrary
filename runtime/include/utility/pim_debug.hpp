@@ -325,10 +325,10 @@ inline int compare_half_relative(half_float::half* data_a, half_float::half* dat
 
     for (int i = 0; i < size; i++) {
         if (compare_half_Ulps_and_absoulte(data_a[i], data_b[i], pass_bit_cnt)) {
-            // std::cout << "c data_a : " << (float)data_a[i] << " data_b : "  <<(float)data_b[i]  << std::endl;
+            // std::cout << "c data_a : " << (float)data_a[i] << " data_b : " << (float)data_b[i] << std::endl;
             pass_cnt++;
         } else if (compare_half_Ulps_and_absoulte(data_a[i], data_b[i], warn_bit_cnt, absTolerance)) {
-            // std::cout << "w data_a : " << (float)data_a[i] << " data_b : "  <<(float)data_b[i]  << std::endl;
+            // std::cout << "w data_a : " << (float)data_a[i] << " data_b : " << (float)data_b[i] << std::endl;
             warning_cnt++;
         } else {
             if (abs(float(data_a[i]) - float(data_b[i])) > max_diff) {

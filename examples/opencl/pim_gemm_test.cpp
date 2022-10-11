@@ -126,7 +126,7 @@ class OclPimGemmTest
         PimCopyMemory(h_o_, d_o_, DEVICE_TO_HOST);
     }
 
-    int validate(float epsilon = 1e-2)
+    int validate(float epsilon = 1e-5)
     {
         return compare_half_relative((half*)h_o_->data, (half*)golden_->data, out_size_, epsilon);
     }

@@ -32,12 +32,26 @@ extern cl_command_queue queue;
 
 namespace executor
 {
-OclPimExecutor::OclPimExecutor(pim::runtime::manager::PimManager* pim_manager, PimPrecision precision)
-    : pim_manager_(pim_manager)
+OclPimExecutor::OclPimExecutor(pim::runtime::manager::PimManager* pim_manager, pim::runtime::PimRuntime* pim_runtime,
+                               PimPrecision precision)
+    : pim_manager_(pim_manager), pim_runtime_(pim_runtime)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called ";
 
     int ret = 0;
+    const char* env_k = std::getenv("PIM_KERNEL_TYPE");
+    if (env_k != nullptr) {
+        switch (*env_k) {
+            case '1':
+                kernel_type_ = PIM;
+                break;
+            case '2':
+                kernel_type_ = CUSTOM_GPU;
+                break;
+            default:
+                kernel_type_ = OPTIMAL;
+        }
+    }
 
     ret = check_cl_program_path();
     if (ret == 0 /* source path */) {
@@ -609,11 +623,10 @@ int OclPimExecutor::execute_aligned_gemm_tile_accum(PimBo* output, PimBo* input,
     clFinish(queue);
     PIM_PROFILE_TOCK(RunGemmKernel);
 #ifdef EMULATOR
-
     PIM_PROFILE_TICK(RunGemmEmulation);
     emulator_trace_gen(block_size, OP_GEMV);
     pim_emulator_->execute_gemm_bias_act(output, weight, h_fmtd32_, h_fmtd32_size_[0], OP_GEMV, g_pim_base_addr[0],
-                                         (uint8_t*)pim_gemv_tmp_buffer_->host_addr, bias, act_func);
+                                         (uint8_t*)pim_gemv_tmp_buffer_, bias, act_func);
 
     PIM_PROFILE_TOCK(RunGemmEmulation);
 #endif
@@ -694,18 +707,71 @@ int OclPimExecutor::execute_chwise_gemm_tile_accum(PimBo* output, PimBo* input, 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
-
-int OclPimExecutor::execute_gemm(PimBo* output, PimBo* input, PimBo* weight, PimBo* bias, PimActFunc act_func,
-                                 void* stream, bool block)
+int OclPimExecutor::execute_ocl_gemm(PimBo* output, PimBo* input, PimBo* weight, PimBo* bias, PimActFunc act_func,
+                                     void* stream, bool block)
 {
     int ret = 0;
-
     if (weight->data_layout_type == PimDataLayoutType::CHWISE_GEMM_WEIGHT)
         ret = execute_chwise_gemm_tile_accum(output, input, weight, bias, act_func, stream, block);
     else if (weight->data_layout_type == PimDataLayoutType::ALIGNED_GEMM_WEIGHT)
         ret = execute_aligned_gemm_tile_accum(output, input, weight, bias, act_func, stream, block);
     else
         DLOG(ERROR) << "Provided layout is not supported in GEMM call";
+
+    return ret;
+}
+int OclPimExecutor::execute_gemv(PimBo* output, PimBo* input, PimBo* weight, PimBo* bias, PimActFunc act_func,
+                                 void* stream, bool block)
+{
+    int ret = 0;
+    DLOG(ERROR) << "OCL Gemv GPU UnImplemented ";
+    return ret;
+}
+int OclPimExecutor::execute_custom_gemv(PimBo* output, PimBo* operand0, PimBo* operand1, bool is_gemv_add, void* stream,
+                                        bool block)
+{
+    int ret = 0;
+    DLOG(ERROR) << "OCL Custom Gemv GPU UnImplemented ";
+    return ret;
+}
+int OclPimExecutor::execute_custom_gemv_add(PimBo* output, PimBo* operand0, PimBo* operand1, PimBo* operand2, bool relu,
+                                            void* stream, bool block)
+{
+    int ret = 0;
+    DLOG(ERROR) << "OCL  Custom Gemv ADD GPU UnImplemented ";
+    return ret;
+}
+int OclPimExecutor::execute_gemm(PimBo* output, PimBo* input, PimBo* weight, PimBo* bias, PimActFunc act_func,
+                                 void* stream, bool block)
+{
+    int ret = 0;
+    if (kernel_type_ == CUSTOM_GPU) {
+        // ret = this->execute_gemv(output, input, weight, bias, act_func, stream, block);
+        DLOG(ERROR) << "OCL Custom GPU UnImplemented ";
+    } else if (kernel_type_ == PIM && !is_transposed(weight)) {
+        PimBo* pim_wei;
+        if (weight->data_layout_type == PimDataLayoutType::RAW) {
+            pim_wei = pim_runtime_->get_preloaded_pim_gemm_weight(weight);
+        } else {
+            // Assume that user has provided correct layout
+            pim_wei = weight;
+        }
+        ret = this->execute_ocl_gemm(output, input, pim_wei, bias, act_func, stream, block);
+    } else {
+        if (is_pim_applicable(weight)) {
+            PimBo* pim_wei;
+            if (weight->data_layout_type == PimDataLayoutType::RAW) {
+                pim_wei = pim_runtime_->get_preloaded_pim_gemm_weight(weight);
+            } else {
+                // Assume that user has provided correct layout
+                pim_wei = weight;
+            }
+            ret = this->execute_ocl_gemm(output, input, pim_wei, bias, act_func, stream, block);
+        } else {
+            std::cout << "Pim Not Applicable" << std::endl;
+            ret = this->execute_gemv(output, input, weight, bias, act_func, stream, block);
+        }
+    }
 
     return ret;
 }

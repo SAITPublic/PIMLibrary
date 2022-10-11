@@ -435,7 +435,6 @@ int OclMemoryManager::convert_data_layout(PimBo* dst, PimBo* src)
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
     bool is_chwise = check_chwise_gemm_bo(src);
-
     if (is_chwise) {
         ret = convert_data_layout_for_chwise_gemm_weight(dst, src);
     } else {
@@ -599,7 +598,6 @@ int OclMemoryManager::convert_data_layout_for_aligned_gemm_weight(PimBo* dst, Pi
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
-
     int num_grf_A = pbi_->num_grf;
     int num_grf_B = pbi_->num_grf;
     int num_pim_blocks = pbi_->num_pim_blocks;
@@ -633,17 +631,19 @@ int OclMemoryManager::convert_data_layout_for_aligned_gemm_weight(PimBo* dst, Pi
     int out_cnt = src->bshape.w;
     int in_cnt = src->bshape.h * type_size / trans_size;
     int src_size = src->size;
-
     if (src->bshape.w != src->bshape_r.w || src->bshape.h != src->bshape_r.h) {
         src_temp = (char*)calloc(src_size, sizeof(half));
+        int copy_success;
         for (int i = 0; i < src->bshape_r.w; i++) {
-            if (hipMemcpy((half*)src_temp + i * src->bshape.h, (half*)src_data + i * src->bshape_r.h,
-                          src->bshape_r.h * sizeof(half), hipMemcpyDeviceToHost) != hipSuccess) {
+            copy_success = copy_memory((half*)src_temp + i * src->bshape.h, (half*)src_data + i * src->bshape_r.h,
+                                       src->bshape_r.h * sizeof(half), DEVICE_TO_HOST);
+            if (copy_success != 0) {
                 DLOG(INFO) << "[END] " << __FUNCTION__ << " Failed to copy";
                 return -1;
             }
         }
-        if (hipMemcpy(src_data, src_temp, src_size, hipMemcpyHostToDevice) != hipSuccess) {
+        copy_success = copy_memory(src_data, src_temp, src_size, HOST_TO_DEVICE);
+        if (copy_success != 0) {
             DLOG(INFO) << "[END] " << __FUNCTION__ << " Failed to copy";
             return -1;
         }
