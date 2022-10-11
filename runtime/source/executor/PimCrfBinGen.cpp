@@ -193,7 +193,7 @@ int PimCrfBinGen::get_loop_counter(PimOpType op_type, int input_size)
     int num_tile = num_transaction / num_parallelism;
 
     if (op_type == OP_GEMV) {
-        if (pim_gemv_type_ == TILE_TREE)
+        if (is_gemv_tile_tree_)
             lc = (input_size / pbi_->trans_size / pbi_->num_grf_A / 2) - 1;
         else
             lc = input_size / pbi_->trans_size / pbi_->num_grf_A;

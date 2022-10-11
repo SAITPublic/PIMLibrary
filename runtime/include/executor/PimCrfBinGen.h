@@ -53,7 +53,6 @@ class PimCrfBinGen
     PimBlockInfo* pbi_;
     bool is_gemv_tile_tree_;
     int max_crf_size_;
-    PimGemvType pim_gemv_type_;
 };
 
 } /* namespace executor */
