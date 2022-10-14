@@ -700,7 +700,7 @@ int OclPimExecutor::execute_chwise_gemm_tile_accum(PimBo* output, PimBo* input, 
     PIM_PROFILE_TICK(RunGemmEmulation);
     emulator_trace_gen(block_size, OP_GEMV);
     pim_emulator_->execute_gemm_bias_act(output, weight, h_fmtd32_, h_fmtd32_size_[0], OP_GEMV, g_pim_base_addr[0],
-                                         (uint8_t*)pim_gemv_tmp_buffer_->host_addr, bias, act_func);
+                                         (uint8_t*)pim_gemv_tmp_buffer_, bias, act_func);
 
     PIM_PROFILE_TOCK(RunGemmEmulation);
 #endif

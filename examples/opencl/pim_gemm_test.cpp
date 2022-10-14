@@ -197,3 +197,20 @@ TEST_F(PimGemmOCLTestFixture, pim_gemm_4x8x1024_4x1024x4096)
 {
     EXPECT_TRUE(ExecuteTest(1, 4, 8, 1024, 4096, false, true, NONE) == 0);
 }
+
+TEST_F(PimGemmOCLTestFixture, pim_gemm_64x1x256_64x256x64)
+{
+    EXPECT_TRUE(ExecuteTest(1, 64, 1, 256, 64, false, true, NONE) == 0);
+}
+TEST_F(PimGemmOCLTestFixture, pim_gemm_64x1x1024_64x1024x64)
+{
+    EXPECT_TRUE(ExecuteTest(1, 64, 1, 1024, 64, false, true, NONE) == 0);
+}
+TEST_F(PimGemmOCLTestFixture, pim_gemm_4x1x4096_4x4096x1024)
+{
+    EXPECT_TRUE(ExecuteTest(1, 4, 1, 4096, 1024, false, true, NONE) == 0);
+}
+TEST_F(PimGemmOCLTestFixture, pim_gemm_8x1x4096_8x4096x1024)
+{
+    EXPECT_TRUE(ExecuteTest(1, 8, 1, 4096, 1024, false, true, NONE) == 0);
+}
