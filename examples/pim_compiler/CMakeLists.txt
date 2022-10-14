@@ -15,6 +15,10 @@ file(GLOB HIP_SOURCES_ELT hip/eltwise.cpp  hip/pimctest_main.cpp)
 add_executable(PimCompilerIntegrationTestElt ${HIP_SOURCES_ELT})
 target_link_libraries(PimCompilerIntegrationTestElt gtest PimRuntime PimC pimcompiler codegen)
 
+file(GLOB HIP_SOURCES_ELT_MULTIOP hip/elt_multiop.cpp  hip/pimctest_main.cpp)
+add_executable(PimCompilerIntegrationTestEltMultiop ${HIP_SOURCES_ELT_MULTIOP})
+target_link_libraries(PimCompilerIntegrationTestEltMultiop gtest PimRuntime PimC pimcompiler codegen)
+
 #file(GLOB HIP_SOURCES_GEMV hip/gemv.cpp hip/pimctest_main.cpp)
 #add_executable(PimCompilerIntegrationTestGemv ${HIP_SOURCES_GEMV})
 #target_link_libraries(PimCompilerIntegrationTestGemv gtest PimRuntime PimC pimcompiler codegen)
