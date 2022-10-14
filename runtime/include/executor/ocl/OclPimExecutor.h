@@ -52,6 +52,7 @@ class OclPimExecutor : public IPimExecutor
     int execute_sync(void* stream) { return -1; }
     int execute_dummy(void) { return -1; }
     void* createStream(void) { return nullptr; }
+
    private:
     int check_cl_program_path(void);
     int build_cl_program_with_source(void);

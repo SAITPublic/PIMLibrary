@@ -220,10 +220,7 @@ bool check_chwise_gemm_bo(PimBo* bo)
     return ret;
 }
 
-bool is_transposed(PimBo* wei)
-{
-    return wei->transposed;
-}
+bool is_transposed(PimBo* wei) { return wei->transposed; }
 
 bool is_pim_applicable(PimBo* wei)
 {
