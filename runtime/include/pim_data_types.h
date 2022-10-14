@@ -13,8 +13,8 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include <vector>
 #include <unordered_map>
+#include <vector>
 
 #define __PIM_API__
 
@@ -103,6 +103,7 @@ typedef struct __PimBufferObject {
     bool transposed;
 } PimBo;
 
+#if PIM_COMPILER_ENABLE == 1
 typedef struct __PimTarget {
     PimRuntimeType runtime;
     PimDevice device;
@@ -111,16 +112,17 @@ typedef struct __PimTarget {
 
 typedef struct __PimCompiledObject {
     int32_t return_val;
-    PimBo* output_pimbo;
-    std::vector<PimBo*> input_pimbo;
-    std::vector<PimBo*> new_pimbo;
+    PimBo *output_pimbo;
+    std::vector<PimBo *> input_pimbo;
+    std::vector<PimBo *> new_pimbo;
     std::string kernel;
     std::string crf_binary;
     uint32_t num_blocks;
     uint32_t num_threads;
     std::vector<std::string> op_order;
-    std::unordered_map<std::string, PimBo*> pimbo_map;
+    std::unordered_map<std::string, PimBo *> pimbo_map;
 } PimCompiledObj;
+#endif
 
 typedef struct __PimGemmDescriptor {
     PimBShape in_bshape;

@@ -477,7 +477,6 @@ int HipPimExecutor::execute_custom_gemv(PimBo* output, PimBo* operand0, PimBo* o
     }
 
     if (copy_to_device) {
-        std::cout<<"PimDestryBo called in "<<__FUNCTION__<<std::endl;
         PimDestroyBo(operand1);
     }
 

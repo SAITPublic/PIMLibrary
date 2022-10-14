@@ -49,9 +49,9 @@ void HIPCompiler::execute(std::string hip_kernel, std::string crf_binary)
     }
 
     if (compileResult != HIPRTC_SUCCESS)
-        std::cout << "Compilation failed." << std::endl;
+        DLOG(INFO) << "Compilation failed." << std::endl;
     else
-        std::cout << "Compilation successful" << std::endl;
+        DLOG(INFO) << "Compilation successful" << std::endl;
 
     size_t codeSize;
     hiprtcGetCodeSize(prog, &codeSize);
@@ -72,40 +72,7 @@ void HIPCompiler::execute(std::string hip_kernel, std::string crf_binary)
 #endif
 }
 
-bool HIPExecutor::execute()
-{
-/*#if PIM_COMPILER_ENABLE == 1
-    unsigned blocks = 64;
-    switch (op_type) {
-        case OP_ELT_ADD:
-        case OP_ELT_MUL: {
-            unsigned threads_per_block = 32;
-            EltArgs<half_float::half> *elt_args = reinterpret_cast<EltArgs<half_float::half> *>(kargs_);
-            hipModuleLaunchKernel(elt_args->get_kernel(), blocks, 1, 1, threads_per_block, 1, 1, 0, nullptr, NULL,
-                                  elt_args->get_kconfig());
-        } break;
-        case OP_GEMV: {
-            unsigned threads_per_block = 64;
-            GemvKArgs<half_float::half> *gemv_args = reinterpret_cast<GemvKArgs<half_float::half> *>(kargs_);
-            hipModuleLaunchKernel(gemv_args->get_kernel(), blocks, 1, 1, threads_per_block, 1, 1, 0, nullptr, NULL,
-                                  gemv_args->get_kconfig());
-        } break;
-        case OP_RELU: {
-            unsigned threads_per_block = 32;
-            ReluArgs<half_float::half> *relu_args = reinterpret_cast<ReluArgs<half_float::half> *>(kargs_);
-            hipModuleLaunchKernel(relu_args->get_kernel(), blocks, 1, 1, threads_per_block, 1, 1, 0, nullptr, NULL,
-                                  relu_args->get_kconfig());
-        }; break;
-        default:
-            DLOG(INFO) << "Invalid operator type " << __FUNCTION__;
-            return false;
-    }
-    hipStreamSynchronize(nullptr);
-    return true;
-#endif*/
-    return false;
-}
-
+bool HIPExecutor::execute() { return false; }
 hipFunction_t PimCDriver::compile_code(std::string kernel, std::string crf_binary)
 {
     compile_.execute(kernel, crf_binary);

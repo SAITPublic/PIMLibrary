@@ -47,7 +47,6 @@ class Tensor
     Tensor(pimc::TensorDesc desc, T *data) : desc_(desc), data_(data) {}
     T *get_data() { return data_; }
     pimc::TensorDesc get_desc() { return desc_; }
-
    private:
     pimc::TensorDesc desc_;
     T *data_;
@@ -77,7 +76,6 @@ class KernelArgs
 
     virtual void **get_kconfig() = 0;
     hipFunction_t get_kernel() { return kernel_; }
-
    protected:
     size_t size_;
     std::string crf_binary_host_;
@@ -227,7 +225,6 @@ class HIPCompiler
     ~HIPCompiler() {}
     void execute(std::string hip_kernel, std::string crf_binary);
     hipFunction_t get_kernel_function() { return kernel_; }
-
    private:
     HIPCompiler(HIPCompiler &&) = delete;
     HIPCompiler(const HIPCompiler &) = delete;

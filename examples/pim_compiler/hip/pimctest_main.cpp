@@ -9,7 +9,7 @@ int main(int argc, char** argv)
     int numDevices = 1;
     hipGetDeviceCount(&numDevices);
     // Check atleast for 1 device
-    if(numDevices < 1){
+    if (numDevices < 1) {
         std::cout << "No device found ... exiting" << std::endl;
         return -1;
     }

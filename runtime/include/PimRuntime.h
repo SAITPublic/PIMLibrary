@@ -13,12 +13,12 @@
 
 #pragma GCC diagnostic ignored "-Wunused-private-field"
 
+#include <api/pim_compiler.h>
 #include <unordered_map>
 #include "executor/IPimExecutor.h"
 #include "manager/PimInfo.h"
 #include "manager/PimManager.h"
 #include "pim_data_types.h"
-#include <api/pim_compiler.h>
 
 namespace pim
 {
@@ -54,8 +54,36 @@ class PimRuntime
     int execute_dummy(void);
     PimBo* generate_gemm_weight_from_buffer(PimBo* src, bool save_for_reuse = false);
     PimBo* get_preloaded_pim_gemm_weight(PimBo* dev_wei, bool save_for_reuse = true);
-    PimCompiledObj* build_program(pimc::frontend::Var output, std::vector<pimc::frontend::Buffer> inputs, std::vector<PimBo*> input_pimbo, PimTarget* target, std::string compile_opts);
+
+#if PIM_COMPILER_ENABLE == 1
+    /**
+    * @brief Build PIM Program, compile code
+    *
+    * This call builds PIM program using PIM Compiler to get compiled code gpu kernel, CRF Binary
+    *
+    * @param Output Var
+    * @param vector of input buffers
+    * @param vector of input PIM Buffer Objects
+    * @param PimTarget object
+    * @param compile options
+    *
+    * @return Return PIM Compiled Object
+    */
+    PimCompiledObj* build_program(pimc::frontend::Var output, std::vector<pimc::frontend::Buffer> inputs,
+                                  std::vector<PimBo*> input_pimbo, PimTarget* target, std::string compile_opts);
+    /**
+   * @brief Execute PIM Program
+   *
+   * This call executes the compiled code, launches the target kernel
+   *
+   * @param PIM Compiled object- CRF Binary, kernel
+   * @param PimTarget object
+   * @param launch options
+   *
+   * @return Return output PIM Buffer Object
+   */
     PimBo* execute_program(PimCompiledObj* obj, PimTarget* target, std::string launch_opts);
+#endif
 
    private:
     int insert_preloaded_pim_weight(PimBo* dev_wei, PimBo* pim_wei);

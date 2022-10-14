@@ -11,8 +11,8 @@
 #ifndef _PIM_RUNTIME_API_H_
 #define _PIM_RUNTIME_API_H_
 
-#include "pim_data_types.h"
 #include <api/pim_compiler.h>
+#include "pim_data_types.h"
 
 /** @mainpage PIM SDK
  *
@@ -399,6 +399,7 @@ __PIM_API__ int PimExecuteDummy(void);
  */
 __PIM_API__ PimBo* PimConvertGemmWeight(PimBo* src, bool save_for_reuse = false);
 
+#if PIM_COMPILER_ENABLE == 1
 /**
  * @brief Create PIM Target
  *
@@ -435,7 +436,8 @@ __PIM_API__ int PimDestroyTarget(PimTarget* target);
  * @return Return PIM Compiled Object
  */
 __PIM_API__ PimCompiledObj* PimBuildProgram(pimc::frontend::Var output, std::vector<pimc::frontend::Buffer> inputs,
-                                            std::vector<PimBo*> input_pimbo, PimTarget* target, std::string compile_opts = "-O0");
+                                            std::vector<PimBo*> input_pimbo, PimTarget* target,
+                                            std::string compile_opts = "-O0");
 
 /**
  * @brief Execute PIM Program
@@ -458,6 +460,7 @@ __PIM_API__ PimBo* PimExecuteProgram(PimCompiledObj* obj, PimTarget* target, std
  * @return successs/failure
  */
 __PIM_API__ int PimDestroyProgram(PimCompiledObj* obj);
+#endif
 /**@}*/
 
 #endif /* _PIM_RUNTIME_API_H_ */

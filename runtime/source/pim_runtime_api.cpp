@@ -10,12 +10,12 @@
 #include "pim_runtime_api.h"
 #include <iostream>
 #include "PimRuntime.h"
+#include "executor/PimCompilerDriver.h"
 #include "half.hpp"
 #include "hip/hip_runtime.h"
 #include "utility/pim_log.h"
 #include "utility/pim_profile.h"
 #include "utility/pim_util.h"
-#include "executor/PimCompilerDriver.h"
 
 using namespace pim::runtime;
 
@@ -504,7 +504,7 @@ int PimExecuteAdd(PimBo* output, void* scalar, PimBo* vector, void* stream, bool
     PIM_PROFILE_TOCK(ExecuteAdd);
 
     PimDestroyBo(padded_scalar);
-    std::cout<<"PimDestryBo called in "<<__FUNCTION__<<std::endl;
+    std::cout << "PimDestryBo called in " << __FUNCTION__ << std::endl;
     return ret;
 }
 
@@ -544,7 +544,7 @@ int PimExecuteMul(PimBo* output, void* scalar, PimBo* vector, void* stream, bool
     PIM_PROFILE_TOCK(ExecuteMul);
 
     PimDestroyBo(padded_scalar);
-    std::cout<<"PimDestryBo called in "<<__FUNCTION__<<std::endl;
+    std::cout << "PimDestryBo called in " << __FUNCTION__ << std::endl;
     return ret;
 }
 
@@ -658,7 +658,9 @@ PimBo* PimConvertGemmWeight(PimBo* src, bool save_for_reuse)
 }
 
 #if PIM_COMPILER_ENABLE == 1
-PimTarget* PimCreateTarget(PimRuntimeType rt_type = PimRuntimeType::RT_TYPE_HIP, PimPrecision precision = PimPrecision::PIM_FP16, PimDevice device = PimDevice::GPU) {
+PimTarget* PimCreateTarget(PimRuntimeType rt_type = PimRuntimeType::RT_TYPE_HIP,
+                           PimPrecision precision = PimPrecision::PIM_FP16, PimDevice device = PimDevice::GPU)
+{
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     PIM_PROFILE_TICK(CreateTarget);
 
@@ -677,7 +679,8 @@ PimTarget* PimCreateTarget(PimRuntimeType rt_type = PimRuntimeType::RT_TYPE_HIP,
     return target;
 }
 
-int PimDestroyTarget(PimTarget* target){
+int PimDestroyTarget(PimTarget* target)
+{
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     PIM_PROFILE_TICK(DestroyTarget);
     int ret = 0;
@@ -694,7 +697,8 @@ int PimDestroyTarget(PimTarget* target){
 }
 
 PimCompiledObj* PimBuildProgram(pimc::frontend::Var output, std::vector<pimc::frontend::Buffer> inputs,
-                                std::vector<PimBo*> input_pimbo, PimTarget* target, std::string compile_opts){
+                                std::vector<PimBo*> input_pimbo, PimTarget* target, std::string compile_opts)
+{
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     PIM_PROFILE_TICK(PimBuildProgram);
 
@@ -715,7 +719,8 @@ PimCompiledObj* PimBuildProgram(pimc::frontend::Var output, std::vector<pimc::fr
     return pim_co;
 }
 
-PimBo* PimExecuteProgram(PimCompiledObj* obj, PimTarget* target, std::string launch_opts) {
+PimBo* PimExecuteProgram(PimCompiledObj* obj, PimTarget* target, std::string launch_opts)
+{
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     PIM_PROFILE_TICK(PimExecuteProgram);
 
@@ -736,7 +741,8 @@ PimBo* PimExecuteProgram(PimCompiledObj* obj, PimTarget* target, std::string lau
     return output_pimbo;
 }
 
-int PimDestroyProgram(PimCompiledObj* obj){
+int PimDestroyProgram(PimCompiledObj* obj)
+{
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     PIM_PROFILE_TICK(DestroyProgram);
     int ret = 0;
