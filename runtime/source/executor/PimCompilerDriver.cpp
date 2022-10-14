@@ -19,8 +19,6 @@ bool HIPCodegen::execute() { return false; }
 void HIPCompiler::execute(std::string hip_kernel, std::string crf_binary)
 {
 #if PIM_COMPILER_ENABLE == 1
-    //std::string hip_kernel = pim_op->get_gpu_kernel();
-
     if (const char *env_p = std::getenv("SAVE_GENERATED_KERNEL")) {
         int value = *((int *)env_p);
         if (value == 1) {
@@ -53,7 +51,7 @@ void HIPCompiler::execute(std::string hip_kernel, std::string crf_binary)
     if (compileResult != HIPRTC_SUCCESS)
         std::cout << "Compilation failed." << std::endl;
     else
-        std::cout << "Compilation successfull" << std::endl;
+        std::cout << "Compilation successful" << std::endl;
 
     size_t codeSize;
     hiprtcGetCodeSize(prog, &codeSize);

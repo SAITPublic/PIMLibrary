@@ -1,16 +1,18 @@
 #include "iostream"
 #include "pim_runtime_api.h"
 #include "api/pim_compiler.h"
+#include "utility/pim_debug.hpp"
 
 #include "gtest/gtest.h"
 
 using namespace std;
 using namespace pimc;
 using namespace pimc::frontend;
+using half_float::half;
 
 int pimc_eltwise_add(int h, int w){
 
-    int32_t ret = 0;
+    int ret = 0;
     PimInitialize(RT_TYPE_HIP, PIM_FP16);
     PimDesc* pim_desc = PimCreateDesc(1, 1, h, w, PIM_FP16);
 
@@ -19,13 +21,18 @@ int pimc_eltwise_add(int h, int w){
     PimBo* host_input1 = PimCreateBo(pim_desc, MEM_TYPE_HOST);
     PimBo* host_output = PimCreateBo(pim_desc, MEM_TYPE_HOST);
     PimBo* golden_output = PimCreateBo(pim_desc, MEM_TYPE_HOST);
-
     PimBo* pim_input0 = PimCreateBo(pim_desc, MEM_TYPE_PIM);
     PimBo* pim_input1 = PimCreateBo(pim_desc, MEM_TYPE_PIM);
 
-    // TODO load golden data
+    //set_rand_half_data((half_float::half*)host_input0->data, (half_float::half)0.5, (h * w));
+    //set_rand_half_data((half_float::half*)host_input1->data, (half_float::half)0.5, (h * w));
 
-    /* __PIM_API__ call : Preload weight data on PIM memory */
+    for (int i = 0; i < (h * w); i++) {
+        ((half_float::half*)host_input0->data)[i] = 4.0;
+        ((half_float::half*)host_input1->data)[i] = 12.0;
+    }
+
+    addCPU((half_float::half*)host_input0->data, (half_float::half*)host_input1->data, (half_float::half*)golden_output->data, (h * w));
     PimCopyMemory(pim_input0, host_input0, HOST_TO_PIM);
     PimCopyMemory(pim_input1, host_input1, HOST_TO_PIM);
 
@@ -44,6 +51,11 @@ int pimc_eltwise_add(int h, int w){
     PimCompiledObj* obj = PimBuildProgram(D, {B, C}, {pim_input0, pim_input1}, target);
     PimBo* device_output = PimExecuteProgram(obj, target);
     PimCopyMemory(host_output, device_output, PIM_TO_HOST);
+    ret = compare_half_relative((half*)host_output->data, (half*)golden_output->data, (h*w));
+
+    //for (int i = 0; i < 5; i++) {
+    //    std::cout<<"PIM Output = " << ((half*)host_output->data)[i] <<" , Golden output = " << ((half*)golden_output->data)[i] << std::endl;
+    //}
 
     PimDestroyBo(host_input0);
     PimDestroyBo(host_input1);
@@ -59,4 +71,4 @@ int pimc_eltwise_add(int h, int w){
 }
 
 
-TEST(PimcompilerIntegrationTest, EltAdd) { EXPECT_TRUE(pimc_eltwise_add(2, 1024) == 0); }
+TEST(PimCompilerIntegrationTestElt, EltAdd) { EXPECT_TRUE(pimc_eltwise_add(2, 4096) == 0); }

@@ -14,8 +14,8 @@ int main(int argc, char** argv)
         return -1;
     }
     // Always default to 0 for now
-    hipError_t deviceSet = hipSetDevice(0);
     int device_id = 0;
+    hipError_t deviceSet = hipSetDevice(device_id);
     if (hipSuccess != deviceSet) {
         std::cout << "Failed to set device " << deviceSet << "Device ID: " << device_id << std::endl;
         return result;

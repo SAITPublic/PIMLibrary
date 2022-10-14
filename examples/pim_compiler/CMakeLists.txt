@@ -7,10 +7,22 @@ include_directories(${ROCM_PATH}/opencl/include)
 link_directories(${ROCM_PATH}/opencl/lib)
 link_directories(${ROCM_PATH}/opencl/lib/x86_64/)
 
-file(GLOB HIP_SOURCES hip/*.cpp)
-#file(GLOB BLAS_HIP_SOURCES hip/blas_1/*.cpp)
+#file(GLOB HIP_SOURCES hip/*.cpp)
+#add_executable(PimCompilerIntegrationTests ${HIP_SOURCES})
+#target_link_libraries(PimCompilerIntegrationTests gtest PimRuntime PimC pimcompiler codegen)
 
-add_executable(PimCompilerIntegrationTests ${HIP_SOURCES})
-#add_executable(PimCompilerIntegrationTests ${HIP_SOURCES} ${BLAS_HIP_SOURCES})
+file(GLOB HIP_SOURCES_ELT hip/eltwise.cpp  hip/pimctest_main.cpp)
+add_executable(PimCompilerIntegrationTestElt ${HIP_SOURCES_ELT})
+target_link_libraries(PimCompilerIntegrationTestElt gtest PimRuntime PimC pimcompiler codegen)
 
-target_link_libraries(PimCompilerIntegrationTests gtest PimRuntime PimC pimcompiler codegen)
+#file(GLOB HIP_SOURCES_GEMV hip/gemv.cpp hip/pimctest_main.cpp)
+#add_executable(PimCompilerIntegrationTestGemv ${HIP_SOURCES_GEMV})
+#target_link_libraries(PimCompilerIntegrationTestGemv gtest PimRuntime PimC pimcompiler codegen)
+#
+#file(GLOB HIP_SOURCES_GEMVBATCH hip/gemv_batch.cpp hip/pimctest_main.cpp)
+#add_executable(PimCompilerIntegrationTestGemvBatch ${HIP_SOURCES_GEMVBATCH})
+#target_link_libraries(PimCompilerIntegrationTestGemvBatch gtest PimRuntime PimC pimcompiler codegen)
+#
+#file(GLOB BLAS_HIP_SOURCES_AXPY hip/blas1/blas_axpy.cpp hip/pimctest_main.cpp)
+#add_executable(PimCompilerIntegrationTestAxpy ${BLAS_HIP_SOURCES_AXPY})
+#target_link_libraries(PimCompilerIntegrationTestAxpy gtest PimRuntime PimC pimcompiler codegen)
