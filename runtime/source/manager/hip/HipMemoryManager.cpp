@@ -579,13 +579,13 @@ int HipMemoryManager::convert_data_layout_for_aligned_gemm_weight(PimBo* dst, Pi
     if (src->bshape.w != src->bshape_r.w || src->bshape.h != src->bshape_r.h) {
         src_temp = (char*)calloc(src_size, sizeof(half));
         for (int i = 0; i < src->bshape_r.w; i++) {
-            if (hipMemcpy((half*)src_temp + i * src->bshape.h, (half*)src_data + i * src->bshape_r.h,
+            if (hipMemcpy((half*)src_temp + i * src->bshape.h, (half*)src->data + i * src->bshape_r.h,
                           src->bshape_r.h * sizeof(half), hipMemcpyDeviceToHost) != hipSuccess) {
                 DLOG(INFO) << "[END] " << __FUNCTION__ << " Failed to copy";
                 return -1;
             }
         }
-        if (hipMemcpy(src_data, src_temp, src_size, hipMemcpyHostToDevice) != hipSuccess) {
+        if (hipMemcpy(src->data, src_temp, src_size, hipMemcpyHostToDevice) != hipSuccess) {
             DLOG(INFO) << "[END] " << __FUNCTION__ << " Failed to copy";
             return -1;
         }
