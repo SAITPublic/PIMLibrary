@@ -12,7 +12,7 @@
 #define _PIM_RUNTIME_API_H_
 
 #if PIM_COMPILER_ENABLE == 1
-#include <api/pim_compiler.h>
+#include <api/pim_compiler.hpp>
 #endif
 
 #include "pim_data_types.h"

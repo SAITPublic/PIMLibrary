@@ -1,6 +1,6 @@
-#include "api/pim_compiler.h"
 #include "iostream"
 #include "pim_runtime_api.h"
+#include "api/pim_compiler.hpp"
 #include "utility/pim_debug.hpp"
 
 #include "gtest/gtest.h"

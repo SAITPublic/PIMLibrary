@@ -14,7 +14,7 @@
 #pragma GCC diagnostic ignored "-Wunused-private-field"
 
 #if PIM_COMPILER_ENABLE == 1
-#include <api/pim_compiler.h>
+#include <api/pim_compiler.hpp>
 #endif
 
 #include <unordered_map>

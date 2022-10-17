@@ -15,7 +15,7 @@
 
 #include <pim_runtime_api.h>
 #include "manager/HostInfo.h"
-//#include <pim_compiler.h>
+//#include <pim_compiler.hpp>
 
 #include <hip/hip_runtime.h>
 #include <hip/hiprtc.h>
