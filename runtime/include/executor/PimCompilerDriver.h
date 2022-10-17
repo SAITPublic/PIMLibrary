@@ -231,7 +231,9 @@ class HIPCompiler
     HIPCompiler &operator=(HIPCompiler &&) = delete;
     HIPCompiler &operator=(const HIPCompiler &) = delete;
 
+#if PIM_COMPILER_ENABLE == 1
     hipModule_t module_;
+#endif
     hipFunction_t kernel_;
 };
 

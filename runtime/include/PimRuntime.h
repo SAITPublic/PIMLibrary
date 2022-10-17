@@ -13,7 +13,10 @@
 
 #pragma GCC diagnostic ignored "-Wunused-private-field"
 
+#if PIM_COMPILER_ENABLE == 1
 #include <api/pim_compiler.h>
+#endif
+
 #include <unordered_map>
 #include "executor/IPimExecutor.h"
 #include "manager/PimInfo.h"

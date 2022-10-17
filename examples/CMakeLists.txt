@@ -17,4 +17,6 @@ add_executable(OpenCLPimIntegrationTests ${OPENCL_SOURCES})
 target_link_libraries(PimIntegrationTests gtest PimRuntime)
 target_link_libraries(OpenCLPimIntegrationTests gtest_main gtest PimRuntime OpenCL)
 
-add_subdirectory(pim_compiler)
+if(PIM_COMPILER)
+    add_subdirectory(pim_compiler)
+endif()

@@ -28,11 +28,6 @@ int pimc_eltwise_add(int h, int w)
     set_rand_half_data((half_float::half*)host_input0->data, (half_float::half)0.5, (h * w));
     set_rand_half_data((half_float::half*)host_input1->data, (half_float::half)0.5, (h * w));
 
-    // for (int i = 0; i < (h * w); i++) {
-    //    ((half_float::half*)host_input0->data)[i] = 4.0;
-    //    ((half_float::half*)host_input1->data)[i] = 12.0;
-    //}
-
     // Compute Golden output
     addCPU((half_float::half*)host_input0->data, (half_float::half*)host_input1->data,
            (half_float::half*)golden_output->data, (h * w));
