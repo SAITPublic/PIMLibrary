@@ -55,17 +55,20 @@ int PimInitialize(PimRuntimeType rt_type, PimPrecision precision)
 
 int PimDeinitialize(void)
 {
-    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
-    PIM_PROFILE_TICK(Deinitialize);
     int ret = 0;
 
-    ret = pim_runtime->deinitialize();
-    pim_runtime.reset();
-    pim_initialized = false;
+    if (pim_initialized) {
+        DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
+        PIM_PROFILE_TICK(Deinitialize);
+        ret = pim_runtime->deinitialize();
+        pim_runtime.reset();
+        pim_initialized = false;
+        PIM_PROFILE_TOCK(Deinitialize);
+        DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+    } else {
+        DLOG(INFO) << "PIM has been already deinitialized " << __FUNCTION__ << " called";
+    }
 
-    PIM_PROFILE_TOCK(Deinitialize);
-
-    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
 
