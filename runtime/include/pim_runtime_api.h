@@ -158,19 +158,23 @@ __PIM_API__ int PimDestroyDesc(PimDesc* pim_desc);
 /**
  * @brief Create PIM GEMM descriptor using parameters passed
  *
- * This API makes dimension for input(nchw) x weight(nchw) = output(nchw)
+ * This API makes dimension for both input(nchw) x weight(nchw) = output(nchw)
+ *                               and weight(nchw) x input(nchw) = output(nchw)
  *
  * @param n number of batches
  * @param c number of channels
- * @param inout_h height of input and output buffer
- * @param in_w width of input buffer and height of weight buffer
- * @param out_w width of weight and output buffer
+ * @param in_h height of input buffer
+ * @param in_w width of input buffer
+ * @param out_h height of output buffer
+ * @param out_w width of output buffer
  * @param precision precision of buffer
- * @param transposed representing whether the content has been transposed or not (optional)
+ * @param gemm_order representing whether execution order is weight x input or input x weight
+ * @param transposed representing whether the content has been transposed or not (default:false)
  *
  * @return PimGemmDesc structure
  */
-__PIM_API__ PimGemmDesc* PimCreateGemmDesc(int n, int c, int inout_h, int in_w, int out_w, PimPrecision precision,
+__PIM_API__ PimGemmDesc* PimCreateGemmDesc(int n, int c, int in_h, int in_w, int out_h, int out_w,
+                                           PimPrecision precision, PimGemmOrder gemm_order = I_X_W,
                                            bool transposed = false);
 
 /**
@@ -347,13 +351,14 @@ __PIM_API__ int PimExecuteRelu(PimBo* output, PimBo* pim_data, void* stream = nu
  * @param weight weight buffer object
  * @param bias bias buffer object
  * @param act_func activation function for PIM GEMM output
+ * @param gemm_order representing whether execution order is weight x input or input x weight
  * @param stream void pointer to stream identifier. default=nullptr
  * @param block enable/disable synchronization. default=false
  *
  * @return success/failure
  */
 __PIM_API__ int PimExecuteGemm(PimBo* output, PimBo* input, PimBo* weight, PimBo* bias, PimActFunc act_func = NONE,
-                               void* stream = nullptr, bool block = false);
+                               PimGemmOrder gemm_order = I_X_W, void* stream = nullptr, bool block = false);
 
 /**
  * @brief Executes Batch normalization operation.
@@ -394,13 +399,14 @@ __PIM_API__ int PimExecuteDummy(void);
  *
  * @param src source address of buffer
  * @param result_type desired layout type for source buffer
+ * @param gemm_order representing whether execution order is weight x input or input x weight
  * @param save_for_reuse enable/disable caching.
  *                       preferable for multiple usage of dst buffer.
  *                       default=false
  *
  * @return reordered buffer
  */
-__PIM_API__ PimBo* PimConvertGemmWeight(PimBo* src, bool save_for_reuse = false);
+__PIM_API__ PimBo* PimConvertGemmWeight(PimBo* src, PimGemmOrder gemm_order, bool save_for_reuse = false);
 
 #if PIM_COMPILER_ENABLE == 1
 /**

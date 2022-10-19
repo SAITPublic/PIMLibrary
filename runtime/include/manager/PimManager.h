@@ -39,6 +39,7 @@ class PimManager
     int copy_memory(PimBo* dst, PimBo* src, PimMemCpyType);
     int copy_memory_3d(const PimCopy3D* copy_params);
     int convert_data_layout(PimBo* dst, PimBo* src);
+    void set_gemm_order(PimGemmOrder gemm_order);
 
     uint8_t* get_crf_binary(void);
     int get_crf_size(void);

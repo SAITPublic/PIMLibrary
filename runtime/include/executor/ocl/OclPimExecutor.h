@@ -52,6 +52,7 @@ class OclPimExecutor : public IPimExecutor
     int execute_sync(void* stream) { return -1; }
     int execute_dummy(void) { return -1; }
     void* createStream(void) { return nullptr; }
+    void set_gemm_order(PimGemmOrder gemm_order) { gemm_order_ = gemm_order; }
 
    private:
     int check_cl_program_path(void);
@@ -84,6 +85,7 @@ class OclPimExecutor : public IPimExecutor
     PimBlockInfo* pbi_;
     PimGemvType pim_gemv_type_;
     PimKrnlType kernel_type_;
+    PimGemmOrder gemm_order_;
 
     std::string cl_binary_path_;
     std::string cl_binary_;

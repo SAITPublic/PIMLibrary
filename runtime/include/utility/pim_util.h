@@ -22,6 +22,8 @@ __host__ void get_pim_block_info(PimBlockInfo* pbi);
 __host__ __device__ uint64_t addr_gen_safe(uint32_t chan, uint32_t rank, uint32_t bg, uint32_t bank, uint32_t& row,
                                            uint32_t& col);
 void transpose_pimbo(PimBo* dst, PimBo* src);
+void set_pimbo_t(PimBo* bo0, PimBo* bo1, PimBo* bo2, PimBo* bo3);
+void set_pimbo_t(PimBo* inout);
 void set_pimbo_t(PimBo* dst, PimBo* src);
 size_t get_aligned_size(PimDesc* pim_desc, PimMemFlag mem_flag, PimBo* pim_bo);
 void set_pimbo(PimGemmDesc* pim_gemm_desc, PimMemType mem_type, PimMemFlag mem_flag, PimBo* pim_bo);
@@ -29,10 +31,10 @@ void pad_data(void* input, int in_size, int in_nsize, int batch_size, PimMemFlag
 void pad_data(void* input, PimDesc* pim_desc, PimMemType mem_type, PimMemFlag mem_flag);
 void align_shape(PimDesc* pim_desc, PimOpType op_type);
 void align_gemm_shape(PimGemmDesc* pim_gemm_desc);
-bool is_pim_applicable(PimBo* wei);
+bool is_pim_applicable(PimBo* wei, PimGemmOrder gemm_order);
 bool is_transposed(PimBo* wei);
 bool is_pim_gemv_list_available(PimBo* output, PimBo* vector, PimBo* matrix);
-bool check_chwise_gemm_bo(PimBo* bo);
+bool check_chwise_gemm_bo(PimBo* bo, PimGemmOrder gemm_order);
 size_t PrecisionSize(const PimBo* bo);
 
 #endif /* _PIM_UTIL_H_ */

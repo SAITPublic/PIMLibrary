@@ -434,7 +434,7 @@ int OclMemoryManager::convert_data_layout(PimBo* dst, PimBo* src)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
-    bool is_chwise = check_chwise_gemm_bo(src);
+    bool is_chwise = check_chwise_gemm_bo(src, gemm_order_);
     if (is_chwise) {
         ret = convert_data_layout_for_chwise_gemm_weight(dst, src);
     } else {
@@ -479,12 +479,21 @@ int OclMemoryManager::convert_data_layout_for_chwise_gemm_weight(PimBo* dst, Pim
     uint32_t odd_s_col = 0;   // starting_col;
 
     int type_size = (src->precision == PIM_FP16) ? 2 : 1;
-    int in_cnt = src->bshape.h * type_size / trans_size;
 
     int in_tile_size = num_grf_A;
     int out_tile_size = num_grf_B * num_pim_blocks * num_pim_chan * num_pim_rank;
     int data_offset = 0;
-    int iter_cnt = src->bshape.n * src->bshape.c * src->bshape.w / PIM_GEMV_OUT_ALIGN;
+
+    int iter_cnt = 0;
+    int in_cnt = 0;
+
+    if (gemm_order_ == I_X_W) {
+        iter_cnt = src->bshape.n * src->bshape.c * src->bshape.w / PIM_GEMV_OUT_ALIGN;
+        in_cnt = src->bshape.h * type_size / trans_size;
+    } else {
+        iter_cnt = src->bshape.n * src->bshape.c * src->bshape.h / PIM_GEMV_OUT_ALIGN;
+        in_cnt = src->bshape.w * type_size / trans_size;
+    }
 
     for (int iter = 0; iter < iter_cnt; iter++) {
         cidx = 0;
@@ -627,10 +636,20 @@ int OclMemoryManager::convert_data_layout_for_aligned_gemm_weight(PimBo* dst, Pi
     uint32_t odd_s_row = 0;   // starting_row;
     uint32_t odd_s_col = 0;   // starting_col;
 
-    int type_size = (src->precision == PIM_FP16) ? 2 : 1;
-    int out_cnt = src->bshape.w;
-    int in_cnt = src->bshape.h * type_size / trans_size;
     int src_size = src->size;
+    int type_size = (src->precision == PIM_FP16) ? 2 : 1;
+
+    int out_cnt = 0;
+    int in_cnt = 0;
+
+    if (gemm_order_ == I_X_W) {
+        out_cnt = src->bshape.w;
+        in_cnt = src->bshape.h * type_size / trans_size;
+    } else {
+        out_cnt = src->bshape.h;
+        in_cnt = src->bshape.w * type_size / trans_size;
+    }
+
     if (src->bshape.w != src->bshape_r.w || src->bshape.h != src->bshape_r.h) {
         src_temp = (char*)calloc(src_size, sizeof(half));
         int copy_success;

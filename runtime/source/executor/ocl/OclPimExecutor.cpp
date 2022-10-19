@@ -751,17 +751,17 @@ int OclPimExecutor::execute_gemm(PimBo* output, PimBo* input, PimBo* weight, Pim
     } else if (kernel_type_ == PIM && !is_transposed(weight)) {
         PimBo* pim_wei;
         if (weight->data_layout_type == PimDataLayoutType::RAW) {
-            pim_wei = pim_runtime_->get_preloaded_pim_gemm_weight(weight);
+            pim_wei = pim_runtime_->get_preloaded_pim_gemm_weight(weight, gemm_order_);
         } else {
             // Assume that user has provided correct layout
             pim_wei = weight;
         }
         ret = this->execute_ocl_gemm(output, input, pim_wei, bias, act_func, stream, block);
     } else {
-        if (is_pim_applicable(weight)) {
+        if (is_pim_applicable(weight, gemm_order_)) {
             PimBo* pim_wei;
             if (weight->data_layout_type == PimDataLayoutType::RAW) {
-                pim_wei = pim_runtime_->get_preloaded_pim_gemm_weight(weight);
+                pim_wei = pim_runtime_->get_preloaded_pim_gemm_weight(weight, gemm_order_);
             } else {
                 // Assume that user has provided correct layout
                 pim_wei = weight;

@@ -49,14 +49,14 @@ class PimRuntime
     int execute_add(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream, bool block = false);
     int execute_mul(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream, bool block = false);
     int execute_relu(PimBo* output, PimBo* pim_data, void* stream, bool block = false);
-    int execute_gemm(PimBo* output, PimBo* input, PimBo* weight, PimBo* bias, PimActFunc act_func, void* stream,
-                     bool block);
+    int execute_gemm(PimBo* output, PimBo* input, PimBo* weight, PimBo* bias, PimActFunc act_func,
+                     PimGemmOrder gemm_order, void* stream, bool block);
     int execute_bn(PimBo* output, PimBo* pim_data, PimBo* beta, PimBo* gamma, PimBo* mean, PimBo* variance,
                    double epsilon, void* stream, bool block = false);
     int execute_sync(void* stream);
     int execute_dummy(void);
-    PimBo* generate_gemm_weight_from_buffer(PimBo* src, bool save_for_reuse = false);
-    PimBo* get_preloaded_pim_gemm_weight(PimBo* dev_wei, bool save_for_reuse = true);
+    PimBo* generate_gemm_weight_from_buffer(PimBo* src, PimGemmOrder gemm_order, bool save_for_reuse = false);
+    PimBo* get_preloaded_pim_gemm_weight(PimBo* dev_wei, PimGemmOrder gemm_order, bool save_for_reuse = true);
 
 #if PIM_COMPILER_ENABLE == 1
     /**

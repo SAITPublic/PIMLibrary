@@ -43,6 +43,8 @@ class HipMemoryManager : public IPimMemoryManager
     int copy_memory(PimBo* dst, PimBo* src, PimMemCpyType cpy_type);
     int copy_memory_3d(const PimCopy3D* copy_params);
     int convert_data_layout(PimBo* dst, PimBo* src);
+    void set_gemm_order(PimGemmOrder gemm_order) { gemm_order_ = gemm_order; }
+    void* get_base_memobj(void) { return nullptr; }
 
    private:
     int convert_data_layout_for_gemm_weight(PimBo* dst, PimBo* src);
@@ -58,6 +60,7 @@ class HipMemoryManager : public IPimMemoryManager
     std::shared_ptr<PimDevice> pim_device_;
     PimPrecision precision_;
     PimBlockInfo* pbi_;
+    PimGemmOrder gemm_order_;
 };
 }  // namespace manager
 }  // namespace runtime

@@ -13,6 +13,27 @@
 
 __host__ void get_pim_block_info(PimBlockInfo* pbi) { memcpy(pbi, &vega20_pbi, sizeof(PimBlockInfo)); }
 
+void set_pimbo_t(PimBo* bo0, PimBo* bo1, PimBo* bo2, PimBo* bo3)
+{
+    set_pimbo_t(bo0);
+    set_pimbo_t(bo1);
+    set_pimbo_t(bo2);
+    set_pimbo_t(bo3);
+}
+
+void set_pimbo_t(PimBo* inout)
+{
+    uint32_t h = inout->bshape.h;
+    uint32_t w = inout->bshape.w;
+    uint32_t h_r = inout->bshape_r.h;
+    uint32_t w_r = inout->bshape_r.w;
+
+    inout->bshape.h = w;
+    inout->bshape.w = h;
+    inout->bshape_r.h = w_r;
+    inout->bshape_r.w = h_r;
+}
+
 void set_pimbo_t(PimBo* dst, PimBo* src)
 {
     memcpy(dst, src, sizeof(PimBo));
@@ -135,27 +156,46 @@ void align_gemm_shape(PimGemmDesc* pim_gemm_desc)
 {
     int n = pim_gemm_desc->in_bshape_r.n;
     int c = pim_gemm_desc->in_bshape_r.c;
+    int in_h = pim_gemm_desc->in_bshape_r.h;
     int in_w = pim_gemm_desc->in_bshape_r.w;
+    int out_h = pim_gemm_desc->out_bshape_r.h;
     int out_w = pim_gemm_desc->out_bshape_r.w;
-    int aligned_in_w = PIM_GEMV_IN_ALIGN * ceil((float)in_w / PIM_GEMV_IN_ALIGN);
-    int aligned_out_w = 0;
-    int out_align = n * c * out_w;
-
-    if (out_align % PIM_GEMV_OUT_ALIGN == 0)
-        aligned_out_w = out_w;
-    else
-        aligned_out_w = PIM_GEMV_OUT_ALIGN * ceil((float)out_w / PIM_GEMV_OUT_ALIGN);
+    int aligned_in_size = 0;
+    int aligned_out_size = 0;
+    int out_align = 0;
 
     pim_gemm_desc->in_bshape = pim_gemm_desc->in_bshape_r;
     pim_gemm_desc->wei_bshape = pim_gemm_desc->wei_bshape_r;
     pim_gemm_desc->bias_bshape = pim_gemm_desc->bias_bshape_r;
     pim_gemm_desc->out_bshape = pim_gemm_desc->out_bshape_r;
 
-    pim_gemm_desc->in_bshape.w = aligned_in_w;
-    pim_gemm_desc->wei_bshape.h = aligned_in_w;
-    pim_gemm_desc->wei_bshape.w = aligned_out_w;
-    pim_gemm_desc->bias_bshape.w = aligned_out_w;
-    pim_gemm_desc->out_bshape.w = aligned_out_w;
+    if (pim_gemm_desc->gemm_order == W_X_I) {
+        aligned_in_size = PIM_GEMV_IN_ALIGN * ceil((float)in_h / PIM_GEMV_IN_ALIGN);
+        out_align = n * c * out_h;
+        if (out_align % PIM_GEMV_OUT_ALIGN == 0)
+            aligned_out_size = out_h;
+        else
+            aligned_out_size = PIM_GEMV_OUT_ALIGN * ceil((float)out_h / PIM_GEMV_OUT_ALIGN);
+
+        pim_gemm_desc->in_bshape.h = aligned_in_size;
+        pim_gemm_desc->wei_bshape.w = aligned_in_size;
+        pim_gemm_desc->wei_bshape.h = aligned_out_size;
+        pim_gemm_desc->bias_bshape.h = aligned_out_size;
+        pim_gemm_desc->out_bshape.h = aligned_out_size;
+    } else {
+        aligned_in_size = PIM_GEMV_IN_ALIGN * ceil((float)in_w / PIM_GEMV_IN_ALIGN);
+        out_align = n * c * out_w;
+        if (out_align % PIM_GEMV_OUT_ALIGN == 0)
+            aligned_out_size = out_w;
+        else
+            aligned_out_size = PIM_GEMV_OUT_ALIGN * ceil((float)out_w / PIM_GEMV_OUT_ALIGN);
+
+        pim_gemm_desc->in_bshape.w = aligned_in_size;
+        pim_gemm_desc->wei_bshape.h = aligned_in_size;
+        pim_gemm_desc->wei_bshape.w = aligned_out_size;
+        pim_gemm_desc->bias_bshape.w = aligned_out_size;
+        pim_gemm_desc->out_bshape.w = aligned_out_size;
+    }
 }
 
 void align_shape(PimDesc* pim_desc, PimOpType op_type)
@@ -210,26 +250,33 @@ void pad_data(void* input, int in_size, int in_nsize, int batch_size, PimMemFlag
     }
 }
 
-bool check_chwise_gemm_bo(PimBo* bo)
+bool check_chwise_gemm_bo(PimBo* bo, PimGemmOrder gemm_order)
 {
     bool ret = true;
 
-    if (bo->bshape.w >= PIM_GEMV_OUT_ALIGN) return false;
-    if ((bo->bshape.n * bo->bshape.c * bo->bshape.w) % PIM_GEMV_OUT_ALIGN != 0) return false;
+    if (gemm_order == I_X_W) {
+        if (bo->bshape.w >= PIM_GEMV_OUT_ALIGN) return false;
+        if ((bo->bshape.n * bo->bshape.c * bo->bshape.w) % PIM_GEMV_OUT_ALIGN != 0) return false;
+    } else {
+        if (bo->bshape.h >= PIM_GEMV_OUT_ALIGN) return false;
+        if ((bo->bshape.n * bo->bshape.c * bo->bshape.h) % PIM_GEMV_OUT_ALIGN != 0) return false;
+    }
 
     return ret;
 }
 
 bool is_transposed(PimBo* wei) { return wei->transposed; }
 
-bool is_pim_applicable(PimBo* wei)
+bool is_pim_applicable(PimBo* wei, PimGemmOrder gemm_order)
 {
     if (wei->data_layout_type != PimDataLayoutType::RAW) {
         // PIM-specific layout has been already created
         return true;
     }
     /* TODO: find optimal shape to execute PIM ops */
-    if (wei->bshape_r.n * wei->bshape_r.c * wei->bshape_r.w >= DIM_OUT_PIM && !is_transposed(wei))
+    uint32_t wei_dim = (gemm_order == PimGemmOrder::W_X_I) ? wei->bshape_r.h : wei->bshape_r.w;
+
+    if (wei->bshape_r.n * wei->bshape_r.c * wei_dim >= DIM_OUT_PIM && !is_transposed(wei))
         return true;
     else
         return false;

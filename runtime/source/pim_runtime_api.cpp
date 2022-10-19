@@ -221,7 +221,8 @@ PimBo* PimCreateBo(PimGemmDesc* pim_gemm_desc, PimMemType mem_type, PimMemFlag m
     return pim_bo;
 }
 
-PimGemmDesc* PimCreateGemmDesc(int n, int c, int inout_h, int in_w, int out_w, PimPrecision precision, bool transposed)
+PimGemmDesc* PimCreateGemmDesc(int n, int c, int in_h, int in_w, int out_h, int out_w, PimPrecision precision,
+                               PimGemmOrder gemm_order, bool transposed)
 {
     DLOG(INFO) << "called";
 
@@ -233,11 +234,15 @@ PimGemmDesc* PimCreateGemmDesc(int n, int c, int inout_h, int in_w, int out_w, P
     PimGemmDesc* pim_gemm_desc = new PimGemmDesc;
 
     pim_gemm_desc->precision = precision;
+    pim_gemm_desc->gemm_order = gemm_order;
     pim_gemm_desc->transposed = transposed;
-    pim_gemm_desc->in_bshape_r = {(uint32_t)n, (uint32_t)c, (uint32_t)inout_h, (uint32_t)in_w};
-    pim_gemm_desc->wei_bshape_r = {(uint32_t)n, (uint32_t)c, (uint32_t)in_w, (uint32_t)out_w};
-    pim_gemm_desc->bias_bshape_r = {(uint32_t)n, (uint32_t)c, (uint32_t)inout_h, (uint32_t)out_w};
-    pim_gemm_desc->out_bshape_r = {(uint32_t)n, (uint32_t)c, (uint32_t)inout_h, (uint32_t)out_w};
+    pim_gemm_desc->in_bshape_r = {(uint32_t)n, (uint32_t)c, (uint32_t)in_h, (uint32_t)in_w};
+    if (gemm_order == W_X_I)
+        pim_gemm_desc->wei_bshape_r = {(uint32_t)n, (uint32_t)c, (uint32_t)out_h, (uint32_t)in_h};
+    else
+        pim_gemm_desc->wei_bshape_r = {(uint32_t)n, (uint32_t)c, (uint32_t)in_w, (uint32_t)out_w};
+    pim_gemm_desc->bias_bshape_r = {(uint32_t)n, (uint32_t)c, (uint32_t)out_h, (uint32_t)out_w};
+    pim_gemm_desc->out_bshape_r = {(uint32_t)n, (uint32_t)c, (uint32_t)out_h, (uint32_t)out_w};
 
     align_gemm_shape(pim_gemm_desc);
 
@@ -548,8 +553,8 @@ int PimExecuteMul(PimBo* output, void* scalar, PimBo* vector, void* stream, bool
     return ret;
 }
 
-int PimExecuteGemm(PimBo* output, PimBo* input, PimBo* weight, PimBo* bias, PimActFunc act_func, void* stream,
-                   bool block)
+int PimExecuteGemm(PimBo* output, PimBo* input, PimBo* weight, PimBo* bias, PimActFunc act_func,
+                   PimGemmOrder gemm_order, void* stream, bool block)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     PIM_PROFILE_TICK(ExecuteGemm);
@@ -560,7 +565,7 @@ int PimExecuteGemm(PimBo* output, PimBo* input, PimBo* weight, PimBo* bias, PimA
         return -1;
     }
 
-    ret = pim_runtime->execute_gemm(output, input, weight, bias, act_func, stream, block);
+    ret = pim_runtime->execute_gemm(output, input, weight, bias, act_func, gemm_order, stream, block);
     PIM_PROFILE_TOCK(ExecuteGemm);
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
@@ -635,7 +640,7 @@ int PimExecuteDummy(void)
     return ret;
 }
 
-PimBo* PimConvertGemmWeight(PimBo* src, bool save_for_reuse)
+PimBo* PimConvertGemmWeight(PimBo* src, PimGemmOrder gemm_order, bool save_for_reuse)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     PIM_PROFILE_TICK(PimGetReorderedBuffer);
@@ -645,7 +650,7 @@ PimBo* PimConvertGemmWeight(PimBo* src, bool save_for_reuse)
         DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
         return nullptr;
     }
-    PimBo* dst = pim_runtime->generate_gemm_weight_from_buffer(src, save_for_reuse);
+    PimBo* dst = pim_runtime->generate_gemm_weight_from_buffer(src, gemm_order, save_for_reuse);
     if (dst == nullptr) {
         DLOG(ERROR) << "Failed to reorder source buffer";
         DLOG(INFO) << "[END] " << __FUNCTION__ << " called";

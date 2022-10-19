@@ -242,22 +242,27 @@ int HipPimExecutor::execute_gemm(PimBo* output, PimBo* input, PimBo* weight, Pim
     } else if (kernel_type_ == PIM && !is_transposed(weight)) {
         PimBo* pim_wei;
         if (weight->data_layout_type == PimDataLayoutType::RAW) {
-            pim_wei = pim_runtime_->get_preloaded_pim_gemm_weight(weight);
+            pim_wei = pim_runtime_->get_preloaded_pim_gemm_weight(weight, gemm_order_);
         } else {
             // Assume that user has provided correct layout
             pim_wei = weight;
         }
+        if (gemm_order_ == W_X_I) set_pimbo_t(input, weight, bias, output);
         ret = this->execute_hip_gemm(output, input, pim_wei, bias, act_func, stream, block);
+        if (gemm_order_ == W_X_I) set_pimbo_t(input, weight, bias, output);
     } else {
-        if (is_pim_applicable(weight)) {
+        if (is_pim_applicable(weight, gemm_order_)) {
             PimBo* pim_wei;
             if (weight->data_layout_type == PimDataLayoutType::RAW) {
-                pim_wei = pim_runtime_->get_preloaded_pim_gemm_weight(weight);
+                pim_wei = pim_runtime_->get_preloaded_pim_gemm_weight(weight, gemm_order_);
             } else {
                 // Assume that user has provided correct layout
                 pim_wei = weight;
             }
+            /* gemm kernel is implemented based on I_X_W order */
+            if (gemm_order_ == W_X_I) set_pimbo_t(input, weight, bias, output);
             ret = this->execute_hip_gemm(output, input, pim_wei, bias, act_func, stream, block);
+            if (gemm_order_ == W_X_I) set_pimbo_t(input, weight, bias, output);
         } else {
             ret = this->execute_gemv(output, input, weight, bias, act_func, stream, block);
         }
@@ -270,12 +275,26 @@ int HipPimExecutor::execute_hip_gemm(PimBo* output, PimBo* input, PimBo* weight,
 {
     int ret = 0;
 
+    if (gemm_order_ == W_X_I) {
+        set_pimbo_t(input);
+        set_pimbo_t(weight);
+        set_pimbo_t(bias);
+        set_pimbo_t(output);
+    }
+
     if (weight->data_layout_type == PimDataLayoutType::CHWISE_GEMM_WEIGHT)
         ret = execute_chwise_gemm_tile_accum(output, input, weight, bias, act_func, stream, block);
     else if (weight->data_layout_type == PimDataLayoutType::ALIGNED_GEMM_WEIGHT)
         ret = execute_aligned_gemm_tile_accum(output, input, weight, bias, act_func, stream, block);
     else
         DLOG(ERROR) << "Provided layout is not supported in GEMM call";
+
+    if (gemm_order_ == W_X_I) {
+        set_pimbo_t(input);
+        set_pimbo_t(weight);
+        set_pimbo_t(bias);
+        set_pimbo_t(output);
+    }
 
     return ret;
 }
@@ -628,15 +647,15 @@ int HipPimExecutor::execute_chwise_gemm_tile_accum(PimBo* output, PimBo* input, 
     int is_gemv_add = 0;
 #endif
 
-    int n_in_tile = input->bshape.w * sizeof(uint16_t) / pbi_->trans_size / pbi_->num_grf_A;
     int n_out_tile = 1;
     int iter_cnt = (weight->bshape.n * weight->bshape.c) / (PIM_GEMV_OUT_ALIGN / weight->bshape.w);
 
     int is_bias = (bias != nullptr) ? 1 : 0;
     int is_relu = (act_func == ACT_RELU) ? 1 : 0;
-
-    uint8_t* crf_bin = pim_crf_generator_->find_crf(OP_GEMV, input->bshape.w * sizeof(uint16_t));
     int crf_size = 32;
+
+    int n_in_tile = input->bshape.w * sizeof(uint16_t) / pbi_->trans_size / pbi_->num_grf_A;
+    uint8_t* crf_bin = pim_crf_generator_->find_crf(OP_GEMV, input->bshape.w * sizeof(uint16_t));
     if (crf_bin == nullptr) {
         crf_bin = (uint8_t*)pim_crf_generator_->make_crf_bin(OP_GEMV, input->bshape.w * sizeof(uint16_t));
     }
@@ -662,7 +681,7 @@ int HipPimExecutor::execute_chwise_gemm_tile_accum(PimBo* output, PimBo* input, 
     PIM_PROFILE_TOCK(PrepareGemmKernel);
 
     PIM_PROFILE_TICK(RunGemmKernel);
-    int device_id;
+    int device_id = 0;
     hipGetDevice(&device_id);
     hipLaunchKernelGGL(
         gemm_kernel, dim3(blocks), dim3(threads_per_block), 0, (hipStream_t)stream,

@@ -51,7 +51,7 @@ class PimFusedGemmTest
         wgt_size1_ = n_ * c_ * in_w1_ * out_w1_;
         out_size1_ = n_ * c_ * h_ * out_w1_;
 
-        desc0_ = PimCreateGemmDesc(n_, c_, h_, in_w0_, out_w0_, PIM_FP16);
+        desc0_ = PimCreateGemmDesc(n_, c_, h_, in_w0_, h_, out_w0_, PIM_FP16);
         h_i0_ = PimCreateBo(desc0_, MEM_TYPE_HOST, GEMM_INPUT);
         h_w0_ = PimCreateBo(desc0_, MEM_TYPE_HOST, GEMM_WEIGHT);
         h_b0_ = PimCreateBo(desc0_, MEM_TYPE_HOST, GEMM_BIAS);
@@ -61,7 +61,7 @@ class PimFusedGemmTest
         d_b0_ = PimCreateBo(desc0_, MEM_TYPE_DEVICE, GEMM_BIAS);
         d_o0_ = PimCreateBo(desc0_, MEM_TYPE_DEVICE, GEMM_OUTPUT);
 
-        desc1_ = PimCreateGemmDesc(n_, c_, h_, in_w1_, out_w1_, PIM_FP16);
+        desc1_ = PimCreateGemmDesc(n_, c_, h_, in_w1_, h_, out_w1_, PIM_FP16);
         h_i1_ = PimCreateBo(desc1_, MEM_TYPE_HOST, GEMM_INPUT);
         h_w1_ = PimCreateBo(desc1_, MEM_TYPE_HOST, GEMM_WEIGHT);
         h_b1_ = PimCreateBo(desc1_, MEM_TYPE_HOST, GEMM_BIAS);
@@ -169,8 +169,8 @@ class PimFusedGemmTest
     void run(bool block = true, unsigned niter = 1)
     {
         for (unsigned i = 0; i < niter; ++i) {
-            (void)PimExecuteGemm(d_o0_, d_i0_, d_w0_, d_b0_, act0_, nullptr, false);
-            (void)PimExecuteGemm(d_o1_, d_o0_, d_w1_, d_b1_, act1_, nullptr, block);
+            (void)PimExecuteGemm(d_o0_, d_i0_, d_w0_, d_b0_, act0_, I_X_W, nullptr, false);
+            (void)PimExecuteGemm(d_o1_, d_o0_, d_w1_, d_b1_, act1_, I_X_W, nullptr, block);
             if (!block) PimSynchronize();
         }
         PimCopyMemory(h_o1_, d_o1_, DEVICE_TO_HOST);

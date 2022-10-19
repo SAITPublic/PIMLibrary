@@ -157,6 +157,9 @@ int PimManager::convert_data_layout(PimBo* dst, PimBo* src)
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
+
+void PimManager::set_gemm_order(PimGemmOrder gemm_order) { pim_memory_manager_->set_gemm_order(gemm_order); }
+
 } /* namespace manager */
 } /* namespace runtime */
 } /*namespace pim */

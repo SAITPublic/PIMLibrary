@@ -50,7 +50,8 @@ class OclMemoryManager : public IPimMemoryManager
     int copy_memory_3d(const PimCopy3D* copy_params);
     int get_physical_id(void);
     int convert_data_layout(PimBo* dst, PimBo* src);
-    void* get_base_memobj() { return fragment_allocator_[0]->get_pim_base(); }
+    void set_gemm_order(PimGemmOrder gemm_order) { gemm_order_ = gemm_order; }
+    void* get_base_memobj(void) { return fragment_allocator_[0]->get_pim_base(); }
 
    private:
     uint32_t mask_by_bit(uint32_t value, uint32_t start, uint32_t end);
@@ -63,6 +64,7 @@ class OclMemoryManager : public IPimMemoryManager
     std::vector<std::shared_ptr<SimpleHeap<OclBlockAllocator>>> fragment_allocator_;
     std::shared_ptr<PimDevice> pim_device_;
     PimBlockInfo* pbi_;
+    PimGemmOrder gemm_order_;
 
     cl_uint num_gpu_devices_;
 };

@@ -67,6 +67,11 @@ typedef enum __PimOpType {
     OP_DUMMY,
 } PimOpType;
 
+typedef enum __PimGemmOrder {
+    W_X_I,
+    I_X_W,
+} PimGemmOrder;
+
 typedef enum __PimActivationFunction {
     NONE,
     ACT_RELU,
@@ -134,6 +139,7 @@ typedef struct __PimGemmDescriptor {
     PimBShape out_bshape;
     PimBShape out_bshape_r;
     PimPrecision precision;
+    PimGemmOrder gemm_order;
     bool transposed;
 } PimGemmDesc;
 

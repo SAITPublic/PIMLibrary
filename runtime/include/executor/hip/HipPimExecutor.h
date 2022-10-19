@@ -55,6 +55,7 @@ class HipPimExecutor : public IPimExecutor
     int execute_sync(void* stream);
     int execute_dummy(void);
     void* createStream(void);
+    void set_gemm_order(PimGemmOrder gemm_order) { gemm_order_ = gemm_order; }
 
    private:
     int execute_gemv_next_pim(PimBo* output, PimBo* operand0, PimBo* operand1, int is_gemv_add, void* stream,
@@ -82,6 +83,7 @@ class HipPimExecutor : public IPimExecutor
     uint8_t* zero_buffer_;
     hipDeviceProp_t dev_prop_;
     PimKrnlType kernel_type_;
+    PimGemmOrder gemm_order_;
 
 #ifdef EMULATOR
     PimMemTraceData* d_fmtd16_;
