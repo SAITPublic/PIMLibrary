@@ -181,7 +181,7 @@ int OclPimExecutor::build_cl_program_with_source(void)
     options += " -DEMULATOR";
 #endif
     // to disable the kernel opt while compliling binary so that it does not remove the dummy read calls meant for PIM.
-    options += "-cl-opt-disable";
+    options += " -cl-opt-disable";
 
     ret = clBuildProgram(program_, 1, &device_id, options.c_str(), NULL, NULL);
     if (ret != CL_SUCCESS) {
