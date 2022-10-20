@@ -1,6 +1,6 @@
+#include "api/pim_compiler.hpp"
 #include "iostream"
 #include "pim_runtime_api.h"
-#include "api/pim_compiler.hpp"
 #include "utility/pim_debug.hpp"
 
 #include "gtest/gtest.h"
@@ -66,7 +66,8 @@ int pimc_eltwise_add(int h, int w)
     PimDestroyBo(pim_input0);
     PimDestroyBo(pim_input1);
     PimDestroyDesc(pim_desc);
-
+    PimDestroyTarget(target);
+    PimDestroyProgram(obj);
     PimDeinitialize();
     return ret;
 }

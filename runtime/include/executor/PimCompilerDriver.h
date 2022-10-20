@@ -64,10 +64,14 @@ class PimCDriver
     PimCDriver &operator=(const PimCDriver &) = delete;
 
 #if PIM_COMPILER_ENABLE == 1
-    hipFunction_t compile_code(std::string kernel, std::string crf_binary);
+    hipFunction_t compile_code_hip(std::string kernel, std::string crf_binary);
     PimCompiledObj *build_program(pimc::frontend::Var output, std::vector<pimc::frontend::Buffer> inputs,
                                   std::vector<PimBo *> input_pimbo, PimTarget *target, std::string compile_opts);
     PimBo *execute_program(PimCompiledObj *obj, PimTarget *target, std::string launch_opts);
+    void pimMalloc(void **ptr, size_t size, PimTarget *target);
+    void pimMemcpy(void *dest, const void *src, size_t size, PimTarget *target);
+    void pimLaunchKernel(std::string kernel, std::string crf_binary, uint32_t num_blocks, uint32_t num_threads,
+                         uint8_t *args[], size_t num_args, PimTarget *target);
 #endif
     // todo:: Pass HW information from user
 

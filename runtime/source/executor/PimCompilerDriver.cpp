@@ -70,7 +70,7 @@ void HIPCompiler::execute(std::string hip_kernel, std::string crf_binary)
     }
 }
 
-hipFunction_t PimCDriver::compile_code(std::string kernel, std::string crf_binary)
+hipFunction_t PimCDriver::compile_code_hip(std::string kernel, std::string crf_binary)
 {
     compile_.execute(kernel, crf_binary);
     return compile_.get_kernel_function();
@@ -141,13 +141,11 @@ PimCompiledObj* PimCDriver::build_program(pimc::frontend::Var output, std::vecto
 PimBo* PimCDriver::execute_program(PimCompiledObj* obj, PimTarget* target, std::string launch_opts)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
-    auto kernel = compile_code(obj->kernel, obj->crf_binary);
     size_t num_args = obj->op_order.size() + 1;
     uint8_t* args[num_args];  // +1 for gpim_base_addr
     uint8_t* crf_binary_device;
-    hipMalloc((void**)&crf_binary_device, 128);
-    hipMemcpy((void*)crf_binary_device, (uint8_t*)(obj->crf_binary.c_str()), obj->crf_binary.size(),
-              hipMemcpyHostToDevice);
+    pimMalloc((void**)&crf_binary_device, 128, target);
+    pimMemcpy((void*)crf_binary_device, (uint8_t*)(obj->crf_binary.c_str()), obj->crf_binary.size(), target);
     for (size_t i = 0; i < obj->op_order.size(); i++) {
         if (obj->pimbo_map.find(obj->op_order[i]) != obj->pimbo_map.end()) {
             args[i] = static_cast<uint8_t*>(obj->pimbo_map[obj->op_order[i]]->data);
@@ -162,14 +160,36 @@ PimBo* PimCDriver::execute_program(PimCompiledObj* obj, PimTarget* target, std::
             return nullptr;
         }
     }
-    void* config[5] = {HIP_LAUNCH_PARAM_BUFFER_POINTER, nullptr, HIP_LAUNCH_PARAM_BUFFER_SIZE, &num_args,
-                       HIP_LAUNCH_PARAM_END};
-    config[1] = static_cast<void*>(args);
-    hipModuleLaunchKernel(kernel, obj->num_blocks, 1, 1, obj->num_threads, 1, 1, 0, nullptr, NULL,
-                          reinterpret_cast<void**>(&config));
+    pimLaunchKernel(obj->kernel, obj->crf_binary, obj->num_blocks, obj->num_threads, args, num_args, target);
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return obj->output_pimbo;
+}
+
+void PimCDriver::pimMalloc(void** ptr, size_t size, PimTarget* target)
+{
+    if (target->runtime == PimRuntimeType::RT_TYPE_HIP) hipMalloc(ptr, size);
+    // else  TODO: OCL
+}
+
+void PimCDriver::pimMemcpy(void* dest, const void* src, size_t size, PimTarget* target)
+{
+    if (target->runtime == PimRuntimeType::RT_TYPE_HIP) hipMemcpy(dest, src, size, hipMemcpyHostToDevice);
+    // else  TODO: OCL
+}
+
+void PimCDriver::pimLaunchKernel(std::string kernel, std::string crf_binary, uint32_t num_blocks, uint32_t num_threads,
+                                 uint8_t* args[], size_t num_args, PimTarget* target)
+{
+    if (target->runtime == PimRuntimeType::RT_TYPE_HIP) {
+        void* config[5] = {HIP_LAUNCH_PARAM_BUFFER_POINTER, nullptr, HIP_LAUNCH_PARAM_BUFFER_SIZE, &num_args,
+                           HIP_LAUNCH_PARAM_END};
+        config[1] = static_cast<void*>(args);
+        auto hip_kernel = compile_code_hip(kernel, crf_binary);
+        hipModuleLaunchKernel(hip_kernel, num_blocks, 1, 1, num_threads, 1, 1, 0, nullptr, NULL,
+                              reinterpret_cast<void**>(&config));
+    }
+    // else  TODO: OCL
 }
 
 #endif
