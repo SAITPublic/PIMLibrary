@@ -1,43 +1,24 @@
 # PIMLibrary
 
-PIM Runtime Library and Tools
+PIM Runtime library and tools to execute computations on PIM hardware.  
+Platforms supported : HIP , OpenCL
 
 # Setup Contribution Environment
 ## Docker env
 
-All Prequisits for PIMLibrary build and testing are installed in docker image. For more info refer [Dockefile](https://github.sec.samsung.net/PIM/PIMLibrary/blob/develop/docker/Dockerfile.PimLibrary)
+All Prerequisites for PIMLibrary build and testing are installed in docker image. For more info refer [Dockefile](https://github.sec.samsung.net/PIM/PIMLibrary/blob/develop/docker/Dockerfile.PimLibrary)
 ```
-docker/docker-pim.sh <image name> <directory>
+cd PIMLibrary/docker
+./docker-fim.sh <image-name> <directory>
 
-image name : docker image to be used ( SAIT-Korea : pim-tf2:rocm3.0-python3)
+image name : docker image to be used ( pim-rocm4.0:tf2.3-dev )
 directory  : (optional) Directory to be mapped inside container. default your home directory is mapped
 ```
-
-## MIOpen Setup ( Optional ) 
-MIOpen Setup is required only if you work on modifying MIOpen code.
-
-### Install PreRequisits
-```
-git clone -b roc-3.0.x git@github.sec.samsung.net:PIM/MIOpen.git
-cd MIOpen
-sudo cmake -P install_deps.cmake --prefix $ROCM_PATH
-```
-
-### Build And Install MIOpen
-```
-#install MIOpen
-cd MIOpen
-mkdir build
-cd build
-CXX=${ROCM_PATH}/bin/hcc cmake -DMIOPEN_BACKEND=HIP -DCMAKE_PREFIX_PATH=$ROCM_PATH -DCMAKE_INSTALL_PREFIX=$ROCM_PATH ..
-make -j8
-sudo make install
-```
-
 # How to build
 ## Using Script
+using build.sh script.
 ```
-./scripts <build> <options>
+./scripts/build.sh <build> <options>
 <build>
 all : uninstall, cmake, make, install
 uninstall : removes all PIMLibrary so and binaries from rocm path
@@ -47,16 +28,28 @@ install : installs to rocm path
 
 <options>
 -o <relative path> : Relative path from current directory where build folder is created
--d --debug  [optional] : if mentioned, Debug mode will be enabled
--m --miopen [optional] : if mentioned, MIOpen Apps will be compiled
--t --target TARGET [optional] : if mentioned, Target mode build will be enabled. Targets: emulator(default), mi50, radeon7
+-d --debug  [optional] : if mentioned, Debug mode will be enabled.
+-t --target [optional] TARGET : represent which target hardware PIMLibrary is built for.  {default : MI50 as target device}
+supported targets : Radeon7 , MI50 , MI100.  
+-e --emulator [optional]: enables the execution in emulator mode (where the computation for PIM are imitated using a simulator) for functionality check and debugging.  
 ```
-
+if build is in PIMLibrary directory, to build from scratch using the script, below command can be used:  
+### TARGET mode  (MI50 as target)
+```
+./scripts/build.sh all -o . -t mi50
+```
+### Emulator mode  (MI50 as target)
+```
+./scripts/build.sh all -o . -t mi50 -e
+```
 ## Using Commands
+defaults :  
+~BUILD_TYPE = RELEASE  
+~EXECUTION MODE = TARGET  
 ```
 mkdir build
 cd build
-cmake -DCMAKE_BUILD_TYPE=<Build Type> -DCMAKE_INSTALL_PREFIX=$ROCM_PATH -DMIOPEN_APPS=<option> ..
+cmake -DCMAKE_BUILD_TYPE=<Build Type> -DEMULATOR=<option> -DCMAKE_INSTALL_PREFIX=$ROCM_PATH ..
 <build Type> : Release, Debug
 <option>     : ON, OFF
 make -j8
@@ -85,34 +78,32 @@ severity
 ## How to run PimIntegrationTests
 
 ### Run all Tests
+### HIP
 ```
 ./build/examples/PimIntegrationTests
 ```
+### OpenCL
+```
+./build/examples/OpenCLPimIntegrationTests
+```
 
-[Optional]
-### List all available Tests
-``./build/examples/PimIntegrationTests --gtest_list_tests``
 ### Run Single Test
-`` ./build/examples/PimIntegrationTests --gtest_filter_test=<Test from List>``
+- List all available Tests
+append --gtest_list_tests to the execute command.  
+``./build/examples/<executable-binary> --gtest_list_tests``  
 
-## How to Run MIOpen Tests
-For MIOpenTests to be added to PimIntegration test, -m option need to be enabled during PIMBuild
-```
-./build/examples/PimIntegrationTests --gtest_filter_test=MIOpenIntegrationTests.*
-```
+ - Run the Test  
+append --gtest_filter flag to execute command.  
+`` ./build/examples/<executable-binary> --gtest_filter=<Test from List>``
 
-## How To Run Tensorflow apps
-```
-export PYTHONPATH=$ROCM_PATH/lib
+-executable-binary : PimIntegrationTests (HIP) / OpenCLPimIntegrationTests (OpenCL)
 
-cd examples
-python3 tf_custom_op/<test_file>
-```
-
-## How To Run Pytorch apps
-```
-Please refer to "python_libs/pytorch_setup.md"
-```
+# NOTE  
+- to generate traces (dump of all instructions PIM HW is supposed to run in order) of the kernel execution , run the test in emulator mode (-e) with debugging flag (-d) enabled.
+- the traces will be generated in test_vectors/dump/operation_name folder with 2 .dat files :   
+  - fmtd16.dat (traces before coleascing of threads)  
+  - fmtd32.dat (traces after coleascing of threads)  
+ format of trace: ``index , block_id , thread_id , command , address``
 
 # Profiling of PIM Library
 ## PIM Library profiler
@@ -121,126 +112,9 @@ Profiler has been developed for Profiling PIM Library
 ### Pre requisites
 1. PIMLibrary in debug mode
    PIM Library need to be build in debug mode for generating debug logs for profiling. Logs will be generated in /tmp/ folder
-2. Generate MIOpen Logs [Optional]
-   MIOpen logs need to be generated for adding MIOpen Level log information in Profiler.
-   ``export MIOPEN_ENABLE_LOGGING=1``
-3. rocProfiler logs [Optional]
-   For adding GPU profiling data
 
 ### Profiler Usage
 For more details about usage, refer [Profiler](https://github.sec.samsung.net/PIM/PIMLibrary/tree/develop/tools/profiler)
-
-
-## ROC-profiler
-ROC profiler developed by ROCm developer tools. It provides low-level performance analysis for profiling GPU compute applications.
-
-### Availability
-ROC profiler can be downloaded and installed from the repository: https://github.com/ROCm-Developer-Tools/rocprofiler
-
-### Profiler Usage
-
-Roc profiler provides a variety of options to gather profiling information.
-```
-rocprof [-h] [--list-basic] [--list-derived] [-i <input .txt/.xml file>] [-o <output CSV file>] <app command line>
-
-Options:
-  -h - this help
-  --verbose - verbose mode, dumping all base counters used in the input metrics
-  --list-basic - to print the list of basic HW counters
-  --list-derived - to print the list of derived metrics with formulas
-  --cmd-qts <on|off> - quoting profiled cmd-line [on]
-
-  -i <.txt|.xml file> - input file
-      Input file .txt format, automatically rerun application for every pmc line:
-
-        # Perf counters group 1
-        pmc : Wavefronts VALUInsts SALUInsts SFetchInsts FlatVMemInsts LDSInsts FlatLDSInsts GDSInsts FetchSize
-        # Perf counters group 2
-        pmc : VALUUtilization,WriteSize L2CacheHit
-        # Filter by dispatches range, GPU index and kernel names
-        # supported range formats: "3:9", "3:", "3"
-        range: 1 : 4
-        gpu: 0 1 2 3
-        kernel: simple Pass1 simpleConvolutionPass2
-
-      Input file .xml format, for single profiling run:
-
-        # Metrics list definition, also the form "<block-name>:<event-id>" can be used
-        # All defined metrics can be found in the 'metrics.xml'
-        # There are basic metrics for raw HW counters and high-level metrics for derived counters
-        <metric name=SQ:4,SQ_WAVES,VFetchInsts
-        ></metric>
-
-        # Filter by dispatches range, GPU index and kernel names
-        <metric
-          # range formats: "3:9", "3:", "3"
-          range=""
-          # list of gpu indexes "0,1,2,3"
-          gpu_index=""
-          # list of matched sub-strings "Simple1,Conv1,SimpleConvolution"
-          kernel=""
-        ></metric>
-
-  -o <output file> - output CSV file [<input file base>.csv]
-    The output CSV file columns meaning in the columns order:
-      Index - kernels dispatch order index
-      KernelName - the dispatched kernel name
-      gpu-id - GPU id the kernel was submitted to
-      queue-id - the ROCm queue unique id the kernel was submitted to
-      queue-index - The ROCm queue write index for the submitted AQL packet
-      tid - system application thread id which submitted the kernel
-      grd - the kernel's grid size
-      wgr - the kernel's work group size
-      lds - the kernel's LDS memory size
-      scr - the kernel's scratch memory size
-      vgpr - the kernel's VGPR size
-      sgpr - the kernel's SGPR size
-      fbar - the kernel's barriers limitation
-      sig - the kernel's completion signal
-      ... - The columns with the counters values per kernel dispatch
-      DispatchNs/BeginNs/EndNs/CompleteNs - timestamp columns if time-stamping was enabled
-      
-  -d <data directory> - directory where profiler store profiling data including thread treaces [/tmp]
-      The data directory is renoving autonatically if the directory is matching the temporary one, which is the default.
-  -t <temporary directory> - to change the temporary directory [/tmp]
-      By changing the temporary directory you can prevent removing the profiling data from /tmp or enable removing from not '/tmp' directory.
-
-  --basenames <on|off> - to turn on/off truncating of the kernel full function names till the base ones [off]
-  --timestamp <on|off> - to turn on/off the kernel dispatches timestamps, dispatch/begin/end/complete [off]
-    Four kernel timestamps in nanoseconds are reported:
-        DispatchNs - the time when the kernel AQL dispatch packet was written to the queue
-        BeginNs - the kernel execution begin time
-        EndNs - the kernel execution end time
-        CompleteNs - the time when the completion signal of the AQL dispatch packet was received
-
-  --ctx-limit <max number> - maximum number of outstanding contexts [0 - unlimited]
-  --heartbeat <rate sec> - to print progress heartbeats [0 - disabled]
-  --obj-tracking <on|off> - to turn on/off kernels code objects tracking [off]
-    To support V3 code-object.
-
-  --stats - generating kernel execution stats, file <output name>.stats.csv
-  
-  --roctx-trace - to enable rocTX application code annotation trace, "Markers and Ranges" JSON trace section.
-  --sys-trace - to trace HIP/HSA APIs and GPU activity, generates stats and JSON trace chrome-tracing compatible
-  --hip-trace - to trace HIP, generates API execution stats and JSON file chrome-tracing compatible
-  --hsa-trace - to trace HSA, generates API execution stats and JSON file chrome-tracing compatible
-  --kfd-trace - to trace KFD, generates API execution stats and JSON file chrome-tracing compatible
-    Generated files: <output name>.<domain>_stats.txt <output name>.json
-    Traced API list can be set by input .txt or .xml files.
-    Input .txt:
-      hsa: hsa_queue_create hsa_amd_memory_pool_allocate
-    Input .xml:
-      <trace name="HSA">
-        <parameters list="hsa_queue_create, hsa_amd_memory_pool_allocate">
-        </parameters>
-      </trace>
-
-  --trace-start <on|off> - to enable tracing on start [on]
-  --trace-period <dealy:length:rate> - to enable trace with initial delay, with periodic sample length and rate
-    Supported time formats: <number(m|s|ms|us)>
-```
-
-
 
 # Documentation
 ## How to generate Doxygen documentation
