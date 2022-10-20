@@ -176,7 +176,7 @@ class PimFusedGemmTest
         PimCopyMemory(h_o1_, d_o1_, DEVICE_TO_HOST);
     }
 
-    int validate(float epsilon = 1.0f)
+    int validate(float epsilon = 0.1f)
     {
         return compare_half_relative((half*)golden_->data, (half*)h_o1_->data, out_size1_, epsilon);
     }

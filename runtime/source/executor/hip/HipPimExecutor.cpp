@@ -247,9 +247,9 @@ int HipPimExecutor::execute_gemm(PimBo* output, PimBo* input, PimBo* weight, Pim
             // Assume that user has provided correct layout
             pim_wei = weight;
         }
-        if (gemm_order_ == W_X_I) set_pimbo_t(input, weight, bias, output);
+        if (gemm_order_ == W_X_I) set_pimbo_t(input, pim_wei, bias, output);
         ret = this->execute_hip_gemm(output, input, pim_wei, bias, act_func, stream, block);
-        if (gemm_order_ == W_X_I) set_pimbo_t(input, weight, bias, output);
+        if (gemm_order_ == W_X_I) set_pimbo_t(input, pim_wei, bias, output);
     } else {
         if (is_pim_applicable(weight, gemm_order_)) {
             PimBo* pim_wei;
@@ -260,9 +260,10 @@ int HipPimExecutor::execute_gemm(PimBo* output, PimBo* input, PimBo* weight, Pim
                 pim_wei = weight;
             }
             /* gemm kernel is implemented based on I_X_W order */
-            if (gemm_order_ == W_X_I) set_pimbo_t(input, weight, bias, output);
+
+            if (gemm_order_ == W_X_I) set_pimbo_t(input, pim_wei, bias, output);
             ret = this->execute_hip_gemm(output, input, pim_wei, bias, act_func, stream, block);
-            if (gemm_order_ == W_X_I) set_pimbo_t(input, weight, bias, output);
+            if (gemm_order_ == W_X_I) set_pimbo_t(input, pim_wei, bias, output);
         } else {
             ret = this->execute_gemv(output, input, weight, bias, act_func, stream, block);
         }
