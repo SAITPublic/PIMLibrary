@@ -12,24 +12,36 @@ set(PIM_LIBRARY_VERSION_MINOR 0)
 
 set(PREFIX ${CMAKE_INSTALL_PREFIX})
 set(EXEC_PREFIX "${PREFIX}/bin")
-set(ROCM_PATH $ENV{ROCM_PATH})
+if(OPENCL AND NVIDIA)
+    set(PIM_PATH $ENV{PIM_PATH})
+else()
+    set(ROCM_PATH $ENV{ROCM_PATH})
+endif()
 
 option(TARGET "Enable TARGET apps build" OFF)
-option(RADEON7 "Enable TARGET:RADEON7 apps build" OFF)
-option(MI50 "Enable TARGET:MI50 apps build" OFF)
+
 option(PIM_COMPILER "Enable PIM Compiler" OFF)
 option(ENABLE_COVERAGE "Enable Test Coverage (lcov)" OFF)
+option(NVIDIA "Enable TARGET:NVIDIA apps build" OFF)
+option(AMD "Enable TARGET:AMD apps build" OFF)
+option(OPENCL "Enable Opencl ON/OFF" OFF)
 
 # Set Default build type to "Debug"
 if((NOT CMAKE_BUILD_TYPE) OR (CMAKE_BUILD_TYPE) STREQUAL None)
-    set(CMAKE_BUILD_TYPE Debug)
+    set(CMAKE_BUILD_TYPE Release)
 endif()
 message(STATUS "Build Type is ${CMAKE_BUILD_TYPE}")
 
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BUILD_DIR})
 
 # Set CMake Flags
-set(CMAKE_CXX_FLAGS "-std=c++14 -Wall -Wno-unused-command-line-argument -Wno-invalid-constexpr")
+if(OPENCL AND NVIDIA)
+    set(CMAKE_CXX_FLAGS "-std=c++14")
+else()
+    set(CMAKE_CXX_FLAGS "-std=c++14 -Wall -Wno-unused-command-line-argument -Wno-invalid-constexpr")
+    
+endif()
+
 set(CMAKE_C_FLAGS "-std=c14")
 
 if("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
@@ -49,28 +61,44 @@ endif()
 message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
 message(STATUS "CMAKE_C_FLAGS: ${CMAKE_C_FLAGS}")
 
-include_directories("${PROJECT_SOURCE_DIR}/runtime/include"
-                    "${PROJECT_SOURCE_DIR}/external_libs/include"
-                    "${PROJECT_SOURCE_DIR}/external_libs/include/dramsim2"
-                    "${PROJECT_SOURCE_DIR}/external_libs/include/dramsim2/lib"
-                    "${PROJECT_SOURCE_DIR}/tools/crfcodegen/include"
-                    "${PROJECT_SOURCE_DIR}/tools/profiler/include"
-                    "${ROCM_PATH}/include")
-link_directories("${ROCM_PATH}/hip/lib" "${ROCM_PATH}/hsa/lib" "${ROCM_PATH}/libhsakmt/lib" "${ROCM_PATH}/lib" "${PROJECT_SOURCE_DIR}/external_libs")
-link_directories("${ROCM_PATH}/opencl/lib/x86_64/")
-include_directories("${ROCM_PATH}/opencl/include/")
+if(AMD)
+    include_directories("${PROJECT_SOURCE_DIR}/runtime/include"
+        "${PROJECT_SOURCE_DIR}/external_libs/include"
+        "${PROJECT_SOURCE_DIR}/external_libs/include/dramsim2"
+        "${PROJECT_SOURCE_DIR}/external_libs/include/dramsim2/lib"
+        "${PROJECT_SOURCE_DIR}/tools/crfcodegen/include"
+        "${PROJECT_SOURCE_DIR}/tools/profiler/include"
+        "${ROCM_PATH}/include")
+else()
+    include_directories("${PROJECT_SOURCE_DIR}/runtime/include"
+            "${PROJECT_SOURCE_DIR}/external_libs/include"
+            "${PROJECT_SOURCE_DIR}/external_libs/include/dramsim2"
+            "${PROJECT_SOURCE_DIR}/external_libs/include/dramsim2/lib"
+            "${PROJECT_SOURCE_DIR}/tools/crfcodegen/include"
+            "${PROJECT_SOURCE_DIR}/tools/profiler/include")
+endif()
 
+if(AMD)
+    link_directories("${ROCM_PATH}/hip/lib" "${ROCM_PATH}/hsa/lib" "${ROCM_PATH}/libhsakmt/lib" "${ROCM_PATH}/lib" "${PROJECT_SOURCE_DIR}/external_libs")
+    link_directories("${ROCM_PATH}/opencl/lib/x86_64/")
+    include_directories("${ROCM_PATH}/opencl/include/")
+else()
+    link_directories("${PROJECT_SOURCE_DIR}/external_libs")
+    link_directories("/opencl/lib/x86_64/")
+    include_directories("/opencl/include/")
+endif()
 #for test vectors default data path
 add_definitions(-DTEST_VECTORS_DATA="${PROJECT_SOURCE_DIR}/test_vectors/")
 add_definitions(-DROCM_PATH="${ROCM_PATH}")
-
 # default OpenCL version 2.0
 add_definitions(-DCL_KERNEL_SOURCE_PATH="${PROJECT_SOURCE_DIR}/runtime/include/executor/ocl/")
 add_definitions(-DCL_KERNEL_INCLUDE_PATH="${PROJECT_SOURCE_DIR}/runtime/include/CL_KERNEL_INCLUDE_PATH")
+add_definitions(-DCL_KERNEL_BINARY_PATH="$/opencl/bin/")
 add_definitions(-DCL_KERNEL_BINARY_PATH="${ROCM_PATH}/opencl/bin/")
 add_definitions(-DCL_KERNEL_BUILD_PATH="${PROJECT_BUILD_DIR}/runtime/source/")
 add_definitions(-DCL_TARGET_OPENCL_VERSION=200)
 add_definitions(-DCL_USE_DEPRECATED_OPENCL_1_2_APIS)
+add_definitions(-DPIM_PATH="${PIM_PATH}")
 
 if(TARGET)
     add_definitions(-DTARGET=1)
@@ -87,6 +115,21 @@ if(PIM_COMPILER)
 	add_definitions(-DPIM_COMPILER_ENABLE=1)
 else()
 	add_definitions(-DPIM_COMPILER_ENABLE=0)
+endif()
+if(AMD)
+	add_definitions(-DAMD=1)
+else()
+	add_definitions(-DAMD=0)
+endif()
+if(NVIDIA)
+	add_definitions(-DNVIDIA=1)
+else()
+	add_definitions(-DNVIDIA=0)
+endif()
+if(OPENCL)
+	add_definitions(-DOPENCL=1)
+else()
+	add_definitions(-DOPENCL=0)
 endif()
 
 add_subdirectory(runtime)

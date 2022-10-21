@@ -99,12 +99,13 @@ else
     cmake_build_options="${cmake_build_options} -DTARGET=ON -DEMULATOR=OFF"
 fi
 
-if [ $target_device = "radeon7" ]; then
-    cmake_build_options="${cmake_build_options} -DRADEON7=ON"
-elif [ $target_device = "mi50" ]; then
-    cmake_build_options="${cmake_build_options} -DMI50=ON"
+if [ $target_device = "amd" ]; then
+    cmake_build_options="${cmake_build_options} -DAMD=ON"
+elif [ $target_device = "nvidia" ]; then
+    cmake_build_options="${cmake_build_options} -DNVIDIA=ON"
+    cmake_build_options="${cmake_build_options} -DOPENCL=ON"
 else
-    cmake_build_options="${cmake_build_options} -DMI50=ON"
+    cmake_build_options="${cmake_build_options} -DAMD=ON"
 fi
 
 if [ $rocm3_enable = "y" ]; then
@@ -153,23 +154,40 @@ make_install_fn()
     make -j8
     sudo make install
 }
-
-make_install_opencl_binary()
-{
-    ./examples/OpenCLPimIntegrationTests --gtest_filter=*create_ocl_kernel_binary*
-    sudo cp ocl_pimk.bin ${ROCM_PATH}/opencl/bin/
-}
-
-
-uninstall_fn()
-{
-    sudo rm -f ${ROCM_PATH}/lib/libPimRuntime.so
-    sudo rm -f ${ROCM_PATH}/include/pim_runtime_api.h
-    sudo rm -f ${ROCM_PATH}/include/pim_data_types.h
-    sudo rm -f ${ROCM_PATH}/lib/libdramsim2.so
-    sudo rm -rf ${ROCM_PATH}/include/dramsim2
-    sudo rm -f ${ROCM_PATH}/opencl/bin/ocl_pimk.bin
-}
+if [ $target_device = "amd" ]; then
+    make_install_opencl_binary()
+    {
+        ./examples/OpenCLPimIntegrationTests --gtest_filter=*create_ocl_kernel_binary*
+        sudo cp ocl_pimk.bin ${ROCM_PATH}/opencl/bin/
+    }
+else
+    make_install_opencl_binary()
+    {
+        ./examples/OpenCLPimIntegrationTests --gtest_filter=*create_ocl_kernel_binary*
+        sudo cp ocl_pimk.bin ${PIM_PATH}/opencl/bin/
+    }
+fi
+if [ $target_device = "amd" ]; then
+    uninstall_fn()
+        {
+            sudo rm -f ${ROCM_PATH}/lib/libPimRuntime.so
+            sudo rm -f ${ROCM_PATH}/include/pim_runtime_api.h
+            sudo rm -f ${ROCM_PATH}/include/pim_data_types.h
+            sudo rm -f ${ROCM_PATH}/lib/libdramsim2.so
+            sudo rm -rf ${ROCM_PATH}/include/dramsim2
+            sudo rm -f ${ROCM_PATH}/opencl/bin/ocl_pimk.bin
+        }
+else
+    uninstall_fn()
+        {
+            sudo rm -f ${PIM_PATH}/lib/libPimRuntime.so
+            sudo rm -f ${PIM_PATH}/include/pim_runtime_api.h
+            sudo rm -f ${PIM_PATH}/include/pim_data_types.h
+            sudo rm -f ${PIM_PATH}/lib/libdramsim2.so
+            sudo rm -rf ${PIM_PATH}/include/dramsim2
+            sudo rm -f ${PIM_PATH}/opencl/bin/ocl_pimk.bin
+        }
+fi
 
 if [ $1 = "all" ]; then
     uninstall_fn

@@ -29,18 +29,26 @@ install : installs to rocm path
 <options>
 -o <relative path> : Relative path from current directory where build folder is created
 -d --debug  [optional] : if mentioned, Debug mode will be enabled.
--t --target [optional] TARGET : represent which target hardware PIMLibrary is built for.  {default : MI50 as target device}
-supported targets : Radeon7 , MI50 , MI100.  
+-t --target [optional] TARGET : represent which target hardware PIMLibrary is built for.  {default : AMD device as target device}
+supported targets : AMD and NVIDIA.  
 -e --emulator [optional]: enables the execution in emulator mode (where the computation for PIM are imitated using a simulator) for functionality check and debugging.  
 ```
 if build is in PIMLibrary directory, to build from scratch using the script, below command can be used:  
-### TARGET mode  (MI50 as target)
+### TARGET mode  (AMD as target)
 ```
-./scripts/build.sh all -o . -t mi50
+./scripts/build.sh all -o . -t amd
 ```
-### Emulator mode  (MI50 as target)
+### Emulator mode  (AMD as target)
 ```
-./scripts/build.sh all -o . -t mi50 -e
+./scripts/build.sh all -o . -t amd -e
+```
+### TARGET mode  (NVIDIA as target)
+```
+./scripts/build.sh all -o . -t nvidia
+```
+### Emulator mode  (NVIDIA as target)
+```
+./scripts/build.sh all -o . -t nvidia -e
 ```
 ## Using Commands
 defaults :  
@@ -129,5 +137,4 @@ sudo apt-get install graphviz
 `doxygen Doxyfile`
 
 Documentation will be generated in Doc/Doxygen folder
-
 
