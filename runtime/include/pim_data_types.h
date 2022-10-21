@@ -105,7 +105,6 @@ typedef struct __PimBufferObject {
     size_t size_r;
     void *data;
     bool use_user_ptr;
-    bool transposed;
 } PimBo;
 
 #if PIM_COMPILER_ENABLE == 1
@@ -140,7 +139,6 @@ typedef struct __PimGemmDescriptor {
     PimBShape out_bshape_r;
     PimPrecision precision;
     PimGemmOrder gemm_order;
-    bool transposed;
 } PimGemmDesc;
 
 typedef struct __PimDescriptor {

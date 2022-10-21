@@ -748,7 +748,7 @@ int OclPimExecutor::execute_gemm(PimBo* output, PimBo* input, PimBo* weight, Pim
     if (kernel_type_ == CUSTOM_GPU) {
         // ret = this->execute_gemv(output, input, weight, bias, act_func, stream, block);
         DLOG(ERROR) << "OCL Custom GPU UnImplemented ";
-    } else if (kernel_type_ == PIM && !is_transposed(weight)) {
+    } else if (kernel_type_ == PIM) {
         PimBo* pim_wei;
         if (weight->data_layout_type == PimDataLayoutType::RAW) {
             pim_wei = pim_runtime_->get_preloaded_pim_gemm_weight(weight, gemm_order_);

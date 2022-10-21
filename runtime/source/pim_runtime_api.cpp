@@ -120,8 +120,7 @@ int PimGetDevice(uint32_t* device_id)
     return ret;
 }
 
-PimBo* PimCreateBo(int n, int c, int h, int w, PimPrecision precision, PimMemType mem_type, void* user_ptr,
-                   bool transposed)
+PimBo* PimCreateBo(int n, int c, int h, int w, PimPrecision precision, PimMemType mem_type, void* user_ptr)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     PIM_PROFILE_TICK(CreateBo);
@@ -142,7 +141,6 @@ PimBo* PimCreateBo(int n, int c, int h, int w, PimPrecision precision, PimMemTyp
     pim_bo->bshape_r = {(uint32_t)n, (uint32_t)c, (uint32_t)h, (uint32_t)w};
     pim_bo->mem_type = mem_type;
     pim_bo->precision = precision;
-    pim_bo->transposed = transposed;
     pim_bo->data_layout_type = PimDataLayoutType::RAW;
 
     ret = pim_runtime->alloc_memory(pim_bo, user_ptr);
@@ -223,7 +221,7 @@ PimBo* PimCreateBo(PimGemmDesc* pim_gemm_desc, PimMemType mem_type, PimMemFlag m
 }
 
 PimGemmDesc* PimCreateGemmDesc(int n, int c, int in_h, int in_w, int out_h, int out_w, PimPrecision precision,
-                               PimGemmOrder gemm_order, bool transposed)
+                               PimGemmOrder gemm_order)
 {
     DLOG(INFO) << "called";
 
@@ -236,7 +234,6 @@ PimGemmDesc* PimCreateGemmDesc(int n, int c, int in_h, int in_w, int out_h, int 
 
     pim_gemm_desc->precision = precision;
     pim_gemm_desc->gemm_order = gemm_order;
-    pim_gemm_desc->transposed = transposed;
     pim_gemm_desc->in_bshape_r = {(uint32_t)n, (uint32_t)c, (uint32_t)in_h, (uint32_t)in_w};
     if (gemm_order == W_X_I)
         pim_gemm_desc->wei_bshape_r = {(uint32_t)n, (uint32_t)c, (uint32_t)out_h, (uint32_t)in_h};

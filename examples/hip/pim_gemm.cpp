@@ -47,7 +47,7 @@ class PimGemmTest
             wgt_size_ = n_ * c_ * in_h_ * out_h_;
         else
             wgt_size_ = n_ * c_ * in_w_ * out_w_;
-        desc_ = PimCreateGemmDesc(n_, c_, in_h_, in_w_, out_h_, out_w_, PIM_FP16, gemm_order_, false);
+        desc_ = PimCreateGemmDesc(n_, c_, in_h_, in_w_, out_h_, out_w_, PIM_FP16, gemm_order_);
         h_i_ = PimCreateBo(desc_, MEM_TYPE_HOST, GEMM_INPUT);
         h_w_ = PimCreateBo(desc_, MEM_TYPE_HOST, GEMM_WEIGHT);
         if (has_bias_) h_b_ = PimCreateBo(desc_, MEM_TYPE_HOST, GEMM_BIAS);

@@ -145,7 +145,6 @@ void set_pimbo(PimGemmDesc* pim_gemm_desc, PimMemType mem_type, PimMemFlag mem_f
         size_r *= 2;
     }
 
-    pim_bo->transposed = pim_gemm_desc->transposed;
     pim_bo->size = size;
     pim_bo->size_r = size_r;
     pim_bo->mem_type = mem_type;
@@ -268,8 +267,6 @@ bool check_chwise_gemm_bo(PimBo* bo, PimGemmOrder gemm_order)
     return ret;
 }
 
-bool is_transposed(PimBo* wei) { return wei->transposed; }
-
 bool is_pim_applicable(PimBo* wei, PimGemmOrder gemm_order)
 {
     if (wei->data_layout_type != PimDataLayoutType::RAW) {
@@ -279,7 +276,10 @@ bool is_pim_applicable(PimBo* wei, PimGemmOrder gemm_order)
     /* TODO: find optimal shape to execute PIM ops */
     uint32_t wei_dim = (gemm_order == PimGemmOrder::W_X_I) ? wei->bshape_r.h : wei->bshape_r.w;
 
-    if (wei->bshape_r.n * wei->bshape_r.c * wei_dim >= DIM_OUT_PIM && !is_transposed(wei))
+    /* TODO: This weight dim is only support in CGEMV */
+    if (wei_dim == 32317) return false;
+
+    if (wei->bshape_r.n * wei->bshape_r.c * wei_dim >= DIM_OUT_PIM)
         return true;
     else
         return false;

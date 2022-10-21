@@ -89,12 +89,11 @@ __PIM_API__ int PimGetDevice(uint32_t* device_id);
  * @param precision precision of buffer object (PIM_INT8, PIM_FP16)
  * @param mem_type  type of memory (PIM/GPU/HOST)
  * @param user_ptr pointer indicating user pre-allocated buffer (optional)
- * @param transposed representing whether the content has been transposed or not (optional)
  *
  * @return Pointer to buffer object.
  */
 __PIM_API__ PimBo* PimCreateBo(int n, int c, int h, int w, PimPrecision precision, PimMemType mem_type,
-                               void* user_ptr = nullptr, bool transposed = false);
+                               void* user_ptr = nullptr);
 
 /**
  * @brief create pim buffer object with pim descriptor
@@ -169,13 +168,11 @@ __PIM_API__ int PimDestroyDesc(PimDesc* pim_desc);
  * @param out_w width of output buffer
  * @param precision precision of buffer
  * @param gemm_order representing whether execution order is weight x input or input x weight
- * @param transposed representing whether the content has been transposed or not (default:false)
  *
  * @return PimGemmDesc structure
  */
 __PIM_API__ PimGemmDesc* PimCreateGemmDesc(int n, int c, int in_h, int in_w, int out_h, int out_w,
-                                           PimPrecision precision, PimGemmOrder gemm_order = I_X_W,
-                                           bool transposed = false);
+                                           PimPrecision precision, PimGemmOrder gemm_order = I_X_W);
 
 /**
  * @brief Destroy PIM GEMM descriptor
