@@ -50,11 +50,11 @@ class PimGemmTest
         desc_ = PimCreateGemmDesc(n_, c_, in_h_, in_w_, out_h_, out_w_, PIM_FP16, gemm_order_, false);
         h_i_ = PimCreateBo(desc_, MEM_TYPE_HOST, GEMM_INPUT);
         h_w_ = PimCreateBo(desc_, MEM_TYPE_HOST, GEMM_WEIGHT);
-        h_b_ = PimCreateBo(desc_, MEM_TYPE_HOST, GEMM_BIAS);
+        if (has_bias_) h_b_ = PimCreateBo(desc_, MEM_TYPE_HOST, GEMM_BIAS);
         h_o_ = PimCreateBo(desc_, MEM_TYPE_HOST, GEMM_OUTPUT);
         d_i_ = PimCreateBo(desc_, MEM_TYPE_DEVICE, GEMM_INPUT);
         d_w_ = PimCreateBo(desc_, MEM_TYPE_DEVICE, GEMM_WEIGHT);
-        d_b_ = PimCreateBo(desc_, MEM_TYPE_DEVICE, GEMM_BIAS);
+        if (has_bias_) d_b_ = PimCreateBo(desc_, MEM_TYPE_DEVICE, GEMM_BIAS);
         d_o_ = PimCreateBo(desc_, MEM_TYPE_DEVICE, GEMM_OUTPUT);
         golden_ = PimCreateBo(desc_, MEM_TYPE_HOST, GEMM_OUTPUT);
     }
@@ -63,12 +63,12 @@ class PimGemmTest
     {
         PimDestroyBo(h_i_);
         PimDestroyBo(h_w_);
-        PimDestroyBo(h_b_);
+        if (has_bias_) PimDestroyBo(h_b_);
         PimDestroyBo(h_o_);
         PimDestroyBo(golden_);
         PimDestroyBo(d_i_);
         PimDestroyBo(d_w_);
-        PimDestroyBo(d_b_);
+        if (has_bias_) PimDestroyBo(d_b_);
         PimDestroyBo(d_o_);
         PimDestroyGemmDesc(desc_);
     }
@@ -79,7 +79,7 @@ class PimGemmTest
         set_half_data((half*)h_o_->data, half(0.0), out_size_);
         set_rand_half_data((half*)h_i_->data, half(variation), in_size_);
         set_rand_half_data((half*)h_w_->data, half(variation), wgt_size_);
-        set_rand_half_data((half*)h_b_->data, half(variation), out_size_);
+        if (has_bias_) set_rand_half_data((half*)h_b_->data, half(variation), out_size_);
 
         half* h_i_data = (half*)h_i_->data;
         half* h_w_data = (half*)h_w_->data;
@@ -181,7 +181,7 @@ class PimGemmTestFixture : public ::testing::Test
     virtual void TearDown(void) override { PimDeinitialize(); }
 
     int ExecuteTest(unsigned n, unsigned c, unsigned in_h, unsigned in_w, unsigned out_h, unsigned out_w,
-                    PimGemmOrder gemm_order = I_X_W, bool has_bias = true, bool block = true, PimActFunc act = NONE)
+                    PimGemmOrder gemm_order = I_X_W, bool has_bias = false, bool block = true, PimActFunc act = NONE)
     {
         PimGemmTest pimGemmTest = PimGemmTest(n, c, in_h, in_w, out_h, out_w, act, has_bias, gemm_order);
         pimGemmTest.prepare();

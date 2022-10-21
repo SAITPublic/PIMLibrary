@@ -23,6 +23,7 @@ void set_pimbo_t(PimBo* bo0, PimBo* bo1, PimBo* bo2, PimBo* bo3)
 
 void set_pimbo_t(PimBo* inout)
 {
+    if (inout == nullptr) return;
     uint32_t h = inout->bshape.h;
     uint32_t w = inout->bshape.w;
     uint32_t h_r = inout->bshape_r.h;
@@ -36,6 +37,8 @@ void set_pimbo_t(PimBo* inout)
 
 void set_pimbo_t(PimBo* dst, PimBo* src)
 {
+    if (src == nullptr) return;
+    if (dst == nullptr) return;
     memcpy(dst, src, sizeof(PimBo));
     dst->bshape.w = src->bshape.h;
     dst->bshape.h = src->bshape.w;

@@ -16,6 +16,7 @@
 #include "utility/pim_log.h"
 #include "utility/pim_profile.h"
 #include "utility/pim_util.h"
+#include "utility/pim_debug.hpp"
 
 using namespace pim::runtime;
 
@@ -556,6 +557,13 @@ int PimExecuteMul(PimBo* output, void* scalar, PimBo* vector, void* stream, bool
 int PimExecuteGemm(PimBo* output, PimBo* input, PimBo* weight, PimBo* bias, PimActFunc act_func,
                    PimGemmOrder gemm_order, void* stream, bool block)
 {
+#if DEBUG
+    printf("gemm_order:%d\n", gemm_order);
+    print_pimbo(input, "input");
+    print_pimbo(weight, "weight");
+    print_pimbo(bias, "bias");
+    print_pimbo(output, "output");
+#endif
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     PIM_PROFILE_TICK(ExecuteGemm);
     int ret = 0;
