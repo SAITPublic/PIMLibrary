@@ -144,8 +144,8 @@ PimBo* PimCDriver::execute_program(PimCompiledObj* obj, PimTarget* target, std::
     size_t num_args = obj->op_order.size() + 1;
     uint8_t* args[num_args];  // +1 for gpim_base_addr
     uint8_t* crf_binary_device;
-    pimMalloc((void**)&crf_binary_device, 128, target);
-    pimMemcpy((void*)crf_binary_device, (uint8_t*)(obj->crf_binary.c_str()), obj->crf_binary.size(), target);
+    pim_malloc((void**)&crf_binary_device, 128, target);
+    pim_memcpy((void*)crf_binary_device, (uint8_t*)(obj->crf_binary.c_str()), obj->crf_binary.size(), target);
     for (size_t i = 0; i < obj->op_order.size(); i++) {
         if (obj->pimbo_map.find(obj->op_order[i]) != obj->pimbo_map.end()) {
             args[i] = static_cast<uint8_t*>(obj->pimbo_map[obj->op_order[i]]->data);
@@ -160,25 +160,25 @@ PimBo* PimCDriver::execute_program(PimCompiledObj* obj, PimTarget* target, std::
             return nullptr;
         }
     }
-    pimLaunchKernel(obj->kernel, obj->crf_binary, obj->num_blocks, obj->num_threads, args, num_args, target);
+    pim_launch_kernel(obj->kernel, obj->crf_binary, obj->num_blocks, obj->num_threads, args, num_args, target);
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return obj->output_pimbo;
 }
 
-void PimCDriver::pimMalloc(void** ptr, size_t size, PimTarget* target)
+void PimCDriver::pim_malloc(void** ptr, size_t size, PimTarget* target)
 {
     if (target->runtime == PimRuntimeType::RT_TYPE_HIP) hipMalloc(ptr, size);
     // else  TODO: OCL
 }
 
-void PimCDriver::pimMemcpy(void* dest, const void* src, size_t size, PimTarget* target)
+void PimCDriver::pim_memcpy(void* dest, const void* src, size_t size, PimTarget* target)
 {
     if (target->runtime == PimRuntimeType::RT_TYPE_HIP) hipMemcpy(dest, src, size, hipMemcpyHostToDevice);
     // else  TODO: OCL
 }
 
-void PimCDriver::pimLaunchKernel(std::string kernel, std::string crf_binary, uint32_t num_blocks, uint32_t num_threads,
+void PimCDriver::pim_launch_kernel(std::string kernel, std::string crf_binary, uint32_t num_blocks, uint32_t num_threads,
                                  uint8_t* args[], size_t num_args, PimTarget* target)
 {
     if (target->runtime == PimRuntimeType::RT_TYPE_HIP) {
