@@ -69,32 +69,26 @@ class Transaction
 
     BusPacketType getBusPacketType()
     {
+        if (!isAllowedRowBufferPolicy(rowBufferPolicy)) {
+            throw invalid_argument("Unknown row buffer policy");
+        }
         switch (transactionType) {
             case DATA_READ:
-
-                if (rowBufferPolicy == OpenPage) {
-                    return READ;
-                } else {
-                    ERROR("Unknown row buffer policy");
-                    abort();
-                }
-                break;
+                return READ;
             case DATA_WRITE:
-                if (rowBufferPolicy == OpenPage) {
-                    return WRITE;
-                } else {
-                    ERROR("Unknown row buffer policy");
-                    abort();
-                }
-                break;
+                return WRITE;
             default:
-                ERROR(
+                throw invalid_argument(
                     "This transaction type doesn't have a corresponding bus "
                     "packet type");
-                abort();
         }
     }
+
+   private:
+    RowBufferPolicy rowBufferPolicy;
+    bool isAllowedRowBufferPolicy(const RowBufferPolicy& policy) { return (policy == OpenPage); }
 };
+
 }  // namespace DRAMSim
 
 #endif

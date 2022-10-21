@@ -33,9 +33,12 @@
  *  OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************************/
+#include <string>
+#include <vector>
+#include "AddressMapping.h"
 #include "CSVWriter.h"
 #include "ClockDomain.h"
-#include "IniReader.h"
+#include "Configuration.h"
 #include "MemoryObject.h"
 #include "MemorySystem.h"
 #include "SimulatorObject.h"
@@ -48,29 +51,22 @@ class MultiChannelMemorySystem : public MemoryObject
 {
    public:
     MultiChannelMemorySystem(const string& dev, const string& sys, const string& pwd, const string& trc,
-                             unsigned megsOfMemory, string* visFilename = NULL,
-                             const IniReader::OverrideMap* paramOverrides = NULL);
+                             unsigned megsOfMemory, string* visFilename = NULL);
     virtual ~MultiChannelMemorySystem();
 
     virtual bool addTransaction(Transaction* trans);
     virtual bool addTransaction(bool isWrite, uint64_t addr, BurstType* data);
     virtual bool addTransaction(bool isWrite, uint64_t addr, const std::string& tag, BurstType* data);
 
-    bool addBarrier(int chan_id);
+    bool addBarrier(int chanId);
 
     void update();
     void printStats(bool finalStats = false);
-    void printTimeOverHead();
     ostream& getLogFile();
     void RegisterCallbacks(TransactionCompleteCB* readDone, TransactionCompleteCB* writeDone,
                            void (*reportPower)(double bgpower, double burstpower, double refreshpower,
                                                double actprepower));
-
-    int getIniBool(const std::string& field, bool* val);
-    int getIniUint(const std::string& field, unsigned int* val);
-    int getIniUint64(const std::string& field, uint64_t* val);
-    int getIniFloat(const std::string& field, float* val);
-    unsigned getNumFence(int ch) { return num_fence[ch]; }
+    unsigned getNumFence(int ch) { return numFence[ch]; }
 
     void InitOutputFiles(string tracefilename);
     void setCPUClockSpeed(uint64_t cpuClkFreqHz);
@@ -82,11 +78,17 @@ class MultiChannelMemorySystem : public MemoryObject
 
     // output file
     std::ofstream visDataOut;
-    ofstream dramsim_log;
-    ofstream mem_trace_log;
-    ofstream mem_trace_debug_log;
-    ofstream mem_trace_16byte_log;
+    ofstream dramsimLog;
     vector<MemorySystem*> channels;
+    AddrMapping* addrMapping;
+
+    void getIniBool(const std::string& field, bool* val) { *val = getConfigParam(BOOL, field); }
+
+    void getIniUint(const std::string& field, unsigned int* val) { *val = getConfigParam(UINT, field); }
+
+    void getIniUint64(const std::string& field, uint64_t* val) { *val = getConfigParam(UINT64, field); }
+
+    void getIniFloat(const std::string& field, float* val) { *val = getConfigParam(FLOAT, field); }
 
    private:
     unsigned findChannelNumber(uint64_t addr);
@@ -105,7 +107,9 @@ class MultiChannelMemorySystem : public MemoryObject
     CSVWriter* csvOut;
 
     double backgroundPower;
-    unsigned* num_fence;
+    unsigned* numFence;
+
+    Configuration* configuration;
 };
 }  // namespace DRAMSim
 

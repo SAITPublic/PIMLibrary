@@ -38,6 +38,7 @@
 
 #include <iostream>
 #include <memory>
+#include <vector>
 #include "BankState.h"
 #include "BusPacket.h"
 #include "SimulatorObject.h"
@@ -56,7 +57,7 @@ class Bank
 
    public:
     // functions
-    Bank(ostream& dramsim_log_);
+    Bank(ostream& simLog);
 
     void read(BusPacket* busPacket);
     void write(const BusPacket* busPacket);
@@ -65,8 +66,9 @@ class Bank
    private:
     // private member
     std::vector<std::shared_ptr<DataStruct>> rowEntries;
-    ostream& dramsim_log;
+    ostream& dramsimLog;
     static std::shared_ptr<DataStruct> searchForRow(unsigned row, std::shared_ptr<DataStruct> head);
+    unsigned numCols;
 };
 }  // namespace DRAMSim
 

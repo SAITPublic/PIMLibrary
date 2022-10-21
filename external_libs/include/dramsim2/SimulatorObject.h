@@ -51,6 +51,7 @@ class SimulatorObject
     void step();
     virtual void update() = 0;
 };
+
 }  // namespace DRAMSim
 
 #endif

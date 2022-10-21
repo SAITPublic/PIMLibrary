@@ -35,6 +35,9 @@
 #define PRINT_MACROS_H
 
 #include <iostream>
+#include <string>
+
+extern std::string SIM_TRACE_FILE;
 
 #define ERROR(str) std::cerr << "[ERROR (" << __FILE__ << ":" << __LINE__ << ")]: " << str << std::endl;
 
@@ -66,50 +69,51 @@ using std::ostream;
 #define PRINTN(str) ;
 #else
 
-#define PRINT(str)                               \
-    {                                            \
-        if (SHOW_SIM_OUTPUT) {                   \
-            if (LOG_OUTPUT)                      \
-                dramsim_log << str << std::endl; \
-            else                                 \
-                std::cout << str << std::endl;   \
-        }                                        \
+#define PRINT(str)                              \
+    {                                           \
+        if (SHOW_SIM_OUTPUT) {                  \
+            if (LOG_OUTPUT)                     \
+                dramsimLog << str << std::endl; \
+            else                                \
+                std::cout << str << std::endl;  \
+        }                                       \
     }
 
 #define PRINTC(color, str)                                     \
     {                                                          \
         if (SHOW_SIM_OUTPUT) {                                 \
             if (LOG_OUTPUT)                                    \
-                dramsim_log << str << std::endl;               \
+                dramsimLog << str << std::endl;                \
             else                                               \
                 std::cout << color << str << END << std::endl; \
         }                                                      \
     }
 
-#define PRINTCOND(cond, str)                     \
-    {                                            \
-        if (SHOW_SIM_OUTPUT && cond) {           \
-            if (LOG_OUTPUT)                      \
-                dramsim_log << str << std::endl; \
-            else                                 \
-                std::cout << str << std::endl;   \
-        }                                        \
+#define PRINTCOND(cond, str)                    \
+    {                                           \
+        if (SHOW_SIM_OUTPUT && cond) {          \
+            if (LOG_OUTPUT)                     \
+                dramsimLog << str << std::endl; \
+            else                                \
+                std::cout << str << std::endl;  \
+        }                                       \
     }
 
-#define PRINTN(str)                 \
-    {                               \
-        if (SHOW_SIM_OUTPUT) {      \
-            if (LOG_OUTPUT)         \
-                dramsim_log << str; \
-            else                    \
-                std::cout << str;   \
-        }                           \
+#define PRINTN(str)                \
+    {                              \
+        if (SHOW_SIM_OUTPUT) {     \
+            if (LOG_OUTPUT)        \
+                dramsimLog << str; \
+            else                   \
+                std::cout << str;  \
+        }                          \
     }
+
 #define PRINTNC(cond, str)             \
     {                                  \
         if (SHOW_SIM_OUTPUT && cond) { \
             if (LOG_OUTPUT)            \
-                dramsim_log << str;    \
+                dramsimLog << str;     \
             else                       \
                 std::cout << str;      \
         }                              \

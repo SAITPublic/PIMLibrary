@@ -39,6 +39,7 @@
 // Header
 //
 
+#include <vector>
 #include "BankState.h"
 #include "BusPacket.h"
 #include "SimulatorObject.h"
@@ -53,7 +54,7 @@ class Rank;
 class CommandQueue : public SimulatorObject
 {
     CommandQueue();
-    ostream& dramsim_log;
+    ostream& dramsimLog;
 
    public:
     // typedefs
@@ -62,7 +63,7 @@ class CommandQueue : public SimulatorObject
     typedef vector<BusPacket2D> BusPacket3D;
 
     // functions
-    CommandQueue(vector<vector<BankState>>& states, ostream& dramsim_log);
+    CommandQueue(vector<vector<BankState>>& states, ostream& dramsimLog);
     virtual ~CommandQueue();
 
     void enqueue(BusPacket* newBusPacket);
@@ -106,7 +107,16 @@ class CommandQueue : public SimulatorObject
     vector<vector<unsigned>> rowAccessCounters;
 
     bool sendAct;
-};
-}  // namespace DRAMSim
 
+    // preloaded system configuration parameters
+    unsigned num_ranks_;
+    unsigned num_banks_;
+    unsigned cmd_queue_depth_;
+    unsigned xaw_;
+    unsigned total_row_accesses_;
+    SchedulingPolicy schedulingPolicy_;
+    QueuingStructure queuingStructure_;
+};
+
+}  // namespace DRAMSim
 #endif

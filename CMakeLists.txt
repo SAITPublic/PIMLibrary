@@ -51,6 +51,8 @@ message(STATUS "CMAKE_C_FLAGS: ${CMAKE_C_FLAGS}")
 
 include_directories("${PROJECT_SOURCE_DIR}/runtime/include"
                     "${PROJECT_SOURCE_DIR}/external_libs/include"
+                    "${PROJECT_SOURCE_DIR}/external_libs/include/dramsim2"
+                    "${PROJECT_SOURCE_DIR}/external_libs/include/dramsim2/lib"
                     "${PROJECT_SOURCE_DIR}/tools/crfcodegen/include"
                     "${PROJECT_SOURCE_DIR}/tools/profiler/include"
                     "${ROCM_PATH}/include")

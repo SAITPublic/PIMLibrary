@@ -48,7 +48,7 @@ enum CurrentBankState { Idle, RowActive, Precharging, Refreshing, PowerDown };
 
 class BankState
 {
-    ostream& dramsim_log;
+    ostream& dramsimLog;
 
    public:
     // Fields
@@ -62,9 +62,11 @@ class BankState
     BusPacketType lastCommand;
     unsigned stateChangeCountdown;
     // Functions
-    BankState(ostream& dramsim_log_);
+    BankState(ostream& simLog);
     void print();
+    void showState();
 };
+
 }  // namespace DRAMSim
 
 #endif

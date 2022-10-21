@@ -46,10 +46,6 @@
 #include <sys/types.h>
 #endif
 
-// number of latencies per bucket in the latency histogram
-// TODO: move to system ini file
-#define HISTOGRAM_BIN_SIZE 10
-
 extern std::ofstream cmd_verify_out;  // used by BusPacket.cpp if VERIFICATION_OUTPUT is enabled
 // extern std::ofstream visDataOut;
 
@@ -70,182 +66,24 @@ extern bool DEBUG_PIM_TIME;
 extern bool DEBUG_CMD_TRACE;
 extern bool DEBUG_PIM_BLOCK;
 
-extern uint64_t TOTAL_STORAGE;
-extern unsigned NUM_BANKS;
-extern unsigned NUM_BANKS_LOG;
-extern unsigned NUM_RANKS;
-extern unsigned NUM_RANKS_LOG;
-extern unsigned NUM_CHANS;
-extern unsigned NUM_CHANS_LOG;
-extern unsigned NUM_ROWS;
-extern unsigned NUM_ROWS_LOG;
-extern unsigned NUM_COLS;
-extern unsigned NUM_COLS_LOG;
-extern unsigned NUM_PIM_BLOCKS;
-extern unsigned FENCE_CYCLE;
-
-/* ---------------------- */
-
-extern unsigned NUM_BANK_GROUPS;
-extern unsigned NUM_BANK_GROUPS_LOG;
-
-/* ---------------------- */
-
-extern unsigned DEVICE_WIDTH;
-extern unsigned BYTE_OFFSET_WIDTH;
-extern unsigned TRANSACTION_SIZE;
-extern unsigned THROW_AWAY_BITS;
-extern unsigned COL_LOW_BIT_WIDTH;
-
-extern unsigned tRFC;
-extern unsigned tRFCSB;
-extern unsigned tREFI;
-extern unsigned tREFISB;
-
-extern float tCK;
-
-extern unsigned CL;
-extern unsigned AL;
-
-extern unsigned RL;
-extern unsigned WL;
-
-extern unsigned BL;
-extern unsigned tRAS;
-extern unsigned tRCD;
-
-extern unsigned tRCDRD;
-extern unsigned tRCDWR;
-
-extern unsigned tRRD;
-extern unsigned tRC;
-extern unsigned tRP;
-extern unsigned tCCD;
-extern unsigned tRTP;
-extern unsigned tWTR;
-extern unsigned tWR;
-extern unsigned tRTRS;
-extern unsigned XAW;
-extern unsigned tXAW;
-extern unsigned tCKE;
-extern unsigned tXP;
-
-extern unsigned tCMD;
-
-extern unsigned tCCDL;
-extern unsigned tCCDS;
-extern unsigned tRRDL;
-extern unsigned tRRDS;
-extern unsigned tWTRL;
-extern unsigned tWTRS;
-extern unsigned tRTPL;
-extern unsigned tRTPS;
-
 extern std::string SIM_TRACE_FILE;
 extern bool SHOW_SIM_OUTPUT;
 extern bool LOG_OUTPUT;
-
-#define READ_TO_PRE_DELAY (AL + BL / 2 + max(tRTPL, tCCDL) - tCCDL)
-#define READ_TO_PRE_DELAY_LONG (AL + BL / 2 + max(tRTPL, tCCDL) - tCCDL)
-#define READ_TO_PRE_DELAY_SHORT (AL + BL / 2 + max(tRTPS, tCCDS) - tCCDS)
-#define WRITE_TO_PRE_DELAY (WL + BL / 2 + tWR)
-#define READ_TO_WRITE_DELAY (RL + BL / 2 + tRTRS - WL)
-#define READ_AUTOPRE_DELAY (AL + tRTP + tRP)
-#define WRITE_AUTOPRE_DELAY (WL + BL / 2 + tWR + tRP)
-
-#define WRITE_TO_READ_DELAY_B_LONG (WL + BL / 2 + tWTRL)   // interbank
-#define WRITE_TO_READ_DELAY_B_SHORT (WL + BL / 2 + tWTRS)  // interbank
-
-#define WRITE_TO_READ_DELAY_R max((int)(WL + BL / 2 + tRTRS) - (int)RL, (int)0)  // interrank
-
-/*
-#define READ_TO_PRE_DELAY_LONG (AL + BL / 2 + max(tRTPL, tCCDL) - tCCDL)
-#define READ_TO_PRE_DELAY_SHORT (AL + BL / 2 + max(tRTPS, tCCDS) - tCCDS)
-#define READ_TO_PRE_DELAY (AL + BL / 2 + max(tRTPL, tCCDL) - tCCDL)
-#define READ_TO_WRITE_DELAY (RL + BL / 2 + tRTRS - WL)
-
-
-#define WRITE_TO_READ_DELAY_B  (WL + BL / 2 + tWTRL)
-#define WRITE_TO_READ_DELAY_B_LONG (WL + BL / 2 + tWTRL)  // interbank
-#define WRITE_TO_READ_DELAY_B_SHORT (WL + BL / 2 + tWTRS) // interbank
-#define WRITE_TO_READ_DELAY_R (max(((int)WL + (int)BL / 2 + (int)tRTRS - (int)RL), (int)0))
-*/
-/* For power parameters (current and voltage), see externs in
- * MemoryController.cpp */
-
-extern unsigned NUM_DEVICES;
-/*
-#define WRITE_TO_PRE_DELAY (WL + BL / 2 + tWR)
-#define READ_AUTOPRE_DELAY (AL + tRTP + tRP)
-#define WRITE_AUTOPRE_DELAY (WL + BL / 2 + tWR + tRP)
-*/
-extern unsigned JEDEC_DATA_BUS_BITS;
-
-// Memory Controller related parameters
-extern unsigned TRANS_QUEUE_DEPTH;
-extern unsigned CMD_QUEUE_DEPTH;
-
-extern unsigned EPOCH_LENGTH;
-
-extern unsigned TOTAL_ROW_ACCESSES;
-
-extern std::string PIM_PRECISION;
-
-extern std::string ROW_BUFFER_POLICY;
-extern std::string SCHEDULING_POLICY;
-extern std::string ADDRESS_MAPPING_SCHEME;
-extern std::string QUEUING_STRUCTURE;
-
-extern unsigned IDD0;
-extern unsigned IDD1;
-extern unsigned IDD2P;
-extern unsigned IDD2Q;
-extern unsigned IDD2N;
-extern unsigned IDD3Pf;
-extern unsigned IDD3Ps;
-extern unsigned IDD3N;
-extern unsigned IDD4W;
-extern unsigned IDD4R;
-extern unsigned IDD5;
-extern unsigned IDD6;
-extern unsigned IDD6L;
-extern unsigned IDD7;
-
-extern unsigned IDD0C;
-extern unsigned IDD0Q;
-
-extern unsigned IDD3NC;
-extern unsigned IDD3NQ;
-
-extern unsigned IDD4WC;
-extern unsigned IDD4WQ;
-
-extern unsigned IDD4RC;
-extern unsigned IDD4RQ;
-
-extern float Vdd;
-
-extern float Vddc;
-extern float Vddq;
-extern float Vpp;
-
-extern unsigned Ealu;
-extern unsigned Ereg;
 
 namespace DRAMSim
 {
 enum TraceType { k6, mase, misc };
 
 enum AddressMappingScheme {
-    Scheme1,
+    Scheme1 = 1,
     Scheme2,
     Scheme3,
     Scheme4,
     Scheme5,
     Scheme6,
     Scheme7,
-    EagleScheme,
-    GPUScheme,
+    /* FIXME: need to change at launch shcha */
+    Scheme8,
     VegaScheme
 };
 
@@ -259,52 +97,321 @@ enum SchedulingPolicy { RankThenBankRoundRobin, BankThenRankRoundRobin };
 enum PIMMode { mac_in_bankgroup, mac_in_bank };
 enum PIMPrecision { FP16, INT8, FP32 };
 
-enum class pim_mode { SB, HAB, HAB_PIM };
+enum class dramMode { SB, HAB, HAB_PIM };
 
-enum class pim_bank_type { EVEN_BANK, ODD_BANK, ALL_BANK };
-enum TestKernelType {
-    ADD_16,
-    ADD_16_NOP,
-    ADD_8,
-    ADD_8_NOP,
-    BN_16,
-    BN_8,
-    ADD_ONE_BANK_8,
-    ADD_ONE_BANK_8_NOP,
-    ADD_ONE_BANK_16,
-    RELU_8
-};
-enum KernelType { ADD, BN, RELU, GEMV, MUL };
+enum class pimBankType { EVEN_BANK, ODD_BANK, ALL_BANK };
 // set by IniReader.cpp
 
 typedef void (*returnCallBack_t)(unsigned id, uint64_t addr, uint64_t clockcycle);
 typedef void (*powerCallBack_t)(double bgpower, double burstpower, double refreshpower, double actprepower);
 
-extern RowBufferPolicy rowBufferPolicy;
-extern SchedulingPolicy schedulingPolicy;
-extern AddressMappingScheme addressMappingScheme;
-extern QueuingStructure queuingStructure;
-extern PIMMode pimMode;
-extern PIMPrecision pimPrecision;
-extern int pimDataLength;
+};  // namespace DRAMSim
 
-//
-// FUNCTIONS
-//
+/* SystemConfiguration Singletone Class */
 
-unsigned inline dramsim_log2(unsigned value)
+#include "ConfigurationDB.h"
+#include "ConfigurationData.h"
+
+using namespace std;
+
+namespace DRAMSim
 {
-    unsigned logbase2 = 0;
-    unsigned orig = value;
-    value >>= 1;
-    while (value > 0) {
-        value >>= 1;
-        logbase2++;
+template <typename T>
+class SystemConfigurationBase
+{
+   public:
+    typedef T dataType;
+    virtual T getValue(const string& key) = 0;
+    void setValue(const string& key, const string& value, const paramType& ptype)
+    {
+        ConfigurationDB& _ptrDB = ConfigurationDB::getDB();
+        ConfigurationData newValue = {key, getVarType(), ptype, value};
+        _ptrDB.update(newValue);
     }
-    if ((unsigned)1 << logbase2 < orig) logbase2++;
-    return logbase2;
+
+   private:
+    varType getVarType()
+    {
+        if (is_same<dataType, string>::value) {
+            return STRING;
+        } else if (is_same<dataType, unsigned>::value) {
+            return UINT;
+        } else if (is_same<dataType, uint64_t>::value) {
+            return UINT64;
+        } else if (is_same<dataType, float>::value) {
+            return FLOAT;
+        } else if (is_same<dataType, bool>::value) {
+            return BOOL;
+        } else {
+            throw invalid_argument("unknown variable type");
+        }
+    }
+};
+
+class StringSystemConfiguration : public SystemConfigurationBase<string>
+{
+   public:
+    virtual string getValue(const string& key) override
+    {
+        ConfigurationDB& _ptrDB = ConfigurationDB::getDB();
+        const ConfigurationData* ptrConf = _ptrDB.find(key);
+        return (ptrConf != nullptr) ? ptrConf->value : 0;
+    }
+};
+
+class UnsignedSystemConfiguration : public SystemConfigurationBase<unsigned>
+{
+   public:
+    virtual unsigned getValue(const string& key) override
+    {
+        ConfigurationDB& _ptrDB = ConfigurationDB::getDB();
+        const ConfigurationData* ptrConf = _ptrDB.find(key);
+        return (ptrConf != nullptr) ? static_cast<unsigned>(stoul(ptrConf->value)) : 0;
+    }
+};
+
+class Uint64SystemConfiguration : public SystemConfigurationBase<uint64_t>
+{
+   public:
+    virtual uint64_t getValue(const string& key) override
+    {
+        ConfigurationDB& _ptrDB = ConfigurationDB::getDB();
+        const ConfigurationData* ptrConf = _ptrDB.find(key);
+        return (ptrConf != nullptr) ? stoul(ptrConf->value) : 0;
+    }
+};
+
+class FloatSystemConfiguration : public SystemConfigurationBase<float>
+{
+   public:
+    virtual float getValue(const string& key) override
+    {
+        ConfigurationDB& _ptrDB = ConfigurationDB::getDB();
+        const ConfigurationData* ptrConf = _ptrDB.find(key);
+        return (ptrConf != nullptr) ? stof(ptrConf->value) : 0;
+    }
+};
+
+class BoolSystemConfiguration : public SystemConfigurationBase<bool>
+{
+   public:
+    virtual bool getValue(const string& key) override
+    {
+        ConfigurationDB& _ptrDB = ConfigurationDB::getDB();
+        const ConfigurationData* ptrConf = _ptrDB.find(key);
+        return (ptrConf != nullptr && ptrConf->value == "true") ? true : false;
+    }
+};
+
+class SystemConfiguration
+{
+   public:
+    static StringSystemConfiguration& getStringSystemConfig()
+    {
+        static StringSystemConfiguration unique_instance;
+        return unique_instance;
+    }
+
+    static UnsignedSystemConfiguration& getUnsignedSystemConfig()
+    {
+        static UnsignedSystemConfiguration unique_instance;
+        return unique_instance;
+    }
+
+    static Uint64SystemConfiguration& getUint64SystemConfig()
+    {
+        static Uint64SystemConfiguration unique_instance;
+        return unique_instance;
+    }
+
+    static FloatSystemConfiguration& getFloatSystemConfig()
+    {
+        static FloatSystemConfiguration unique_instance;
+        return unique_instance;
+    }
+
+    static BoolSystemConfiguration& getBoolSystemConfig()
+    {
+        static BoolSystemConfiguration unique_instance;
+        return unique_instance;
+    }
+};
+
+#define getConfigParam(variableType, key) get##variableType##Config(key)
+
+static inline string getSTRINGConfig(const string& key)
+{
+    StringSystemConfiguration& config = SystemConfiguration::getStringSystemConfig();
+    return config.getValue(key);
 }
-inline bool isPowerOfTwo(unsigned long x) { return (1UL << dramsim_log2(x)) == x; }
+
+static inline unsigned getUINTConfig(const string& key)
+{
+    UnsignedSystemConfiguration& config = SystemConfiguration::getUnsignedSystemConfig();
+    return config.getValue(key);
+}
+
+static inline uint64_t getUINT64Config(const string& key)
+{
+    Uint64SystemConfiguration& config = SystemConfiguration::getUint64SystemConfig();
+    return config.getValue(key);
+}
+
+static inline float getFLOATConfig(const string& key)
+{
+    FloatSystemConfiguration& config = SystemConfiguration::getFloatSystemConfig();
+    return config.getValue(key);
+}
+
+static inline bool getBOOLConfig(const string& key)
+{
+    BoolSystemConfiguration& config = SystemConfiguration::getBoolSystemConfig();
+    return config.getValue(key);
+}
+
+#define setDevConfigParam(variableType, key, value) set##variableType##Config(key, value, DEV_PARAM)
+#define setSysConfigParam(variableType, key, value) set##variableType##Config(key, value, SYS_PARAM)
+
+static inline void setSTRINGConfig(const string& key, const string& value, const paramType& ptype)
+{
+    StringSystemConfiguration& config = SystemConfiguration::getStringSystemConfig();
+    config.setValue(key, value, ptype);
+}
+
+static inline void setUINTConfig(const string& key, const unsigned& value, const paramType& ptype)
+{
+    UnsignedSystemConfiguration& config = SystemConfiguration::getUnsignedSystemConfig();
+    config.setValue(key, to_string(value), ptype);
+}
+
+static inline void setUINT64Config(const string& key, const uint64_t& value, const paramType& ptype)
+{
+    Uint64SystemConfiguration& config = SystemConfiguration::getUint64SystemConfig();
+    config.setValue(key, to_string(value), ptype);
+}
+
+static inline void setFLOATConfig(const string& key, const float& value, const paramType& ptype)
+{
+    FloatSystemConfiguration& config = SystemConfiguration::getFloatSystemConfig();
+    config.setValue(key, to_string(value), ptype);
+}
+
+static inline void setBOOLConfig(const string& key, const bool& value, const paramType& ptype)
+{
+    BoolSystemConfiguration& config = SystemConfiguration::getBoolSystemConfig();
+    config.setValue(key, to_string(value), ptype);
+}
+
+class PIMConfiguration
+{
+   public:
+    static RowBufferPolicy getRowBufferPolicy()
+    {
+        string param = getConfigParam(STRING, "ROW_BUFFER_POLICY");
+        if (param == "open_page") {
+            return OpenPage;
+        } else if (param == "close_page") {
+            return ClosePage;
+        }
+        throw invalid_argument("Invalid row buffer policy");
+    }
+
+    static SchedulingPolicy getSchedulingPolicy()
+    {
+        string param = getConfigParam(STRING, "SCHEDULING_POLICY");
+
+        if (param == "rank_then_bank_round_robin") {
+            return RankThenBankRoundRobin;
+        } else if (param == "bank_then_rank_round_robin") {
+            return BankThenRankRoundRobin;
+        }
+        throw invalid_argument("Invalid scheduling policy");
+    }
+
+    static AddressMappingScheme getAddressMappingScheme()
+    {
+        string param = getConfigParam(STRING, "ADDRESS_MAPPING_SCHEME");
+        for (unsigned i = Scheme1; i <= Scheme7; ++i) {
+            string s{"scheme" + to_string(i)};
+            if (param == s) {
+                return AddressMappingScheme(i);
+            }
+        }
+
+        /* FIXME: need to change at launch shcha */
+        //        if (param == "EagleScheme")
+        //        {
+        //            return EagleScheme;
+        //        }
+        //        else if (param == "GPUScheme")
+        //        {
+        //            return GPUScheme;
+        //        }
+        //        else if (param == "VegaScheme")
+        //        {
+        //            return VegaScheme;
+        //        }
+        //        else if (param == "Scheme8")
+        //        {
+        //            return Scheme8;
+        //        }
+        if (param == "Scheme8") {
+            return Scheme8;
+        } else if (param == "VegaScheme") {
+            return VegaScheme;
+        }
+        throw invalid_argument("Invalid address mapping scheme");
+    }
+
+    static QueuingStructure getQueueingStructure()
+    {
+        string param = getConfigParam(STRING, "QUEUING_STRUCTURE");
+        if (param == "per_rank_per_bank") {
+            return PerRankPerBank;
+        } else if (param == "per_rank") {
+            return PerRank;
+        }
+        throw invalid_argument("Invalid queueing structure");
+    }
+
+    static PIMMode getPIMMode()
+    {
+        string param = getConfigParam(STRING, "PIM_MODE");
+        if (param == "mac_in_bankgroup") {
+            return mac_in_bankgroup;
+        } else if (param == "mac_in_bank") {
+            return mac_in_bank;
+        }
+        throw invalid_argument("Invalid PIM mode");
+    }
+
+    static PIMPrecision getPIMPrecision()
+    {
+        string param = getConfigParam(STRING, "PIM_PRECISION");
+        if (param == "FP16") {
+            return FP16;
+        } else if (param == "INT8") {
+            return INT8;
+        } else if (param == "FP32") {
+            return FP32;
+        }
+        throw invalid_argument("Invalid PIM precision");
+    }
+
+    static int getPimDataLength()
+    {
+        string param = getConfigParam(STRING, "PIM_PRECISION");
+        if (param == "FP16") {
+            return 2;
+        } else if (param == "INT8") {
+            return 1;
+        } else if (param == "FP32") {
+            return 4;
+        }
+        throw invalid_argument("Invalid PIM data length");
+    }
+};
+
 };  // namespace DRAMSim
 
 #endif

@@ -39,17 +39,22 @@
 // Header file for JEDEC memory system wrapper
 //
 
+#include <deque>
+#include <string>
+#include <vector>
+
+#include "AddressMapping.h"
 #include "CSVWriter.h"
 #include "Callback.h"
+#include "Configuration.h"
 #include "MemoryController.h"
 #include "MemoryObject.h"
 #include "Rank.h"
 #include "SimulatorObject.h"
 #include "SystemConfiguration.h"
 #include "Transaction.h"
+#include "Utils.h"
 #include "burst.h"
-
-#include <deque>
 
 namespace DRAMSim
 {
@@ -57,11 +62,9 @@ typedef CallbackBase<void, unsigned, uint64_t, uint64_t> Callback_t;
 
 class MemorySystem : public MemoryObject
 {
-    ostream& dramsim_log;
-
    public:
     // functions
-    MemorySystem(unsigned id, unsigned megsOfMemory, CSVWriter& csvOut_, ostream& dramsim_log_);
+    MemorySystem(unsigned id, unsigned megsOfMemory, CSVWriter& csvOut_, ostream& simLog, Configuration& config);
     virtual ~MemorySystem();
     void update();
 
@@ -90,10 +93,15 @@ class MemorySystem : public MemoryObject
     // TODO: make this a functor as well?
     static powerCallBack_t ReportPower;
     unsigned systemID;
-    uint64_t num_on_the_fly_transactions;
+    uint64_t numOnTheFlyTransactions;
 
    private:
     CSVWriter& csvOut;
+    ostream& dramsimLog;
+
+    // system and timing parameters
+    unsigned num_ranks_;
+    Configuration& config;
 };
 }  // namespace DRAMSim
 

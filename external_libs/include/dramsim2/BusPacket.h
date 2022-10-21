@@ -56,7 +56,7 @@ enum BusPacketType {
 class BusPacket
 {
     BusPacket();
-    ostream& dramsim_log;
+    ostream& dramsimLog;
 
    public:
     // Fields
@@ -71,14 +71,15 @@ class BusPacket
 
     // Functions
     BusPacket(BusPacketType packtype, uint64_t physicalAddr, unsigned col, unsigned rw, unsigned r, unsigned b,
-              BurstType* dat, ostream& dramsim_log_);
+              BurstType* dat, ostream& simLog);
     BusPacket(BusPacketType packtype, uint64_t physicalAddr, unsigned col, unsigned rw, unsigned r, unsigned b,
-              BurstType* dat, ostream& dramsim_log_, std::string tg);
+              BurstType* dat, ostream& simLog, std::string tg);
 
     void print();
     void print(uint64_t currentClockCycle, bool dataStart);
     void printData() const;
 };
+
 }  // namespace DRAMSim
 
 #endif

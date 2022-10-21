@@ -66,5 +66,4 @@ class ClockDomainCrosser
     };
 */
 }  // namespace ClockDomain
-
 #endif

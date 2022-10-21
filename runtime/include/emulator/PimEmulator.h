@@ -12,9 +12,9 @@
 #define _PIM_EMULATOR_H_
 
 #include "PimTraceCoalescer.h"
-#include "dramsim2/PimSimulator.h"
 #include "manager/PimInfo.h"
 #include "pim_data_types.h"
+#include "tests/PimSimulator.h"
 
 namespace pim
 {

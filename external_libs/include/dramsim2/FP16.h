@@ -9,8 +9,8 @@
 using namespace std;
 
 typedef half_float::half fp16;
-float convert_h2f(half_float::half val);
-half_float::half convert_f2h(float val);
+float convertH2F(fp16 val);
+fp16 convertF2H(float val);
 
 union fp16i {
     fp16 fval;
@@ -21,6 +21,6 @@ union fp16i {
     fp16i(uint16_t x) { ival = x; }
 };
 
-bool fp16_equal(fp16 A, fp16 B, int maxUlpsDiff);
+bool fp16Equal(fp16 A, fp16 B, int maxUlpsDiff, float maxFsdiff);
 
 #endif

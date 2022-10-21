@@ -167,7 +167,6 @@ class CSVWriter
     CSVWriter& operator<<(const char* name)
     {
         if (!finalized) {
-            //                cout <<"Adding "<<name<<endl;
             fieldNames.push_back(string(name));
         }
         return *this;
@@ -184,7 +183,6 @@ class CSVWriter
     CSVWriter& operator<<(const IndexedName& indexedName)
     {
         if (!finalized) {
-            //                cout <<"Adding "<<indexedName.str<<endl;
             fieldNames.push_back(indexedName.str);
         }
         return *this;
@@ -192,7 +190,7 @@ class CSVWriter
 
     bool isFinalized()
     {
-        //            printf("obj=%p", this);
+        // printf("obj=%p", this);
         return finalized;
     }
 
@@ -222,7 +220,6 @@ class CSVWriter
    private:
     CSVWriter(const CSVWriter&);
     CSVWriter& operator=(const CSVWriter&);
-
 };  // class CSVWriter
 
 }  // namespace DRAMSim
