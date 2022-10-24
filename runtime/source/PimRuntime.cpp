@@ -356,6 +356,8 @@ PimBo* PimRuntime::get_preloaded_pim_gemm_weight(PimBo* dev_wei, PimGemmOrder ge
         if (gemm_order == I_X_W) {
             pim_manager_->copy_memory(host_weight_t, dev_wei, DEVICE_TO_HOST);
             transpose_pimbo(host_weight, host_weight_t);
+        } else {
+            pim_manager_->copy_memory(host_weight, dev_wei, DEVICE_TO_HOST);
         }
 
         pim_manager_->set_gemm_order(gemm_order);

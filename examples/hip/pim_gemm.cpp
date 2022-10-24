@@ -87,7 +87,7 @@ class PimGemmTest
 
         if (gemm_order_ == W_X_I) {
             for (int nc_i = 0; nc_i < n_ * c_; nc_i++) {
-                matmulCPU(h_w_data, h_i_data, golden_data, in_h_, out_w_, in_w_, half(alpha), half(beta));
+                matmulCPU(h_w_data, h_i_data, golden_data, out_h_, out_w_, in_h_, half(alpha), half(beta));
                 h_i_data += (in_h_ * in_w_);
                 h_w_data += (in_h_ * out_h_);
                 golden_data += (out_h_ * out_w_);
@@ -200,15 +200,11 @@ class PimGemmTestFixture : public ::testing::Test
     }
 };
 
-TEST_F(PimGemmTestFixture, pim_gemm_bias_relu_4096x1024_1024x1)
+TEST_F(PimGemmTestFixture, pim_gemm_bias_relu_w_x_i_4096x1024_1024x1)
 {
     EXPECT_TRUE(ExecuteTest(1, 1, 1024, 1, 4096, 1, W_X_I) == 0);
 }
-TEST_F(PimGemmTestFixture, pim_gemm_bias_relu_4096x1024_1024x2)
-{
-    EXPECT_TRUE(ExecuteTest(1, 1, 1024, 2, 4096, 2, W_X_I) == 0);
-}
-TEST_F(PimGemmTestFixture, pim_gemm_bias_relu_2x4096x1024_2x1024x1)
+TEST_F(PimGemmTestFixture, pim_gemm_bias_relu_w_x_i_2x4096x1024_2x1024x1)
 {
     EXPECT_TRUE(ExecuteTest(1, 2, 1024, 1, 4096, 1, W_X_I) == 0);
 }
@@ -242,6 +238,10 @@ TEST_F(PimGemmTestFixture, pim_gemm_bias_relu_4x1x4096_4x4096x1024)
 }
 #if 0
 /* TODO:check */
+TEST_F(PimGemmTestFixture, pim_gemm_bias_relu_w_x_i_4096x1024_1024x2)
+{
+    EXPECT_TRUE(ExecuteTest(1, 1, 1024, 2, 4096, 2, W_X_I) == 0);
+}
 TEST_F(PimGemmTestFixture, pim_gemm_bias_relu_8x1x4096_8x4096x1024)
 {
     EXPECT_TRUE(ExecuteTest(1, 8, 1, 4096, 1, 1024) == 0);
