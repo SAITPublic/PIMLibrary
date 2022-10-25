@@ -968,4 +968,4 @@ __global__ void pim_aligned_gemm_bias_relu_8tile_fp16(
 #endif
 }
 
-#endif /* _PIM_GEMV_KERNELS_PIMK_ */
+#endif /* _PIM_GEMM_KERNELS_PIMK_ */
