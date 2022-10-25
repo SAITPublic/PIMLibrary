@@ -62,7 +62,7 @@ inline void matmulCPU(half_float::half* input, half_float::half* weight, half_fl
                 temp += (input[mi * k + ki] * weight[ki * n + ni]);
             }
             int out_idx = mi * n + ni;
-            output[out_idx] += alpha * temp + beta * output[out_idx];
+            output[out_idx] = alpha * temp + beta * output[out_idx];
         }
     }
 }
