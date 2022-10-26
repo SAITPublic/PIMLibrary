@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Samsung Electronics Co. LTD
+ * Copyright (C) 2022 Samsung Electronics Co. LTD
  *
  * This software is a property of Samsung Electronics.
  * No part of this software, either material or conceptual may be copied or distributed, transmitted,
@@ -21,23 +21,27 @@
 
 using half_float::half;
 
-int pim_gemm_beta(bool block)
+int custom_gemv_beta_test_api(int in_h, int in_w, int out_h, int out_w, PimGemmOrder gemm_order, bool block)
 {
     int ret = 0;
-    int in_size = 1024;
-    int out_size = 4096;
-    int wei_size = in_size * out_size;
-
+    int wei_size = 0;
+    int in_size = 0;
+    int out_size = 0;
     float alpha = 1.0f;
     float beta = 1.0f;
     float variation = 0.2f;
     float epsilon = 0.1f;
 
-    /* Start of PIM GEMM */
     PimInitialize(RT_TYPE_HIP, PIM_FP16);
-    PimGemmOrder gemm_order = I_X_W;
-    PimGemmDesc* gemm_desc = PimCreateGemmDesc(1, 1, 1, in_size, 1, out_size, PIM_FP16, gemm_order);
-
+    PimGemmDesc* gemm_desc = PimCreateGemmDesc(1, 1, in_h, in_w, out_h, out_w, PIM_FP16, gemm_order);
+    if (gemm_order == I_X_W) {
+        in_size = in_w;
+        out_size = out_w;
+    } else {
+        in_size = in_h;
+        out_size = out_h;
+    }
+    wei_size = in_size * out_size;
     PimBo* h_i = PimCreateBo(gemm_desc, MEM_TYPE_HOST, GEMM_INPUT);
     PimBo* h_w = PimCreateBo(gemm_desc, MEM_TYPE_HOST, GEMM_WEIGHT);
     PimBo* h_o = PimCreateBo(gemm_desc, MEM_TYPE_HOST, GEMM_OUTPUT);
@@ -52,7 +56,11 @@ int pim_gemm_beta(bool block)
     half* h_w_data = (half*)h_w->data;
     half* golden_data = (half*)golden->data;
 
-    matmulCPU(h_i_data, h_w_data, golden_data, 1, out_size, in_size, half(alpha), half(beta));
+    if (gemm_order == I_X_W) {
+        matmulCPU(h_i_data, h_w_data, golden_data, in_h, out_w, in_w, half(alpha), half(beta));
+    } else {
+        matmulCPU(h_w_data, h_i_data, golden_data, out_h, out_w, in_h, half(alpha), half(beta));
+    }
 
     PimBo* d_i = PimCreateBo(gemm_desc, MEM_TYPE_DEVICE, GEMM_INPUT);
     PimBo* d_w = PimCreateBo(gemm_desc, MEM_TYPE_DEVICE, GEMM_WEIGHT);
@@ -80,9 +88,16 @@ int pim_gemm_beta(bool block)
     PimDestroyBo(d_o);
     PimDestroyGemmDesc(gemm_desc);
     PimDeinitialize();
-    /* End of PIM GEMM */
 
     return ret;
 }
 
-TEST(HIPIntegrationTest, pim_gemm_beta) { EXPECT_TRUE(pim_gemm_beta(true) == 0); }
+TEST(HIPIntegrationTest, CustomAddmvxAyBetaAPITest)
+{
+    EXPECT_TRUE(custom_gemv_beta_test_api(1, 320, 1, 1280, I_X_W, true) == 0);
+}
+
+TEST(HIPIntegrationTest, CustomAddmvAxyBetaAPITest)
+{
+    EXPECT_TRUE(custom_gemv_beta_test_api(320, 1, 1280, 1, W_X_I, true) == 0);
+}
