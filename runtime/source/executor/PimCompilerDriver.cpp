@@ -122,7 +122,7 @@ PimCompiledObj* PimCDriver::build_program(pimc::frontend::Var output, std::vecto
     }
 
     // TODO Reorder weights
-    auto* reordered_pim_w = PimConvertGemmWeight(input_pimbo[0]);
+    auto* reordered_pim_w = PimConvertGemmWeight(input_pimbo[0], W_X_I);
     pimbo_map[inputs[0].get_name()] = reordered_pim_w;
     input_pimbo[0] = reordered_pim_w;
 

@@ -22,8 +22,8 @@ int pimc_gemv(int h, int w){
     PimBo* host_weight = PimCreateBo(pim_desc_w, MEM_TYPE_HOST);
     PimBo* host_output = PimCreateBo(pim_desc_out, MEM_TYPE_HOST);
 
-    PimBo* pim_input = PimCreateBo(pim_desc_in, MEM_TYPE_PIM);
-    PimBo* pim_weight = PimCreateBo(pim_desc_w, MEM_TYPE_PIM);
+    PimBo* pim_input = PimCreateBo(pim_desc_in, MEM_TYPE_DEVICE);
+    PimBo* pim_weight = PimCreateBo(pim_desc_w, MEM_TYPE_DEVICE);
     PimBo* golden_output = PimCreateBo(pim_desc_out, MEM_TYPE_HOST);
     // Load operand data
     //set_rand_half_data((half_float::half*)host_input0->data, (half_float::half)0.5, (h * w));
@@ -44,8 +44,8 @@ int pimc_gemv(int h, int w){
     }
 
     //Copy input data from HOST to PIM
-    PimCopyMemory(pim_input, host_input, HOST_TO_PIM);
-    PimCopyMemory(pim_weight, host_weight, HOST_TO_PIM);
+    PimCopyMemory(pim_input, host_input, HOST_TO_DEVICE);
+    PimCopyMemory(pim_weight, host_weight, HOST_TO_DEVICE);
 
     //Declare variables
     IndexVar i(0, h, "i");
