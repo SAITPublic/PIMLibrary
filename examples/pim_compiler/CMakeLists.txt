@@ -15,14 +15,15 @@ file(GLOB HIP_SOURCES_ELT_MULTIOP hip/elt_multiop.cpp  hip/pimctest_main.cpp)
 add_executable(PimCompilerIntegrationTestEltMultiop ${HIP_SOURCES_ELT_MULTIOP})
 target_link_libraries(PimCompilerIntegrationTestEltMultiop gtest PimRuntime PimC pimcompiler codegen)
 
-#file(GLOB HIP_SOURCES_GEMV hip/gemv.cpp hip/pimctest_main.cpp)
-#add_executable(PimCompilerIntegrationTestGemv ${HIP_SOURCES_GEMV})
-#target_link_libraries(PimCompilerIntegrationTestGemv gtest PimRuntime PimC pimcompiler codegen)
-#
-#file(GLOB HIP_SOURCES_GEMVBATCH hip/gemv_batch.cpp hip/pimctest_main.cpp)
-#add_executable(PimCompilerIntegrationTestGemvBatch ${HIP_SOURCES_GEMVBATCH})
-#target_link_libraries(PimCompilerIntegrationTestGemvBatch gtest PimRuntime PimC pimcompiler codegen)
-#
-#file(GLOB BLAS_HIP_SOURCES_AXPY hip/blas1/blas_axpy.cpp hip/pimctest_main.cpp)
-#add_executable(PimCompilerIntegrationTestAxpy ${BLAS_HIP_SOURCES_AXPY})
-#target_link_libraries(PimCompilerIntegrationTestAxpy gtest PimRuntime PimC pimcompiler codegen)
+
+file(GLOB HIP_SOURCES_MAD hip/mad.cpp  hip/pimctest_main.cpp)
+add_executable(PimCompilerIntegrationTestMad ${HIP_SOURCES_MAD})
+target_link_libraries(PimCompilerIntegrationTestMad gtest PimRuntime PimC pimcompiler codegen)
+
+file(GLOB BLAS_HIP_SOURCES_AXPY hip/blas1/blas_axpy.cpp hip/pimctest_main.cpp)
+add_executable(PimCompilerIntegrationTestAxpy ${BLAS_HIP_SOURCES_AXPY})
+target_link_libraries(PimCompilerIntegrationTestAxpy gtest PimRuntime PimC pimcompiler codegen)
+
+file(GLOB BLAS_HIP_SOURCES_SCAL hip/blas1/blas_scal.cpp hip/pimctest_main.cpp)
+add_executable(PimCompilerIntegrationTestScal ${BLAS_HIP_SOURCES_SCAL})
+target_link_libraries(PimCompilerIntegrationTestScal gtest PimRuntime PimC pimcompiler codegen)

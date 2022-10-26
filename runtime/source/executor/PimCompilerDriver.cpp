@@ -116,6 +116,7 @@ PimCompiledObj* PimCDriver::build_program(pimc::frontend::Var output, std::vecto
     // Create temp PimBos
     for (auto buf : compiled_obj->get_extra_buffers()) {
         auto pimbo = PimCreateBo(1, 1, 1, buf->size(), PimPrecision::PIM_FP16, PimMemType::MEM_TYPE_PIM);
+        hipMemset(pimbo->data, 0x00, buf->size());
         pimbo_map[buf->name()] = pimbo;
         new_pimbo.push_back(pimbo);
     }
