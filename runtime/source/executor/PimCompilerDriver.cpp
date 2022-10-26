@@ -48,9 +48,9 @@ void HIPCompiler::execute(std::string hip_kernel, std::string crf_binary)
     }
 
     if (compileResult != HIPRTC_SUCCESS)
-        DLOG(INFO) << "Compilation failed." << std::endl;
+        std::cout << "Compilation failed." << std::endl;
     else
-        DLOG(INFO) << "Compilation successful" << std::endl;
+        std::cout << "Compilation successful" << std::endl;
 
     size_t codeSize;
     hiprtcGetCodeSize(prog, &codeSize);
@@ -122,6 +122,9 @@ PimCompiledObj* PimCDriver::build_program(pimc::frontend::Var output, std::vecto
     }
 
     // TODO Reorder weights
+    auto* reordered_pim_w = PimConvertGemmWeight(input_pimbo[0]);
+    pimbo_map[inputs[0].get_name()] = reordered_pim_w;
+    input_pimbo[0] = reordered_pim_w;
 
     // Wrap in PimCompiledObj
     PimCompiledObj* pim_co = new PimCompiledObj;
