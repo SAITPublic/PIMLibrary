@@ -640,7 +640,6 @@ int OclPimExecutor::execute_chwise_gemm_tile_accum(PimBo* output, PimBo* input, 
     PIM_PROFILE_TICK(PrepareGemmKernel);
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
-    size_t output_size = output->size;
     const size_t block_size = pbi_->num_pim_chan;
     const size_t local_work_size = 64;
     const size_t global_work_size = block_size * local_work_size;

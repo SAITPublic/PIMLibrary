@@ -44,16 +44,18 @@ int gpu_reduce_sum(void)
     int in_size = 16 * 4096;
     int out_size = 4096;
     int reduce_size = 16;
+
     half* in;
     half* out;
     half* golden_out;
-    for (int i = 0; i < in_size; i++) in[i] = 1;
-    for (int i = 0; i < out_size; i++) out[i] = 0;
-    for (int i = 0; i < out_size; i++) golden_out[i] = 16.0;
 
     hipHostMalloc((void**)&in, in_size * sizeof(half));
     hipHostMalloc((void**)&out, out_size * sizeof(half));
     hipHostMalloc((void**)&golden_out, out_size * sizeof(half));
+
+    for (int i = 0; i < in_size; i++) in[i] = 1;
+    for (int i = 0; i < out_size; i++) out[i] = 0;
+    for (int i = 0; i < out_size; i++) golden_out[i] = 16.0;
 
     unsigned max_threads = 64;
     unsigned blocks = 64;
