@@ -443,7 +443,7 @@ int HipPimExecutor::execute_custom_gemv(PimBo* output, PimBo* operand0, PimBo* o
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
 
-    uint32_t m, n, k;
+    uint32_t m = 1, n = 1, k = 1;
 
     if (operand0->bshape_r.n != 1 || operand1->data_layout_type != PimDataLayoutType::RAW ||
         operand0->data_layout_type != PimDataLayoutType::RAW) {
@@ -468,15 +468,35 @@ int HipPimExecutor::execute_custom_gemv(PimBo* output, PimBo* operand0, PimBo* o
     float alpha = 1.0f;
     float beta = is_gemv_add ? 1.0f : 0.0f;
 
-    if (gemm_order_ == W_X_I) {
-        m = operand1->bshape_r.h;
-        k = operand1->bshape_r.w;
-        n = 1;
+    PimGemmOrder gemm_order = I_X_W;
+    if (operand1->transposed) {
+        if (gemm_order_ == W_X_I) {
+            gemm_order = I_X_W;
+            m = 1;
+            n = operand1->bshape_r.h;
+            k = operand1->bshape_r.w;
+        } else {
+            gemm_order = W_X_I;
+            n = 1;
+            m = operand1->bshape_r.w;
+            k = operand1->bshape_r.h;
+        }
+    } else {
+        gemm_order = gemm_order_;
+        if (gemm_order_ == W_X_I) {
+            m = operand1->bshape_r.h;
+            k = operand1->bshape_r.w;
+            n = 1;
+        } else {
+            m = 1;
+            k = operand1->bshape_r.h;
+            n = operand1->bshape_r.w;
+        }
+    }
+
+    if (gemm_order == W_X_I) {
         rocblas_gemv_fp16_Axy(mat, vec, out, m, n, k, alpha, beta, (hipStream_t)stream);
     } else {
-        m = 1;
-        k = operand1->bshape_r.h;
-        n = operand1->bshape_r.w;
         rocblas_gemv_fp16_xAy(vec, mat, out, m, n, k, alpha, beta, (hipStream_t)stream);
     }
 
@@ -494,7 +514,7 @@ int HipPimExecutor::execute_custom_gemv_add(PimBo* output, PimBo* operand0, PimB
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
 
-    uint32_t m, n, k;
+    uint32_t m = 1, n = 1, k = 1;
 
     if (operand0->bshape_r.n != 1 || operand1->data_layout_type != PimDataLayoutType::RAW ||
         operand0->data_layout_type != PimDataLayoutType::RAW) {
@@ -509,20 +529,39 @@ int HipPimExecutor::execute_custom_gemv_add(PimBo* output, PimBo* operand0, PimB
 
     float alpha = 1.0f;
     float beta = 0.0f;
+    PimGemmOrder gemm_order = I_X_W;
+    if (operand1->transposed) {
+        if (gemm_order_ == W_X_I) {
+            gemm_order = I_X_W;
+            m = 1;
+            n = operand1->bshape_r.h;
+            k = operand1->bshape_r.w;
+        } else {
+            gemm_order = W_X_I;
+            n = 1;
+            m = operand1->bshape_r.w;
+            k = operand1->bshape_r.h;
+        }
+    } else {
+        gemm_order = gemm_order_;
+        if (gemm_order_ == W_X_I) {
+            m = operand1->bshape_r.h;
+            k = operand1->bshape_r.w;
+            n = 1;
+        } else {
+            m = 1;
+            k = operand1->bshape_r.h;
+            n = operand1->bshape_r.w;
+        }
+    }
 
-    if (gemm_order_ == W_X_I) {
-        m = operand1->bshape_r.h;
-        k = operand1->bshape_r.w;
-        n = 1;
+    if (gemm_order == W_X_I) {
         if (m == 32317) {
             rocblas_addmv_fp16_Axy_large(in, mat, vec, out, m, n, k, alpha, beta, relu, (hipStream_t)stream);
         } else {
             rocblas_addmv_fp16_Axy(in, mat, vec, out, m, n, k, alpha, beta, relu, (hipStream_t)stream);
         }
     } else {
-        m = 1;
-        k = operand1->bshape_r.h;
-        n = operand1->bshape_r.w;
         rocblas_addmv_fp16_xAy(in, vec, mat, out, m, n, k, alpha, beta, relu, (hipStream_t)stream);
     }
 
