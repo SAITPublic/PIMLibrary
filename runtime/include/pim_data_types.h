@@ -105,6 +105,7 @@ typedef struct __PimBufferObject {
     size_t size_r;
     void *data;
     bool use_user_ptr;
+    bool transposed;
 } PimBo;
 
 #if PIM_COMPILER_ENABLE == 1

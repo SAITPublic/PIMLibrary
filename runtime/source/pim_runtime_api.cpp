@@ -120,7 +120,7 @@ int PimGetDevice(uint32_t* device_id)
     return ret;
 }
 
-PimBo* PimCreateBo(int n, int c, int h, int w, PimPrecision precision, PimMemType mem_type, void* user_ptr)
+PimBo* PimCreateBo(int n, int c, int h, int w, PimPrecision precision, PimMemType mem_type, void* user_ptr, bool transposed)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     PIM_PROFILE_TICK(CreateBo);
@@ -142,6 +142,7 @@ PimBo* PimCreateBo(int n, int c, int h, int w, PimPrecision precision, PimMemTyp
     pim_bo->mem_type = mem_type;
     pim_bo->precision = precision;
     pim_bo->data_layout_type = PimDataLayoutType::RAW;
+    pim_bo->transposed = transposed;
 
     ret = pim_runtime->alloc_memory(pim_bo, user_ptr);
     if (ret != 0) {
@@ -155,7 +156,7 @@ PimBo* PimCreateBo(int n, int c, int h, int w, PimPrecision precision, PimMemTyp
     return pim_bo;
 }
 
-PimBo* PimCreateBo(PimDesc* pim_desc, PimMemType mem_type, PimMemFlag mem_flag, void* user_ptr)
+PimBo* PimCreateBo(PimDesc* pim_desc, PimMemType mem_type, PimMemFlag mem_flag, void* user_ptr, bool transposed)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     PIM_PROFILE_TICK(CreateBo);
@@ -176,6 +177,7 @@ PimBo* PimCreateBo(PimDesc* pim_desc, PimMemType mem_type, PimMemFlag mem_flag, 
     pim_bo->mem_type = mem_type;
     pim_bo->precision = pim_desc->precision;
     pim_bo->data_layout_type = PimDataLayoutType::RAW;
+    pim_bo->transposed = transposed;
 
     ret = pim_runtime->alloc_memory(pim_bo, user_ptr);
     if (ret != 0) {
@@ -190,7 +192,7 @@ PimBo* PimCreateBo(PimDesc* pim_desc, PimMemType mem_type, PimMemFlag mem_flag, 
     return pim_bo;
 }
 
-PimBo* PimCreateBo(PimGemmDesc* pim_gemm_desc, PimMemType mem_type, PimMemFlag mem_flag, void* user_ptr)
+PimBo* PimCreateBo(PimGemmDesc* pim_gemm_desc, PimMemType mem_type, PimMemFlag mem_flag, void* user_ptr, bool transposed)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     PIM_PROFILE_TICK(CreateBo);
@@ -205,7 +207,7 @@ PimBo* PimCreateBo(PimGemmDesc* pim_gemm_desc, PimMemType mem_type, PimMemFlag m
 
     PimBo* pim_bo = new PimBo;
 
-    set_pimbo(pim_gemm_desc, mem_type, mem_flag, pim_bo);
+    set_pimbo(pim_gemm_desc, mem_type, mem_flag, transposed, pim_bo);
 
     ret = pim_runtime->alloc_memory(pim_bo, user_ptr);
     if (ret != 0) {

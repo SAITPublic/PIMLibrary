@@ -332,6 +332,22 @@ int PimRuntime::insert_preloaded_pim_weight(PimBo* dev_wei, PimBo* pim_wei)
     return ret;
 }
 
+bool PimRuntime::check_need_for_transpose(PimGemmOrder gemm_order, PimBo* dev_wei)
+{
+    bool transposed = dev_wei->transposed;
+    bool ret = false;
+
+    if (gemm_order == I_X_W) {
+        if (transposed == false) return true;
+        else return false;
+    } else {
+        if (transposed == false) return false;
+        else return true;
+    }
+
+    return ret;
+}
+
 PimBo* PimRuntime::get_preloaded_pim_gemm_weight(PimBo* dev_wei, PimGemmOrder gemm_order, bool save_for_reuse)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
@@ -353,7 +369,7 @@ PimBo* PimRuntime::get_preloaded_pim_gemm_weight(PimBo* dev_wei, PimGemmOrder ge
         host_reordered_weight = PimCreateBo(bshape->n, bshape->c, bshape->h, bshape->w, PIM_FP16, MEM_TYPE_HOST);
         pre_wei = PimCreateBo(bshape->n, bshape->c, bshape->h, bshape->w, PIM_FP16, MEM_TYPE_PIM);
 
-        if (gemm_order == I_X_W) {
+        if (check_need_for_transpose(gemm_order, dev_wei) == true) {
             pim_manager_->copy_memory(host_weight_t, dev_wei, DEVICE_TO_HOST);
             transpose_pimbo(host_weight, host_weight_t);
         } else {

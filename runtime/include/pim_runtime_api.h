@@ -89,11 +89,12 @@ __PIM_API__ int PimGetDevice(uint32_t* device_id);
  * @param precision precision of buffer object (PIM_INT8, PIM_FP16)
  * @param mem_type  type of memory (PIM/GPU/HOST)
  * @param user_ptr pointer indicating user pre-allocated buffer (optional)
+ * @param trasnposed whether buffer is transposed or not for H and W
  *
  * @return Pointer to buffer object.
  */
 __PIM_API__ PimBo* PimCreateBo(int n, int c, int h, int w, PimPrecision precision, PimMemType mem_type,
-                               void* user_ptr = nullptr);
+                               void* user_ptr = nullptr, bool transposed = false);
 
 /**
  * @brief create pim buffer object with pim descriptor
@@ -103,11 +104,12 @@ __PIM_API__ PimBo* PimCreateBo(int n, int c, int h, int w, PimPrecision precisio
  * @param mem_flag describes operation for which buffer is used for (element wise or gemm)
  * @param user_ptr external memory passed by user. if passed, bo is created with user pointer.
  *                 if nullptr, pim library does the allocation
+ * @param trasnposed whether buffer is transposed or not for H and W
  *
  * @return pointer to buffer object
  */
 __PIM_API__ PimBo* PimCreateBo(PimDesc* pim_desc, PimMemType mem_type, PimMemFlag mem_flag = ELT_OP,
-                               void* user_ptr = nullptr);
+                               void* user_ptr = nullptr, bool transposed = false);
 
 /**
  * @brief create pim buffer object with pim gemm descriptor
@@ -117,11 +119,12 @@ __PIM_API__ PimBo* PimCreateBo(PimDesc* pim_desc, PimMemType mem_type, PimMemFla
  * @param mem_flag describes operation for which buffer is used for (element wise or gemm)
  * @param user_ptr external memory passed by user. if passed, bo is created with user pointer.
  *                 if nullptr, pim library does the allocation
+ * @param trasnposed whether buffer is transposed or not for H and W
  *
  * @return pointer to buffer object
  */
 __PIM_API__ PimBo* PimCreateBo(PimGemmDesc* pim_gemm_desc, PimMemType mem_type, PimMemFlag mem_flag,
-                               void* user_ptr = nullptr);
+                               void* user_ptr = nullptr, bool trasnposed = false);
 
 /**
  * @brief Destroy Buffer object

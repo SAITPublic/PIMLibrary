@@ -109,7 +109,7 @@ size_t get_aligned_size(PimDesc* pim_desc, PimMemFlag mem_flag, PimBo* pim_bo)
     return size;
 }
 
-void set_pimbo(PimGemmDesc* pim_gemm_desc, PimMemType mem_type, PimMemFlag mem_flag, PimBo* pim_bo)
+void set_pimbo(PimGemmDesc* pim_gemm_desc, PimMemType mem_type, PimMemFlag mem_flag, bool transposed, PimBo* pim_bo)
 {
     size_t size = 0;
     size_t size_r = 0;
@@ -152,6 +152,7 @@ void set_pimbo(PimGemmDesc* pim_gemm_desc, PimMemType mem_type, PimMemFlag mem_f
     pim_bo->data_layout_type = PimDataLayoutType::RAW;
     pim_bo->bshape = *bshape;
     pim_bo->bshape_r = *bshape_r;
+    pim_bo->transposed = transposed;
 }
 
 void align_gemm_shape(PimGemmDesc* pim_gemm_desc)

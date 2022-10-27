@@ -26,7 +26,7 @@ void set_pimbo_t(PimBo* bo0, PimBo* bo1, PimBo* bo2, PimBo* bo3);
 void set_pimbo_t(PimBo* inout);
 void set_pimbo_t(PimBo* dst, PimBo* src);
 size_t get_aligned_size(PimDesc* pim_desc, PimMemFlag mem_flag, PimBo* pim_bo);
-void set_pimbo(PimGemmDesc* pim_gemm_desc, PimMemType mem_type, PimMemFlag mem_flag, PimBo* pim_bo);
+void set_pimbo(PimGemmDesc* pim_gemm_desc, PimMemType mem_type, PimMemFlag mem_flag, bool transposed, PimBo* pim_bo);
 void pad_data(void* input, int in_size, int in_nsize, int batch_size, PimMemFlag mem_flag);
 void pad_data(void* input, PimDesc* pim_desc, PimMemType mem_type, PimMemFlag mem_flag);
 void align_shape(PimDesc* pim_desc, PimOpType op_type);

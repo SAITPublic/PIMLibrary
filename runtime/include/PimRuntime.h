@@ -89,6 +89,9 @@ class PimRuntime
 #endif
 
    private:
+    bool check_need_for_transpose(PimGemmOrder gemm_order, PimBo* dev_wei);
+
+   private:
     int insert_preloaded_pim_weight(PimBo* dev_wei, PimBo* pim_wei);
     PimBo* find_preloaded_pim_weight(PimBo* dev_wei);
     pim::runtime::manager::PimManager* pim_manager_;
