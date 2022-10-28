@@ -238,6 +238,12 @@ TEST_F(PimGemmTestFixture, pim_gemm_bias_relu_4x1x4096_4x4096x1024)
 }
 #if 0
 /* TODO:check */
+
+TEST_F(PimGemmTestFixture, pim_gemm_bias_relu_w_x_i_4096x240_240x1)
+{
+    EXPECT_TRUE(ExecuteTest(1, 1, 240, 1, 4096, 1, W_X_I) == 0);
+}
+
 TEST_F(PimGemmTestFixture, pim_gemm_bias_relu_w_x_i_4096x1024_1024x2)
 {
     EXPECT_TRUE(ExecuteTest(1, 1, 1024, 2, 4096, 2, W_X_I) == 0);

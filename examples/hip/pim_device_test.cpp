@@ -26,8 +26,15 @@ using namespace std;
 bool test_set_get_device()
 {
     int ret = 0;
+    int numDevices = 1;
     uint32_t set_device_id = 1;
     uint32_t get_device_id = 0;
+    hipGetDeviceCount(&numDevices);
+
+    if (set_device_id >= numDevices) {
+        std::cout << "current device only have " << numDevices << " GPU, fail to set PimDevice" << std::endl;
+        return true;
+    }
 
     PimInitialize(RT_TYPE_HIP, PIM_FP16);
 
