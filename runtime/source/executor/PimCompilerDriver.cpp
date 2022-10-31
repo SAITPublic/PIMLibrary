@@ -107,7 +107,10 @@ PimCompiledObj* PimCDriver::build_program(pimc::frontend::Var output, std::vecto
     if (num > 1) h = indices[num - 2]->get_stop() - indices[num - 2]->get_start();
     if (num > 2) c = indices[num - 3]->get_stop() - indices[num - 3]->get_start();
     if (num > 3) n = indices[num - 4]->get_stop() - indices[num - 4]->get_start();
-    output_pimbo = PimCreateBo(n, c, h, w, PimPrecision::PIM_FP16, PimMemType::MEM_TYPE_PIM);
+
+    PimGemmDesc* gemm_desc = PimCreateGemmDesc(1, 1, 1, 256, 1, 4096, PIM_FP16, I_X_W);
+    //PimGemmDesc* gemm_desc = PimCreateGemmDesc(1, 1, 256, 1, 4096, 1, PIM_FP16, W_X_I);
+    output_pimbo = PimCreateBo(gemm_desc, PimMemType::MEM_TYPE_DEVICE, GEMM_OUTPUT);
     pimbo_map[output.name()] = output_pimbo;
 
     // Compile code
@@ -115,14 +118,15 @@ PimCompiledObj* PimCDriver::build_program(pimc::frontend::Var output, std::vecto
     auto compiled_obj = pimc::get_compiled_object(output, compile_opts);
     // Create temp PimBos
     for (auto buf : compiled_obj->get_extra_buffers()) {
-        auto pimbo = PimCreateBo(1, 1, 1, buf->size(), PimPrecision::PIM_FP16, PimMemType::MEM_TYPE_PIM);
-        hipMemset(pimbo->data, 0x00, buf->size());
+        auto pimbo = PimCreateBo(1, 1, 1, 1024 * 1024, PimPrecision::PIM_FP16, PimMemType::MEM_TYPE_PIM);
+        hipMemset(pimbo->data, 0x00, 1024 * 1024);
+        std::cout << "Buffer name : " << buf->name() << " Buffer size : " << buf->size() << std::endl;
         pimbo_map[buf->name()] = pimbo;
         new_pimbo.push_back(pimbo);
     }
 
-    // TODO Reorder weights
-    auto* reordered_pim_w = PimConvertGemmWeight(input_pimbo[0], W_X_I);
+    auto* reordered_pim_w = PimConvertGemmWeight(input_pimbo[0], I_X_W);
+    //auto* reordered_pim_w = PimConvertGemmWeight(input_pimbo[0], W_X_I);
     pimbo_map[inputs[0].get_name()] = reordered_pim_w;
     input_pimbo[0] = reordered_pim_w;
 
@@ -164,7 +168,17 @@ PimBo* PimCDriver::execute_program(PimCompiledObj* obj, PimTarget* target, std::
             return nullptr;
         }
     }
-    pim_launch_kernel(obj->kernel, obj->crf_binary, obj->num_blocks, obj->num_threads, args, num_args, target);
+    pim_launch_kernel(obj->kernel, obj->crf_binary, obj->num_blocks, 64, args, num_args, target);
+
+    auto temp_buf = obj->pimbo_map["D_part"];
+    PimBo* host_weight_temp = PimCreateBo(1,1, 1,1024 * 1024,  PIM_FP16, MEM_TYPE_HOST);
+    PimCopyMemory(host_weight_temp, temp_buf, PIM_TO_HOST);
+
+
+    for (int i = 0; i < 150000; i++) {
+        //float o = float(((half_float::half*)host_weight_temp->data)[i]);
+        std::cout << "Index : " << i << " Retrieved value : " << ((half_float::half*)host_weight_temp->data)[i] << std::endl;
+    }
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return obj->output_pimbo;
