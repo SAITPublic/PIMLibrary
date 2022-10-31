@@ -54,13 +54,14 @@ int gpu_reduce_sum(void)
     hipHostMalloc((void**)&golden_out, out_size * sizeof(half));
 
     for (int i = 0; i < in_size; i++) in[i] = 1;
-    for (int i = 0; i < out_size; i++) out[i] = 0;
     for (int i = 0; i < out_size; i++) golden_out[i] = 16.0;
 
     unsigned max_threads = 64;
     unsigned blocks = 64;
 
     for (int threads = 1; threads <= max_threads; threads *= 2) {
+        // zeroize out data to avoid accumulation
+        for (int i = 0; i < out_size; i++) out[i] = 0;
         half* in_d;
         half* out_d;
         hipMalloc((void**)&in_d, in_size * sizeof(half));
