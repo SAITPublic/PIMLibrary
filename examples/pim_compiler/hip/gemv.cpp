@@ -13,39 +13,38 @@ using half_float::half;
 int pimc_gemv(int h, int w){
     int32_t ret = 0;
     PimInitialize(RT_TYPE_HIP, PIM_FP16);
-    PimDesc* pim_desc_in = PimCreateDesc(1, 1, 1, h, PIM_FP16);
-    PimDesc* pim_desc_w = PimCreateDesc(1, 1, h, w, PIM_FP16);
-    PimDesc* pim_desc_out = PimCreateDesc(1, 1, 1, w, PIM_FP16);
+    PimGemmDesc* gemm_desc = PimCreateGemmDesc(1, 1, 1, h, 1, w, PIM_FP16, I_X_W);
+    //PimGemmDesc* gemm_desc = PimCreateGemmDesc(1, 1, h, 1, w, 1, PIM_FP16, W_X_I);
 
     // __PIM_API__ call : Create PIM Buffer Object
-    PimBo* host_input = PimCreateBo(pim_desc_in, MEM_TYPE_HOST);
-    PimBo* host_weight = PimCreateBo(pim_desc_w, MEM_TYPE_HOST);
-    PimBo* host_output = PimCreateBo(pim_desc_out, MEM_TYPE_HOST);
+    PimBo* host_input = PimCreateBo(gemm_desc, MEM_TYPE_HOST, GEMM_INPUT);
+    PimBo* host_weight = PimCreateBo(gemm_desc, MEM_TYPE_HOST, GEMM_WEIGHT);
+    PimBo* host_output = PimCreateBo(gemm_desc, MEM_TYPE_HOST, GEMM_OUTPUT);
+    PimBo* golden_output = PimCreateBo(gemm_desc, MEM_TYPE_HOST, GEMM_OUTPUT);
 
-    PimBo* pim_input = PimCreateBo(pim_desc_in, MEM_TYPE_DEVICE);
-    PimBo* pim_weight = PimCreateBo(pim_desc_w, MEM_TYPE_DEVICE);
-    PimBo* golden_output = PimCreateBo(pim_desc_out, MEM_TYPE_HOST);
+    PimBo* device_input = PimCreateBo(gemm_desc, MEM_TYPE_DEVICE, GEMM_INPUT);
+    PimBo* device_weight = PimCreateBo(gemm_desc, MEM_TYPE_DEVICE, GEMM_WEIGHT);
     // Load operand data
-    //set_rand_half_data((half_float::half*)host_input0->data, (half_float::half)0.5, (h * w));
-    //set_rand_half_data((half_float::half*)host_input1->data, (half_float::half)0.5, w);
-    //
-    for (int i = 0; i < h; i++) {
-        for (int j = 0; j < w; j++) {
-           ((half_float::half*)host_weight->data)[(i * w) + j] = 0.2;
-           ((half_float::half*)host_input->data)[i] = 0.3;
-        }
-    }
+    set_rand_half_data((half_float::half*)host_weight->data, (half)0.2, (h * w));
+    set_rand_half_data((half_float::half*)host_input->data, (half)0.2, h);
+
+    //for (int i = 0; i < h; i++) {
+    //    for (int j = 0; j < w; j++) {
+    //       ((half*)host_weight->data)[(i * w) + j] = 0.02;
+    //       ((half*)host_input->data)[i] = 0.03;
+    //    }
+    //}
 
     //Compute Golden output
     for (int j = 0; j < w; j++) {
-        ((half_float::half*)golden_output->data)[j] = 0.0f;
+        ((half*)golden_output->data)[j] = 0.0f;
         for (int i = 0; i < h; i++)
-            ((half_float::half*)golden_output->data)[j] += ((half_float::half*)host_weight->data)[(j * h) + i] * ((half_float::half*)host_input->data)[i];
+            ((half*)golden_output->data)[j] += ((half*)host_weight->data)[(i * w) + j] * ((half*)host_input->data)[i];
     }
 
     //Copy input data from HOST to PIM
-    PimCopyMemory(pim_input, host_input, HOST_TO_DEVICE);
-    PimCopyMemory(pim_weight, host_weight, HOST_TO_DEVICE);
+    PimCopyMemory(device_input, host_input, HOST_TO_DEVICE);
+    PimCopyMemory(device_weight, host_weight, HOST_TO_DEVICE);
 
     //Declare variables
     IndexVar i(0, h, "i");
@@ -61,9 +60,9 @@ int pimc_gemv(int h, int w){
     PimTarget* target = PimCreateTarget(RT_TYPE_HIP, PIM_FP16, GPU);
     //Reorder weights for GEMV
 
-    PimCompiledObj* obj = PimBuildProgram(D, {weight, input}, {pim_weight, pim_input}, target);
+    PimCompiledObj* obj = PimBuildProgram(D, {weight, input}, {device_weight, device_input}, target);
     PimBo* device_output = PimExecuteProgram(obj, target);
-    PimCopyMemory(host_output, device_output, PIM_TO_HOST);
+    PimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
     ret = compare_half_relative((half*)host_output->data, (half*)golden_output->data, w);
 
     PimDestroyBo(host_input);
@@ -71,11 +70,9 @@ int pimc_gemv(int h, int w){
     PimDestroyBo(host_output);
     PimDestroyBo(golden_output);
     PimDestroyBo(device_output);
-    PimDestroyBo(pim_input);
-    PimDestroyBo(pim_weight);
-    PimDestroyDesc(pim_desc_in);
-    PimDestroyDesc(pim_desc_w);
-    PimDestroyDesc(pim_desc_out);
+    PimDestroyBo(device_input);
+    PimDestroyBo(device_weight);
+    PimDestroyGemmDesc(gemm_desc);
     PimDestroyTarget(target);
     PimDestroyProgram(obj);
     PimDeinitialize();
