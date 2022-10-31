@@ -42,14 +42,14 @@ class HipMemoryManager : public IPimMemoryManager
     int copy_memory(void* dst, void* src, size_t size, PimMemCpyType cpy_type);
     int copy_memory(PimBo* dst, PimBo* src, PimMemCpyType cpy_type);
     int copy_memory_3d(const PimCopy3D* copy_params);
-    int convert_data_layout(PimBo* dst, PimBo* src);
+    int convert_data_layout(PimBo* dst, PimBo* src, bool reorder_on_device = false);
     void set_gemm_order(PimGemmOrder gemm_order) { gemm_order_ = gemm_order; }
     void* get_base_memobj(void) { return nullptr; }
 
    private:
     int convert_data_layout_for_gemm_weight(PimBo* dst, PimBo* src);
-    int convert_data_layout_for_aligned_gemm_weight(PimBo* dst, PimBo* src);
-    int convert_data_layout_for_chwise_gemm_weight(PimBo* dst, PimBo* src);
+    int convert_data_layout_for_aligned_gemm_weight(PimBo* dst, PimBo* src, bool reorder_on_device);
+    int convert_data_layout_for_chwise_gemm_weight(PimBo* dst, PimBo* src, bool reorder_on_device);
     int convert_data_layout_for_gemv_weight(PimBo* dst, PimBo* src, int data_offset);
     int convert_data_layout_for_gemv_weight(PimBo* dst, PimBo* src, int data_offset, int ch_per_op);
 

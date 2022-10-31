@@ -16,8 +16,13 @@
 #include <list>
 #include "hip/hip_runtime.h"
 #include "manager/HostInfo.h"
+#include "manager/PimInfo.h"
+#include "pim_data_types.h"
 #include "utility/pim_debug.hpp"
 #include "utility/pim_util.h"
+
+
+#include "pim_runtime_api.h"
 
 extern std::map<uint32_t, HostInfo*> host_devices;
 
@@ -27,6 +32,160 @@ namespace runtime
 {
 namespace manager
 {
+namespace
+{
+__device__ __host__ inline uint64_t convert_idx_from_raw_to_aligned_gemm_weight_layout(uint32_t n, uint32_t c, uint32_t h,
+                                                                                   uint32_t w, uint32_t n_cord,
+                                                                                   uint32_t c_cord, uint32_t h_cord,
+                                                                                   uint32_t w_cord, size_t type_size)
+{
+    const PimBlockInfo& pbi = vega20_pbi;
+    uint32_t num_grf_A = pbi.num_grf_A;
+    uint32_t num_grf_B = pbi.num_grf_B;
+    uint32_t num_pim_blocks = pbi.num_pim_blocks;
+    uint32_t num_pim_chan = pbi.num_pim_chan;
+    uint32_t num_pim_rank = pbi.num_pim_rank;
+    uint32_t num_banks = pbi.num_banks;
+    uint32_t num_bank_groups = pbi.num_bank_groups;
+    uint32_t trans_size = pbi.trans_size;
+    uint32_t num_col = pbi.num_col;
+    uint32_t bl = pbi.bl;
+
+    uint32_t in_cnt = h * type_size / trans_size;
+
+    uint32_t in_tile_size = num_grf_A;
+    uint32_t out_tile_size = num_grf_B * num_pim_blocks * num_pim_chan * num_pim_rank;
+
+    uint64_t n_c_offset = (n_cord * c + c_cord) * h * w * type_size;
+
+    uint32_t y_tile = w_cord / out_tile_size;
+    uint32_t x_tile = (h_cord * type_size / trans_size) / in_tile_size;
+
+    uint32_t y_tile_offset = w_cord % out_tile_size;
+
+    uint32_t y_tile_data_size = out_tile_size * in_cnt * in_tile_size;
+    uint32_t x_tile_data_size = out_tile_size * in_tile_size;
+
+    uint32_t grfb_idx = y_tile_offset % num_grf_B;
+    uint32_t grfa_idx = ((h_cord * type_size / trans_size) % in_tile_size);
+
+    uint32_t y_block_idx = y_tile_offset / num_grf_B;
+
+    uint64_t prev_el_count = (y_tile * y_tile_data_size + x_tile * x_tile_data_size +
+                              y_block_idx * num_grf_B * num_grf_A + grfb_idx * num_grf_A + grfa_idx);
+
+    uint32_t col_s = (prev_el_count / (num_grf_A * num_grf_B)) / (num_banks * num_pim_chan * num_pim_rank);
+    uint32_t row_s = (col_s * num_grf_A * num_grf_B) / (num_col / bl);
+    col_s = (col_s * num_grf_A * num_grf_B) % (num_col / bl);
+
+    uint32_t col = col_s + grfb_idx * in_tile_size + grfa_idx;
+    uint32_t row = row_s + (col / (num_col / bl));
+    col %= (num_col / bl);
+
+    uint64_t prev_el_count_after_s =
+        prev_el_count % (num_grf_A * num_grf_B * (num_banks / 2) * num_pim_chan * num_pim_rank);
+    uint64_t prev_grf_count_after_s = prev_el_count_after_s / (num_grf_A * num_grf_B);
+
+    uint32_t cidx = prev_grf_count_after_s / ((num_banks / 2) * num_pim_rank);
+    prev_grf_count_after_s %= ((num_banks / 2) * num_pim_rank);
+    uint32_t rank = prev_grf_count_after_s / (num_banks / 2);
+    prev_grf_count_after_s %= (num_banks / 2);
+    uint32_t bg = prev_grf_count_after_s / ((num_banks / 2) / num_bank_groups);
+
+    bool is_odd = x_tile % 2;
+    uint32_t bank = (prev_grf_count_after_s % ((num_banks / 2) / num_bank_groups)) * 2 + uint32_t(is_odd);
+
+    return (n_c_offset + addr_gen(cidx, rank, bg, bank, row, col) + (h_cord * type_size % trans_size)) / type_size;
+}
+
+__device__ __host__ inline uint64_t convert_idx_from_raw_to_chwise_gemm_weight_layout(uint32_t n, uint32_t c, uint32_t h,
+                                                                                  uint32_t w, uint32_t n_cord,
+                                                                                  uint32_t c_cord, uint32_t h_cord,
+                                                                                  uint32_t w_cord, size_t type_size)
+{
+    const PimBlockInfo& pbi = vega20_pbi;
+    uint32_t num_grf_A = pbi.num_grf_A;
+    uint32_t num_grf_B = pbi.num_grf_B;
+    uint32_t num_pim_chan = pbi.num_pim_chan;
+    uint32_t num_pim_rank = pbi.num_pim_rank;
+    uint32_t num_banks = pbi.num_banks;
+    uint32_t num_bank_groups = pbi.num_bank_groups;
+    uint32_t trans_size = pbi.trans_size;
+    uint32_t num_col = pbi.num_col;
+    uint32_t bl = pbi.bl;
+
+    uint32_t in_tile_size = num_grf_A;
+    uint32_t out_tile_size = PIM_GEMV_OUT_ALIGN;
+
+    uint32_t x_tile = (h_cord * type_size / trans_size) / in_tile_size;
+
+    uint32_t y_tile_offset = ((n_cord * c * w + c_cord * w + w_cord) % out_tile_size);
+    uint32_t n_c_offset = ((n_cord * c * w + c_cord * w + w_cord) / out_tile_size) * out_tile_size * h * 2;
+
+    uint32_t x_tile_data_size = out_tile_size * in_tile_size;
+
+    uint32_t grfb_idx = y_tile_offset % num_grf_B;
+    uint32_t grfa_idx = ((h_cord * type_size / trans_size) % in_tile_size);
+
+    uint32_t y_block_idx = y_tile_offset / num_grf_B;
+
+    uint64_t prev_el_count = x_tile * x_tile_data_size +
+            y_block_idx * num_grf_B * num_grf_A + grfb_idx * num_grf_A + grfa_idx;
+
+    uint32_t col_s = (prev_el_count / (num_grf_A * num_grf_B)) / (num_banks * num_pim_chan * num_pim_rank);
+    uint32_t row_s = (col_s * num_grf_A * num_grf_B) / (num_col / bl);
+    col_s = (col_s * num_grf_A * num_grf_B) % (num_col / bl);
+
+    uint32_t col = col_s + grfb_idx * in_tile_size + grfa_idx;
+    uint32_t row = row_s + col / (num_col / bl);
+    col %= (num_col / bl);
+
+    uint64_t prev_el_count_after_s =
+        prev_el_count % (num_grf_A * num_grf_B * (num_banks / 2) * num_pim_chan * num_pim_rank);
+    uint64_t prev_grf_count_after_s = prev_el_count_after_s / (num_grf_A * num_grf_B);
+
+    uint32_t cidx = prev_grf_count_after_s / ((num_banks / 2) * num_pim_rank);
+    prev_grf_count_after_s %= ((num_banks / 2) * num_pim_rank);
+    uint32_t rank = prev_grf_count_after_s / (num_banks / 2);
+    prev_grf_count_after_s %= (num_banks / 2);
+    uint32_t bg = prev_grf_count_after_s / ((num_banks / 2) / num_bank_groups);
+
+    bool is_odd = x_tile % 2;
+    uint32_t bank = (prev_grf_count_after_s % ((num_banks / 2) / num_bank_groups)) * 2 + uint32_t(is_odd);
+
+    return (n_c_offset + addr_gen(cidx, rank, bg, bank, row, col) + (h_cord * type_size % trans_size)) /
+           type_size;
+}
+
+__global__ void fill_gemm_weight_chwise(int n, int c, int h, int w, half* dst, half* src)
+{
+    for (int i = blockIdx.y; i < n; i += gridDim.y) {
+        for (int j = blockIdx.x; j < c; j += gridDim.x) {
+            for (int k = threadIdx.y; k < h; k += blockDim.y) {
+                for (int l = threadIdx.x; l < w; l += blockDim.x) {
+                    auto idx = convert_idx_from_raw_to_chwise_gemm_weight_layout(n, c, h, w, i, j, k, l, sizeof(half));
+                    dst[idx] = src[i * c * h * w + j * h * w + k * w + l];
+                }
+            }
+        }
+    }
+}
+
+__global__ void fill_gemm_weight_aligned(int n, int c, int h, int w, half* dst, half* src)
+{
+    for (int i = blockIdx.y; i < n; i += gridDim.y) {
+        for (int j = blockIdx.x; j < c; j += gridDim.x) {
+            for (int k = threadIdx.y; k < h; k += blockDim.y) {
+                for (int l = threadIdx.x; l < w; l += blockDim.x) {
+                    auto idx = convert_idx_from_raw_to_aligned_gemm_weight_layout(n, c, h, w, i, j, k, l, sizeof(half));
+                    dst[idx] = src[i * c * h * w + j * h * w + k * w + l];
+                }
+            }
+        }
+    }
+}
+}  // namespace
+
 inline std::list<int> get_env(const char* key)
 {
     std::list<int> hip_devices = {};
@@ -364,16 +523,16 @@ int HipMemoryManager::copy_memory_3d(const PimCopy3D* copy_params)
     return ret;
 }
 
-int HipMemoryManager::convert_data_layout(PimBo* dst, PimBo* src)
+int HipMemoryManager::convert_data_layout(PimBo* dst, PimBo* src, bool on_device)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
     bool is_chwise = check_chwise_gemm_bo(src, gemm_order_);
 
     if (is_chwise) {
-        ret = convert_data_layout_for_chwise_gemm_weight(dst, src);
+        ret = convert_data_layout_for_chwise_gemm_weight(dst, src, on_device);
     } else {
-        ret = convert_data_layout_for_aligned_gemm_weight(dst, src);
+        ret = convert_data_layout_for_aligned_gemm_weight(dst, src, on_device);
     }
     if (ret != 0) {
         printf("fail to convert data layout for gemm\n");
@@ -384,10 +543,20 @@ int HipMemoryManager::convert_data_layout(PimBo* dst, PimBo* src)
     return ret;
 }
 
-int HipMemoryManager::convert_data_layout_for_chwise_gemm_weight(PimBo* dst, PimBo* src)
+int HipMemoryManager::convert_data_layout_for_chwise_gemm_weight(PimBo* dst, PimBo* src, bool on_device)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
+    if (on_device) {
+        DLOG(INFO) << "reordering on device";
+        auto blocks = dim3(src->bshape_r.n, src->bshape_r.c);
+        auto threads = dim3(32, 32); // cover any shape by 32x32 squares
+        // TODO: provide stream for gpu conversion
+        hipLaunchKernelGGL(fill_gemm_weight_chwise, blocks, threads, 0, 0, src->bshape_r.n, src->bshape_r.c,
+                           src->bshape_r.h, src->bshape_r.w, (half*)dst->data, (half*)src->data);
+        dst->data_layout_type = PimDataLayoutType::CHWISE_GEMM_WEIGHT;
+        return ret;
+    }
 
     int num_grf_A = pbi_->num_grf;
     int num_grf_B = pbi_->num_grf;
@@ -545,7 +714,7 @@ int HipMemoryManager::convert_data_layout_for_chwise_gemm_weight(PimBo* dst, Pim
     return ret;
 }
 
-int HipMemoryManager::convert_data_layout_for_aligned_gemm_weight(PimBo* dst, PimBo* src)
+int HipMemoryManager::convert_data_layout_for_aligned_gemm_weight(PimBo* dst, PimBo* src, bool on_device)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
@@ -601,11 +770,21 @@ int HipMemoryManager::convert_data_layout_for_aligned_gemm_weight(PimBo* dst, Pi
                 return -1;
             }
         }
-        if (hipMemcpy(src->data, src_temp, src_size, hipMemcpyHostToDevice) != hipSuccess) {
+        if (hipMemcpy(src_data, src_temp, src_size, hipMemcpyHostToDevice) != hipSuccess) {
             DLOG(INFO) << "[END] " << __FUNCTION__ << " Failed to copy";
             return -1;
         }
         free(src_temp);
+    }
+    if (on_device) {
+        DLOG(INFO) << "reordering on device";
+        auto blocks = dim3(src->bshape_r.n, src->bshape_r.c);
+        auto threads = dim3(1, 1024); // alignment 256x4096 can't be reached due to 1024 threads limitation
+        // TODO: provide stream for gpu conversion
+        hipLaunchKernelGGL(fill_gemm_weight_aligned, blocks, threads, 0, 0, src->bshape_r.n, src->bshape_r.c,
+                           src->bshape_r.h, src->bshape_r.w, (half*)dst->data, (half*)src->data);
+        dst->data_layout_type = PimDataLayoutType::ALIGNED_GEMM_WEIGHT;
+        return ret;
     }
 
     for (int iter = 0; iter < iter_cnt; iter++) {

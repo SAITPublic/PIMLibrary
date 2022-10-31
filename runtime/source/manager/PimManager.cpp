@@ -148,11 +148,11 @@ int PimManager::copy_memory_3d(const PimCopy3D* copy_params)
     return ret;
 }
 
-int PimManager::convert_data_layout(PimBo* dst, PimBo* src)
+int PimManager::convert_data_layout(PimBo* dst, PimBo* src, bool reorder_on_device)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
-    ret = pim_memory_manager_->convert_data_layout(dst, src);
+    ret = pim_memory_manager_->convert_data_layout(dst, src, reorder_on_device);
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;

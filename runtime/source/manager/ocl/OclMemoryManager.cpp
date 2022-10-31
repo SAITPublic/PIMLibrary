@@ -350,91 +350,12 @@ int OclMemoryManager::copy_memory_3d(const PimCopy3D* copy_params)
     return ret;
 }
 
-// TODO:: Create an address generator and data converter for both HIP and OpenCL
-uint32_t OclMemoryManager::mask_by_bit(uint32_t value, uint32_t start, uint32_t end)
-{
-    int length = start - end + 1;
-    value >>= end;
-    return value & ((1 << length) - 1);
-}
-
-uint64_t OclMemoryManager::addr_gen(uint32_t chan, uint32_t rank, uint32_t bankgroup, uint32_t bank, uint32_t row,
-                                    uint32_t col)
-{
-    /* vega20 memory map info */
-    int num_row_bit = 14;
-    int num_col_high_bit = 3;
-    int num_bank_high_bit = 1;
-    int num_bankgroup_bit = 2;
-    int num_bank_low_bit = 1;
-    int num_chan_bit = 6;
-    int num_offset_bit = 5;
-
-    uint64_t addr = 0;
-
-    addr = rank;
-
-    addr <<= num_row_bit;
-    addr |= row;
-
-    addr <<= num_col_high_bit;
-    addr |= mask_by_bit(col, 4, 2);
-
-    addr <<= num_bank_high_bit;
-    addr |= mask_by_bit(bank, 1, 1);
-
-    addr <<= num_bankgroup_bit;
-    addr |= bankgroup;
-
-    addr <<= num_bank_low_bit;
-    addr |= mask_by_bit(bank, 0, 0);
-
-    addr <<= num_chan_bit - 1;
-    addr |= mask_by_bit(chan, num_chan_bit - 1, 1);
-
-    addr <<= 1;
-    addr |= mask_by_bit(col, 1, 1);
-
-    addr <<= 1;
-    addr |= mask_by_bit(chan, 0, 0);
-
-    addr <<= 1;
-    addr |= mask_by_bit(col, 0, 0);
-
-    addr <<= num_offset_bit;
-
-#if TARGET && RADEON7
-    /* we assume pim kernel run on vega20(32GB) system */
-    /* but SAIT server is vega20(16GB) system */
-    /* so upper 2bit should be set as 0 for normal work */
-    uint64_t mask = 0x1FFFFFFFF;
-    addr &= mask;
-#endif
-
-    return addr;
-}
-
-uint64_t OclMemoryManager::addr_gen_safe(uint32_t chan, uint32_t rank, uint32_t bg, uint32_t bank, uint32_t& row,
-                                         uint32_t& col)
-{
-    PimBlockInfo* pbi = &vega20_pbi;
-
-    while (col >= pbi->num_col / pbi->bl) {
-        row++;
-        col -= (pbi->num_col / pbi->bl);
-    }
-
-    if (row >= pbi->num_row) {
-    }
-
-    return addr_gen(chan, rank, bg, bank, row, col);
-}
-
-int OclMemoryManager::convert_data_layout(PimBo* dst, PimBo* src)
+int OclMemoryManager::convert_data_layout(PimBo* dst, PimBo* src, bool reorder_on_device)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
     bool is_chwise = check_chwise_gemm_bo(src, gemm_order_);
+    //TODO: support device reordering for OCL
     if (is_chwise) {
         ret = convert_data_layout_for_chwise_gemm_weight(dst, src);
     } else {

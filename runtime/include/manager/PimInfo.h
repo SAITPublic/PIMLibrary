@@ -49,7 +49,7 @@ typedef struct __PimBlockInfo {
     int num_out_per_grf;
 } PimBlockInfo;
 
-static PimBlockInfo vega20_pbi = {
+static const PimBlockInfo vega20_pbi = {
     .pim_addr_map = AMDGPU_VEGA20,
     .num_banks = 16,
     .num_bank_groups = 4,

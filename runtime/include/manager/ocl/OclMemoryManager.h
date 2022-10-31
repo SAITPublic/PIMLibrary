@@ -49,14 +49,11 @@ class OclMemoryManager : public IPimMemoryManager
     int copy_memory(PimBo* dst, PimBo* src, PimMemCpyType cpy_type);
     int copy_memory_3d(const PimCopy3D* copy_params);
     int get_physical_id(void);
-    int convert_data_layout(PimBo* dst, PimBo* src);
+    int convert_data_layout(PimBo* dst, PimBo* src, bool reorder_on_device);
     void set_gemm_order(PimGemmOrder gemm_order) { gemm_order_ = gemm_order; }
     void* get_base_memobj(void) { return fragment_allocator_[0]->get_pim_base(); }
 
    private:
-    uint32_t mask_by_bit(uint32_t value, uint32_t start, uint32_t end);
-    uint64_t addr_gen(uint32_t chan, uint32_t rank, uint32_t bankgroup, uint32_t bank, uint32_t row, uint32_t col);
-    uint64_t addr_gen_safe(uint32_t chan, uint32_t rank, uint32_t bg, uint32_t bank, uint32_t& row, uint32_t& col);
     int convert_data_layout_for_aligned_gemm_weight(PimBo* dst, PimBo* src);
     int convert_data_layout_for_chwise_gemm_weight(PimBo* dst, PimBo* src);
 
