@@ -8,10 +8,11 @@
  * to third parties without the express written permission of Samsung Electronics.
  */
 
-#ifndef _PIM_EMULATOR_H_
-#define _PIM_EMULATOR_H_
+#ifndef _HIP_PIM_EMULATOR_H_
+#define _HIP_PIM_EMULATOR_H_
 
-#include "PimTraceCoalescer.h"
+#include "emulator/PimTraceCoalescer.h"
+#include "emulator/IPimEmulator.h"
 #include "manager/PimInfo.h"
 #include "pim_data_types.h"
 #include "tests/PimSimulator.h"
@@ -22,21 +23,14 @@ namespace runtime
 {
 namespace emulator
 {
-class PimEmulator
+class HipPimEmulator : public IPimEmulator
 {
    public:
-    PimEmulator();
-    virtual ~PimEmulator(void) {}
-    static PimEmulator* get_instance(void);
+    HipPimEmulator();
+    virtual ~HipPimEmulator(void) {}
 
     int initialize(void);
     int deinitialize(void);
-    int set_rttype(PimRuntimeType rtType)
-    {
-        rt_type_ = rtType;
-        return 0;
-    }
-
     int convert_mem_trace_from_16B_to_32B(PimMemTraceData* fmtd32, int* fmtd32_size, PimMemTraceData* fmtd16,
                                           int fmtd16_size, PimOpType op_type);
     int execute_bn(PimBo* output, PimBo* pim_data, PimMemTraceData* fmtd32, int fmtd32_size, uint64_t pim_base_addr,
@@ -62,12 +56,10 @@ class PimEmulator
    private:
     PimBlockInfo fbi_;
     PimSimulator pim_sim_;
-
-    PimRuntimeType rt_type_;
 };
 
 } /* namespace emulator */
 } /* namespace runtime */
 } /* namespace pim */
 
-#endif /* _PIM_EMULATOR_H_ */
+#endif /* _HIP_PIM_EMULATOR_H_ */

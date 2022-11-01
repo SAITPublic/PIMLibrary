@@ -13,7 +13,7 @@
 
 #include <CL/cl.h>
 #include "PimRuntime.h"
-#include "emulator/PimEmulator.h"
+#include "emulator/ocl/OclPimEmulator.h"
 #include "executor/IPimExecutor.h"
 #include "executor/PimCrfBinGen.h"
 #include "manager/PimInfo.h"
@@ -106,7 +106,7 @@ class OclPimExecutor : public IPimExecutor
     cl_kernel pim_chwise_gemm_bias_relu_fp16_;
 
 #ifdef EMULATOR
-    std::shared_ptr<pim::runtime::emulator::PimEmulator> pim_emulator_;
+    std::shared_ptr<pim::runtime::emulator::OclPimEmulator> pim_emulator_;
     PimMemTraceData* h_fmtd16_;
     PimMemTraceData* h_fmtd32_;
     PimMemTracer* d_emulator_trace_;

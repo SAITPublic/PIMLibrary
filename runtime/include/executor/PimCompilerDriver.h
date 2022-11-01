@@ -42,6 +42,7 @@ class HIPCompiler
     ~HIPCompiler() {}
     void execute(std::string hip_kernel, std::string crf_binary);
     hipFunction_t get_kernel_function() { return kernel_; }
+
    private:
     HIPCompiler(HIPCompiler &&) = delete;
     HIPCompiler(const HIPCompiler &) = delete;
@@ -71,7 +72,7 @@ class PimCDriver
     void pim_malloc(void **ptr, size_t size, PimTarget *target);
     void pim_memcpy(void *dest, const void *src, size_t size, PimTarget *target);
     void pim_launch_kernel(std::string kernel, std::string crf_binary, uint32_t num_blocks, uint32_t num_threads,
-                         uint8_t *args[], size_t num_args, PimTarget *target);
+                           uint8_t *args[], size_t num_args, PimTarget *target);
 #endif
     // todo:: Pass HW information from user
 

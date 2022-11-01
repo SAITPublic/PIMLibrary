@@ -37,7 +37,7 @@ HipPimExecutor::HipPimExecutor(pim::runtime::manager::PimManager* pim_manager, p
     pim_device_ = pim_manager_->get_pim_device();
     pbi_ = pim_device_->get_pim_block_info();
 #ifdef EMULATOR
-    pim_emulator_ = std::make_shared<pim::runtime::emulator::PimEmulator>();
+    pim_emulator_ = std::make_shared<pim::runtime::emulator::HipPimEmulator>();
 
     fmtd_size_per_ch_ = 100000;
     max_block_size_ = pbi_->num_pim_chan;
@@ -99,7 +99,6 @@ int HipPimExecutor::initialize(void)
 
 #ifdef EMULATOR
     int reserved_fmtd_size = max_fmtd_size_ * sizeof(PimMemTraceData);
-    pim_emulator_->set_rttype(RT_TYPE_HIP);
 
     hipMalloc((void**)&d_fmtd16_, reserved_fmtd_size);
     hipMalloc((void**)&d_fmtd16_size_, sizeof(int));
@@ -596,9 +595,10 @@ int HipPimExecutor::execute_aligned_gemm_tile_accum(PimBo* output, PimBo* input,
     int device_id;
     hipGetDevice(&device_id);
 
-    void (*gemm_kernel)(volatile uint8_t* __restrict__, volatile uint8_t* __restrict__, volatile uint8_t* __restrict__,
-                        volatile uint8_t* __restrict__, volatile uint8_t* __restrict__, volatile uint8_t* __restrict__,
-                        int, int, int, int, int, int, int, int,
+    void (*gemm_kernel)(volatile uint8_t * __restrict__, volatile uint8_t * __restrict__,
+                        volatile uint8_t * __restrict__, volatile uint8_t * __restrict__,
+                        volatile uint8_t * __restrict__, volatile uint8_t * __restrict__, int, int, int, int, int, int,
+                        int, int,
 #ifdef EMULATOR
                         PimMemTraceData*, int*, int, PimMemTracer*,
 #endif
@@ -683,9 +683,10 @@ int HipPimExecutor::execute_chwise_gemm_tile_accum(PimBo* output, PimBo* input, 
         crf_bin = (uint8_t*)pim_crf_generator_->make_crf_bin(OP_GEMV, input->bshape.w * sizeof(uint16_t));
     }
 
-    void (*gemm_kernel)(volatile uint8_t* __restrict__, volatile uint8_t* __restrict__, volatile uint8_t* __restrict__,
-                        volatile uint8_t* __restrict__, volatile uint8_t* __restrict__, volatile uint8_t* __restrict__,
-                        int, int, int, int, int, int, int, int,
+    void (*gemm_kernel)(volatile uint8_t * __restrict__, volatile uint8_t * __restrict__,
+                        volatile uint8_t * __restrict__, volatile uint8_t * __restrict__,
+                        volatile uint8_t * __restrict__, volatile uint8_t * __restrict__, int, int, int, int, int, int,
+                        int, int,
 #ifdef EMULATOR
                         PimMemTraceData*, int*, int, PimMemTracer*,
 #endif

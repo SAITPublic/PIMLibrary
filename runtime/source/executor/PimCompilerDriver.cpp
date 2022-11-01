@@ -178,8 +178,8 @@ void PimCDriver::pim_memcpy(void* dest, const void* src, size_t size, PimTarget*
     // else  TODO: OCL
 }
 
-void PimCDriver::pim_launch_kernel(std::string kernel, std::string crf_binary, uint32_t num_blocks, uint32_t num_threads,
-                                 uint8_t* args[], size_t num_args, PimTarget* target)
+void PimCDriver::pim_launch_kernel(std::string kernel, std::string crf_binary, uint32_t num_blocks,
+                                   uint32_t num_threads, uint8_t* args[], size_t num_args, PimTarget* target)
 {
     if (target->runtime == PimRuntimeType::RT_TYPE_HIP) {
         void* config[5] = {HIP_LAUNCH_PARAM_BUFFER_POINTER, nullptr, HIP_LAUNCH_PARAM_BUFFER_SIZE, &num_args,

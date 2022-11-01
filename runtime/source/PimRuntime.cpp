@@ -338,11 +338,15 @@ bool PimRuntime::check_need_for_transpose(PimGemmOrder gemm_order, PimBo* dev_we
     bool ret = false;
 
     if (gemm_order == I_X_W) {
-        if (transposed == false) return true;
-        else return false;
+        if (transposed == false)
+            return true;
+        else
+            return false;
     } else {
-        if (transposed == false) return false;
-        else return true;
+        if (transposed == false)
+            return false;
+        else
+            return true;
     }
 
     return ret;

@@ -12,7 +12,7 @@
 #define _HIP_PIM_EXECUTOR_H_
 
 #include "PimRuntime.h"
-#include "emulator/PimEmulator.h"
+#include "emulator/hip/HipPimEmulator.h"
 #include "executor/IPimExecutor.h"
 #include "executor/PimCrfBinGen.h"
 #include "hip/hip_fp16.h"
@@ -88,7 +88,7 @@ class HipPimExecutor : public IPimExecutor
 #ifdef EMULATOR
     PimMemTraceData* d_fmtd16_;
     int* d_fmtd16_size_;
-    std::shared_ptr<pim::runtime::emulator::PimEmulator> pim_emulator_;
+    std::shared_ptr<pim::runtime::emulator::HipPimEmulator> pim_emulator_;
     PimMemTraceData* h_fmtd16_;
     PimMemTraceData* h_fmtd32_;
     PimMemTracer* d_emulator_trace_;

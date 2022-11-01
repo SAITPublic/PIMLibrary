@@ -6,8 +6,11 @@ aux_source_directory(executor runtime_source)
 aux_source_directory(executor/hip runtime_source)
 aux_source_directory(executor/ocl runtime_source)
 
+
 if(EMULATOR)
 aux_source_directory(emulator runtime_source)
+aux_source_directory(emulator/hip runtime_source)
+aux_source_directory(emulator/ocl runtime_source)
 endif()
 aux_source_directory(utility runtime_source)
 

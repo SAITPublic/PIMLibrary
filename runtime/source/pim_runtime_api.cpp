@@ -13,10 +13,10 @@
 #include "executor/PimCompilerDriver.h"
 #include "half.hpp"
 #include "hip/hip_runtime.h"
+#include "utility/pim_debug.hpp"
 #include "utility/pim_log.h"
 #include "utility/pim_profile.h"
 #include "utility/pim_util.h"
-#include "utility/pim_debug.hpp"
 
 using namespace pim::runtime;
 
@@ -120,7 +120,8 @@ int PimGetDevice(uint32_t* device_id)
     return ret;
 }
 
-PimBo* PimCreateBo(int n, int c, int h, int w, PimPrecision precision, PimMemType mem_type, void* user_ptr, bool transposed)
+PimBo* PimCreateBo(int n, int c, int h, int w, PimPrecision precision, PimMemType mem_type, void* user_ptr,
+                   bool transposed)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     PIM_PROFILE_TICK(CreateBo);
@@ -192,7 +193,8 @@ PimBo* PimCreateBo(PimDesc* pim_desc, PimMemType mem_type, PimMemFlag mem_flag, 
     return pim_bo;
 }
 
-PimBo* PimCreateBo(PimGemmDesc* pim_gemm_desc, PimMemType mem_type, PimMemFlag mem_flag, void* user_ptr, bool transposed)
+PimBo* PimCreateBo(PimGemmDesc* pim_gemm_desc, PimMemType mem_type, PimMemFlag mem_flag, void* user_ptr,
+                   bool transposed)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     PIM_PROFILE_TICK(CreateBo);

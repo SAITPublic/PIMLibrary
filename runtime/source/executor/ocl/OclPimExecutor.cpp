@@ -95,7 +95,7 @@ OclPimExecutor::OclPimExecutor(pim::runtime::manager::PimManager* pim_manager, p
     pim_chwise_gemm_bias_relu_fp16_ = clCreateKernel(program_, "pim_chwise_gemm_bias_relu_fp16", &exec_err_);
     cl_ok(exec_err_);
 #ifdef EMULATOR
-    pim_emulator_ = std::make_shared<pim::runtime::emulator::PimEmulator>();
+    pim_emulator_ = std::make_shared<pim::runtime::emulator::OclPimEmulator>();
     fmtd_size_per_ch_ = 100000;
     max_block_size_ = pbi_->num_pim_chan;
     max_fmtd_size_ = fmtd_size_per_ch_ * max_block_size_;
@@ -289,7 +289,6 @@ int OclPimExecutor::initialize(void)
 
 #ifdef EMULATOR
     size_t reserved_fmtd_size = max_fmtd_size_ * sizeof(PimMemTraceData);
-    pim_emulator_->set_rttype(RT_TYPE_OPENCL);
 
     d_emulator_trace_ = (PimMemTracer*)malloc(sizeof(PimMemTracer));
     h_fmtd16_ = (PimMemTraceData*)malloc(reserved_fmtd_size);
@@ -359,7 +358,6 @@ void OclPimExecutor::emulator_trace_gen(unsigned int block_size, PimOpType op_ty
                h_fmtd16_size_[0] * sizeof(PimMemTraceData));
     }
     h_fmtd16_size_[0] *= block_size;
-    pim_emulator_->set_rttype(RT_TYPE_OPENCL);
     pim_emulator_->convert_mem_trace_from_16B_to_32B(h_fmtd32_, (int*)h_fmtd32_size_, h_fmtd16_, (int)h_fmtd16_size_[0],
                                                      op_type);
 }
