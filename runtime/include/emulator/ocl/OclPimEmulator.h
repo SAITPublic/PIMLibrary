@@ -11,11 +11,11 @@
 #ifndef _OCL_PIM_EMULATOR_H_
 #define _OCL_PIM_EMULATOR_H_
 
-#include "emulator/PimTraceCoalescer.h"
 #include "emulator/IPimEmulator.h"
+#include "emulator/PimTraceCoalescer.h"
 #include "manager/PimInfo.h"
 #include "pim_data_types.h"
-#include "tests/PimSimulator.h"
+#include "tools/emulator_api/PimSimulator.h"
 
 namespace pim
 {

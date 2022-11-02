@@ -127,6 +127,7 @@ class pimCmd
     }
 
     uint32_t bitmask(int bit) const { return (1 << bit) - 1; }
+
     uint32_t toBit(uint32_t val, int bit_len, int bit_pos) const { return ((val & bitmask(bit_len)) << bit_pos); }
     uint32_t fromBit(uint32_t val, int bit_len, int bit_pos) const { return ((val >> bit_pos) & bitmask(bit_len)); }
 

@@ -44,6 +44,7 @@
 #include <vector>
 
 #include "AddressMapping.h"
+#include "Burst.h"
 #include "CSVWriter.h"
 #include "Callback.h"
 #include "Configuration.h"
@@ -54,7 +55,6 @@
 #include "SystemConfiguration.h"
 #include "Transaction.h"
 #include "Utils.h"
-#include "burst.h"
 
 namespace DRAMSim
 {

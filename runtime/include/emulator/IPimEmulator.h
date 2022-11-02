@@ -14,7 +14,7 @@
 #include "PimTraceCoalescer.h"
 #include "manager/PimInfo.h"
 #include "pim_data_types.h"
-#include "tests/PimSimulator.h"
+#include "tools/emulator_api/PimSimulator.h"
 
 namespace pim
 {

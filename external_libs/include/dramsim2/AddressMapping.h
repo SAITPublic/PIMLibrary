@@ -44,6 +44,7 @@ class AddrMapping
     AddrMapping();
     void addressMapping(uint64_t physicalAddress, unsigned& channel, unsigned& rank, unsigned& bank, unsigned& row,
                         unsigned& col);
+
     uint64_t inline diffBitWidth(uint64_t* physicalAddress, uint64_t BitWidth)
     {
         uint64_t tempA = *physicalAddress;

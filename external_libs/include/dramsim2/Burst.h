@@ -25,6 +25,7 @@ union BurstType {
         }
     }
     BurstType(float* x) { memcpy(u8Data_, x, 32); }
+
     BurstType(fp16* x) { memcpy(u8Data_, x, 32); }
 
     BurstType(float x0, float x1, float x2, float x3, float x4, float x5, float x6, float x7)

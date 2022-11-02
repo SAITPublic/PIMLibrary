@@ -38,8 +38,8 @@
 // Header file for bus packet object
 //
 #include <string>
+#include "Burst.h"
 #include "SystemConfiguration.h"
-#include "burst.h"
 
 namespace DRAMSim
 {

@@ -52,6 +52,6 @@ class PimSimulator
 
     int bst_size_;
     size_t cycle_;
-    AddrMapping* addrMapping;
+    AddrMapping* addr_mapping_;
 };
 #endif

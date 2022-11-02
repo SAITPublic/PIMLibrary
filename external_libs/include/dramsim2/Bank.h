@@ -40,10 +40,10 @@
 #include <memory>
 #include <vector>
 #include "BankState.h"
+#include "Burst.h"
 #include "BusPacket.h"
 #include "SimulatorObject.h"
 #include "SystemConfiguration.h"
-#include "burst.h"
 
 namespace DRAMSim
 {

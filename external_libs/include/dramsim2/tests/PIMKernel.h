@@ -85,9 +85,11 @@ class PIMKernel
     void addTransactionAll(bool isWrite, int bg, int bank, int row, int col, BurstType* bst, bool use_barrier = false,
                            int loopCounter = 1);
     /*
-    void preprocessBn(NumpyBurstType* mean_npbst, NumpyBurstType* var_npbst, NumpyBurstType* gamma_npbst,
-            NumpyBurstType* beta_npbst, NumpyBurstType* input_npbst, fp16** params, float eps);
-    void preprocessSrf(NumpyBurstType* input_npbst, fp16** params, int burst_offset, int num_srf_usage);
+    void preprocessBn(NumpyBurstType* mean_npbst, NumpyBurstType* var_npbst,
+                      NumpyBurstType* gamma_npbst, NumpyBurstType* beta_npbst,
+                      NumpyBurstType* input_npbst, fp16** params, float eps);
+    void preprocessSrf(NumpyBurstType* input_npbst, fp16** params, int burst_offset,
+                       int num_srf_usage);
     */
     /*
     void programSrf();
@@ -101,7 +103,7 @@ class PIMKernel
     void preloadNoReplacement(NumpyBurstType* operand, unsigned startingRow, unsigned startingCol);
     /*
     void preloadEltwise(NumpyBurstType* operand, pimBankType bank_types, unsigned startingRow,
-            unsigned startingCol);
+                        unsigned startingCol);
     */
     void executeGemv(NumpyBurstType* w_data, NumpyBurstType* i_data, bool is_tree);
     void executeEltwise(int dim, pimBankType bank_types, KernelType ktype, int input0_row, int result_row,
