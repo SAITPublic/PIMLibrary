@@ -36,6 +36,7 @@ namespace DRAMSim
     msg << " ch" << getChanId() << " ra" << getRankId() << " idx" << packet->column - 0x4 << " @" << currentClockCycle
 
 class Rank;  // forward declaration
+
 class PIMRank : public SimulatorObject
 {
    private:

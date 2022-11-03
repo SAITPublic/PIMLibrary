@@ -22,7 +22,7 @@ class PIMKernel
     int num_grfA_;
     int num_grfB_;
     int num_grf_;
-    bool useAllGrf_;
+    bool use_all_grf_;
 
    private:
     unsigned cycle_;
@@ -42,7 +42,12 @@ class PIMKernel
 
    public:
     PIMKernel(shared_ptr<MultiChannelMemorySystem> mem, int num_pim_chan, int num_pim_rank)
-        : mem_(mem), num_pim_chans_(num_pim_chan), num_pim_ranks_(num_pim_rank), cycle_(0)
+        : mem_(mem),
+          num_pim_chans_(num_pim_chan),
+          num_pim_ranks_(num_pim_rank),
+          use_all_grf_(false),
+          srf_bst_(NULL),
+          cycle_(0)
     {
         transaction_size_ = getConfigParam(UINT, "BL") * (getConfigParam(UINT, "JEDEC_DATA_BUS_BITS") / 8);  // in byte
 
@@ -50,8 +55,7 @@ class PIMKernel
         num_grfA_ = 8;
         num_grfB_ = 8;
         num_grf_ = num_grfA_;
-        useAllGrf_ = false;
-        srf_bst_ = NULL;
+
         bst_hab_pim_.u8Data_[0] = 1;
         bst_hab_pim_.u8Data_[16] = 3;
         bst_hab_pim_.u8Data_[21] = 1;
@@ -60,8 +64,9 @@ class PIMKernel
         grfB_reset_.u8Data_[21] = 1;
 
         pim_chans_.clear();
-        pim_ranks_.clear();
         for (int i = 0; i < num_pim_chans_; i++) pim_chans_.push_back(i);
+
+        pim_ranks_.clear();
         for (int i = 0; i < num_pim_ranks_; i++) pim_ranks_.push_back(i);
         mode_ = PIMConfiguration::getPIMMode();
         num_banks_ = getConfigParam(UINT, "NUM_BANKS");
@@ -71,8 +76,6 @@ class PIMKernel
         pim_addr_mgr_ = make_shared<PIMAddrManager>(num_pim_chan, num_pim_rank);
     }
 
-    void setPimCmd(vector<pimCmd>& pim_cmds, KernelType ktype, int num_jump_to_be_taken,
-                   int num_jump_to_be_taken_odd_bank, int num_jump_to_be_taken_even_bank);
     void addBarrier();
     void runPim();
     uint64_t getCycle();
@@ -116,8 +119,7 @@ class PIMKernel
 
     void readResult(BurstType* resultBst, pimBankType bank_types, int output_dim, uint64_t baseAddr = 0,
                     unsigned startingRow = 0, unsigned startingCol = 0);
-
-    void readData(BurstType* bst_data, size_t bst_cnt, unsigned starting_row = 0, unsigned starting_col = 0);
+    void readData(BurstType* bst_data, size_t bst_cnt, unsigned s_row = 0, unsigned s_col = 0);
     void adderTree(BurstType* result, int output_dim, int numTile, int step, fp16* temp);
     shared_ptr<PIMAddrManager> pim_addr_mgr_;
 };

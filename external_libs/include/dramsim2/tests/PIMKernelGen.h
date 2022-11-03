@@ -21,34 +21,40 @@ class IPIMKernel
     KernelType kernelType;
 };
 
+/*
 class BatchNormPIMKernel : public IPIMKernel
 {
-   public:
+  public:
     BatchNormPIMKernel(KernelType ktype) : IPIMKernel(ktype) {}
-    virtual vector<pimCmd> generateKernel(int num_jump_to_be_taken, int num_jump_to_be_taken_odd_bank = 0,
+    virtual vector<pimCmd> generateKernel(int num_jump_to_be_taken,
+                                          int num_jump_to_be_taken_odd_bank = 0,
                                           int num_jump_to_be_taken_even_bank = 0) override
     {
         vector<pimCmd> pim_cmds;
-        vector<pimCmd> tmp_cmds{pimCmd(pimCmdType::MAD, pimOpdType::GRF_A, pimOpdType::EVEN_BANK, pimOpdType::SRF_M,
-                                       pimOpdType::SRF_A, 1, 0, 0, 0),
-                                pimCmd(pimCmdType::MAD, pimOpdType::GRF_A, pimOpdType::GRF_A, pimOpdType::SRF_M,
-                                       pimOpdType::SRF_A, 1, 0, 0, 1),
-                                pimCmd(pimCmdType::NOP, 7),
-                                pimCmd(pimCmdType::MAD, pimOpdType::GRF_B, pimOpdType::ODD_BANK, pimOpdType::SRF_M,
-                                       pimOpdType::SRF_A, 1, 0, 0, 0),
-                                pimCmd(pimCmdType::MAD, pimOpdType::GRF_B, pimOpdType::GRF_B, pimOpdType::SRF_M,
-                                       pimOpdType::SRF_A, 1, 0, 0, 1),
-                                pimCmd(pimCmdType::NOP, 7),
-                                pimCmd(pimCmdType::NOP, 0)};
+        vector<pimCmd> tmp_cmds
+        {
+            pimCmd(pimCmdType::MAD, pimOpdType::GRF_A, pimOpdType::EVEN_BANK, pimOpdType::SRF_M,
+                   pimOpdType::SRF_A, 1, 0, 0, 0),
+            pimCmd(pimCmdType::MAD, pimOpdType::GRF_A, pimOpdType::GRF_A, pimOpdType::SRF_M,
+                   pimOpdType::SRF_A, 1, 0, 0, 1),
+            pimCmd(pimCmdType::NOP, 7),
+            pimCmd(pimCmdType::MAD, pimOpdType::GRF_B, pimOpdType::ODD_BANK, pimOpdType::SRF_M,
+                   pimOpdType::SRF_A, 1, 0, 0, 0),
+            pimCmd(pimCmdType::MAD, pimOpdType::GRF_B, pimOpdType::GRF_B, pimOpdType::SRF_M,
+                   pimOpdType::SRF_A, 1, 0, 0, 1),
+            pimCmd(pimCmdType::NOP, 7),
+            pimCmd(pimCmdType::NOP, 0)
+        };
         pim_cmds.assign(tmp_cmds.begin(), tmp_cmds.end());
-        if (num_jump_to_be_taken != 0) {
+        if (num_jump_to_be_taken != 0)
+        {
             pim_cmds.push_back(pimCmd(pimCmdType::JUMP, num_jump_to_be_taken, pim_cmds.size() + 1));
         }
         pim_cmds.push_back(pimCmd(pimCmdType::EXIT, 0));
         return pim_cmds;
     }
 };
-
+*/
 class EltwisePIMKernel : public IPIMKernel
 {
    public:

@@ -169,7 +169,7 @@ class MemoryControllerStats
 {
    public:
     MemoryControllerStats(MemorySystem* parent, CSVWriter& csvOut_, ostream& simLog, Configuration& configuration,
-                          uint64_t& totalTrans, vector<uint64_t>& grandTotalBankAcc, vector<uint64_t> totalReadsPerR,
+                          uint64_t& totalTrans, vector<uint64_t>& grandTotalBankAcc, vector<uint64_t>& totalReadsPerR,
                           vector<uint64_t>& totalWritesPerR, vector<uint64_t>& totalReadsPerB,
                           vector<uint64_t>& totalWritesPerB, vector<uint64_t>& totalActivatesPerR,
                           vector<uint64_t>& totalActivatesPerB, uint64_t& totalRef, vector<uint64_t>& backgroundE,
@@ -197,6 +197,7 @@ class MemoryControllerStats
     {
         parentMemorySystem = parent;
         totalEpochLatency = vector<uint64_t>(config.NUM_RANKS * config.NUM_BANKS, 0);
+        resetStats();
     }
 
     void printStats(bool finalStats, unsigned myChannel, uint64_t currentClockCycle);
