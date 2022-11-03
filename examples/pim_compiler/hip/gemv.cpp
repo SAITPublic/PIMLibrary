@@ -28,13 +28,6 @@ int pimc_gemv(int h, int w){
     set_rand_half_data((half_float::half*)host_weight->data, (half)0.2, (h * w));
     set_rand_half_data((half_float::half*)host_input->data, (half)0.2, h);
 
-    //for (int i = 0; i < h; i++) {
-    //    for (int j = 0; j < w; j++) {
-    //       ((half*)host_weight->data)[(i * w) + j] = 0.02;
-    //       ((half*)host_input->data)[i] = 0.03;
-    //    }
-    //}
-
     //Compute Golden output
     for (int j = 0; j < w; j++) {
         ((half*)golden_output->data)[j] = 0.0f;
@@ -58,12 +51,10 @@ int pimc_gemv(int h, int w){
 
     //Run
     PimTarget* target = PimCreateTarget(RT_TYPE_HIP, PIM_FP16, GPU);
-    //Reorder weights for GEMV
-
     PimCompiledObj* obj = PimBuildProgram(D, {weight, input}, {device_weight, device_input}, target);
     PimBo* device_output = PimExecuteProgram(obj, target);
     PimCopyMemory(host_output, device_output, DEVICE_TO_HOST);
-    ret = compare_half_relative((half*)host_output->data, (half*)golden_output->data, w);
+    ret = compare_half_relative((half*)host_output->data, (half*)golden_output->data, w, 0.01f);
 
     PimDestroyBo(host_input);
     PimDestroyBo(host_weight);
