@@ -112,9 +112,9 @@ PimCompiledObj* PimCDriver::build_program(pimc::frontend::Var output, std::vecto
     if (num > 2) c = indices[num - 3]->get_stop() - indices[num - 3]->get_start();
     if (num > 3) n = indices[num - 4]->get_stop() - indices[num - 4]->get_start();
     auto output_loc = compiled_obj->get_output_targets();
-    if(output_loc.find(output.name()) != output_loc.end() && output_loc[output.name()] == "device"){
+    if (output_loc.find(output.name()) != output_loc.end() && output_loc[output.name()] == "device") {
         output_pimbo = PimCreateBo(n, c, h, w, PIM_FP16, PimMemType::MEM_TYPE_DEVICE);
-    }else{
+    } else {
         output_pimbo = PimCreateBo(n, c, h, w, PIM_FP16, PimMemType::MEM_TYPE_PIM);
     }
     pimbo_map[output.name()] = output_pimbo;
@@ -128,16 +128,16 @@ PimCompiledObj* PimCDriver::build_program(pimc::frontend::Var output, std::vecto
     }
 
     // Reorder pimbos
-    for(auto buf : compiled_obj->get_reorder_buffers()){
+    for (auto buf : compiled_obj->get_reorder_buffers()) {
         size_t index = 0;
-        for(index = 0; index < inputs.size(); index++){
-            if(inputs[index].get_name() == buf){
+        for (index = 0; index < inputs.size(); index++) {
+            if (inputs[index].get_name() == buf) {
                 break;
             }
         }
         assert(index < inputs.size());
         auto* reordered_pim_w = PimConvertGemmWeight(input_pimbo[index], I_X_W);
-        //auto* reordered_pim_w = PimConvertGemmWeight(input_pimbo[0], W_X_I);
+        // auto* reordered_pim_w = PimConvertGemmWeight(input_pimbo[0], W_X_I);
         pimbo_map[inputs[index].get_name()] = reordered_pim_w;
         input_pimbo[index] = reordered_pim_w;
     }
