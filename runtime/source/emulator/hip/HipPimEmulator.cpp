@@ -75,35 +75,6 @@ int HipPimEmulator::convert_mem_trace_from_16B_to_32B(PimMemTraceData* fmtd32, i
     return ret;
 }
 
-int HipPimEmulator::execute_gemv_tile_tree(PimBo* output, PimBo* pim_data, PimMemTraceData* fmtd32, int fmtd32_size,
-                                           PimOpType op_type, uint64_t pim_base_addr, uint8_t* temp_buf)
-{
-    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
-    int ret = 0;
-    uint16_t* sim_output = nullptr;
-    int out_dim = pim_data->bshape.h;
-    int batch_dim = output->bshape.n;
-    int num_input_tile = pim_data->bshape.w / 128;
-    sim_output = new uint16_t[out_dim * batch_dim];
-    uint64_t tmp_data_addr = reinterpret_cast<uint64_t>(temp_buf);
-    uint64_t pim_data_addr = reinterpret_cast<uint64_t>(pim_data->data);
-
-    pim_sim_.preload_data_with_addr(pim_data_addr - pim_base_addr, pim_data->data, pim_data->size);
-    pim_sim_.execute_kernel((void*)fmtd32, fmtd32_size);
-    pim_sim_.read_result_gemv_tree(sim_output, tmp_data_addr - pim_base_addr, out_dim, batch_dim, num_input_tile);
-
-    if (output->mem_type != MEM_TYPE_HOST) {
-        for (int i = 0; i < output->bshape.n; i++) {
-            hipMemcpy((half*)output->data + i * pim_data->bshape_r.h, (half*)sim_output + i * pim_data->bshape.h,
-                      pim_data->bshape_r.h * sizeof(half), hipMemcpyHostToDevice);
-        }
-    }
-
-    delete[] sim_output;
-
-    return ret;
-}
-
 int HipPimEmulator::execute_gemm_bias_act(PimBo* output, PimBo* pim_data, PimMemTraceData* fmtd32, int fmtd32_size,
                                           PimOpType op_type, uint64_t pim_base_addr, uint8_t* temp_buf, PimBo* bias,
                                           PimActFunc act_func)
@@ -166,41 +137,6 @@ int HipPimEmulator::execute_gemm_bias_act(PimBo* output, PimBo* pim_data, PimMem
     return ret;
 }
 
-int HipPimEmulator::execute_gemv_tile_accum(PimBo* output, PimBo* pim_data, PimMemTraceData* fmtd32, int fmtd32_size,
-                                            PimOpType op_type, uint64_t pim_base_addr, uint8_t* temp_buf)
-{
-    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
-    int ret = 0;
-    int offset = 0;
-    int offset_r = 0;
-    uint16_t* sim_output = nullptr;
-    int out_dim = output->bshape.n * output->bshape.c * output->bshape.h * output->bshape.w;
-    sim_output = new uint16_t[out_dim];
-    uint64_t tmp_data_addr = reinterpret_cast<uint64_t>(temp_buf);
-    uint64_t pim_data_addr = reinterpret_cast<uint64_t>(pim_data->data);
-
-    pim_sim_.preload_data_with_addr(pim_data_addr - pim_base_addr, pim_data->data, pim_data->size);
-    pim_sim_.execute_kernel((void*)fmtd32, fmtd32_size);
-    pim_sim_.read_result_gemv(sim_output, tmp_data_addr - pim_base_addr, out_dim);
-
-    if (output->mem_type != MEM_TYPE_HOST) {
-        for (int n = 0; n < output->bshape.n; n++) {
-            for (int c = 0; c < output->bshape.c; c++) {
-                offset = n * output->bshape.c * output->bshape.h * output->bshape.w;
-                offset += c * output->bshape.h * output->bshape.w;
-                offset_r = n * output->bshape_r.c * output->bshape_r.h * output->bshape_r.w;
-                offset_r += c * output->bshape_r.h * output->bshape_r.w;
-                hipMemcpy((half*)output->data + offset_r, (half*)sim_output + offset,
-                          pim_data->bshape_r.w * output->bshape_r.h * sizeof(half), hipMemcpyHostToDevice);
-            }
-        }
-    }
-
-    delete[] sim_output;
-
-    return ret;
-}
-
 int HipPimEmulator::execute_gemv_add_tile_accum(PimBo* output, PimBo* pim_data, PimMemTraceData* fmtd32,
                                                 int fmtd32_size, PimOpType op_type, uint64_t pim_base_addr,
                                                 uint8_t* temp_buf)
@@ -237,12 +173,6 @@ int HipPimEmulator::execute_gemv_add_tile_accum(PimBo* output, PimBo* pim_data, 
     return ret;
 }
 
-int HipPimEmulator::execute_bn(PimBo* output, PimBo* pim_data, PimMemTraceData* fmtd32, int fmtd32_size,
-                               uint64_t pim_base_addr, uint8_t* temp_buf)
-{
-    return execute_relu_bn_copy(output, pim_data, fmtd32, fmtd32_size, pim_base_addr);
-}
-
 int HipPimEmulator::execute_elt_op(PimBo* output, PimBo* operand0, PimBo* operand1, PimMemTraceData* fmtd32,
                                    int fmtd32_size, uint64_t pim_base_addr)
 {
@@ -254,20 +184,17 @@ int HipPimEmulator::execute_elt_op(PimBo* output, PimBo* operand0, PimBo* operan
     sim_output = new uint16_t[num_element];
 
     uint64_t input_addr[2], output_addr;
-    void* input_data[2];
 
     input_addr[0] = reinterpret_cast<uint64_t>(operand0->data);
     input_addr[1] = reinterpret_cast<uint64_t>(operand1->data);
     output_addr = reinterpret_cast<uint64_t>(output->data);
-    input_data[0] = operand0->data;
-    input_data[1] = operand1->data;
 
-    pim_sim_.preload_data_with_addr(input_addr[0] - pim_base_addr, input_data[0], operand0->size);
-    pim_sim_.preload_data_with_addr(input_addr[1] - pim_base_addr, input_data[1], operand1->size);
+    pim_sim_.preload_data_with_addr(input_addr[0] - pim_base_addr, operand0->data, operand0->size);
+    pim_sim_.preload_data_with_addr(input_addr[1] - pim_base_addr, operand1->data, operand1->size);
     pim_sim_.execute_kernel((void*)fmtd32, (size_t)fmtd32_size);
     pim_sim_.read_result(sim_output, output_addr - pim_base_addr, output->size);
 
-    memcpy((void*)output_addr, sim_output, output->size);
+    hipMemcpy((half*)output->data, (half*)sim_output, output->size, hipMemcpyHostToDevice);
 
     delete[] sim_output;
 
@@ -283,23 +210,26 @@ int HipPimEmulator::execute_relu_bn_copy(PimBo* output, PimBo* pim_data, PimMemT
     uint16_t* sim_output = nullptr;
     num_element = output->size / sizeof(uint16_t);
     sim_output = new uint16_t[num_element];
-
     uint64_t input_addr, output_addr;
-    void* input_data;
 
     input_addr = reinterpret_cast<uint64_t>(pim_data->data);
     output_addr = reinterpret_cast<uint64_t>(output->data);
-    input_data = pim_data->data;
 
-    pim_sim_.preload_data_with_addr(input_addr - pim_base_addr, input_data, pim_data->size);
+    pim_sim_.preload_data_with_addr(input_addr - pim_base_addr, pim_data->data, pim_data->size);
     pim_sim_.execute_kernel((void*)fmtd32, (size_t)fmtd32_size);
     pim_sim_.read_result(sim_output, output_addr - pim_base_addr, output->size);
 
-    memcpy((void*)output_addr, sim_output, output->size);
+    hipMemcpy((half*)output->data, (half*)sim_output, output->size, hipMemcpyHostToDevice);
 
     delete[] sim_output;
 
     return ret;
+}
+
+int HipPimEmulator::execute_bn(PimBo* output, PimBo* pim_data, PimMemTraceData* fmtd32, int fmtd32_size,
+                               uint64_t pim_base_addr, uint8_t* temp_buf)
+{
+    return execute_relu_bn_copy(output, pim_data, fmtd32, fmtd32_size, pim_base_addr);
 }
 
 int HipPimEmulator::execute_relu(PimBo* output, PimBo* pim_data, PimMemTraceData* fmtd32, int fmtd32_size,

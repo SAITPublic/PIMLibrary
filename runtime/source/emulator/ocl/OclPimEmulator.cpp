@@ -77,35 +77,6 @@ int OclPimEmulator::convert_mem_trace_from_16B_to_32B(PimMemTraceData* fmtd32, i
     return ret;
 }
 
-int OclPimEmulator::execute_gemv_tile_tree(PimBo* output, PimBo* pim_data, PimMemTraceData* fmtd32, int fmtd32_size,
-                                           PimOpType op_type, uint64_t pim_base_addr, uint8_t* temp_buf)
-{
-    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
-    int ret = 0;
-    uint16_t* sim_output = nullptr;
-    int out_dim = pim_data->bshape.h;
-    int batch_dim = output->bshape.n;
-    int num_input_tile = pim_data->bshape.w / 128;
-    sim_output = new uint16_t[out_dim * batch_dim];
-    uint64_t tmp_data_addr = reinterpret_cast<uint64_t>(temp_buf);
-    uint64_t pim_data_addr = reinterpret_cast<uint64_t>(pim_data->data);
-
-    pim_sim_.preload_data_with_addr(pim_data_addr - pim_base_addr, pim_data->data, pim_data->size);
-    pim_sim_.execute_kernel((void*)fmtd32, fmtd32_size);
-    pim_sim_.read_result_gemv_tree(sim_output, tmp_data_addr - pim_base_addr, out_dim, batch_dim, num_input_tile);
-
-    if (output->mem_type != MEM_TYPE_HOST) {
-        for (int i = 0; i < output->bshape.n; i++) {
-            hipMemcpy((half*)output->data + i * pim_data->bshape_r.h, (half*)sim_output + i * pim_data->bshape.h,
-                      pim_data->bshape_r.h * sizeof(half), hipMemcpyHostToDevice);
-        }
-    }
-
-    delete[] sim_output;
-
-    return ret;
-}
-
 int OclPimEmulator::execute_gemm_bias_act(PimBo* output, PimBo* pim_data, PimMemTraceData* fmtd32, int fmtd32_size,
                                           PimOpType op_type, uint64_t pim_base_addr, uint8_t* temp_buf, PimBo* bias,
                                           PimActFunc act_func)
@@ -148,62 +119,26 @@ int OclPimEmulator::execute_gemm_bias_act(PimBo* output, PimBo* pim_data, PimMem
     }
 
     if (output->mem_type != MEM_TYPE_HOST) {
+        cl_int err_ret;
+        void* host_addr = clEnqueueMapBuffer(queue, (cl_mem)output->data, CL_TRUE, CL_MAP_READ | CL_MAP_WRITE, 0,
+                                             output->size, 0, NULL, NULL, &err_ret);
+        cl_ok(err_ret);
         for (int n = 0; n < output->bshape.n; n++) {
             for (int c = 0; c < output->bshape.c; c++) {
                 offset = n * output->bshape.c * output->bshape.h * output->bshape.w;
                 offset += c * output->bshape.h * output->bshape.w;
                 offset_r = n * output->bshape_r.c * output->bshape_r.h * output->bshape_r.w;
                 offset_r += c * output->bshape_r.h * output->bshape_r.w;
-
-                cl_int err_ret;
-                void* host_addr = clEnqueueMapBuffer(queue, (cl_mem)output->data, CL_TRUE, CL_MAP_READ | CL_MAP_WRITE,
-                                                     0, output->size, 0, NULL, NULL, &err_ret);
-                cl_ok(err_ret);
                 memcpy((half*)host_addr + offset_r, (half*)sim_output + offset,
                        pim_data->bshape_r.w * output->bshape_r.h * sizeof(half));
-                cl_ok(clEnqueueUnmapMemObject(queue, (cl_mem)output->data, host_addr, 0, NULL, NULL));
-                clFinish(queue);
             }
         }
+        cl_ok(clEnqueueUnmapMemObject(queue, (cl_mem)output->data, host_addr, 0, NULL, NULL));
+        clFinish(queue);
     }
 
     delete[] sim_output;
     delete[] h_bias;
-
-    return ret;
-}
-
-int OclPimEmulator::execute_gemv_tile_accum(PimBo* output, PimBo* pim_data, PimMemTraceData* fmtd32, int fmtd32_size,
-                                            PimOpType op_type, uint64_t pim_base_addr, uint8_t* temp_buf)
-{
-    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
-    int ret = 0;
-    int offset = 0;
-    int offset_r = 0;
-    uint16_t* sim_output = nullptr;
-    int out_dim = output->bshape.n * output->bshape.c * output->bshape.h * output->bshape.w;
-    sim_output = new uint16_t[out_dim];
-    uint64_t tmp_data_addr = reinterpret_cast<uint64_t>(temp_buf);
-    uint64_t pim_data_addr = reinterpret_cast<uint64_t>(pim_data->data);
-
-    pim_sim_.preload_data_with_addr(pim_data_addr - pim_base_addr, pim_data->data, pim_data->size);
-    pim_sim_.execute_kernel((void*)fmtd32, fmtd32_size);
-    pim_sim_.read_result_gemv(sim_output, tmp_data_addr - pim_base_addr, out_dim);
-
-    if (output->mem_type != MEM_TYPE_HOST) {
-        for (int n = 0; n < output->bshape.n; n++) {
-            for (int c = 0; c < output->bshape.c; c++) {
-                offset = n * output->bshape.c * output->bshape.h * output->bshape.w;
-                offset += c * output->bshape.h * output->bshape.w;
-                offset_r = n * output->bshape_r.c * output->bshape_r.h * output->bshape_r.w;
-                offset_r += c * output->bshape_r.h * output->bshape_r.w;
-                hipMemcpy((half*)output->data + offset_r, (half*)sim_output + offset,
-                          pim_data->bshape_r.w * output->bshape_r.h * sizeof(half), hipMemcpyHostToDevice);
-            }
-        }
-    }
-
-    delete[] sim_output;
 
     return ret;
 }
@@ -229,25 +164,19 @@ int OclPimEmulator::execute_gemv_add_tile_accum(PimBo* output, PimBo* pim_data, 
     pim_sim_.execute_kernel((void*)fmtd32, fmtd32_size);
     pim_sim_.read_result_gemv(sim_output, tmp_data_addr - pim_base_addr, out_dim);
 
-    hipMemcpy(output_host, output->data, out_size_r, hipMemcpyDeviceToHost);
+    clEnqueueReadBuffer(queue, (cl_mem)output->data, CL_TRUE, 0, out_size_r, (void*)output_host, 0, NULL, NULL);
     for (int b = 0; b < num_batch; b++) {
         for (int i = 0; i < out_num_r; i++) {
             (reinterpret_cast<half_float::half*>(output_host))[b * out_num_r + i] +=
                 (reinterpret_cast<half_float::half*>(sim_output))[b * out_num + i];
         }
     }
-    hipMemcpy(output->data, output_host, out_size_r, hipMemcpyHostToDevice);
+    clEnqueueWriteBuffer(queue, (cl_mem)output->data, CL_TRUE, 0, out_size_r, (void*)output_host, 0, NULL, NULL);
 
     free(output_host);
     delete[] sim_output;
 
     return ret;
-}
-
-int OclPimEmulator::execute_bn(PimBo* output, PimBo* pim_data, PimMemTraceData* fmtd32, int fmtd32_size,
-                               uint64_t pim_base_addr, uint8_t* temp_buf)
-{
-    return execute_relu_bn_copy(output, pim_data, fmtd32, fmtd32_size, pim_base_addr);
 }
 
 int OclPimEmulator::execute_elt_op(PimBo* output, PimBo* operand0, PimBo* operand1, PimMemTraceData* fmtd32,
@@ -329,6 +258,12 @@ int OclPimEmulator::execute_relu_bn_copy(PimBo* output, PimBo* pim_data, PimMemT
     delete[] sim_output;
 
     return ret;
+}
+
+int OclPimEmulator::execute_bn(PimBo* output, PimBo* pim_data, PimMemTraceData* fmtd32, int fmtd32_size,
+                               uint64_t pim_base_addr, uint8_t* temp_buf)
+{
+    return execute_relu_bn_copy(output, pim_data, fmtd32, fmtd32_size, pim_base_addr);
 }
 
 int OclPimEmulator::execute_relu(PimBo* output, PimBo* pim_data, PimMemTraceData* fmtd32, int fmtd32_size,

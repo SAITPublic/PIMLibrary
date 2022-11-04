@@ -42,12 +42,8 @@ class HipPimEmulator : public IPimEmulator
     int execute_gemm_bias_act(PimBo* output, PimBo* pim_data, PimMemTraceData* fmtd32, int fmtd32_size,
                               PimOpType op_type, uint64_t pim_base_addr, uint8_t* temp_buf, PimBo* bias,
                               PimActFunc act_func);
-    int execute_gemv_tile_accum(PimBo* output, PimBo* pim_data, PimMemTraceData* fmtd32, int fmtd32_size,
-                                PimOpType op_type, uint64_t pim_base_addr, uint8_t* temp_buf);
     int execute_gemv_add_tile_accum(PimBo* output, PimBo* pim_data, PimMemTraceData* fmtd32, int fmtd32_size,
                                     PimOpType op_type, uint64_t pim_base_addr, uint8_t* temp_buf);
-    int execute_gemv_tile_tree(PimBo* output, PimBo* pim_data, PimMemTraceData* fmtd32, int fmtd32_size,
-                               PimOpType op_type, uint64_t pim_base_addr, uint8_t* temp_buf);
 
    private:
     int execute_relu_bn_copy(PimBo* output, PimBo* pim_data, PimMemTraceData* fmtd32, int fmtd32_size,
