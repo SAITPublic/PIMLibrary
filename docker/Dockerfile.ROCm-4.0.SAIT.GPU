@@ -14,13 +14,13 @@ RUN dpkg -i /tmp/files/sudo*
 RUN sed -i '/# Host alias /iDefaults\tenv_keep="http_proxy https_proxy ftp_proxy"' /etc/sudoers
 RUN sed -i 's/archive.ubuntu.com/kr.archive.ubuntu.com/g' /etc/apt/sources.list
 
-RUN export http_proxy="http://75.12.251.5:8080"
-RUN export https_proxy="http://75.12.251.5:8080"
-ENV http_proxy http://75.12.251.5:8080
-ENV https_proxy http://75.12.251.5:8080
-ENV ftp_proxy http://75.12.251.5:8080
-ENV HTTP_PROXY http://75.12.251.5:8080
-ENV HTTPS_PROXY http://75.12.251.5:8080
+RUN export http_proxy="http://12.26.204.100:8080"
+RUN export https_proxy="http://12.26.204.100:8080"
+ENV http_proxy http://12.26.204.100:8080
+ENV https_proxy http://12.26.204.100:8080
+ENV ftp_proxy http://12.26.204.100:8080
+ENV HTTP_PROXY http://12.26.204.100:8080
+ENV HTTPS_PROXY http://12.26.204.100:8080
 
 RUN dpkg --add-architecture i386 && \
     dpkg -i /tmp/files/ca-cert*
