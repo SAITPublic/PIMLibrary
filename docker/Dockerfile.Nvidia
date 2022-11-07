@@ -1,0 +1,53 @@
+FROM ubuntu:20.04
+ARG DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get -y upgrade \
+  && apt-get install -y \
+    apt-utils \
+    unzip \
+    tar \
+    curl \
+    xz-utils \
+    ocl-icd-libopencl1 \
+    opencl-headers \
+    clinfo \
+    ;
+
+RUN mkdir -p /etc/OpenCL/vendors && \
+    echo "libnvidia-opencl.so.1" > /etc/OpenCL/vendors/nvidia.icd
+
+RUN apt-get update
+RUN apt-get --yes --allow-unauthenticated install sudo
+RUN apt-get --yes --allow-unauthenticated install wget
+RUN apt-get --yes --allow-unauthenticated install kmod
+RUN apt-get --yes --allow-unauthenticated install libbz2-dev
+
+# Developement Requirments
+RUN apt-get --yes --allow-unauthenticated install build-essential
+RUN apt-get --yes --allow-unauthenticated install git
+RUN apt-get --yes --allow-unauthenticated install vim
+RUN apt-get --yes --allow-unauthenticated install byobu
+RUN apt-get --yes --allow-unauthenticated install bash-completion
+RUN apt-get --yes --allow-unauthenticated install clang-format
+RUN apt-get --yes --allow-unauthenticated install cmake
+RUN apt-get --yes --allow-unauthenticated install libpci-dev
+RUN apt-get --yes --allow-unauthenticated install libsqlite3-dev
+RUN apt-get --yes --allow-unauthenticated install libboost-all-dev
+
+# PIM Library requirements
+RUN apt-get --yes --allow-unauthenticated install libgoogle-glog-dev
+
+RUN apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/3bf863cc.pub
+RUN apt-get --yes --allow-unauthenticated install nvidia-opencl-dev
+
+ENV QWORKSPACE=/home/user/pim-workspace
+RUN groupadd -g 9000 developer
+
+COPY ./entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY ./bashrc /tmp/bashrc
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+
+CMD ["bash", "-l"]
+
+ENV NVIDIA_VISIBLE_DEVICES all
+ENV NVIDIA_DRIVER_CAPABILITIES compute,utility
