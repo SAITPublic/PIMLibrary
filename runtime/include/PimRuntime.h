@@ -57,9 +57,9 @@ class PimRuntime
     int execute_sync(void* stream);
     int execute_dummy(void);
     PimBo* generate_gemm_weight_from_buffer(PimBo* src, PimGemmOrder gemm_order, bool reorder_on_device = false,
-                                            bool save_for_reuse = false);
+                                            void* stream = nullptr, bool save_for_reuse = false);
     PimBo* get_preloaded_pim_gemm_weight(PimBo* dev_wei, PimGemmOrder gemm_order, bool reorder_on_device = false,
-                                         bool save_for_reuse = true);
+                                         void* stream = nullptr, bool save_for_reuse = true);
 
 #if PIM_COMPILER_ENABLE == 1
     /**

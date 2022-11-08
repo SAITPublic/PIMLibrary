@@ -146,7 +146,8 @@ class PimGemmTest
     {
         auto* w_to_reorder = use_device_weight ? d_w_ : h_w_;
         for (unsigned i = 0; i < niter; ++i) {
-            auto* reordered_pim_w = PimConvertGemmWeight(w_to_reorder, gemm_order_, /*reorder_on_device = */ true);
+            auto* reordered_pim_w =
+                PimConvertGemmWeight(w_to_reorder, gemm_order_, /*reorder_on_device = */ true, nullptr);
             // Ignore return value here to avoid extra branches.
             // Please check the success of the API call in logs.
             // Results are verified further.

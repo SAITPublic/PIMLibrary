@@ -402,6 +402,7 @@ __PIM_API__ int PimExecuteDummy(void);
  * @param result_type desired layout type for source buffer
  * @param gemm_order representing whether execution order is weight x input or input x weight
  * @param reorder_on_device defines whether reordering is produced on device or on host
+ * @param stream defines stream for device idx reordering
  * @param save_for_reuse enable/disable caching.
  *                       preferable for multiple usage of dst buffer.
  *                       default=false
@@ -409,7 +410,7 @@ __PIM_API__ int PimExecuteDummy(void);
  * @return reordered buffer
  */
 __PIM_API__ PimBo* PimConvertGemmWeight(PimBo* src, PimGemmOrder gemm_order, bool reorder_on_device = false,
-                                        bool save_for_reuse = false);
+                                        void* stream = nullptr, bool save_for_reuse = false);
 
 #if PIM_COMPILER_ENABLE == 1
 /**

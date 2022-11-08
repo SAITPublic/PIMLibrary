@@ -651,7 +651,8 @@ int PimExecuteDummy(void)
     return ret;
 }
 
-PimBo* PimConvertGemmWeight(PimBo* src, PimGemmOrder gemm_order, bool reorder_on_device, bool save_for_reuse)
+PimBo* PimConvertGemmWeight(PimBo* src, PimGemmOrder gemm_order, bool reorder_on_device, void* stream,
+                            bool save_for_reuse)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     PIM_PROFILE_TICK(PimGetReorderedBuffer);
@@ -661,7 +662,8 @@ PimBo* PimConvertGemmWeight(PimBo* src, PimGemmOrder gemm_order, bool reorder_on
         DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
         return nullptr;
     }
-    PimBo* dst = pim_runtime->generate_gemm_weight_from_buffer(src, gemm_order, reorder_on_device, save_for_reuse);
+    PimBo* dst =
+        pim_runtime->generate_gemm_weight_from_buffer(src, gemm_order, reorder_on_device, stream, save_for_reuse);
     if (dst == nullptr) {
         DLOG(ERROR) << "Failed to reorder source buffer";
         DLOG(INFO) << "[END] " << __FUNCTION__ << " called";

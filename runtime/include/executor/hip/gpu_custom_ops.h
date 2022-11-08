@@ -7,7 +7,7 @@
  * electronic, mechanical, manual or otherwise, or disclosed
  * to third parties without the express written permission of Samsung Electronics.
  * (Use of the Software is restricted to non-commercial, personal or academic, research purpose only)
-*/
+ */
 #ifndef _GPU_CUSTOM_OP_KERN_
 #define _GPU_CUSTOM_OP_KERN_
 

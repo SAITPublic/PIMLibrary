@@ -50,7 +50,7 @@ class OclMemoryManager : public IPimMemoryManager
     int copy_memory(PimBo* dst, PimBo* src, PimMemCpyType cpy_type);
     int copy_memory_3d(const PimCopy3D* copy_params);
     int get_physical_id(void);
-    int convert_data_layout(PimBo* dst, PimBo* src, bool reorder_on_device);
+    int convert_data_layout(PimBo* dst, PimBo* src, bool reorder_on_device = false, void* stream = nullptr);
     void set_gemm_order(PimGemmOrder gemm_order) { gemm_order_ = gemm_order; }
     void* get_base_memobj(void) { return fragment_allocator_[0]->get_pim_base(); }
 

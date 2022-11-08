@@ -354,7 +354,7 @@ bool PimRuntime::check_need_for_transpose(PimGemmOrder gemm_order, PimBo* dev_we
 }
 
 PimBo* PimRuntime::get_preloaded_pim_gemm_weight(PimBo* dev_wei, PimGemmOrder gemm_order, bool reorder_on_device,
-                                                 bool save_for_reuse)
+                                                 void* stream, bool save_for_reuse)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     PimBo* pre_wei = find_preloaded_pim_weight(dev_wei);
@@ -364,7 +364,7 @@ PimBo* PimRuntime::get_preloaded_pim_gemm_weight(PimBo* dev_wei, PimGemmOrder ge
             pim_manager_->set_gemm_order(gemm_order);
             pre_wei = PimCreateBo(dev_wei->bshape.n, dev_wei->bshape.c, dev_wei->bshape.h, dev_wei->bshape.w, PIM_FP16,
                                   MEM_TYPE_PIM);
-            pim_manager_->convert_data_layout(pre_wei, dev_wei, true);
+            pim_manager_->convert_data_layout(pre_wei, dev_wei, true, stream);
         } else {
             PimBo* host_weight = nullptr;
             PimBo* host_weight_t = nullptr;
@@ -389,7 +389,7 @@ PimBo* PimRuntime::get_preloaded_pim_gemm_weight(PimBo* dev_wei, PimGemmOrder ge
             }
 
             pim_manager_->set_gemm_order(gemm_order);
-            pim_manager_->convert_data_layout(host_reordered_weight, host_weight, false);
+            pim_manager_->convert_data_layout(host_reordered_weight, host_weight, false, nullptr);
             PimCopyMemory(pre_wei, host_reordered_weight, HOST_TO_PIM);
 
             PimDestroyBo(host_weight);
@@ -407,13 +407,13 @@ PimBo* PimRuntime::get_preloaded_pim_gemm_weight(PimBo* dev_wei, PimGemmOrder ge
 }
 
 PimBo* PimRuntime::generate_gemm_weight_from_buffer(PimBo* src, PimGemmOrder gemm_order, bool reorder_on_device,
-                                                    bool save_for_reuse)
+                                                    void* stream, bool save_for_reuse)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
 
     PimBo* pre_weight = nullptr;
     if (src->data_layout_type == PimDataLayoutType::RAW && is_pim_applicable(src, gemm_order)) {
-        pre_weight = get_preloaded_pim_gemm_weight(src, gemm_order, reorder_on_device, save_for_reuse);
+        pre_weight = get_preloaded_pim_gemm_weight(src, gemm_order, reorder_on_device, stream, save_for_reuse);
     } else {
         DLOG(ERROR) << "GEMM weight generation for provided layout is not supported yet";
         DLOG(INFO) << "[END] " << __FUNCTION__ << " called";

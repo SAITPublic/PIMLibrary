@@ -524,16 +524,16 @@ int HipMemoryManager::copy_memory_3d(const PimCopy3D* copy_params)
     return ret;
 }
 
-int HipMemoryManager::convert_data_layout(PimBo* dst, PimBo* src, bool on_device)
+int HipMemoryManager::convert_data_layout(PimBo* dst, PimBo* src, bool on_device, void* stream)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
     bool is_chwise = check_chwise_gemm_bo(src, gemm_order_);
 
     if (is_chwise) {
-        ret = convert_data_layout_for_chwise_gemm_weight(dst, src, on_device);
+        ret = convert_data_layout_for_chwise_gemm_weight(dst, src, on_device, stream);
     } else {
-        ret = convert_data_layout_for_aligned_gemm_weight(dst, src, on_device);
+        ret = convert_data_layout_for_aligned_gemm_weight(dst, src, on_device, stream);
     }
     if (ret != 0) {
         printf("fail to convert data layout for gemm\n");
@@ -544,7 +544,7 @@ int HipMemoryManager::convert_data_layout(PimBo* dst, PimBo* src, bool on_device
     return ret;
 }
 
-int HipMemoryManager::convert_data_layout_for_chwise_gemm_weight(PimBo* dst, PimBo* src, bool on_device)
+int HipMemoryManager::convert_data_layout_for_chwise_gemm_weight(PimBo* dst, PimBo* src, bool on_device, void* stream)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
@@ -552,9 +552,8 @@ int HipMemoryManager::convert_data_layout_for_chwise_gemm_weight(PimBo* dst, Pim
         DLOG(INFO) << "reordering on device";
         auto blocks = dim3(src->bshape_r.n, src->bshape_r.c);
         auto threads = dim3(32, 32);  // cover any shape by 32x32 squares
-        // TODO: provide stream for gpu conversion
-        hipLaunchKernelGGL(fill_gemm_weight_chwise, blocks, threads, 0, 0, src->bshape_r.n, src->bshape_r.c,
-                           src->bshape_r.h, src->bshape_r.w, (half*)dst->data, (half*)src->data);
+        hipLaunchKernelGGL(fill_gemm_weight_chwise, blocks, threads, 0, (hipStream_t)stream, src->bshape_r.n,
+                           src->bshape_r.c, src->bshape_r.h, src->bshape_r.w, (half*)dst->data, (half*)src->data);
         dst->data_layout_type = PimDataLayoutType::CHWISE_GEMM_WEIGHT;
         return ret;
     }
@@ -715,7 +714,7 @@ int HipMemoryManager::convert_data_layout_for_chwise_gemm_weight(PimBo* dst, Pim
     return ret;
 }
 
-int HipMemoryManager::convert_data_layout_for_aligned_gemm_weight(PimBo* dst, PimBo* src, bool on_device)
+int HipMemoryManager::convert_data_layout_for_aligned_gemm_weight(PimBo* dst, PimBo* src, bool on_device, void* stream)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
@@ -781,9 +780,8 @@ int HipMemoryManager::convert_data_layout_for_aligned_gemm_weight(PimBo* dst, Pi
         DLOG(INFO) << "reordering on device";
         auto blocks = dim3(src->bshape_r.n, src->bshape_r.c);
         auto threads = dim3(1, 1024);  // alignment 256x4096 can't be reached due to 1024 threads limitation
-        // TODO: provide stream for gpu conversion
-        hipLaunchKernelGGL(fill_gemm_weight_aligned, blocks, threads, 0, 0, src->bshape_r.n, src->bshape_r.c,
-                           src->bshape_r.h, src->bshape_r.w, (half*)dst->data, (half*)src->data);
+        hipLaunchKernelGGL(fill_gemm_weight_aligned, blocks, threads, 0, (hipStream_t)stream, src->bshape_r.n,
+                           src->bshape_r.c, src->bshape_r.h, src->bshape_r.w, (half*)dst->data, (half*)src->data);
         dst->data_layout_type = PimDataLayoutType::ALIGNED_GEMM_WEIGHT;
         return ret;
     }

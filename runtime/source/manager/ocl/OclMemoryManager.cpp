@@ -351,7 +351,7 @@ int OclMemoryManager::copy_memory_3d(const PimCopy3D* copy_params)
     return ret;
 }
 
-int OclMemoryManager::convert_data_layout(PimBo* dst, PimBo* src, bool reorder_on_device)
+int OclMemoryManager::convert_data_layout(PimBo* dst, PimBo* src, bool reorder_on_device, void* stream)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
