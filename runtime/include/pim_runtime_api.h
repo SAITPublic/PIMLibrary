@@ -407,7 +407,8 @@ __PIM_API__ int PimExecuteDummy(void);
  *
  * @return reordered buffer
  */
-__PIM_API__ PimBo* PimConvertGemmWeight(PimBo* src, PimGemmOrder gemm_order, bool reorder_on_device = false, bool save_for_reuse = false);
+__PIM_API__ PimBo* PimConvertGemmWeight(PimBo* src, PimGemmOrder gemm_order, bool reorder_on_device = false,
+                                        bool save_for_reuse = false);
 
 #if PIM_COMPILER_ENABLE == 1
 /**

@@ -21,7 +21,6 @@
 #include "utility/pim_debug.hpp"
 #include "utility/pim_util.h"
 
-
 #include "pim_runtime_api.h"
 
 extern std::map<uint32_t, HostInfo*> host_devices;
@@ -34,10 +33,11 @@ namespace manager
 {
 namespace
 {
-__device__ __host__ inline uint64_t convert_idx_from_raw_to_aligned_gemm_weight_layout(uint32_t n, uint32_t c, uint32_t h,
-                                                                                   uint32_t w, uint32_t n_cord,
-                                                                                   uint32_t c_cord, uint32_t h_cord,
-                                                                                   uint32_t w_cord, size_t type_size)
+__device__ __host__ inline uint64_t convert_idx_from_raw_to_aligned_gemm_weight_layout(uint32_t n, uint32_t c,
+                                                                                       uint32_t h, uint32_t w,
+                                                                                       uint32_t n_cord, uint32_t c_cord,
+                                                                                       uint32_t h_cord, uint32_t w_cord,
+                                                                                       size_t type_size)
 {
     const PimBlockInfo& pbi = vega20_pbi;
     uint32_t num_grf_A = pbi.num_grf_A;
@@ -98,10 +98,11 @@ __device__ __host__ inline uint64_t convert_idx_from_raw_to_aligned_gemm_weight_
     return (n_c_offset + addr_gen(cidx, rank, bg, bank, row, col) + (h_cord * type_size % trans_size)) / type_size;
 }
 
-__device__ __host__ inline uint64_t convert_idx_from_raw_to_chwise_gemm_weight_layout(uint32_t n, uint32_t c, uint32_t h,
-                                                                                  uint32_t w, uint32_t n_cord,
-                                                                                  uint32_t c_cord, uint32_t h_cord,
-                                                                                  uint32_t w_cord, size_t type_size)
+__device__ __host__ inline uint64_t convert_idx_from_raw_to_chwise_gemm_weight_layout(uint32_t n, uint32_t c,
+                                                                                      uint32_t h, uint32_t w,
+                                                                                      uint32_t n_cord, uint32_t c_cord,
+                                                                                      uint32_t h_cord, uint32_t w_cord,
+                                                                                      size_t type_size)
 {
     const PimBlockInfo& pbi = vega20_pbi;
     uint32_t num_grf_A = pbi.num_grf_A;
@@ -129,8 +130,8 @@ __device__ __host__ inline uint64_t convert_idx_from_raw_to_chwise_gemm_weight_l
 
     uint32_t y_block_idx = y_tile_offset / num_grf_B;
 
-    uint64_t prev_el_count = x_tile * x_tile_data_size +
-            y_block_idx * num_grf_B * num_grf_A + grfb_idx * num_grf_A + grfa_idx;
+    uint64_t prev_el_count =
+        x_tile * x_tile_data_size + y_block_idx * num_grf_B * num_grf_A + grfb_idx * num_grf_A + grfa_idx;
 
     uint32_t col_s = (prev_el_count / (num_grf_A * num_grf_B)) / (num_banks * num_pim_chan * num_pim_rank);
     uint32_t row_s = (col_s * num_grf_A * num_grf_B) / (num_col / bl);
@@ -153,16 +154,15 @@ __device__ __host__ inline uint64_t convert_idx_from_raw_to_chwise_gemm_weight_l
     bool is_odd = x_tile % 2;
     uint32_t bank = (prev_grf_count_after_s % ((num_banks / 2) / num_bank_groups)) * 2 + uint32_t(is_odd);
 
-    return (n_c_offset + addr_gen(cidx, rank, bg, bank, row, col) + (h_cord * type_size % trans_size)) /
-           type_size;
+    return (n_c_offset + addr_gen(cidx, rank, bg, bank, row, col) + (h_cord * type_size % trans_size)) / type_size;
 }
 
 __global__ void fill_gemm_weight_chwise(int n, int c, int h, int w, half* dst, half* src)
 {
-    for (int i = blockIdx.y; i < n; i += gridDim.y) {
-        for (int j = blockIdx.x; j < c; j += gridDim.x) {
-            for (int k = threadIdx.y; k < h; k += blockDim.y) {
-                for (int l = threadIdx.x; l < w; l += blockDim.x) {
+    for (int i = blockIdx.x; i < n; i += gridDim.x) {
+        for (int j = blockIdx.y; j < c; j += gridDim.y) {
+            for (int k = threadIdx.x; k < h; k += blockDim.x) {
+                for (int l = threadIdx.y; l < w; l += blockDim.y) {
                     auto idx = convert_idx_from_raw_to_chwise_gemm_weight_layout(n, c, h, w, i, j, k, l, sizeof(half));
                     dst[idx] = src[i * c * h * w + j * h * w + k * w + l];
                 }
@@ -173,10 +173,10 @@ __global__ void fill_gemm_weight_chwise(int n, int c, int h, int w, half* dst, h
 
 __global__ void fill_gemm_weight_aligned(int n, int c, int h, int w, half* dst, half* src)
 {
-    for (int i = blockIdx.y; i < n; i += gridDim.y) {
-        for (int j = blockIdx.x; j < c; j += gridDim.x) {
-            for (int k = threadIdx.y; k < h; k += blockDim.y) {
-                for (int l = threadIdx.x; l < w; l += blockDim.x) {
+    for (int i = blockIdx.x; i < n; i += gridDim.x) {
+        for (int j = blockIdx.y; j < c; j += gridDim.y) {
+            for (int k = threadIdx.x; k < h; k += blockDim.x) {
+                for (int l = threadIdx.y; l < w; l += blockDim.y) {
                     auto idx = convert_idx_from_raw_to_aligned_gemm_weight_layout(n, c, h, w, i, j, k, l, sizeof(half));
                     dst[idx] = src[i * c * h * w + j * h * w + k * w + l];
                 }
@@ -550,7 +550,7 @@ int HipMemoryManager::convert_data_layout_for_chwise_gemm_weight(PimBo* dst, Pim
     if (on_device) {
         DLOG(INFO) << "reordering on device";
         auto blocks = dim3(src->bshape_r.n, src->bshape_r.c);
-        auto threads = dim3(32, 32); // cover any shape by 32x32 squares
+        auto threads = dim3(32, 32);  // cover any shape by 32x32 squares
         // TODO: provide stream for gpu conversion
         hipLaunchKernelGGL(fill_gemm_weight_chwise, blocks, threads, 0, 0, src->bshape_r.n, src->bshape_r.c,
                            src->bshape_r.h, src->bshape_r.w, (half*)dst->data, (half*)src->data);
@@ -779,7 +779,7 @@ int HipMemoryManager::convert_data_layout_for_aligned_gemm_weight(PimBo* dst, Pi
     if (on_device) {
         DLOG(INFO) << "reordering on device";
         auto blocks = dim3(src->bshape_r.n, src->bshape_r.c);
-        auto threads = dim3(1, 1024); // alignment 256x4096 can't be reached due to 1024 threads limitation
+        auto threads = dim3(1, 1024);  // alignment 256x4096 can't be reached due to 1024 threads limitation
         // TODO: provide stream for gpu conversion
         hipLaunchKernelGGL(fill_gemm_weight_aligned, blocks, threads, 0, 0, src->bshape_r.n, src->bshape_r.c,
                            src->bshape_r.h, src->bshape_r.w, (half*)dst->data, (half*)src->data);

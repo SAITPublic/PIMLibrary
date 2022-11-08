@@ -352,7 +352,8 @@ bool PimRuntime::check_need_for_transpose(PimGemmOrder gemm_order, PimBo* dev_we
     return ret;
 }
 
-PimBo* PimRuntime::get_preloaded_pim_gemm_weight(PimBo* dev_wei, PimGemmOrder gemm_order, bool reorder_on_device, bool save_for_reuse)
+PimBo* PimRuntime::get_preloaded_pim_gemm_weight(PimBo* dev_wei, PimGemmOrder gemm_order, bool reorder_on_device,
+                                                 bool save_for_reuse)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     PimBo* pre_wei = find_preloaded_pim_weight(dev_wei);
@@ -360,7 +361,8 @@ PimBo* PimRuntime::get_preloaded_pim_gemm_weight(PimBo* dev_wei, PimGemmOrder ge
     if (pre_wei == nullptr) {
         if (reorder_on_device) {
             pim_manager_->set_gemm_order(gemm_order);
-            pre_wei = PimCreateBo(dev_wei->bshape.n, dev_wei->bshape.c, dev_wei->bshape.h, dev_wei->bshape.w, PIM_FP16, MEM_TYPE_PIM);
+            pre_wei = PimCreateBo(dev_wei->bshape.n, dev_wei->bshape.c, dev_wei->bshape.h, dev_wei->bshape.w, PIM_FP16,
+                                  MEM_TYPE_PIM);
             pim_manager_->convert_data_layout(pre_wei, dev_wei, true);
         } else {
             PimBo* host_weight = nullptr;
@@ -403,7 +405,8 @@ PimBo* PimRuntime::get_preloaded_pim_gemm_weight(PimBo* dev_wei, PimGemmOrder ge
     return pre_wei;
 }
 
-PimBo* PimRuntime::generate_gemm_weight_from_buffer(PimBo* src, PimGemmOrder gemm_order, bool reorder_on_device, bool save_for_reuse)
+PimBo* PimRuntime::generate_gemm_weight_from_buffer(PimBo* src, PimGemmOrder gemm_order, bool reorder_on_device,
+                                                    bool save_for_reuse)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
 

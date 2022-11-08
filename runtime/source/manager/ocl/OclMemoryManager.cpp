@@ -355,7 +355,7 @@ int OclMemoryManager::convert_data_layout(PimBo* dst, PimBo* src, bool reorder_o
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
     bool is_chwise = check_chwise_gemm_bo(src, gemm_order_);
-    //TODO: support device reordering for OCL
+    // TODO: support device reordering for OCL
     if (is_chwise) {
         ret = convert_data_layout_for_chwise_gemm_weight(dst, src);
     } else {

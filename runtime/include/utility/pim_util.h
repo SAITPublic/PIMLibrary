@@ -27,8 +27,8 @@ __host__ __device__ inline uint32_t mask_by_bit(uint32_t value, uint32_t start, 
     return value & ((1 << length) - 1);
 }
 
-__host__ __device__ inline uint64_t addr_gen(uint32_t chan, uint32_t rank, uint32_t bankgroup, uint32_t bank, uint32_t row,
-                                      uint32_t col)
+__host__ __device__ inline uint64_t addr_gen(uint32_t chan, uint32_t rank, uint32_t bankgroup, uint32_t bank,
+                                             uint32_t row, uint32_t col)
 {
     const PimBlockInfo& pbi = vega20_pbi;
     int num_row_bit = pbi.num_row_bit;
@@ -83,8 +83,8 @@ __host__ __device__ inline uint64_t addr_gen(uint32_t chan, uint32_t rank, uint3
     return addr;
 }
 
-__host__ __device__ inline uint64_t addr_gen_safe(uint32_t chan, uint32_t rank, uint32_t bg, uint32_t bank, uint32_t& row,
-                                           uint32_t& col)
+__host__ __device__ inline uint64_t addr_gen_safe(uint32_t chan, uint32_t rank, uint32_t bg, uint32_t bank,
+                                                  uint32_t& row, uint32_t& col)
 {
     const PimBlockInfo& pbi = vega20_pbi;
 
