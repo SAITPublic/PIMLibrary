@@ -43,12 +43,12 @@ int pimc_gemv(int h, int w)
     // Declare variables
     IndexVar i(0, h, "i");
     IndexVar j(0, w, "j");
-    Buffer weight(w, h, "weight");
+    Buffer weight(h, w, "weight");
     Buffer input(h, "input");
     Var D("D");
 
     // Define Computation
-    D[j] += weight[i][j] * input[i];
+    D[j] += weight[j][i] * input[i];
 
     // Run
     PimTarget* target = PimCreateTarget(RT_TYPE_HIP, PIM_FP16, GPU);
