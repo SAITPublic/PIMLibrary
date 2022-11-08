@@ -48,6 +48,10 @@ else()
     endif()
 endif()
 
+if(PIM_COMPILER)
+    target_link_libraries(PimRuntime PimC pimcompiler codegen)
+endif()
+
 if(NVIDIA AND OPENCL)
     install ( TARGETS PimRuntime LIBRARY DESTINATION ${PIM_PATH}/lib/)
     install ( FILES ${CMAKE_CURRENT_SOURCE_DIR}/../include/pim_runtime_api.h DESTINATION ${PIM_PATH}/include )
