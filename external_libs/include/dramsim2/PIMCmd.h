@@ -1,3 +1,14 @@
+/***************************************************************************************************
+* Copyright (C) 2021 Samsung Electronics Co. LTD
+*
+* This software is a property of Samsung Electronics.
+* No part of this software, either material or conceptual may be copied or distributed, transmitted,
+* transcribed, stored in a retrieval system, or translated into any human or computer language in
+* any form by any means,electronic, mechanical, manual or otherwise, or disclosed
+* to third parties without the express written permission of Samsung Electronics.
+* (Use of the Software is restricted to non-commercial, personal or academic, research purpose only)
+***************************************************************************************************/
+
 #ifndef __PIM_CMD_HPP__
 #define __PIM_CMD_HPP__
 
@@ -10,13 +21,42 @@ using namespace std;
 
 namespace DRAMSim
 {
-enum class pimCmdType { NOP, ADD, MUL, MAC, MAD, REV0, REV1, REV2, MOV, FILL, REV3, REV4, REV5, REV6, JUMP, EXIT };
 
-enum class pimOpdType { A_OUT, M_OUT, EVEN_BANK, ODD_BANK, GRF_A, GRF_B, SRF_M, SRF_A };
+enum class pimCmdType
+{
+    NOP,
+    ADD,
+    MUL,
+    MAC,
+    MAD,
+    REV0,
+    REV1,
+    REV2,
+    MOV,
+    FILL,
+    REV3,
+    REV4,
+    REV5,
+    REV6,
+    JUMP,
+    EXIT
+};
+
+enum class pimOpdType
+{
+    A_OUT,
+    M_OUT,
+    EVEN_BANK,
+    ODD_BANK,
+    GRF_A,
+    GRF_B,
+    SRF_M,
+    SRF_A
+};
 
 class pimCmd
 {
-   public:
+  public:
     pimCmdType type_;
     pimOpdType dst_;
     pimOpdType src0_;
@@ -31,109 +71,56 @@ class pimCmd
     int isRelu_;
 
     pimCmd()
-        : type_(pimCmdType::NOP),
-          dst_(pimOpdType::A_OUT),
-          src0_(pimOpdType::A_OUT),
-          src1_(pimOpdType::A_OUT),
-          src2_(pimOpdType::A_OUT),
-          loopCounter_(0),
-          loopOffset_(0),
-          isAuto_(0),
-          dstIdx_(0),
-          src0Idx_(0),
-          src1Idx_(0)
-    {
-    }
+        : type_(pimCmdType::NOP), dst_(pimOpdType::A_OUT), src0_(pimOpdType::A_OUT),
+          src1_(pimOpdType::A_OUT), src2_(pimOpdType::A_OUT), loopCounter_(0), loopOffset_(0),
+          isAuto_(0), dstIdx_(0), src0Idx_(0), src1Idx_(0) {}
 
     // NOP, CTRL
     pimCmd(pimCmdType type, int loopCounter)
-        : type_(type),
-          dst_(pimOpdType::A_OUT),
-          src0_(pimOpdType::A_OUT),
-          src1_(pimOpdType::A_OUT),
-          src2_(pimOpdType::A_OUT),
-          loopCounter_(loopCounter),
-          loopOffset_(0),
-          isAuto_(0),
-          dstIdx_(0),
-          src0Idx_(0),
-          src1Idx_(0)
-    {
-    }
+        : type_(type), dst_(pimOpdType::A_OUT), src0_(pimOpdType::A_OUT), src1_(pimOpdType::A_OUT),
+          src2_(pimOpdType::A_OUT), loopCounter_(loopCounter), loopOffset_(0), isAuto_(0),
+          dstIdx_(0), src0Idx_(0), src1Idx_(0)
+    {}
 
     // JUMP
     pimCmd(pimCmdType type, int loopCounter, int loop_offset)
-        : type_(type),
-          dst_(pimOpdType::A_OUT),
-          src0_(pimOpdType::A_OUT),
-          src1_(pimOpdType::A_OUT),
-          src2_(pimOpdType::A_OUT),
-          loopCounter_(loopCounter),
-          loopOffset_(loop_offset),
-          isAuto_(0),
-          dstIdx_(0),
-          src0Idx_(0),
-          src1Idx_(0)
-    {
-    }
+        : type_(type), dst_(pimOpdType::A_OUT), src0_(pimOpdType::A_OUT), src1_(pimOpdType::A_OUT),
+          src2_(pimOpdType::A_OUT), loopCounter_(loopCounter), loopOffset_(loop_offset), isAuto_(0),
+          dstIdx_(0), src0Idx_(0), src1Idx_(0) {}
 
-    pimCmd(pimCmdType type, pimOpdType dst, pimOpdType src0, int is_auto = 0, int dst_idx = 0, int src0_idx = 0,
-           int src1_idx = 0, int is_relu = 0)
-        : type_(type),
-          dst_(dst),
-          src0_(src0),
-          src1_(pimOpdType::A_OUT),
-          src2_(pimOpdType::A_OUT),
-          loopCounter_(0),
-          loopOffset_(0),
-          isAuto_(is_auto),
-          dstIdx_(dst_idx),
-          src0Idx_(src0_idx),
-          src1Idx_(src1_idx),
-          isRelu_(is_relu)
-    {
-    }
+    pimCmd(pimCmdType type, pimOpdType dst, pimOpdType src0, int is_auto = 0, int dst_idx = 0,
+          int src0_idx = 0, int src1_idx = 0, int is_relu = 0)
+        : type_(type), dst_(dst), src0_(src0), src1_(pimOpdType::A_OUT), src2_(pimOpdType::A_OUT),
+          loopCounter_(0), loopOffset_(0), isAuto_(is_auto), dstIdx_(dst_idx), src0Idx_(src0_idx),
+          src1Idx_(src1_idx), isRelu_(is_relu) {}
 
-    pimCmd(pimCmdType type, pimOpdType dst, pimOpdType src0, pimOpdType src1, int is_auto = 0, int dst_idx = 0,
-           int src0_idx = 0, int src1_idx = 0)
-        : type_(type),
-          dst_(dst),
-          src0_(src0),
-          src1_(src1),
-          src2_(pimOpdType::A_OUT),
-          loopCounter_(0),
-          loopOffset_(0),
-          isAuto_(is_auto),
-          dstIdx_(dst_idx),
-          src0Idx_(src0_idx),
-          src1Idx_(src1_idx)
-    {
-    }
-
-    pimCmd(pimCmdType type, pimOpdType dst, pimOpdType src0, pimOpdType src1, pimOpdType src2, int is_auto = 0,
+    pimCmd(pimCmdType type, pimOpdType dst, pimOpdType src0, pimOpdType src1, int is_auto = 0,
            int dst_idx = 0, int src0_idx = 0, int src1_idx = 0)
-        : type_(type),
-          dst_(dst),
-          src0_(src0),
-          src1_(src1),
-          src2_(src2),
-          loopCounter_(0),
-          loopOffset_(0),
-          isAuto_(is_auto),
-          dstIdx_(dst_idx),
-          src0Idx_(src0_idx),
-          src1Idx_(src1_idx)
-    {
-    }
+        : type_(type), dst_(dst), src0_(src0), src1_(src1), src2_(pimOpdType::A_OUT),
+          loopCounter_(0), loopOffset_(0), isAuto_(is_auto), dstIdx_(dst_idx), src0Idx_(src0_idx),
+          src1Idx_(src1_idx) {}
+
+    pimCmd(pimCmdType type, pimOpdType dst, pimOpdType src0, pimOpdType src1, pimOpdType src2,
+           int is_auto = 0, int dst_idx = 0, int src0_idx = 0, int src1_idx = 0)
+        : type_(type), dst_(dst), src0_(src0), src1_(src1), src2_(src2), loopCounter_(0),
+          loopOffset_(0), isAuto_(is_auto), dstIdx_(dst_idx), src0Idx_(src0_idx),
+          src1Idx_(src1_idx) {}
 
     uint32_t bitmask(int bit) const { return (1 << bit) - 1; }
 
-    uint32_t toBit(uint32_t val, int bit_len, int bit_pos) const { return ((val & bitmask(bit_len)) << bit_pos); }
-    uint32_t fromBit(uint32_t val, int bit_len, int bit_pos) const { return ((val >> bit_pos) & bitmask(bit_len)); }
+    uint32_t toBit(uint32_t val, int bit_len, int bit_pos) const
+    {
+        return ((val & bitmask(bit_len)) << bit_pos);
+    }
+    uint32_t fromBit(uint32_t val, int bit_len, int bit_pos) const
+    {
+        return ((val >> bit_pos) & bitmask(bit_len));
+    }
 
     std::string opdToStr(pimOpdType opd, int idx = 0) const
     {
-        switch (opd) {
+        switch (opd)
+        {
             case pimOpdType::A_OUT:
                 return "A_OUT";
             case pimOpdType::M_OUT:
@@ -157,7 +144,8 @@ class pimCmd
 
     std::string cmdToStr(pimCmdType type) const
     {
-        switch (type_) {
+        switch (type_)
+        {
             case pimCmdType::EXIT:
                 return "EXIT";
             case pimCmdType::NOP:
@@ -190,6 +178,5 @@ class pimCmd
 bool operator==(const pimCmd& lhs, const pimCmd& rhs);
 bool operator!=(const pimCmd& lhs, const pimCmd& rhs);
 
-}  // namespace DRAMSim
-
+} // namespace DRAMSim
 #endif

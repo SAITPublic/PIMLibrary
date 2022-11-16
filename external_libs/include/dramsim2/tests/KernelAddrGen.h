@@ -1,10 +1,21 @@
+/***************************************************************************************************
+* Copyright (C) 2021 Samsung Electronics Co. LTD
+*
+* This software is a property of Samsung Electronics.
+* No part of this software, either material or conceptual may be copied or distributed, transmitted,
+* transcribed, stored in a retrieval system, or translated into any human or computer language in
+* any form by any means,electronic, mechanical, manual or otherwise, or disclosed
+* to third parties without the express written permission of Samsung Electronics.
+* (Use of the Software is restricted to non-commercial, personal or academic, research purpose only)
+***************************************************************************************************/
+
 #ifndef __ADDRGEN_HPP__
 #define __ADDRGEN_HPP__
 
 #include <sstream>
 #include <vector>
-#include "MultiChannelMemorySystem.h"
 #include "PIMCmd.h"
+#include "MultiChannelMemorySystem.h"
 #include "SystemConfiguration.h"
 #include "Utils.h"
 
@@ -12,7 +23,7 @@ using namespace DRAMSim;
 
 class PIMAddrManager
 {
-   public:
+  public:
     unsigned num_chans_;
     unsigned num_ranks_;
     unsigned num_bank_groups_;
@@ -23,11 +34,14 @@ class PIMAddrManager
     unsigned num_pim_ranks_;
     unsigned num_cols_per_bl_;
 
-    uint64_t addrGen(unsigned chan, unsigned rank, unsigned bankgroup, unsigned bank, unsigned row, unsigned col);
-    uint64_t addrGenSafe(unsigned chan, unsigned rank, unsigned bankgroup, unsigned bank, unsigned& row, unsigned& col);
+    uint64_t addrGen(unsigned chan, unsigned rank, unsigned bankgroup, unsigned bank,
+                     unsigned row, unsigned col);
+    uint64_t addrGenSafe(unsigned chan, unsigned rank, unsigned bankgroup, unsigned bank,
+                         unsigned& row, unsigned& col);
     unsigned maskByBit(unsigned value, int startingBit, int endBit);
 
-    PIMAddrManager(int num_pim_chans, int num_pim_ranks) : num_pim_chans_(num_pim_chans), num_pim_ranks_(num_pim_ranks)
+    PIMAddrManager(int num_pim_chans, int num_pim_ranks): num_pim_chans_(num_pim_chans),
+                   num_pim_ranks_(num_pim_ranks)
     {
         num_chans_ = getConfigParam(UINT, "NUM_CHANS");
         num_ranks_ = getConfigParam(UINT, "NUM_RANKS");
@@ -42,11 +56,12 @@ class PIMAddrManager
         num_chan_bits_ = uLog2(num_chans_);
         num_col_bits_ = uLog2(num_cols_ / getConfigParam(UINT, "BL"));
         num_rank_bits_ = uLog2(num_ranks_);
-        num_offset_bits_ = uLog2(getConfigParam(UINT, "BL") * getConfigParam(UINT, "JEDEC_DATA_BUS_BITS") / 8);
+        num_offset_bits_ = uLog2(getConfigParam(UINT, "BL") *
+                           getConfigParam(UINT, "JEDEC_DATA_BUS_BITS") / 8);
 
         num_col_low_bits_ = 2;
         num_col_high_bits_ = num_col_bits_ - num_col_low_bits_;
-        /* FIXME: need to change at launch shcha */
+		/* FIXME: need to change at launch shcha */
         num_bank_low_bits_ = num_bank_bits_ / 2;
         num_bank_high_bits_ = num_bank_bits_ - num_bank_low_bits_;
         num_cols_per_bl_ = num_cols_ / getConfigParam(UINT, "BL");
@@ -54,7 +69,7 @@ class PIMAddrManager
         address_mapping_scheme_ = PIMConfiguration::getAddressMappingScheme();
     }
 
-   private:
+  private:
     int num_chan_bits_;
     int num_rank_bits_;
     int num_col_bits_;
@@ -71,5 +86,13 @@ class PIMAddrManager
     AddressMappingScheme address_mapping_scheme_;
 };
 
-enum class KernelType { ADD, BN, RELU, GEMV, MUL, GEMVTREE };
+enum class KernelType
+{
+    ADD,
+    BN,
+    RELU,
+    GEMV,
+    MUL,
+    GEMVTREE
+};
 #endif

@@ -39,8 +39,6 @@
 // Header file for memory controller object
 //
 
-#include <map>
-#include <vector>
 #include "BankState.h"
 #include "BusPacket.h"
 #include "CSVWriter.h"
@@ -50,6 +48,8 @@
 #include "SimulatorObject.h"
 #include "SystemConfiguration.h"
 #include "Transaction.h"
+#include <map>
+#include <vector>
 
 using namespace std;
 
@@ -60,7 +60,7 @@ class MemorySystem;
 class MemoryControllerStats;
 class MemoryController : public SimulatorObject
 {
-   public:
+  public:
     // functions
     MemoryController(MemorySystem* ms, CSVWriter& csvOut_, ostream& simLog, Configuration& config);
     virtual ~MemoryController();
@@ -78,122 +78,80 @@ class MemoryController : public SimulatorObject
 
     // fields
     vector<Transaction*> transactionQueue;
-
-   private:
+  private:
     ostream& dramsimLog;
     vector<vector<BankState>> bankStates;
 
     // functions
     void insertHistogram(unsigned latencyValue, unsigned rank, unsigned bank);
-    void updateCommandQueue(BusPacket* poppedBusPacket);
+    void updateCommandQueue(BusPacket *poppedBusPacket);
     void updateTransactionQueue();
     void updateBankState();
     void updateRefresh();
-    void setBankStatesNextRW(size_t rank, size_t bank, uint64_t nextRead, uint64_t nextWrite);
-    void setBankStates(size_t rank, size_t bank, CurrentBankState currentBankState, BusPacketType lastCommand,
-                       uint64_t stateChangeCountdown, uint64_t nextActivate);
+    void setBankStatesRW(size_t rank, size_t bank, uint64_t nextRead, uint64_t nextWrite);
+    void setBankStates(size_t rank, size_t bank, CurrentBankState currentBankState,
+                       BusPacketType lastCommand, uint64_t stateChangeCountdown, uint64_t nextAct);
 
     // fields
     MemorySystem* parentMemorySystem;
 
     CommandQueue commandQueue;
     BusPacket* poppedBusPacket;
-
     vector<BusPacket*> writeDataToSend;
     vector<unsigned> writeDataCountdown;
     vector<Transaction*> returnTransaction;
     vector<Transaction*> pendingReadTransactions;
-    map<unsigned, unsigned> latencies;  // latencyValue -> latencyCount
+    map<unsigned, unsigned> latencies; // latencyValue -> latencyCount
     vector<bool> powerDown;
-
     vector<Rank*>* ranks;
 
     // output file
     CSVWriter& csvOut;
 
     // these packets are counting down waiting to be transmitted on the "bus"
-    BusPacket* outgoingCmdPacket;
-    unsigned cmdCyclesLeft;
-    BusPacket* outgoingDataPacket;
-    unsigned dataCyclesLeft;
+    BusPacket *outgoingCmdPacket, *outgoingDataPacket;
+    unsigned cmdCyclesLeft, dataCyclesLeft;
 
-    uint64_t totalTransactions;
-    vector<uint64_t> grandTotalBankAccesses;
-
-    vector<uint64_t> totalReadsPerBank;
-    vector<uint64_t> totalWritesPerBank;
-
-    vector<uint64_t> totalReadsPerRank;
-    vector<uint64_t> totalWritesPerRank;
-
-    vector<uint64_t> totalActivatesPerBank;
-    vector<uint64_t> totalActivatesPerRank;
-    uint64_t totalRefreshes;
-
-    vector<uint64_t> totalEpochLatency;
-
-    /*
-    unsigned channelBitWidth;
-    unsigned rankBitWidth;
-    unsigned bankBitWidth;
-    unsigned rowBitWidth;
-    unsigned colBitWidth;
-    unsigned byteOffsetWidth;
-    */
-
-    unsigned refreshRank;
-    unsigned refreshBank;
-
-    vector<unsigned> refreshCountdown;
-    vector<unsigned> refreshCountdownBank;
-
+    uint64_t totalTransactions, totalRefreshes;
+    vector<uint64_t> grandTotalBankAccesses, totalReadsPerBank, totalWritesPerBank;
+    vector<uint64_t> totalReadsPerRank, totalWritesPerRank;
+    vector<uint64_t> totalActivatesPerBank, totalActivatesPerRank, totalEpochLatency;
+    unsigned refreshRank, refreshBank;
+    vector<unsigned> refreshCountdown, refreshCountdownBank;
     Configuration& config;
-    MemoryControllerStats* memoryContStats;
+    MemoryControllerStats *memoryContStats;
 
-   public:
-    // energy values are per rank -- SST uses these directly, so make these
-    // public
-    vector<uint64_t> backgroundEnergy;
-    vector<uint64_t> burstEnergy;
-    vector<uint64_t> actpreEnergy;
-    vector<uint64_t> refreshEnergy;
-    vector<uint64_t> aluPimEnergy;
-    vector<uint64_t> readPimEnergy;
+  public:
+    // energy values are per rank -- SST uses these directly, so make these public
+    vector<uint64_t> backgroundEnergy, burstEnergy, actpreEnergy, refreshEnergy, aluPimEnergy,
+        readPimEnergy;
     double totalBandwidth;
 
-    uint64_t totalReads;
-    uint64_t totalWrites;
+    uint64_t totalReads, totalWrites;
 };
 
 class MemoryControllerStats
 {
-   public:
-    MemoryControllerStats(MemorySystem* parent, CSVWriter& csvOut_, ostream& simLog, Configuration& configuration,
-                          uint64_t& totalTrans, vector<uint64_t>& grandTotalBankAcc, vector<uint64_t>& totalReadsPerR,
-                          vector<uint64_t>& totalWritesPerR, vector<uint64_t>& totalReadsPerB,
-                          vector<uint64_t>& totalWritesPerB, vector<uint64_t>& totalActivatesPerR,
-                          vector<uint64_t>& totalActivatesPerB, uint64_t& totalRef, vector<uint64_t>& backgroundE,
-                          vector<uint64_t>& burstE, vector<uint64_t>& actpreE, vector<uint64_t>& refreshE,
-                          vector<uint64_t>& aluPimE, vector<uint64_t>& readPimE, vector<Transaction*>& pendingReadTrans)
-        : csvOut(csvOut_),
-          dramsimLog(simLog),
-          config(configuration),
-          totalTransactions(totalTrans),
-          grandTotalBankAccesses(grandTotalBankAcc),
-          totalReadsPerRank(totalReadsPerR),
-          totalWritesPerRank(totalWritesPerR),
-          totalReadsPerBank(totalReadsPerB),
-          totalWritesPerBank(totalWritesPerB),
-          totalActivatesPerRank(totalActivatesPerR),
-          totalActivatesPerBank(totalActivatesPerB),
-          totalRefreshes(totalRef),
-          backgroundEnergy(backgroundE),
-          burstEnergy(burstE),
-          actpreEnergy(actpreE),
-          refreshEnergy(refreshE),
-          aluPimEnergy(aluPimE),
-          readPimEnergy(readPimE),
-          pendingReadTransactions(pendingReadTrans)
+  public:
+    MemoryControllerStats(MemorySystem* parent, CSVWriter& csvOut_, ostream& simLog,
+                          Configuration& configuration, uint64_t &totalTrans,
+                          vector<uint64_t> &grandTotalBankAcc, vector<uint64_t> &totalReadsPerR,
+                          vector<uint64_t> &totalWritesPerR, vector<uint64_t> &totalReadsPerB,
+                          vector<uint64_t> &totalWritesPerB, vector<uint64_t> &totalActivatesPerR,
+                          vector<uint64_t> &totalActivatesPerB, uint64_t &totalRef,
+                          vector<uint64_t> &backgroundE, vector<uint64_t> &burstE,
+                          vector<uint64_t> &actpreE, vector<uint64_t> &refreshE,
+                          vector<uint64_t> &aluPimE, vector<uint64_t> &readPimE,
+                          vector<Transaction*>& pendingReadTrans) :
+                          csvOut(csvOut_), dramsimLog(simLog), config(configuration),
+                          totalTransactions(totalTrans), grandTotalBankAccesses(grandTotalBankAcc),
+                          totalReadsPerRank(totalReadsPerR), totalWritesPerRank(totalWritesPerR),
+                          totalReadsPerBank(totalReadsPerB), totalWritesPerBank(totalWritesPerB),
+                          totalActivatesPerRank(totalActivatesPerR),
+                          totalActivatesPerBank(totalActivatesPerB), totalRefreshes(totalRef),
+                          backgroundEnergy(backgroundE), burstEnergy(burstE), actpreEnergy(actpreE),
+                          refreshEnergy(refreshE), aluPimEnergy(aluPimE), readPimEnergy(readPimE),
+                          pendingReadTransactions(pendingReadTrans)
     {
         parentMemorySystem = parent;
         totalEpochLatency = vector<uint64_t>(config.NUM_RANKS * config.NUM_BANKS, 0);
@@ -204,13 +162,13 @@ class MemoryControllerStats
     void insertHistogram(unsigned latencyValue, unsigned rank, unsigned bank);
     void resetStats();
 
-   private:
+  private:
     MemorySystem* parentMemorySystem;
     ostream& dramsimLog;
     Configuration& config;
     CSVWriter& csvOut;
 
-    uint64_t& totalTransactions;
+    uint64_t &totalTransactions;
     vector<uint64_t>& grandTotalBankAccesses;
     vector<uint64_t>& totalReadsPerRank;
     vector<uint64_t>& totalWritesPerRank;
@@ -233,7 +191,7 @@ class MemoryControllerStats
     vector<uint64_t> totalEpochLatency;
 };
 
-}  // namespace DRAMSim
+} // namespace DRAMSim
 
 #endif
 

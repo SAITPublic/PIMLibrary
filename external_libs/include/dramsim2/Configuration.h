@@ -1,16 +1,28 @@
+/***************************************************************************************************
+* Copyright (C) 2021 Samsung Electronics Co. LTD
+*
+* This software is a property of Samsung Electronics.
+* No part of this software, either material or conceptual may be copied or distributed, transmitted,
+* transcribed, stored in a retrieval system, or translated into any human or computer language in
+* any form by any means,electronic, mechanical, manual or otherwise, or disclosed
+* to third parties without the express written permission of Samsung Electronics.
+* (Use of the Software is restricted to non-commercial, personal or academic, research purpose only)
+***************************************************************************************************/
+
 #ifndef CONFIGURATION_CACHE_H_
 #define CONFIGURATION_CACHE_H_
 
-#include <algorithm>
 #include <string>
+#include <algorithm>
 #include "AddressMapping.h"
 #include "SystemConfiguration.h"
 
 namespace DRAMSim
 {
+
 class Configuration
 {
-   public:
+public:
     Configuration(AddrMapping& am) : addrMapping(am)
     {
         AL = getConfigParam(UINT, "AL");
@@ -69,14 +81,21 @@ class Configuration
         READ_TO_WRITE_DELAY = (RL + BL / 2 + tRTRS - WL);
         READ_AUTOPRE_DELAY = (AL + tRTP + tRP);
         WRITE_AUTOPRE_DELAY = (WL + BL / 2 + tWR + tRP);
-        WRITE_TO_READ_DELAY_B_LONG = (WL + BL / 2 + tWTRL);   // interbank
-        WRITE_TO_READ_DELAY_B_SHORT = (WL + BL / 2 + tWTRS);  // interbank
+        WRITE_TO_READ_DELAY_B_LONG = (WL + BL / 2 + tWTRL);  // interbank
+        WRITE_TO_READ_DELAY_B_SHORT = (WL + BL / 2 + tWTRS); // interbank
         WRITE_TO_READ_DELAY_R = max((int)(WL + BL / 2 + tRTRS) - (int)RL, (int)0);
 
-        if (NUM_CHANS == 0) {
+        if (NUM_CHANS == 0)
+        {
             throw invalid_argument("Not allowed zero channel");
         }
 
+        setDebugConfiguration();
+        setOutputConfiguration();
+    }
+
+    void setDebugConfiguration()
+    {
         DEBUG_PIM_BLOCK = getConfigParam(BOOL, "DEBUG_PIM_BLOCK");
         DEBUG_TRANS_Q = getConfigParam(BOOL, "DEBUG_TRANS_Q");
         DEBUG_CMD_Q = getConfigParam(BOOL, "DEBUG_CMD_Q");
@@ -87,10 +106,15 @@ class Configuration
         DEBUG_POWER = getConfigParam(BOOL, "DEBUG_POWER");
         DEBUG_CMD_TRACE = getConfigParam(BOOL, "DEBUG_CMD_TRACE");
         DEBUG_PIM_TIME = getConfigParam(BOOL, "DEBUG_PIM_TIME");
-        DEBUG_PIM_BLOCK = getConfigParam(BOOL, "DEBUG_PIM_BLOCK");
-        CSV_FILE_OUTPUT = getConfigParam(BOOL, "CSV_FILE_OUTPUT");
+    }
+
+    void setOutputConfiguration()
+    {
         PRINT_CHAN_STAT = getConfigParam(BOOL, "PRINT_CHAN_STAT");
+        VIS_FILE_OUTPUT = getConfigParam(BOOL, "VIS_FILE_OUTPUT");
         VERIFICATION_OUTPUT = getConfigParam(BOOL, "VERIFICATION_OUTPUT");
+        SHOW_SIM_OUTPUT = getConfigParam(BOOL, "SHOW_SIM_OUTPUT");
+        LOG_OUTPUT = getConfigParam(BOOL, "LOG_OUTPUT");
         SIM_TRACE_FILE = getConfigParam(STRING, "SIM_TRACE_FILE");
     }
 
@@ -110,7 +134,7 @@ class Configuration
     unsigned RL;
     unsigned tCCDL;
     unsigned tCCDS;
-    float tCK;
+    float    tCK;
     unsigned tCMD;
     unsigned tCKE;
     unsigned tRAS;
@@ -155,23 +179,8 @@ class Configuration
     unsigned WRITE_TO_READ_DELAY_R;
 
     AddrMapping& addrMapping;
-
-    bool DEBUG_TRANS_Q;
-    bool DEBUG_CMD_Q;
-    bool DEBUG_ADDR_MAP;
-    bool DEBUG_BANKSTATE;
-    bool DEBUG_BUS;
-    bool DEBUG_BANKS;
-    bool DEBUG_POWER;
-    bool DEBUG_CMD_TRACE;
-    bool DEBUG_PIM_TIME;
-    bool DEBUG_PIM_BLOCK;
-    bool CSV_FILE_OUTPUT;
-    bool PRINT_CHAN_STAT;
-    bool VERIFICATION_OUTPUT;
-    string SIM_TRACE_FILE;
 };
 
-};  // namespace DRAMSim
+}; // namespace DRAMSim
 
 #endif /* CONFIGURATION_CACHE_H_ */
