@@ -13,17 +13,16 @@
 #ifndef CONFIGURATION_CACHE_H_
 #define CONFIGURATION_CACHE_H_
 
-#include <string>
 #include <algorithm>
+#include <string>
 #include "AddressMapping.h"
 #include "SystemConfiguration.h"
 
 namespace DRAMSim
 {
-
 class Configuration
 {
-public:
+   public:
     Configuration(AddrMapping& am) : addrMapping(am)
     {
         AL = getConfigParam(UINT, "AL");
@@ -82,12 +81,11 @@ public:
         READ_TO_WRITE_DELAY = (RL + BL / 2 + tRTRS - WL);
         READ_AUTOPRE_DELAY = (AL + tRTP + tRP);
         WRITE_AUTOPRE_DELAY = (WL + BL / 2 + tWR + tRP);
-        WRITE_TO_READ_DELAY_B_LONG = (WL + BL / 2 + tWTRL);  // interbank
-        WRITE_TO_READ_DELAY_B_SHORT = (WL + BL / 2 + tWTRS); // interbank
+        WRITE_TO_READ_DELAY_B_LONG = (WL + BL / 2 + tWTRL);   // interbank
+        WRITE_TO_READ_DELAY_B_SHORT = (WL + BL / 2 + tWTRS);  // interbank
         WRITE_TO_READ_DELAY_R = max((int)(WL + BL / 2 + tRTRS) - (int)RL, (int)0);
 
-        if (NUM_CHANS == 0)
-        {
+        if (NUM_CHANS == 0) {
             throw invalid_argument("Not allowed zero channel");
         }
 
@@ -135,7 +133,7 @@ public:
     unsigned RL;
     unsigned tCCDL;
     unsigned tCCDS;
-    float    tCK;
+    float tCK;
     unsigned tCMD;
     unsigned tCKE;
     unsigned tRAS;
@@ -182,6 +180,6 @@ public:
     AddrMapping& addrMapping;
 };
 
-}; // namespace DRAMSim
+};  // namespace DRAMSim
 
 #endif /* CONFIGURATION_CACHE_H_ */

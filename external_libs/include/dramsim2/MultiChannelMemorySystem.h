@@ -33,29 +33,28 @@
 
 #include <string>
 #include <vector>
+#include "AddressMapping.h"
 #include "CSVWriter.h"
 #include "ClockDomain.h"
+#include "Configuration.h"
 #include "MemoryObject.h"
 #include "MemorySystem.h"
 #include "SimulatorObject.h"
 #include "SystemConfiguration.h"
 #include "Transaction.h"
-#include "AddressMapping.h"
-#include "Configuration.h"
 
 namespace DRAMSim
 {
 class MultiChannelMemorySystem : public MemoryObject
 {
-  public:
-    MultiChannelMemorySystem(const string& dev, const string& sys, const string& pwd,
-                             const string& trc, unsigned megsOfMemory, string* visFilename = NULL);
+   public:
+    MultiChannelMemorySystem(const string& dev, const string& sys, const string& pwd, const string& trc,
+                             unsigned megsOfMemory, string* visFilename = NULL);
     virtual ~MultiChannelMemorySystem();
 
     virtual bool addTransaction(Transaction* trans);
     virtual bool addTransaction(bool isWrite, uint64_t addr, BurstType* data);
-    virtual bool addTransaction(bool isWrite, uint64_t addr, const std::string& tag,
-                                BurstType* data);
+    virtual bool addTransaction(bool isWrite, uint64_t addr, const std::string& tag, BurstType* data);
 
     bool addBarrier(int chanId);
 
@@ -63,8 +62,8 @@ class MultiChannelMemorySystem : public MemoryObject
     void printStats(bool finalStats = false);
     ostream& getLogFile();
     void RegisterCallbacks(TransactionCompleteCB* readDone, TransactionCompleteCB* writeDone,
-                           void (*reportPower)(double bgpower, double burstpower,
-                                               double refreshpower, double actprepower));
+                           void (*reportPower)(double bgpower, double burstpower, double refreshpower,
+                                               double actprepower));
     unsigned getNumFence(int ch) { return numFence[ch]; }
 
     void InitOutputFiles(string tracefilename);
@@ -79,29 +78,17 @@ class MultiChannelMemorySystem : public MemoryObject
     std::ofstream visDataOut;
     ofstream dramsimLog;
     vector<MemorySystem*> channels;
-    AddrMapping *addrMapping;
+    AddrMapping* addrMapping;
 
-    void getIniBool(const std::string& field, bool* val)
-    {
-        *val = getConfigParam(BOOL, field);
-    }
+    void getIniBool(const std::string& field, bool* val) { *val = getConfigParam(BOOL, field); }
 
-    void getIniUint(const std::string& field, unsigned int* val)
-    {
-        *val = getConfigParam(UINT, field);
-    }
+    void getIniUint(const std::string& field, unsigned int* val) { *val = getConfigParam(UINT, field); }
 
-    void getIniUint64(const std::string& field, uint64_t* val)
-    {
-        *val = getConfigParam(UINT64, field);
-    }
+    void getIniUint64(const std::string& field, uint64_t* val) { *val = getConfigParam(UINT64, field); }
 
-    void getIniFloat(const std::string& field, float* val)
-    {
-        *val = getConfigParam(FLOAT, field);
-    }
+    void getIniFloat(const std::string& field, float* val) { *val = getConfigParam(FLOAT, field); }
 
-  private:
+   private:
     unsigned findChannelNumber(uint64_t addr);
     uint64_t changeRA12RA13(uint64_t addr);
     void actual_update();
@@ -122,6 +109,6 @@ class MultiChannelMemorySystem : public MemoryObject
 
     Configuration* configuration;
 };
-} // namespace DRAMSim
+}  // namespace DRAMSim
 
 #endif

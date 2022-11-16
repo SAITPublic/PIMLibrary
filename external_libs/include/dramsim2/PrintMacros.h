@@ -36,8 +36,7 @@
 
 extern std::string SIM_TRACE_FILE;
 
-#define ERROR(str) std::cerr << "[ERROR (" << __FILE__ << ":" << __LINE__ << ")]: " << str         \
-                             << std::endl;
+#define ERROR(str) std::cerr << "[ERROR (" << __FILE__ << ":" << __LINE__ << ")]: " << str << std::endl;
 
 #define L_BLUE "\x1B[94m"
 #define GREEN "\x1B[32m"
@@ -54,48 +53,63 @@ using std::ostream;
 #define DEBUG(str) std::cerr << str << std::endl;
 #define DEBUGN(str) std::cerr << str;
 #else
-#define DEBUG(str);
-#define DEBUGN(str);
-#endif // end DEBUG_BUILD
+#define DEBUG(str) ;
+#define DEBUGN(str) ;
+#endif  // end DEBUG_BUILD
 
 #ifdef NO_OUTPUT
 #undef DEBUG
 #undef DEBUGN
-#define DEBUG(str);
-#define DEBUGN(str);
-#define PRINT(str);
-#define PRINTN(str);
+#define DEBUG(str) ;
+#define DEBUGN(str) ;
+#define PRINT(str) ;
+#define PRINTN(str) ;
 #else
-#define PRINT(str) do { if (SHOW_SIM_OUTPUT) { if (LOG_OUTPUT)                                     \
-                                                   dramsimLog << str << endl;                      \
-                                               else                                                \
-                                                   cout << str << endl;                            \
-                                             }                                                     \
-                      } while (0)
-#define PRINTC(color, str) do { if (SHOW_SIM_OUTPUT) { if (LOG_OUTPUT)                             \
-                                                            dramsimLog << str << endl;             \
-                                                        else                                       \
-                                                            cout << str << endl;                   \
-                                                     }                                             \
-                              } while (0)
-#define PRINTCOND(cond, str) do { if (SHOW_SIM_OUTPUT && cond) { if (LOG_OUTPUT)                   \
-                                                                     dramsimLog << str << endl;    \
-                                                                 else                              \
-                                                                     cout << str << endl;          \
-                                                               }                                   \
-                                } while (0)
-#define PRINTN(str) do { if (SHOW_SIM_OUTPUT) { if (LOG_OUTPUT)                                    \
-                                                    dramsimLog << str;                             \
-                                                else                                               \
-                                                    cout << str;                                   \
-                                              }                                                    \
-                       } while (0)
-#define PRINTNC(cond, str) do { if (SHOW_SIM_OUTPUT && cond) { if (LOG_OUTPUT)                     \
-                                                                   dramsimLog << str;              \
-                                                               else                                \
-                                                                   cout << str;                    \
-                                                             }                                     \
-                              } while (0)
-#endif // end NO_OUTPUT
+#define PRINT(str)                         \
+    do {                                   \
+        if (SHOW_SIM_OUTPUT) {             \
+            if (LOG_OUTPUT)                \
+                dramsimLog << str << endl; \
+            else                           \
+                cout << str << endl;       \
+        }                                  \
+    } while (0)
+#define PRINTC(color, str)                 \
+    do {                                   \
+        if (SHOW_SIM_OUTPUT) {             \
+            if (LOG_OUTPUT)                \
+                dramsimLog << str << endl; \
+            else                           \
+                cout << str << endl;       \
+        }                                  \
+    } while (0)
+#define PRINTCOND(cond, str)               \
+    do {                                   \
+        if (SHOW_SIM_OUTPUT && cond) {     \
+            if (LOG_OUTPUT)                \
+                dramsimLog << str << endl; \
+            else                           \
+                cout << str << endl;       \
+        }                                  \
+    } while (0)
+#define PRINTN(str)                \
+    do {                           \
+        if (SHOW_SIM_OUTPUT) {     \
+            if (LOG_OUTPUT)        \
+                dramsimLog << str; \
+            else                   \
+                cout << str;       \
+        }                          \
+    } while (0)
+#define PRINTNC(cond, str)             \
+    do {                               \
+        if (SHOW_SIM_OUTPUT && cond) { \
+            if (LOG_OUTPUT)            \
+                dramsimLog << str;     \
+            else                       \
+                cout << str;           \
+        }                              \
+    } while (0)
+#endif  // end NO_OUTPUT
 
 #endif /*PRINT_MACROS_H*/

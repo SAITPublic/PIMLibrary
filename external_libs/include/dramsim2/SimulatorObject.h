@@ -35,16 +35,15 @@
 
 namespace DRAMSim
 {
-
 class SimulatorObject
 {
-  public:
+   public:
     uint64_t currentClockCycle;
 
     void step();
     virtual void update() = 0;
 };
 
-} // namespace DRAMSim
+}  // namespace DRAMSim
 
 #endif

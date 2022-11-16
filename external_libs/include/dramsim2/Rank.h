@@ -32,31 +32,31 @@
 #define RANK_H
 
 #include <vector>
+#include "AddressMapping.h"
 #include "Bank.h"
 #include "BankState.h"
 #include "BusPacket.h"
 #include "Configuration.h"
 #include "PIMRank.h"
 #include "SimulatorObject.h"
-#include "AddressMapping.h"
 
 using namespace std;
 using namespace DRAMSim;
 
 namespace DRAMSim
 {
-class MemoryController; // forward declaration
-class PIMRank;          // forward declaration
+class MemoryController;  // forward declaration
+class PIMRank;           // forward declaration
 class Rank : public SimulatorObject
 {
-  private:
+   private:
     int chanId;
     int rankId;
     ostream& dramsimLog;
     bool isPowerDown;
     Configuration& config;
 
-  public:
+   public:
     // functions
     Rank(ostream& simLog, Configuration& configuration);
     virtual ~Rank();
@@ -83,7 +83,7 @@ class Rank : public SimulatorObject
     // fields
     MemoryController* memoryController;
     BusPacket* outgoingDataPacket;
-    PIMRank *pimRank;
+    PIMRank* pimRank;
     unsigned dataCyclesLeft;
     bool refreshWaiting;
 
@@ -105,8 +105,7 @@ class Rank : public SimulatorObject
 
     const char* getModeColor()
     {
-        switch (mode_)
-        {
+        switch (mode_) {
             case dramMode::SB:
                 return END;
             case dramMode::HAB:
@@ -117,5 +116,5 @@ class Rank : public SimulatorObject
         return GRAY;
     }
 };
-} // namespace DRAMSim
+}  // namespace DRAMSim
 #endif

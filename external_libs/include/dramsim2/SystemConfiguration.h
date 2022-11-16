@@ -31,24 +31,23 @@
 #ifndef SYSCONFIG_H
 #define SYSCONFIG_H
 
-#include "PrintMacros.h"
+#include <stdint.h>
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
-#include <stdint.h>
 #include <string>
 #include <vector>
+#include "PrintMacros.h"
 
 #ifdef __APPLE__
 #include <sys/types.h>
 #endif
 
-
-extern std::ofstream cmd_verify_out; // used by BusPacket.cpp if VERIFICATION_OUTPUT is enabled
+extern std::ofstream cmd_verify_out;  // used by BusPacket.cpp if VERIFICATION_OUTPUT is enabled
 // extern std::ofstream visDataOut;
 
 // TODO: namespace these to DRAMSim::
-extern bool VERIFICATION_OUTPUT; // output suitable to feed to modelsim
+extern bool VERIFICATION_OUTPUT;  // output suitable to feed to modelsim
 
 extern bool DEBUG_TRANS_Q;
 extern bool DEBUG_CMD_Q;
@@ -64,17 +63,15 @@ extern bool DEBUG_PIM_TIME;
 extern bool DEBUG_CMD_TRACE;
 extern bool DEBUG_PIM_BLOCK;
 
-
 extern std::string SIM_TRACE_FILE;
 extern bool SHOW_SIM_OUTPUT;
 extern bool LOG_OUTPUT;
 
 namespace DRAMSim
 {
-enum TraceType {k6, mase, misc};
+enum TraceType { k6, mase, misc };
 
-enum AddressMappingScheme
-{
+enum AddressMappingScheme {
     Scheme1 = 1,
     Scheme2,
     Scheme3,
@@ -87,7 +84,6 @@ enum AddressMappingScheme
     VegaScheme
 };
 
-
 // used in MemoryController and CommandQueue
 enum RowBufferPolicy { OpenPage, ClosePage };
 
@@ -98,26 +94,15 @@ enum SchedulingPolicy { RankThenBankRoundRobin, BankThenRankRoundRobin };
 enum PIMMode { mac_in_bankgroup, mac_in_bank };
 enum PIMPrecision { FP16, INT8, FP32 };
 
-enum class dramMode
-{
-    SB,
-    HAB,
-    HAB_PIM
-};
+enum class dramMode { SB, HAB, HAB_PIM };
 
-enum class pimBankType
-{
-    EVEN_BANK,
-    ODD_BANK,
-    ALL_BANK
-};
+enum class pimBankType { EVEN_BANK, ODD_BANK, ALL_BANK };
 // set by IniReader.cpp
 
 typedef void (*returnCallBack_t)(unsigned id, uint64_t addr, uint64_t clockcycle);
-typedef void (*powerCallBack_t)(double bgpower, double burstpower, double refreshpower,
-                                double actprepower);
+typedef void (*powerCallBack_t)(double bgpower, double burstpower, double refreshpower, double actprepower);
 
-}; // namespace DRAMSim
+};  // namespace DRAMSim
 
 /* SystemConfiguration Singletone Class */
 
@@ -128,44 +113,33 @@ using namespace std;
 
 namespace DRAMSim
 {
-
 template <typename T>
 class SystemConfigurationBase
 {
-public:
+   public:
     typedef T dataType;
     virtual T getValue(const string& key) = 0;
     void setValue(const string& key, const string& value, const paramType& ptype)
     {
         ConfigurationDB& _ptrDB = ConfigurationDB::getDB();
-        ConfigurationData newValue = { key, getVarType(), ptype, value };
+        ConfigurationData newValue = {key, getVarType(), ptype, value};
         _ptrDB.update(newValue);
     }
-private:
+
+   private:
     varType getVarType()
     {
-        if (is_same<dataType, string>::value)
-        {
+        if (is_same<dataType, string>::value) {
             return STRING;
-        }
-        else if (is_same<dataType, unsigned>::value)
-        {
+        } else if (is_same<dataType, unsigned>::value) {
             return UINT;
-        }
-        else if (is_same<dataType, uint64_t>::value)
-        {
+        } else if (is_same<dataType, uint64_t>::value) {
             return UINT64;
-        }
-        else if (is_same<dataType, float>::value)
-        {
+        } else if (is_same<dataType, float>::value) {
             return FLOAT;
-        }
-        else if (is_same<dataType, bool>::value)
-        {
+        } else if (is_same<dataType, bool>::value) {
             return BOOL;
-        }
-        else
-        {
+        } else {
             throw invalid_argument("unknown variable type");
         }
     }
@@ -173,7 +147,7 @@ private:
 
 class StringSystemConfiguration : public SystemConfigurationBase<string>
 {
-public:
+   public:
     virtual string getValue(const string& key) override
     {
         ConfigurationDB& _ptrDB = ConfigurationDB::getDB();
@@ -184,7 +158,7 @@ public:
 
 class UnsignedSystemConfiguration : public SystemConfigurationBase<unsigned>
 {
-  public:
+   public:
     virtual unsigned getValue(const string& key) override
     {
         ConfigurationDB& _ptrDB = ConfigurationDB::getDB();
@@ -195,7 +169,7 @@ class UnsignedSystemConfiguration : public SystemConfigurationBase<unsigned>
 
 class Uint64SystemConfiguration : public SystemConfigurationBase<uint64_t>
 {
-  public:
+   public:
     virtual uint64_t getValue(const string& key) override
     {
         ConfigurationDB& _ptrDB = ConfigurationDB::getDB();
@@ -206,7 +180,7 @@ class Uint64SystemConfiguration : public SystemConfigurationBase<uint64_t>
 
 class FloatSystemConfiguration : public SystemConfigurationBase<float>
 {
-  public:
+   public:
     virtual float getValue(const string& key) override
     {
         ConfigurationDB& _ptrDB = ConfigurationDB::getDB();
@@ -217,7 +191,7 @@ class FloatSystemConfiguration : public SystemConfigurationBase<float>
 
 class BoolSystemConfiguration : public SystemConfigurationBase<bool>
 {
-  public:
+   public:
     virtual bool getValue(const string& key) override
     {
         ConfigurationDB& _ptrDB = ConfigurationDB::getDB();
@@ -228,7 +202,7 @@ class BoolSystemConfiguration : public SystemConfigurationBase<bool>
 
 class SystemConfiguration
 {
-  public:
+   public:
     static StringSystemConfiguration& getStringSystemConfig()
     {
         static StringSystemConfiguration unique_instance;
@@ -327,16 +301,13 @@ static inline void setBOOLConfig(const string& key, const bool& value, const par
 
 class PIMConfiguration
 {
-public:
+   public:
     static RowBufferPolicy getRowBufferPolicy()
     {
         string param = getConfigParam(STRING, "ROW_BUFFER_POLICY");
-        if (param == "open_page")
-        {
+        if (param == "open_page") {
             return OpenPage;
-        }
-        else if (param == "close_page")
-        {
+        } else if (param == "close_page") {
             return ClosePage;
         }
         throw invalid_argument("Invalid row buffer policy");
@@ -346,12 +317,9 @@ public:
     {
         string param = getConfigParam(STRING, "SCHEDULING_POLICY");
 
-        if (param == "rank_then_bank_round_robin")
-        {
+        if (param == "rank_then_bank_round_robin") {
             return RankThenBankRoundRobin;
-        }
-        else if (param == "bank_then_rank_round_robin")
-        {
+        } else if (param == "bank_then_rank_round_robin") {
             return BankThenRankRoundRobin;
         }
         throw invalid_argument("Invalid scheduling policy");
@@ -360,11 +328,9 @@ public:
     static AddressMappingScheme getAddressMappingScheme()
     {
         string param = getConfigParam(STRING, "ADDRESS_MAPPING_SCHEME");
-        for (unsigned i = Scheme1; i <= Scheme7; ++i)
-        {
+        for (unsigned i = Scheme1; i <= Scheme7; ++i) {
             string s{"scheme" + to_string(i)};
-            if (param == s)
-            {
+            if (param == s) {
                 return AddressMappingScheme(i);
             }
         }
@@ -386,12 +352,9 @@ public:
         //        {
         //            return Scheme8;
         //        }
-        if (param == "Scheme8")
-        {
+        if (param == "Scheme8") {
             return Scheme8;
-        }
-        else if (param == "VegaScheme")
-        {
+        } else if (param == "VegaScheme") {
             return VegaScheme;
         }
         throw invalid_argument("Invalid address mapping scheme");
@@ -400,12 +363,9 @@ public:
     static QueuingStructure getQueueingStructure()
     {
         string param = getConfigParam(STRING, "QUEUING_STRUCTURE");
-        if (param == "per_rank_per_bank")
-        {
+        if (param == "per_rank_per_bank") {
             return PerRankPerBank;
-        }
-        else if (param == "per_rank")
-        {
+        } else if (param == "per_rank") {
             return PerRank;
         }
         throw invalid_argument("Invalid queueing structure");
@@ -414,12 +374,9 @@ public:
     static PIMMode getPIMMode()
     {
         string param = getConfigParam(STRING, "PIM_MODE");
-        if (param == "mac_in_bankgroup")
-        {
+        if (param == "mac_in_bankgroup") {
             return mac_in_bankgroup;
-        }
-        else if (param == "mac_in_bank")
-        {
+        } else if (param == "mac_in_bank") {
             return mac_in_bank;
         }
         throw invalid_argument("Invalid PIM mode");
@@ -428,16 +385,11 @@ public:
     static PIMPrecision getPIMPrecision()
     {
         string param = getConfigParam(STRING, "PIM_PRECISION");
-        if (param == "FP16")
-        {
+        if (param == "FP16") {
             return FP16;
-        }
-        else if (param == "INT8")
-        {
+        } else if (param == "INT8") {
             return INT8;
-        }
-        else if (param == "FP32")
-        {
+        } else if (param == "FP32") {
             return FP32;
         }
         throw invalid_argument("Invalid PIM precision");
@@ -446,22 +398,17 @@ public:
     static int getPIMDataLength()
     {
         string param = getConfigParam(STRING, "PIM_PRECISION");
-        if (param == "FP16")
-        {
+        if (param == "FP16") {
             return 2;
-        }
-        else if (param == "INT8")
-        {
+        } else if (param == "INT8") {
             return 1;
-        }
-        else if (param == "FP32")
-        {
+        } else if (param == "FP32") {
             return 4;
         }
         throw invalid_argument("Invalid PIM data length");
     }
 };
 
-}; // namespace DRAMSim
+};  // namespace DRAMSim
 
 #endif

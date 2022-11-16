@@ -24,18 +24,14 @@ using namespace std;
 
 namespace DRAMSim
 {
-
 class PIMBlock
 {
-  public:
-    PIMBlock()
-    {
-        pimPrecision_ = PIMConfiguration::getPIMPrecision();
-    }
+   public:
+    PIMBlock() { pimPrecision_ = PIMConfiguration::getPIMPrecision(); }
     PIMBlock(const PIMPrecision& pimPrecision) : pimPrecision_(pimPrecision) {}
 
     BurstType srf;
-    BurstType grfA[8];      // FIXME: hard coding shcha
+    BurstType grfA[8];  // FIXME: hard coding shcha
     BurstType grfB[8];
     BurstType mOut;
     BurstType aOut;
@@ -46,9 +42,10 @@ class PIMBlock
     void mad(BurstType& dstBst, BurstType& src0Bst, BurstType& src1Bst, BurstType& src2Bst);
 
     std::string print();
-  private:
+
+   private:
     PIMPrecision pimPrecision_;
 };
 
-} // namespace DRAMSim
+}  // namespace DRAMSim
 #endif

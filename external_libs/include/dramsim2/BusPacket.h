@@ -31,21 +31,19 @@
 #ifndef BUSPACKET_H
 #define BUSPACKET_H
 
-#include "SystemConfiguration.h"
-#include "Burst.h"
 #include <string>
+#include "Burst.h"
+#include "SystemConfiguration.h"
 
 namespace DRAMSim
 {
-
-enum BusPacketType
-{
-    READ,      // 0
-    WRITE,     // 1
-    ACTIVATE,  // 2
-    PRECHARGE, // 3
-    REF,       // 4
-    DATA,      // 5
+enum BusPacketType {
+    READ,       // 0
+    WRITE,      // 1
+    ACTIVATE,   // 2
+    PRECHARGE,  // 3
+    REF,        // 4
+    DATA,       // 5
     RFCSB
 };
 
@@ -54,7 +52,7 @@ class BusPacket
     BusPacket();
     ostream& dramsimLog;
 
-  public:
+   public:
     // Fields
     BusPacketType busPacketType;
     unsigned column;
@@ -76,6 +74,6 @@ class BusPacket
     void printData() const;
 };
 
-} // namespace DRAMSim
+}  // namespace DRAMSim
 
 #endif

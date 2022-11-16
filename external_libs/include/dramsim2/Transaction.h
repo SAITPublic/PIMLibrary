@@ -39,14 +39,13 @@ using std::ostream;
 
 namespace DRAMSim
 {
-
 enum TransactionType { DATA_READ, DATA_WRITE, RETURN_DATA };
 
 class Transaction
 {
     Transaction();
 
-  public:
+   public:
     // fields
     TransactionType transactionType;
     uint64_t address;
@@ -63,29 +62,26 @@ class Transaction
 
     BusPacketType getBusPacketType()
     {
-        if (!isAllowedRowBufferPolicy(rowBufferPolicy))
-        {
+        if (!isAllowedRowBufferPolicy(rowBufferPolicy)) {
             throw invalid_argument("Unknown row buffer policy");
         }
-        switch (transactionType)
-        {
+        switch (transactionType) {
             case DATA_READ:
                 return READ;
             case DATA_WRITE:
                 return WRITE;
             default:
-                throw invalid_argument("This transaction type doesn't have a corresponding bus "
-                        "packet type");
+                throw invalid_argument(
+                    "This transaction type doesn't have a corresponding bus "
+                    "packet type");
         }
     }
-private:
+
+   private:
     RowBufferPolicy rowBufferPolicy;
-    bool isAllowedRowBufferPolicy(const RowBufferPolicy& policy)
-    {
-        return (policy == OpenPage);
-    }
+    bool isAllowedRowBufferPolicy(const RowBufferPolicy& policy) { return (policy == OpenPage); }
 };
 
-} // namespace DRAMSim
+}  // namespace DRAMSim
 
 #endif

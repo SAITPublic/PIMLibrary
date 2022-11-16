@@ -41,14 +41,13 @@
 
 namespace DRAMSim
 {
-
 enum CurrentBankState { Idle, RowActive, Precharging, Refreshing, PowerDown };
 
 class BankState
 {
     ostream& dramsimLog;
 
-  public:
+   public:
     // Fields
     CurrentBankState currentBankState;
     unsigned openRowAddress;
@@ -65,6 +64,6 @@ class BankState
     void showState();
 };
 
-} // namespace DRAMSim
+}  // namespace DRAMSim
 
 #endif

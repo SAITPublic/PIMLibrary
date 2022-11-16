@@ -13,10 +13,10 @@
 #ifndef CONFIGURATION_DB_H_
 #define CONFIGURATION_DB_H_
 
+#include <string>
 #include <unordered_map>
 #include <utility>
 #include <vector>
-#include <string>
 #include "ConfigurationData.h"
 #include "ParameterReader.h"
 
@@ -26,22 +26,19 @@ namespace DRAMSim
 {
 class ConfigurationDB
 {
-  public:
+   public:
     static ConfigurationDB& getDB()
     {
         static ConfigurationDB unique_instance;
         return unique_instance;
     }
 
-    void clearDB(void)
-    { _dbMap.clear(); }
+    void clearDB(void) { _dbMap.clear(); }
     void initialize(const ConfigurationData* config = defaultConfiguration)
     {
         clearDB();
-        if (config != nullptr)
-        {
-            for (unsigned i = 0; !config[i].name.empty(); ++i)
-            {
+        if (config != nullptr) {
+            for (unsigned i = 0; !config[i].name.empty(); ++i) {
                 update(config[i]);
             }
         }
@@ -55,23 +52,20 @@ class ConfigurationDB
 
     void update(const ConfigurationData& config)
     {
-        if (_dbMap.count(config.name) > 0)
-        {
+        if (_dbMap.count(config.name) > 0) {
             _dbMap[config.name] = config;
-        }
-        else
-        {
+        } else {
             _dbMap.insert(make_pair(config.name, config));
         }
     }
 
     void update(const vector<pair<string, string>>* configParamList)
     {
-        if (!configParamList) { return; }
-        for (auto iter = configParamList->begin(); iter != configParamList->end(); ++iter)
-        {
-            if (_dbMap.count(iter->first))
-            {
+        if (!configParamList) {
+            return;
+        }
+        for (auto iter = configParamList->begin(); iter != configParamList->end(); ++iter) {
+            if (_dbMap.count(iter->first)) {
                 _dbMap[iter->first].value = iter->second;
             }
         }
@@ -86,26 +80,23 @@ class ConfigurationDB
     void dump(std::ofstream& visDataOut)
     {
         visDataOut << "!!SYSTEM INI PARAMETER" << endl;
-        for (auto &it : _dbMap)
-        {
-            if (it.second.parameterType == SYS_PARAM)
-            {
+        for (auto& it : _dbMap) {
+            if (it.second.parameterType == SYS_PARAM) {
                 visDataOut << it.second.value << endl;
             }
         }
         visDataOut << "!!DEVICE INI PARAMETER" << endl;
-        for (auto &it : _dbMap)
-        {
-            if (it.second.parameterType == DEV_PARAM)
-            {
+        for (auto& it : _dbMap) {
+            if (it.second.parameterType == DEV_PARAM) {
                 visDataOut << it.second.value << endl;
             }
         }
         visDataOut << "!!EPOCH_DATA" << endl;
     }
-private:
+
+   private:
     unordered_map<string, ConfigurationData> _dbMap;
 };
-}; // namespace DRAMSim
+};  // namespace DRAMSim
 
 #endif

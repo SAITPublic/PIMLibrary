@@ -32,30 +32,28 @@
 #define MEMORYSYSTEM_H
 
 #include <deque>
-#include <vector>
 #include <string>
+#include <vector>
+#include "AddressMapping.h"
+#include "Burst.h"
 #include "CSVWriter.h"
 #include "Callback.h"
+#include "Configuration.h"
 #include "MemoryController.h"
 #include "MemoryObject.h"
 #include "Rank.h"
 #include "SimulatorObject.h"
 #include "SystemConfiguration.h"
 #include "Transaction.h"
-#include "Burst.h"
-#include "AddressMapping.h"
-#include "Configuration.h"
 #include "Utils.h"
-
 
 namespace DRAMSim
 {
-
 typedef CallbackBase<void, unsigned, uint64_t, uint64_t> Callback_t;
 
 class MemorySystem : public MemoryObject
 {
-  public:
+   public:
     // functions
     MemorySystem(unsigned id, unsigned megsOfMemory, CSVWriter& csvOut_, ostream& simLog, Configuration& config);
     virtual ~MemorySystem();
@@ -88,7 +86,7 @@ class MemorySystem : public MemoryObject
     unsigned systemID;
     uint64_t numOnTheFlyTransactions;
 
-  private:
+   private:
     CSVWriter& csvOut;
     ostream& dramsimLog;
 
@@ -96,6 +94,6 @@ class MemorySystem : public MemoryObject
     unsigned num_ranks_;
     Configuration& config;
 };
-} // namespace DRAMSim
+}  // namespace DRAMSim
 
 #endif

@@ -54,8 +54,7 @@
 #if __has_feature(cxx_thread_local) && !defined(HALF_ENABLE_CPP11_THREAD_LOCAL)
 #define HALF_ENABLE_CPP11_THREAD_LOCAL 1
 #endif
-#if (defined(__GXX_EXPERIMENTAL_CXX0X__) || __cplusplus >= 201103L) && \
-    !defined(HALF_ENABLE_CPP11_LONG_LONG)
+#if (defined(__GXX_EXPERIMENTAL_CXX0X__) || __cplusplus >= 201103L) && !defined(HALF_ENABLE_CPP11_LONG_LONG)
 #define HALF_ENABLE_CPP11_LONG_LONG 1
 #endif
 #elif HALF_ICC_VERSION && defined(__INTEL_CXX11_MODE__)  // Intel C++
@@ -208,9 +207,8 @@
 #endif
 
 // any error handling enabled?
-#define HALF_ERRHANDLING                                                          \
-    (HALF_ERRHANDLING_FLAGS || HALF_ERRHANDLING_ERRNO || HALF_ERRHANDLING_FENV || \
-     HALF_ERRHANDLING_THROWS)
+#define HALF_ERRHANDLING \
+    (HALF_ERRHANDLING_FLAGS || HALF_ERRHANDLING_ERRNO || HALF_ERRHANDLING_FENV || HALF_ERRHANDLING_THROWS)
 
 #if HALF_ERRHANDLING
 #define HALF_UNUSED_NOERR(name) name
@@ -586,15 +584,13 @@ typedef long int32;
 
 /// Unsigned integer of (at least) 32 bits width.
 template <>
-struct bits<float>
-    : conditional<std::numeric_limits<unsigned int>::digits >= 32, unsigned int, unsigned long> {
+struct bits<float> : conditional<std::numeric_limits<unsigned int>::digits >= 32, unsigned int, unsigned long> {
 };
 
 #if HALF_ENABLE_CPP11_LONG_LONG
 /// Unsigned integer of (at least) 64 bits width.
 template <>
-struct bits<double> : conditional<std::numeric_limits<unsigned long>::digits >= 64, unsigned long,
-                                  unsigned long long> {
+struct bits<double> : conditional<std::numeric_limits<unsigned long>::digits >= 64, unsigned long, unsigned long long> {
 };
 #else
 /// Unsigned integer of (at least) 64 bits width.
@@ -786,8 +782,7 @@ inline HALF_CONSTEXPR_NOERR unsigned int signal(unsigned int nan)
 inline HALF_CONSTEXPR_NOERR unsigned int signal(unsigned int x, unsigned int y)
 {
 #if HALF_ERRHANDLING
-    raise(FE_INVALID,
-          ((x & 0x7FFF) > 0x7C00 && !(x & 0x200)) || ((y & 0x7FFF) > 0x7C00 && !(y & 0x200)));
+    raise(FE_INVALID, ((x & 0x7FFF) > 0x7C00 && !(x & 0x200)) || ((y & 0x7FFF) > 0x7C00 && !(y & 0x200)));
 #endif
     return ((x & 0x7FFF) > 0x7C00) ? (x | 0x200) : (y | 0x200);
 }
@@ -801,12 +796,10 @@ inline HALF_CONSTEXPR_NOERR unsigned int signal(unsigned int x, unsigned int y)
 inline HALF_CONSTEXPR_NOERR unsigned int signal(unsigned int x, unsigned int y, unsigned int z)
 {
 #if HALF_ERRHANDLING
-    raise(FE_INVALID, ((x & 0x7FFF) > 0x7C00 && !(x & 0x200)) ||
-                          ((y & 0x7FFF) > 0x7C00 && !(y & 0x200)) ||
+    raise(FE_INVALID, ((x & 0x7FFF) > 0x7C00 && !(x & 0x200)) || ((y & 0x7FFF) > 0x7C00 && !(y & 0x200)) ||
                           ((z & 0x7FFF) > 0x7C00 && !(z & 0x200)));
 #endif
-    return ((x & 0x7FFF) > 0x7C00) ? (x | 0x200)
-                                   : ((y & 0x7FFF) > 0x7C00) ? (y | 0x200) : (z | 0x200);
+    return ((x & 0x7FFF) > 0x7C00) ? (x | 0x200) : ((y & 0x7FFF) > 0x7C00) ? (y | 0x200) : (z | 0x200);
 }
 
 /// Select value or signaling NaN.
@@ -873,11 +866,10 @@ HALF_CONSTEXPR_NOERR unsigned int overflow(unsigned int sign = 0)
 #if HALF_ERRHANDLING
     raise(FE_OVERFLOW);
 #endif
-    return (R == std::round_toward_infinity)
-               ? (sign + 0x7C00 - (sign >> 15))
-               : (R == std::round_toward_neg_infinity)
-                     ? (sign + 0x7BFF + (sign >> 15))
-                     : (R == std::round_toward_zero) ? (sign | 0x7BFF) : (sign | 0x7C00);
+    return (R == std::round_toward_infinity) ? (sign + 0x7C00 - (sign >> 15))
+                                             : (R == std::round_toward_neg_infinity)
+                                                   ? (sign + 0x7BFF + (sign >> 15))
+                                                   : (R == std::round_toward_zero) ? (sign | 0x7BFF) : (sign | 0x7C00);
 }
 
 /// Half-precision underflow.
@@ -891,9 +883,8 @@ HALF_CONSTEXPR_NOERR unsigned int underflow(unsigned int sign = 0)
 #if HALF_ERRHANDLING
     raise(FE_UNDERFLOW);
 #endif
-    return (R == std::round_toward_infinity)
-               ? (sign + 1 - (sign >> 15))
-               : (R == std::round_toward_neg_infinity) ? (sign + (sign >> 15)) : sign;
+    return (R == std::round_toward_infinity) ? (sign + 1 - (sign >> 15))
+                                             : (R == std::round_toward_neg_infinity) ? (sign + (sign >> 15)) : sign;
 }
 
 /// Round half-precision number.
@@ -910,11 +901,10 @@ template <std::float_round_style R, bool I>
 HALF_CONSTEXPR_NOERR unsigned int rounded(unsigned int value, int g, int s)
 {
 #if HALF_ERRHANDLING
-    value += (R == std::round_to_nearest)
-                 ? (g & (s | value))
-                 : (R == std::round_toward_infinity)
-                       ? (~(value >> 15) & (g | s))
-                       : (R == std::round_toward_neg_infinity) ? ((value >> 15) & (g | s)) : 0;
+    value += (R == std::round_to_nearest) ? (g & (s | value))
+                                          : (R == std::round_toward_infinity)
+                                                ? (~(value >> 15) & (g | s))
+                                                : (R == std::round_toward_neg_infinity) ? ((value >> 15) & (g | s)) : 0;
     if ((value & 0x7C00) == 0x7C00)
         raise(FE_OVERFLOW);
     else if (value & 0x7C00)
@@ -927,8 +917,7 @@ HALF_CONSTEXPR_NOERR unsigned int rounded(unsigned int value, int g, int s)
                ? (value + (g & (s | value)))
                : (R == std::round_toward_infinity)
                      ? (value + (~(value >> 15) & (g | s)))
-                     : (R == std::round_toward_neg_infinity) ? (value + ((value >> 15) & (g | s)))
-                                                             : value;
+                     : (R == std::round_toward_neg_infinity) ? (value + ((value >> 15) & (g | s))) : value;
 #endif
 }
 
@@ -950,19 +939,17 @@ unsigned int integral(unsigned int value)
                     ? (0x3C00 & -static_cast<unsigned>(abs >= (0x3800 + E)))
                     : (R == std::round_toward_infinity)
                           ? (0x3C00 & -(~(value >> 15) & (abs != 0)))
-                          : (R == std::round_toward_neg_infinity)
-                                ? (0x3C00 & -static_cast<unsigned>(value > 0x8000))
-                                : 0) |
+                          : (R == std::round_toward_neg_infinity) ? (0x3C00 & -static_cast<unsigned>(value > 0x8000))
+                                                                  : 0) |
                (value & 0x8000);
     }
     if (abs >= 0x6400) return (abs > 0x7C00) ? signal(value) : value;
     unsigned int exp = 25 - (abs >> 10), mask = (1 << exp) - 1;
     raise(FE_INEXACT, I && (value & mask));
-    return (((R == std::round_to_nearest)
-                 ? ((1 << (exp - 1)) - (~(value >> exp) & E))
-                 : (R == std::round_toward_infinity)
-                       ? (mask & ((value >> 15) - 1))
-                       : (R == std::round_toward_neg_infinity) ? (mask & -(value >> 15)) : 0) +
+    return (((R == std::round_to_nearest) ? ((1 << (exp - 1)) - (~(value >> exp) & E))
+                                          : (R == std::round_toward_infinity)
+                                                ? (mask & ((value >> 15) - 1))
+                                                : (R == std::round_toward_neg_infinity) ? (mask & -(value >> 15)) : 0) +
             value) &
            ~mask;
 }
@@ -1011,28 +998,26 @@ template <std::float_round_style R>
 unsigned int float2half_impl(float value, true_type)
 {
 #if HALF_ENABLE_F16C_INTRINSICS
-    return _mm_cvtsi128_si32(
-        _mm_cvtps_ph(_mm_set_ss(value), (R == std::round_to_nearest)
-                                            ? _MM_FROUND_TO_NEAREST_INT
-                                            : (R == std::round_toward_zero)
-                                                  ? _MM_FROUND_TO_ZERO
-                                                  : (R == std::round_toward_infinity)
-                                                        ? _MM_FROUND_TO_POS_INF
-                                                        : (R == std::round_toward_neg_infinity)
-                                                              ? _MM_FROUND_TO_NEG_INF
-                                                              : _MM_FROUND_CUR_DIRECTION));
+    return _mm_cvtsi128_si32(_mm_cvtps_ph(_mm_set_ss(value), (R == std::round_to_nearest)
+                                                                 ? _MM_FROUND_TO_NEAREST_INT
+                                                                 : (R == std::round_toward_zero)
+                                                                       ? _MM_FROUND_TO_ZERO
+                                                                       : (R == std::round_toward_infinity)
+                                                                             ? _MM_FROUND_TO_POS_INF
+                                                                             : (R == std::round_toward_neg_infinity)
+                                                                                   ? _MM_FROUND_TO_NEG_INF
+                                                                                   : _MM_FROUND_CUR_DIRECTION));
 #else
     bits<float>::type fbits;
     std::memcpy(&fbits, &value, sizeof(float));
 #if 1
     unsigned int sign = (fbits >> 16) & 0x8000;
     fbits &= 0x7FFFFFFF;
-    if (fbits >= 0x7F800000)
-        return sign | 0x7C00 | ((fbits > 0x7F800000) ? (0x200 | ((fbits >> 13) & 0x3FF)) : 0);
+    if (fbits >= 0x7F800000) return sign | 0x7C00 | ((fbits > 0x7F800000) ? (0x200 | ((fbits >> 13) & 0x3FF)) : 0);
     if (fbits >= 0x47800000) return overflow<R>(sign);
     if (fbits >= 0x38800000)
-        return rounded<R, false>(sign | (((fbits >> 23) - 112) << 10) | ((fbits >> 13) & 0x3FF),
-                                 (fbits >> 12) & 1, (fbits & 0xFFF) != 0);
+        return rounded<R, false>(sign | (((fbits >> 23) - 112) << 10) | ((fbits >> 13) & 0x3FF), (fbits >> 12) & 1,
+                                 (fbits & 0xFFF) != 0);
     if (fbits >= 0x33000000) {
         int i = 125 - (fbits >> 23);
         fbits = (fbits & 0x7FFFFF) | 0x800000;
@@ -1043,66 +1028,54 @@ unsigned int float2half_impl(float value, true_type)
     return sign;
 #else
     static const uint16 base_table[512] = {
-        0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-        0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-        0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-        0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-        0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-        0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-        0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-        0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-        0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
-        0x0000, 0x0000, 0x0000, 0x0000, 0x0001, 0x0002, 0x0004, 0x0008, 0x0010, 0x0020, 0x0040,
-        0x0080, 0x0100, 0x0200, 0x0400, 0x0800, 0x0C00, 0x1000, 0x1400, 0x1800, 0x1C00, 0x2000,
-        0x2400, 0x2800, 0x2C00, 0x3000, 0x3400, 0x3800, 0x3C00, 0x4000, 0x4400, 0x4800, 0x4C00,
-        0x5000, 0x5400, 0x5800, 0x5C00, 0x6000, 0x6400, 0x6800, 0x6C00, 0x7000, 0x7400, 0x7800,
-        0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF,
-        0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF,
-        0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF,
-        0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF,
-        0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF,
-        0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF,
-        0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF,
-        0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF,
-        0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF,
-        0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF,
-        0x7BFF, 0x7BFF, 0x7C00, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000,
-        0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000,
-        0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000,
-        0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000,
-        0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000,
-        0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000,
-        0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000,
-        0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000,
-        0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000,
-        0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8001, 0x8002, 0x8004, 0x8008,
-        0x8010, 0x8020, 0x8040, 0x8080, 0x8100, 0x8200, 0x8400, 0x8800, 0x8C00, 0x9000, 0x9400,
-        0x9800, 0x9C00, 0xA000, 0xA400, 0xA800, 0xAC00, 0xB000, 0xB400, 0xB800, 0xBC00, 0xC000,
-        0xC400, 0xC800, 0xCC00, 0xD000, 0xD400, 0xD800, 0xDC00, 0xE000, 0xE400, 0xE800, 0xEC00,
-        0xF000, 0xF400, 0xF800, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF,
-        0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF,
-        0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF,
-        0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF,
-        0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF,
-        0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF,
-        0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF,
-        0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF,
-        0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF,
-        0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF,
-        0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFC00};
+        0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
+        0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
+        0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
+        0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
+        0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
+        0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
+        0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
+        0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0001, 0x0002, 0x0004, 0x0008, 0x0010, 0x0020, 0x0040, 0x0080, 0x0100,
+        0x0200, 0x0400, 0x0800, 0x0C00, 0x1000, 0x1400, 0x1800, 0x1C00, 0x2000, 0x2400, 0x2800, 0x2C00, 0x3000, 0x3400,
+        0x3800, 0x3C00, 0x4000, 0x4400, 0x4800, 0x4C00, 0x5000, 0x5400, 0x5800, 0x5C00, 0x6000, 0x6400, 0x6800, 0x6C00,
+        0x7000, 0x7400, 0x7800, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF,
+        0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF,
+        0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF,
+        0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF,
+        0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF,
+        0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF,
+        0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF,
+        0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF, 0x7BFF,
+        0x7BFF, 0x7BFF, 0x7BFF, 0x7C00, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000,
+        0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000,
+        0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000,
+        0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000,
+        0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000,
+        0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000,
+        0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000,
+        0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8001, 0x8002, 0x8004, 0x8008, 0x8010,
+        0x8020, 0x8040, 0x8080, 0x8100, 0x8200, 0x8400, 0x8800, 0x8C00, 0x9000, 0x9400, 0x9800, 0x9C00, 0xA000, 0xA400,
+        0xA800, 0xAC00, 0xB000, 0xB400, 0xB800, 0xBC00, 0xC000, 0xC400, 0xC800, 0xCC00, 0xD000, 0xD400, 0xD800, 0xDC00,
+        0xE000, 0xE400, 0xE800, 0xEC00, 0xF000, 0xF400, 0xF800, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF,
+        0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF,
+        0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF,
+        0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF,
+        0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF,
+        0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF,
+        0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF,
+        0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF,
+        0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFBFF, 0xFC00};
     static const unsigned char shift_table[256] = {
-        24, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25,
-        25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25,
-        25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25,
-        25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25,
-        25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 24, 23, 22, 21, 20, 19, 18, 17,
-        16, 15, 14, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
-        13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24,
-        24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24,
-        24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24,
-        24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24,
-        24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24,
-        24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 13};
+        24, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25,
+        25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25,
+        25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25,
+        25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 24, 23,
+        22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
+        13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24,
+        24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24,
+        24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24,
+        24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24,
+        24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 13};
     int sexp = fbits >> 23, exp = sexp & 0xFF, i = shift_table[exp];
     fbits &= 0x7FFFFF;
     uint32 m = (fbits | ((exp != 0) << 23)) & -static_cast<uint32>(exp != 0xFF);
@@ -1124,20 +1097,18 @@ unsigned int float2half_impl(double value, true_type)
 {
 #if HALF_ENABLE_F16C_INTRINSICS
     if (R == std::round_indeterminate)
-        return _mm_cvtsi128_si32(
-            _mm_cvtps_ph(_mm_cvtpd_ps(_mm_set_sd(value)), _MM_FROUND_CUR_DIRECTION));
+        return _mm_cvtsi128_si32(_mm_cvtps_ph(_mm_cvtpd_ps(_mm_set_sd(value)), _MM_FROUND_CUR_DIRECTION));
 #endif
     bits<double>::type dbits;
     std::memcpy(&dbits, &value, sizeof(double));
     uint32 hi = dbits >> 32, lo = dbits & 0xFFFFFFFF;
     unsigned int sign = (hi >> 16) & 0x8000;
     hi &= 0x7FFFFFFF;
-    if (hi >= 0x7FF00000)
-        return sign | 0x7C00 | ((dbits & 0xFFFFFFFFFFFFF) ? (0x200 | ((hi >> 10) & 0x3FF)) : 0);
+    if (hi >= 0x7FF00000) return sign | 0x7C00 | ((dbits & 0xFFFFFFFFFFFFF) ? (0x200 | ((hi >> 10) & 0x3FF)) : 0);
     if (hi >= 0x40F00000) return overflow<R>(sign);
     if (hi >= 0x3F100000)
-        return rounded<R, false>(sign | (((hi >> 20) - 1008) << 10) | ((hi >> 10) & 0x3FF),
-                                 (hi >> 9) & 1, ((hi & 0x1FF) | lo) != 0);
+        return rounded<R, false>(sign | (((hi >> 20) - 1008) << 10) | ((hi >> 10) & 0x3FF), (hi >> 9) & 1,
+                                 ((hi & 0x1FF) | lo) != 0);
     if (hi >= 0x3E600000) {
         int i = 1018 - (hi >> 20);
         hi = (hi & 0xFFFFF) | 0x100000;
@@ -1188,8 +1159,8 @@ unsigned int float2half_impl(T value, ...)
 template <std::float_round_style R, typename T>
 unsigned int float2half(T value)
 {
-    return float2half_impl<R>(value, bool_type < std::numeric_limits<T>::is_iec559 &&
-                                         sizeof(typename bits<T>::type) == sizeof(T) > ());
+    return float2half_impl<R>(
+        value, bool_type < std::numeric_limits<T>::is_iec559 && sizeof(typename bits<T>::type) == sizeof(T) > ());
 }
 
 /// Convert integer to half-precision floating-point.
@@ -1212,8 +1183,7 @@ unsigned int int2half(T value)
     for (; m > 0x7FF; m >>= 1, ++exp)
         ;
     bits |= (exp << 10) + m;
-    return (exp > 24) ? rounded<R, false>(bits, (value >> (exp - 25)) & 1,
-                                          (((1 << (exp - 25)) - 1) & value) != 0)
+    return (exp > 24) ? rounded<R, false>(bits, (value >> (exp - 25)) & 1, (((1 << (exp - 25)) - 1) & value) != 0)
                       : bits;
 }
 
@@ -1237,318 +1207,249 @@ inline float half2float_impl(unsigned int value, float, true_type)
     //            }
     //#else
     static const bits<float>::type mantissa_table[2048] = {
-        0x00000000, 0x33800000, 0x34000000, 0x34400000, 0x34800000, 0x34A00000, 0x34C00000,
-        0x34E00000, 0x35000000, 0x35100000, 0x35200000, 0x35300000, 0x35400000, 0x35500000,
-        0x35600000, 0x35700000, 0x35800000, 0x35880000, 0x35900000, 0x35980000, 0x35A00000,
-        0x35A80000, 0x35B00000, 0x35B80000, 0x35C00000, 0x35C80000, 0x35D00000, 0x35D80000,
-        0x35E00000, 0x35E80000, 0x35F00000, 0x35F80000, 0x36000000, 0x36040000, 0x36080000,
-        0x360C0000, 0x36100000, 0x36140000, 0x36180000, 0x361C0000, 0x36200000, 0x36240000,
-        0x36280000, 0x362C0000, 0x36300000, 0x36340000, 0x36380000, 0x363C0000, 0x36400000,
-        0x36440000, 0x36480000, 0x364C0000, 0x36500000, 0x36540000, 0x36580000, 0x365C0000,
-        0x36600000, 0x36640000, 0x36680000, 0x366C0000, 0x36700000, 0x36740000, 0x36780000,
-        0x367C0000, 0x36800000, 0x36820000, 0x36840000, 0x36860000, 0x36880000, 0x368A0000,
-        0x368C0000, 0x368E0000, 0x36900000, 0x36920000, 0x36940000, 0x36960000, 0x36980000,
-        0x369A0000, 0x369C0000, 0x369E0000, 0x36A00000, 0x36A20000, 0x36A40000, 0x36A60000,
-        0x36A80000, 0x36AA0000, 0x36AC0000, 0x36AE0000, 0x36B00000, 0x36B20000, 0x36B40000,
-        0x36B60000, 0x36B80000, 0x36BA0000, 0x36BC0000, 0x36BE0000, 0x36C00000, 0x36C20000,
-        0x36C40000, 0x36C60000, 0x36C80000, 0x36CA0000, 0x36CC0000, 0x36CE0000, 0x36D00000,
-        0x36D20000, 0x36D40000, 0x36D60000, 0x36D80000, 0x36DA0000, 0x36DC0000, 0x36DE0000,
-        0x36E00000, 0x36E20000, 0x36E40000, 0x36E60000, 0x36E80000, 0x36EA0000, 0x36EC0000,
-        0x36EE0000, 0x36F00000, 0x36F20000, 0x36F40000, 0x36F60000, 0x36F80000, 0x36FA0000,
-        0x36FC0000, 0x36FE0000, 0x37000000, 0x37010000, 0x37020000, 0x37030000, 0x37040000,
-        0x37050000, 0x37060000, 0x37070000, 0x37080000, 0x37090000, 0x370A0000, 0x370B0000,
-        0x370C0000, 0x370D0000, 0x370E0000, 0x370F0000, 0x37100000, 0x37110000, 0x37120000,
-        0x37130000, 0x37140000, 0x37150000, 0x37160000, 0x37170000, 0x37180000, 0x37190000,
-        0x371A0000, 0x371B0000, 0x371C0000, 0x371D0000, 0x371E0000, 0x371F0000, 0x37200000,
-        0x37210000, 0x37220000, 0x37230000, 0x37240000, 0x37250000, 0x37260000, 0x37270000,
-        0x37280000, 0x37290000, 0x372A0000, 0x372B0000, 0x372C0000, 0x372D0000, 0x372E0000,
-        0x372F0000, 0x37300000, 0x37310000, 0x37320000, 0x37330000, 0x37340000, 0x37350000,
-        0x37360000, 0x37370000, 0x37380000, 0x37390000, 0x373A0000, 0x373B0000, 0x373C0000,
-        0x373D0000, 0x373E0000, 0x373F0000, 0x37400000, 0x37410000, 0x37420000, 0x37430000,
-        0x37440000, 0x37450000, 0x37460000, 0x37470000, 0x37480000, 0x37490000, 0x374A0000,
-        0x374B0000, 0x374C0000, 0x374D0000, 0x374E0000, 0x374F0000, 0x37500000, 0x37510000,
-        0x37520000, 0x37530000, 0x37540000, 0x37550000, 0x37560000, 0x37570000, 0x37580000,
-        0x37590000, 0x375A0000, 0x375B0000, 0x375C0000, 0x375D0000, 0x375E0000, 0x375F0000,
-        0x37600000, 0x37610000, 0x37620000, 0x37630000, 0x37640000, 0x37650000, 0x37660000,
-        0x37670000, 0x37680000, 0x37690000, 0x376A0000, 0x376B0000, 0x376C0000, 0x376D0000,
-        0x376E0000, 0x376F0000, 0x37700000, 0x37710000, 0x37720000, 0x37730000, 0x37740000,
-        0x37750000, 0x37760000, 0x37770000, 0x37780000, 0x37790000, 0x377A0000, 0x377B0000,
-        0x377C0000, 0x377D0000, 0x377E0000, 0x377F0000, 0x37800000, 0x37808000, 0x37810000,
-        0x37818000, 0x37820000, 0x37828000, 0x37830000, 0x37838000, 0x37840000, 0x37848000,
-        0x37850000, 0x37858000, 0x37860000, 0x37868000, 0x37870000, 0x37878000, 0x37880000,
-        0x37888000, 0x37890000, 0x37898000, 0x378A0000, 0x378A8000, 0x378B0000, 0x378B8000,
-        0x378C0000, 0x378C8000, 0x378D0000, 0x378D8000, 0x378E0000, 0x378E8000, 0x378F0000,
-        0x378F8000, 0x37900000, 0x37908000, 0x37910000, 0x37918000, 0x37920000, 0x37928000,
-        0x37930000, 0x37938000, 0x37940000, 0x37948000, 0x37950000, 0x37958000, 0x37960000,
-        0x37968000, 0x37970000, 0x37978000, 0x37980000, 0x37988000, 0x37990000, 0x37998000,
-        0x379A0000, 0x379A8000, 0x379B0000, 0x379B8000, 0x379C0000, 0x379C8000, 0x379D0000,
-        0x379D8000, 0x379E0000, 0x379E8000, 0x379F0000, 0x379F8000, 0x37A00000, 0x37A08000,
-        0x37A10000, 0x37A18000, 0x37A20000, 0x37A28000, 0x37A30000, 0x37A38000, 0x37A40000,
-        0x37A48000, 0x37A50000, 0x37A58000, 0x37A60000, 0x37A68000, 0x37A70000, 0x37A78000,
-        0x37A80000, 0x37A88000, 0x37A90000, 0x37A98000, 0x37AA0000, 0x37AA8000, 0x37AB0000,
-        0x37AB8000, 0x37AC0000, 0x37AC8000, 0x37AD0000, 0x37AD8000, 0x37AE0000, 0x37AE8000,
-        0x37AF0000, 0x37AF8000, 0x37B00000, 0x37B08000, 0x37B10000, 0x37B18000, 0x37B20000,
-        0x37B28000, 0x37B30000, 0x37B38000, 0x37B40000, 0x37B48000, 0x37B50000, 0x37B58000,
-        0x37B60000, 0x37B68000, 0x37B70000, 0x37B78000, 0x37B80000, 0x37B88000, 0x37B90000,
-        0x37B98000, 0x37BA0000, 0x37BA8000, 0x37BB0000, 0x37BB8000, 0x37BC0000, 0x37BC8000,
-        0x37BD0000, 0x37BD8000, 0x37BE0000, 0x37BE8000, 0x37BF0000, 0x37BF8000, 0x37C00000,
-        0x37C08000, 0x37C10000, 0x37C18000, 0x37C20000, 0x37C28000, 0x37C30000, 0x37C38000,
-        0x37C40000, 0x37C48000, 0x37C50000, 0x37C58000, 0x37C60000, 0x37C68000, 0x37C70000,
-        0x37C78000, 0x37C80000, 0x37C88000, 0x37C90000, 0x37C98000, 0x37CA0000, 0x37CA8000,
-        0x37CB0000, 0x37CB8000, 0x37CC0000, 0x37CC8000, 0x37CD0000, 0x37CD8000, 0x37CE0000,
-        0x37CE8000, 0x37CF0000, 0x37CF8000, 0x37D00000, 0x37D08000, 0x37D10000, 0x37D18000,
-        0x37D20000, 0x37D28000, 0x37D30000, 0x37D38000, 0x37D40000, 0x37D48000, 0x37D50000,
-        0x37D58000, 0x37D60000, 0x37D68000, 0x37D70000, 0x37D78000, 0x37D80000, 0x37D88000,
-        0x37D90000, 0x37D98000, 0x37DA0000, 0x37DA8000, 0x37DB0000, 0x37DB8000, 0x37DC0000,
-        0x37DC8000, 0x37DD0000, 0x37DD8000, 0x37DE0000, 0x37DE8000, 0x37DF0000, 0x37DF8000,
-        0x37E00000, 0x37E08000, 0x37E10000, 0x37E18000, 0x37E20000, 0x37E28000, 0x37E30000,
-        0x37E38000, 0x37E40000, 0x37E48000, 0x37E50000, 0x37E58000, 0x37E60000, 0x37E68000,
-        0x37E70000, 0x37E78000, 0x37E80000, 0x37E88000, 0x37E90000, 0x37E98000, 0x37EA0000,
-        0x37EA8000, 0x37EB0000, 0x37EB8000, 0x37EC0000, 0x37EC8000, 0x37ED0000, 0x37ED8000,
-        0x37EE0000, 0x37EE8000, 0x37EF0000, 0x37EF8000, 0x37F00000, 0x37F08000, 0x37F10000,
-        0x37F18000, 0x37F20000, 0x37F28000, 0x37F30000, 0x37F38000, 0x37F40000, 0x37F48000,
-        0x37F50000, 0x37F58000, 0x37F60000, 0x37F68000, 0x37F70000, 0x37F78000, 0x37F80000,
-        0x37F88000, 0x37F90000, 0x37F98000, 0x37FA0000, 0x37FA8000, 0x37FB0000, 0x37FB8000,
-        0x37FC0000, 0x37FC8000, 0x37FD0000, 0x37FD8000, 0x37FE0000, 0x37FE8000, 0x37FF0000,
-        0x37FF8000, 0x38000000, 0x38004000, 0x38008000, 0x3800C000, 0x38010000, 0x38014000,
-        0x38018000, 0x3801C000, 0x38020000, 0x38024000, 0x38028000, 0x3802C000, 0x38030000,
-        0x38034000, 0x38038000, 0x3803C000, 0x38040000, 0x38044000, 0x38048000, 0x3804C000,
-        0x38050000, 0x38054000, 0x38058000, 0x3805C000, 0x38060000, 0x38064000, 0x38068000,
-        0x3806C000, 0x38070000, 0x38074000, 0x38078000, 0x3807C000, 0x38080000, 0x38084000,
-        0x38088000, 0x3808C000, 0x38090000, 0x38094000, 0x38098000, 0x3809C000, 0x380A0000,
-        0x380A4000, 0x380A8000, 0x380AC000, 0x380B0000, 0x380B4000, 0x380B8000, 0x380BC000,
-        0x380C0000, 0x380C4000, 0x380C8000, 0x380CC000, 0x380D0000, 0x380D4000, 0x380D8000,
-        0x380DC000, 0x380E0000, 0x380E4000, 0x380E8000, 0x380EC000, 0x380F0000, 0x380F4000,
-        0x380F8000, 0x380FC000, 0x38100000, 0x38104000, 0x38108000, 0x3810C000, 0x38110000,
-        0x38114000, 0x38118000, 0x3811C000, 0x38120000, 0x38124000, 0x38128000, 0x3812C000,
-        0x38130000, 0x38134000, 0x38138000, 0x3813C000, 0x38140000, 0x38144000, 0x38148000,
-        0x3814C000, 0x38150000, 0x38154000, 0x38158000, 0x3815C000, 0x38160000, 0x38164000,
-        0x38168000, 0x3816C000, 0x38170000, 0x38174000, 0x38178000, 0x3817C000, 0x38180000,
-        0x38184000, 0x38188000, 0x3818C000, 0x38190000, 0x38194000, 0x38198000, 0x3819C000,
-        0x381A0000, 0x381A4000, 0x381A8000, 0x381AC000, 0x381B0000, 0x381B4000, 0x381B8000,
-        0x381BC000, 0x381C0000, 0x381C4000, 0x381C8000, 0x381CC000, 0x381D0000, 0x381D4000,
-        0x381D8000, 0x381DC000, 0x381E0000, 0x381E4000, 0x381E8000, 0x381EC000, 0x381F0000,
-        0x381F4000, 0x381F8000, 0x381FC000, 0x38200000, 0x38204000, 0x38208000, 0x3820C000,
-        0x38210000, 0x38214000, 0x38218000, 0x3821C000, 0x38220000, 0x38224000, 0x38228000,
-        0x3822C000, 0x38230000, 0x38234000, 0x38238000, 0x3823C000, 0x38240000, 0x38244000,
-        0x38248000, 0x3824C000, 0x38250000, 0x38254000, 0x38258000, 0x3825C000, 0x38260000,
-        0x38264000, 0x38268000, 0x3826C000, 0x38270000, 0x38274000, 0x38278000, 0x3827C000,
-        0x38280000, 0x38284000, 0x38288000, 0x3828C000, 0x38290000, 0x38294000, 0x38298000,
-        0x3829C000, 0x382A0000, 0x382A4000, 0x382A8000, 0x382AC000, 0x382B0000, 0x382B4000,
-        0x382B8000, 0x382BC000, 0x382C0000, 0x382C4000, 0x382C8000, 0x382CC000, 0x382D0000,
-        0x382D4000, 0x382D8000, 0x382DC000, 0x382E0000, 0x382E4000, 0x382E8000, 0x382EC000,
-        0x382F0000, 0x382F4000, 0x382F8000, 0x382FC000, 0x38300000, 0x38304000, 0x38308000,
-        0x3830C000, 0x38310000, 0x38314000, 0x38318000, 0x3831C000, 0x38320000, 0x38324000,
-        0x38328000, 0x3832C000, 0x38330000, 0x38334000, 0x38338000, 0x3833C000, 0x38340000,
-        0x38344000, 0x38348000, 0x3834C000, 0x38350000, 0x38354000, 0x38358000, 0x3835C000,
-        0x38360000, 0x38364000, 0x38368000, 0x3836C000, 0x38370000, 0x38374000, 0x38378000,
-        0x3837C000, 0x38380000, 0x38384000, 0x38388000, 0x3838C000, 0x38390000, 0x38394000,
-        0x38398000, 0x3839C000, 0x383A0000, 0x383A4000, 0x383A8000, 0x383AC000, 0x383B0000,
-        0x383B4000, 0x383B8000, 0x383BC000, 0x383C0000, 0x383C4000, 0x383C8000, 0x383CC000,
-        0x383D0000, 0x383D4000, 0x383D8000, 0x383DC000, 0x383E0000, 0x383E4000, 0x383E8000,
-        0x383EC000, 0x383F0000, 0x383F4000, 0x383F8000, 0x383FC000, 0x38400000, 0x38404000,
-        0x38408000, 0x3840C000, 0x38410000, 0x38414000, 0x38418000, 0x3841C000, 0x38420000,
-        0x38424000, 0x38428000, 0x3842C000, 0x38430000, 0x38434000, 0x38438000, 0x3843C000,
-        0x38440000, 0x38444000, 0x38448000, 0x3844C000, 0x38450000, 0x38454000, 0x38458000,
-        0x3845C000, 0x38460000, 0x38464000, 0x38468000, 0x3846C000, 0x38470000, 0x38474000,
-        0x38478000, 0x3847C000, 0x38480000, 0x38484000, 0x38488000, 0x3848C000, 0x38490000,
-        0x38494000, 0x38498000, 0x3849C000, 0x384A0000, 0x384A4000, 0x384A8000, 0x384AC000,
-        0x384B0000, 0x384B4000, 0x384B8000, 0x384BC000, 0x384C0000, 0x384C4000, 0x384C8000,
-        0x384CC000, 0x384D0000, 0x384D4000, 0x384D8000, 0x384DC000, 0x384E0000, 0x384E4000,
-        0x384E8000, 0x384EC000, 0x384F0000, 0x384F4000, 0x384F8000, 0x384FC000, 0x38500000,
-        0x38504000, 0x38508000, 0x3850C000, 0x38510000, 0x38514000, 0x38518000, 0x3851C000,
-        0x38520000, 0x38524000, 0x38528000, 0x3852C000, 0x38530000, 0x38534000, 0x38538000,
-        0x3853C000, 0x38540000, 0x38544000, 0x38548000, 0x3854C000, 0x38550000, 0x38554000,
-        0x38558000, 0x3855C000, 0x38560000, 0x38564000, 0x38568000, 0x3856C000, 0x38570000,
-        0x38574000, 0x38578000, 0x3857C000, 0x38580000, 0x38584000, 0x38588000, 0x3858C000,
-        0x38590000, 0x38594000, 0x38598000, 0x3859C000, 0x385A0000, 0x385A4000, 0x385A8000,
-        0x385AC000, 0x385B0000, 0x385B4000, 0x385B8000, 0x385BC000, 0x385C0000, 0x385C4000,
-        0x385C8000, 0x385CC000, 0x385D0000, 0x385D4000, 0x385D8000, 0x385DC000, 0x385E0000,
-        0x385E4000, 0x385E8000, 0x385EC000, 0x385F0000, 0x385F4000, 0x385F8000, 0x385FC000,
-        0x38600000, 0x38604000, 0x38608000, 0x3860C000, 0x38610000, 0x38614000, 0x38618000,
-        0x3861C000, 0x38620000, 0x38624000, 0x38628000, 0x3862C000, 0x38630000, 0x38634000,
-        0x38638000, 0x3863C000, 0x38640000, 0x38644000, 0x38648000, 0x3864C000, 0x38650000,
-        0x38654000, 0x38658000, 0x3865C000, 0x38660000, 0x38664000, 0x38668000, 0x3866C000,
-        0x38670000, 0x38674000, 0x38678000, 0x3867C000, 0x38680000, 0x38684000, 0x38688000,
-        0x3868C000, 0x38690000, 0x38694000, 0x38698000, 0x3869C000, 0x386A0000, 0x386A4000,
-        0x386A8000, 0x386AC000, 0x386B0000, 0x386B4000, 0x386B8000, 0x386BC000, 0x386C0000,
-        0x386C4000, 0x386C8000, 0x386CC000, 0x386D0000, 0x386D4000, 0x386D8000, 0x386DC000,
-        0x386E0000, 0x386E4000, 0x386E8000, 0x386EC000, 0x386F0000, 0x386F4000, 0x386F8000,
-        0x386FC000, 0x38700000, 0x38704000, 0x38708000, 0x3870C000, 0x38710000, 0x38714000,
-        0x38718000, 0x3871C000, 0x38720000, 0x38724000, 0x38728000, 0x3872C000, 0x38730000,
-        0x38734000, 0x38738000, 0x3873C000, 0x38740000, 0x38744000, 0x38748000, 0x3874C000,
-        0x38750000, 0x38754000, 0x38758000, 0x3875C000, 0x38760000, 0x38764000, 0x38768000,
-        0x3876C000, 0x38770000, 0x38774000, 0x38778000, 0x3877C000, 0x38780000, 0x38784000,
-        0x38788000, 0x3878C000, 0x38790000, 0x38794000, 0x38798000, 0x3879C000, 0x387A0000,
-        0x387A4000, 0x387A8000, 0x387AC000, 0x387B0000, 0x387B4000, 0x387B8000, 0x387BC000,
-        0x387C0000, 0x387C4000, 0x387C8000, 0x387CC000, 0x387D0000, 0x387D4000, 0x387D8000,
-        0x387DC000, 0x387E0000, 0x387E4000, 0x387E8000, 0x387EC000, 0x387F0000, 0x387F4000,
-        0x387F8000, 0x387FC000, 0x38000000, 0x38002000, 0x38004000, 0x38006000, 0x38008000,
-        0x3800A000, 0x3800C000, 0x3800E000, 0x38010000, 0x38012000, 0x38014000, 0x38016000,
-        0x38018000, 0x3801A000, 0x3801C000, 0x3801E000, 0x38020000, 0x38022000, 0x38024000,
-        0x38026000, 0x38028000, 0x3802A000, 0x3802C000, 0x3802E000, 0x38030000, 0x38032000,
-        0x38034000, 0x38036000, 0x38038000, 0x3803A000, 0x3803C000, 0x3803E000, 0x38040000,
-        0x38042000, 0x38044000, 0x38046000, 0x38048000, 0x3804A000, 0x3804C000, 0x3804E000,
-        0x38050000, 0x38052000, 0x38054000, 0x38056000, 0x38058000, 0x3805A000, 0x3805C000,
-        0x3805E000, 0x38060000, 0x38062000, 0x38064000, 0x38066000, 0x38068000, 0x3806A000,
-        0x3806C000, 0x3806E000, 0x38070000, 0x38072000, 0x38074000, 0x38076000, 0x38078000,
-        0x3807A000, 0x3807C000, 0x3807E000, 0x38080000, 0x38082000, 0x38084000, 0x38086000,
-        0x38088000, 0x3808A000, 0x3808C000, 0x3808E000, 0x38090000, 0x38092000, 0x38094000,
-        0x38096000, 0x38098000, 0x3809A000, 0x3809C000, 0x3809E000, 0x380A0000, 0x380A2000,
-        0x380A4000, 0x380A6000, 0x380A8000, 0x380AA000, 0x380AC000, 0x380AE000, 0x380B0000,
-        0x380B2000, 0x380B4000, 0x380B6000, 0x380B8000, 0x380BA000, 0x380BC000, 0x380BE000,
-        0x380C0000, 0x380C2000, 0x380C4000, 0x380C6000, 0x380C8000, 0x380CA000, 0x380CC000,
-        0x380CE000, 0x380D0000, 0x380D2000, 0x380D4000, 0x380D6000, 0x380D8000, 0x380DA000,
-        0x380DC000, 0x380DE000, 0x380E0000, 0x380E2000, 0x380E4000, 0x380E6000, 0x380E8000,
-        0x380EA000, 0x380EC000, 0x380EE000, 0x380F0000, 0x380F2000, 0x380F4000, 0x380F6000,
-        0x380F8000, 0x380FA000, 0x380FC000, 0x380FE000, 0x38100000, 0x38102000, 0x38104000,
-        0x38106000, 0x38108000, 0x3810A000, 0x3810C000, 0x3810E000, 0x38110000, 0x38112000,
-        0x38114000, 0x38116000, 0x38118000, 0x3811A000, 0x3811C000, 0x3811E000, 0x38120000,
-        0x38122000, 0x38124000, 0x38126000, 0x38128000, 0x3812A000, 0x3812C000, 0x3812E000,
-        0x38130000, 0x38132000, 0x38134000, 0x38136000, 0x38138000, 0x3813A000, 0x3813C000,
-        0x3813E000, 0x38140000, 0x38142000, 0x38144000, 0x38146000, 0x38148000, 0x3814A000,
-        0x3814C000, 0x3814E000, 0x38150000, 0x38152000, 0x38154000, 0x38156000, 0x38158000,
-        0x3815A000, 0x3815C000, 0x3815E000, 0x38160000, 0x38162000, 0x38164000, 0x38166000,
-        0x38168000, 0x3816A000, 0x3816C000, 0x3816E000, 0x38170000, 0x38172000, 0x38174000,
-        0x38176000, 0x38178000, 0x3817A000, 0x3817C000, 0x3817E000, 0x38180000, 0x38182000,
-        0x38184000, 0x38186000, 0x38188000, 0x3818A000, 0x3818C000, 0x3818E000, 0x38190000,
-        0x38192000, 0x38194000, 0x38196000, 0x38198000, 0x3819A000, 0x3819C000, 0x3819E000,
-        0x381A0000, 0x381A2000, 0x381A4000, 0x381A6000, 0x381A8000, 0x381AA000, 0x381AC000,
-        0x381AE000, 0x381B0000, 0x381B2000, 0x381B4000, 0x381B6000, 0x381B8000, 0x381BA000,
-        0x381BC000, 0x381BE000, 0x381C0000, 0x381C2000, 0x381C4000, 0x381C6000, 0x381C8000,
-        0x381CA000, 0x381CC000, 0x381CE000, 0x381D0000, 0x381D2000, 0x381D4000, 0x381D6000,
-        0x381D8000, 0x381DA000, 0x381DC000, 0x381DE000, 0x381E0000, 0x381E2000, 0x381E4000,
-        0x381E6000, 0x381E8000, 0x381EA000, 0x381EC000, 0x381EE000, 0x381F0000, 0x381F2000,
-        0x381F4000, 0x381F6000, 0x381F8000, 0x381FA000, 0x381FC000, 0x381FE000, 0x38200000,
-        0x38202000, 0x38204000, 0x38206000, 0x38208000, 0x3820A000, 0x3820C000, 0x3820E000,
-        0x38210000, 0x38212000, 0x38214000, 0x38216000, 0x38218000, 0x3821A000, 0x3821C000,
-        0x3821E000, 0x38220000, 0x38222000, 0x38224000, 0x38226000, 0x38228000, 0x3822A000,
-        0x3822C000, 0x3822E000, 0x38230000, 0x38232000, 0x38234000, 0x38236000, 0x38238000,
-        0x3823A000, 0x3823C000, 0x3823E000, 0x38240000, 0x38242000, 0x38244000, 0x38246000,
-        0x38248000, 0x3824A000, 0x3824C000, 0x3824E000, 0x38250000, 0x38252000, 0x38254000,
-        0x38256000, 0x38258000, 0x3825A000, 0x3825C000, 0x3825E000, 0x38260000, 0x38262000,
-        0x38264000, 0x38266000, 0x38268000, 0x3826A000, 0x3826C000, 0x3826E000, 0x38270000,
-        0x38272000, 0x38274000, 0x38276000, 0x38278000, 0x3827A000, 0x3827C000, 0x3827E000,
-        0x38280000, 0x38282000, 0x38284000, 0x38286000, 0x38288000, 0x3828A000, 0x3828C000,
-        0x3828E000, 0x38290000, 0x38292000, 0x38294000, 0x38296000, 0x38298000, 0x3829A000,
-        0x3829C000, 0x3829E000, 0x382A0000, 0x382A2000, 0x382A4000, 0x382A6000, 0x382A8000,
-        0x382AA000, 0x382AC000, 0x382AE000, 0x382B0000, 0x382B2000, 0x382B4000, 0x382B6000,
-        0x382B8000, 0x382BA000, 0x382BC000, 0x382BE000, 0x382C0000, 0x382C2000, 0x382C4000,
-        0x382C6000, 0x382C8000, 0x382CA000, 0x382CC000, 0x382CE000, 0x382D0000, 0x382D2000,
-        0x382D4000, 0x382D6000, 0x382D8000, 0x382DA000, 0x382DC000, 0x382DE000, 0x382E0000,
-        0x382E2000, 0x382E4000, 0x382E6000, 0x382E8000, 0x382EA000, 0x382EC000, 0x382EE000,
-        0x382F0000, 0x382F2000, 0x382F4000, 0x382F6000, 0x382F8000, 0x382FA000, 0x382FC000,
-        0x382FE000, 0x38300000, 0x38302000, 0x38304000, 0x38306000, 0x38308000, 0x3830A000,
-        0x3830C000, 0x3830E000, 0x38310000, 0x38312000, 0x38314000, 0x38316000, 0x38318000,
-        0x3831A000, 0x3831C000, 0x3831E000, 0x38320000, 0x38322000, 0x38324000, 0x38326000,
-        0x38328000, 0x3832A000, 0x3832C000, 0x3832E000, 0x38330000, 0x38332000, 0x38334000,
-        0x38336000, 0x38338000, 0x3833A000, 0x3833C000, 0x3833E000, 0x38340000, 0x38342000,
-        0x38344000, 0x38346000, 0x38348000, 0x3834A000, 0x3834C000, 0x3834E000, 0x38350000,
-        0x38352000, 0x38354000, 0x38356000, 0x38358000, 0x3835A000, 0x3835C000, 0x3835E000,
-        0x38360000, 0x38362000, 0x38364000, 0x38366000, 0x38368000, 0x3836A000, 0x3836C000,
-        0x3836E000, 0x38370000, 0x38372000, 0x38374000, 0x38376000, 0x38378000, 0x3837A000,
-        0x3837C000, 0x3837E000, 0x38380000, 0x38382000, 0x38384000, 0x38386000, 0x38388000,
-        0x3838A000, 0x3838C000, 0x3838E000, 0x38390000, 0x38392000, 0x38394000, 0x38396000,
-        0x38398000, 0x3839A000, 0x3839C000, 0x3839E000, 0x383A0000, 0x383A2000, 0x383A4000,
-        0x383A6000, 0x383A8000, 0x383AA000, 0x383AC000, 0x383AE000, 0x383B0000, 0x383B2000,
-        0x383B4000, 0x383B6000, 0x383B8000, 0x383BA000, 0x383BC000, 0x383BE000, 0x383C0000,
-        0x383C2000, 0x383C4000, 0x383C6000, 0x383C8000, 0x383CA000, 0x383CC000, 0x383CE000,
-        0x383D0000, 0x383D2000, 0x383D4000, 0x383D6000, 0x383D8000, 0x383DA000, 0x383DC000,
-        0x383DE000, 0x383E0000, 0x383E2000, 0x383E4000, 0x383E6000, 0x383E8000, 0x383EA000,
-        0x383EC000, 0x383EE000, 0x383F0000, 0x383F2000, 0x383F4000, 0x383F6000, 0x383F8000,
-        0x383FA000, 0x383FC000, 0x383FE000, 0x38400000, 0x38402000, 0x38404000, 0x38406000,
-        0x38408000, 0x3840A000, 0x3840C000, 0x3840E000, 0x38410000, 0x38412000, 0x38414000,
-        0x38416000, 0x38418000, 0x3841A000, 0x3841C000, 0x3841E000, 0x38420000, 0x38422000,
-        0x38424000, 0x38426000, 0x38428000, 0x3842A000, 0x3842C000, 0x3842E000, 0x38430000,
-        0x38432000, 0x38434000, 0x38436000, 0x38438000, 0x3843A000, 0x3843C000, 0x3843E000,
-        0x38440000, 0x38442000, 0x38444000, 0x38446000, 0x38448000, 0x3844A000, 0x3844C000,
-        0x3844E000, 0x38450000, 0x38452000, 0x38454000, 0x38456000, 0x38458000, 0x3845A000,
-        0x3845C000, 0x3845E000, 0x38460000, 0x38462000, 0x38464000, 0x38466000, 0x38468000,
-        0x3846A000, 0x3846C000, 0x3846E000, 0x38470000, 0x38472000, 0x38474000, 0x38476000,
-        0x38478000, 0x3847A000, 0x3847C000, 0x3847E000, 0x38480000, 0x38482000, 0x38484000,
-        0x38486000, 0x38488000, 0x3848A000, 0x3848C000, 0x3848E000, 0x38490000, 0x38492000,
-        0x38494000, 0x38496000, 0x38498000, 0x3849A000, 0x3849C000, 0x3849E000, 0x384A0000,
-        0x384A2000, 0x384A4000, 0x384A6000, 0x384A8000, 0x384AA000, 0x384AC000, 0x384AE000,
-        0x384B0000, 0x384B2000, 0x384B4000, 0x384B6000, 0x384B8000, 0x384BA000, 0x384BC000,
-        0x384BE000, 0x384C0000, 0x384C2000, 0x384C4000, 0x384C6000, 0x384C8000, 0x384CA000,
-        0x384CC000, 0x384CE000, 0x384D0000, 0x384D2000, 0x384D4000, 0x384D6000, 0x384D8000,
-        0x384DA000, 0x384DC000, 0x384DE000, 0x384E0000, 0x384E2000, 0x384E4000, 0x384E6000,
-        0x384E8000, 0x384EA000, 0x384EC000, 0x384EE000, 0x384F0000, 0x384F2000, 0x384F4000,
-        0x384F6000, 0x384F8000, 0x384FA000, 0x384FC000, 0x384FE000, 0x38500000, 0x38502000,
-        0x38504000, 0x38506000, 0x38508000, 0x3850A000, 0x3850C000, 0x3850E000, 0x38510000,
-        0x38512000, 0x38514000, 0x38516000, 0x38518000, 0x3851A000, 0x3851C000, 0x3851E000,
-        0x38520000, 0x38522000, 0x38524000, 0x38526000, 0x38528000, 0x3852A000, 0x3852C000,
-        0x3852E000, 0x38530000, 0x38532000, 0x38534000, 0x38536000, 0x38538000, 0x3853A000,
-        0x3853C000, 0x3853E000, 0x38540000, 0x38542000, 0x38544000, 0x38546000, 0x38548000,
-        0x3854A000, 0x3854C000, 0x3854E000, 0x38550000, 0x38552000, 0x38554000, 0x38556000,
-        0x38558000, 0x3855A000, 0x3855C000, 0x3855E000, 0x38560000, 0x38562000, 0x38564000,
-        0x38566000, 0x38568000, 0x3856A000, 0x3856C000, 0x3856E000, 0x38570000, 0x38572000,
-        0x38574000, 0x38576000, 0x38578000, 0x3857A000, 0x3857C000, 0x3857E000, 0x38580000,
-        0x38582000, 0x38584000, 0x38586000, 0x38588000, 0x3858A000, 0x3858C000, 0x3858E000,
-        0x38590000, 0x38592000, 0x38594000, 0x38596000, 0x38598000, 0x3859A000, 0x3859C000,
-        0x3859E000, 0x385A0000, 0x385A2000, 0x385A4000, 0x385A6000, 0x385A8000, 0x385AA000,
-        0x385AC000, 0x385AE000, 0x385B0000, 0x385B2000, 0x385B4000, 0x385B6000, 0x385B8000,
-        0x385BA000, 0x385BC000, 0x385BE000, 0x385C0000, 0x385C2000, 0x385C4000, 0x385C6000,
-        0x385C8000, 0x385CA000, 0x385CC000, 0x385CE000, 0x385D0000, 0x385D2000, 0x385D4000,
-        0x385D6000, 0x385D8000, 0x385DA000, 0x385DC000, 0x385DE000, 0x385E0000, 0x385E2000,
-        0x385E4000, 0x385E6000, 0x385E8000, 0x385EA000, 0x385EC000, 0x385EE000, 0x385F0000,
-        0x385F2000, 0x385F4000, 0x385F6000, 0x385F8000, 0x385FA000, 0x385FC000, 0x385FE000,
-        0x38600000, 0x38602000, 0x38604000, 0x38606000, 0x38608000, 0x3860A000, 0x3860C000,
-        0x3860E000, 0x38610000, 0x38612000, 0x38614000, 0x38616000, 0x38618000, 0x3861A000,
-        0x3861C000, 0x3861E000, 0x38620000, 0x38622000, 0x38624000, 0x38626000, 0x38628000,
-        0x3862A000, 0x3862C000, 0x3862E000, 0x38630000, 0x38632000, 0x38634000, 0x38636000,
-        0x38638000, 0x3863A000, 0x3863C000, 0x3863E000, 0x38640000, 0x38642000, 0x38644000,
-        0x38646000, 0x38648000, 0x3864A000, 0x3864C000, 0x3864E000, 0x38650000, 0x38652000,
-        0x38654000, 0x38656000, 0x38658000, 0x3865A000, 0x3865C000, 0x3865E000, 0x38660000,
-        0x38662000, 0x38664000, 0x38666000, 0x38668000, 0x3866A000, 0x3866C000, 0x3866E000,
-        0x38670000, 0x38672000, 0x38674000, 0x38676000, 0x38678000, 0x3867A000, 0x3867C000,
-        0x3867E000, 0x38680000, 0x38682000, 0x38684000, 0x38686000, 0x38688000, 0x3868A000,
-        0x3868C000, 0x3868E000, 0x38690000, 0x38692000, 0x38694000, 0x38696000, 0x38698000,
-        0x3869A000, 0x3869C000, 0x3869E000, 0x386A0000, 0x386A2000, 0x386A4000, 0x386A6000,
-        0x386A8000, 0x386AA000, 0x386AC000, 0x386AE000, 0x386B0000, 0x386B2000, 0x386B4000,
-        0x386B6000, 0x386B8000, 0x386BA000, 0x386BC000, 0x386BE000, 0x386C0000, 0x386C2000,
-        0x386C4000, 0x386C6000, 0x386C8000, 0x386CA000, 0x386CC000, 0x386CE000, 0x386D0000,
-        0x386D2000, 0x386D4000, 0x386D6000, 0x386D8000, 0x386DA000, 0x386DC000, 0x386DE000,
-        0x386E0000, 0x386E2000, 0x386E4000, 0x386E6000, 0x386E8000, 0x386EA000, 0x386EC000,
-        0x386EE000, 0x386F0000, 0x386F2000, 0x386F4000, 0x386F6000, 0x386F8000, 0x386FA000,
-        0x386FC000, 0x386FE000, 0x38700000, 0x38702000, 0x38704000, 0x38706000, 0x38708000,
-        0x3870A000, 0x3870C000, 0x3870E000, 0x38710000, 0x38712000, 0x38714000, 0x38716000,
-        0x38718000, 0x3871A000, 0x3871C000, 0x3871E000, 0x38720000, 0x38722000, 0x38724000,
-        0x38726000, 0x38728000, 0x3872A000, 0x3872C000, 0x3872E000, 0x38730000, 0x38732000,
-        0x38734000, 0x38736000, 0x38738000, 0x3873A000, 0x3873C000, 0x3873E000, 0x38740000,
-        0x38742000, 0x38744000, 0x38746000, 0x38748000, 0x3874A000, 0x3874C000, 0x3874E000,
-        0x38750000, 0x38752000, 0x38754000, 0x38756000, 0x38758000, 0x3875A000, 0x3875C000,
-        0x3875E000, 0x38760000, 0x38762000, 0x38764000, 0x38766000, 0x38768000, 0x3876A000,
-        0x3876C000, 0x3876E000, 0x38770000, 0x38772000, 0x38774000, 0x38776000, 0x38778000,
-        0x3877A000, 0x3877C000, 0x3877E000, 0x38780000, 0x38782000, 0x38784000, 0x38786000,
-        0x38788000, 0x3878A000, 0x3878C000, 0x3878E000, 0x38790000, 0x38792000, 0x38794000,
-        0x38796000, 0x38798000, 0x3879A000, 0x3879C000, 0x3879E000, 0x387A0000, 0x387A2000,
-        0x387A4000, 0x387A6000, 0x387A8000, 0x387AA000, 0x387AC000, 0x387AE000, 0x387B0000,
-        0x387B2000, 0x387B4000, 0x387B6000, 0x387B8000, 0x387BA000, 0x387BC000, 0x387BE000,
-        0x387C0000, 0x387C2000, 0x387C4000, 0x387C6000, 0x387C8000, 0x387CA000, 0x387CC000,
-        0x387CE000, 0x387D0000, 0x387D2000, 0x387D4000, 0x387D6000, 0x387D8000, 0x387DA000,
-        0x387DC000, 0x387DE000, 0x387E0000, 0x387E2000, 0x387E4000, 0x387E6000, 0x387E8000,
-        0x387EA000, 0x387EC000, 0x387EE000, 0x387F0000, 0x387F2000, 0x387F4000, 0x387F6000,
-        0x387F8000, 0x387FA000, 0x387FC000, 0x387FE000};
+        0x00000000, 0x33800000, 0x34000000, 0x34400000, 0x34800000, 0x34A00000, 0x34C00000, 0x34E00000, 0x35000000,
+        0x35100000, 0x35200000, 0x35300000, 0x35400000, 0x35500000, 0x35600000, 0x35700000, 0x35800000, 0x35880000,
+        0x35900000, 0x35980000, 0x35A00000, 0x35A80000, 0x35B00000, 0x35B80000, 0x35C00000, 0x35C80000, 0x35D00000,
+        0x35D80000, 0x35E00000, 0x35E80000, 0x35F00000, 0x35F80000, 0x36000000, 0x36040000, 0x36080000, 0x360C0000,
+        0x36100000, 0x36140000, 0x36180000, 0x361C0000, 0x36200000, 0x36240000, 0x36280000, 0x362C0000, 0x36300000,
+        0x36340000, 0x36380000, 0x363C0000, 0x36400000, 0x36440000, 0x36480000, 0x364C0000, 0x36500000, 0x36540000,
+        0x36580000, 0x365C0000, 0x36600000, 0x36640000, 0x36680000, 0x366C0000, 0x36700000, 0x36740000, 0x36780000,
+        0x367C0000, 0x36800000, 0x36820000, 0x36840000, 0x36860000, 0x36880000, 0x368A0000, 0x368C0000, 0x368E0000,
+        0x36900000, 0x36920000, 0x36940000, 0x36960000, 0x36980000, 0x369A0000, 0x369C0000, 0x369E0000, 0x36A00000,
+        0x36A20000, 0x36A40000, 0x36A60000, 0x36A80000, 0x36AA0000, 0x36AC0000, 0x36AE0000, 0x36B00000, 0x36B20000,
+        0x36B40000, 0x36B60000, 0x36B80000, 0x36BA0000, 0x36BC0000, 0x36BE0000, 0x36C00000, 0x36C20000, 0x36C40000,
+        0x36C60000, 0x36C80000, 0x36CA0000, 0x36CC0000, 0x36CE0000, 0x36D00000, 0x36D20000, 0x36D40000, 0x36D60000,
+        0x36D80000, 0x36DA0000, 0x36DC0000, 0x36DE0000, 0x36E00000, 0x36E20000, 0x36E40000, 0x36E60000, 0x36E80000,
+        0x36EA0000, 0x36EC0000, 0x36EE0000, 0x36F00000, 0x36F20000, 0x36F40000, 0x36F60000, 0x36F80000, 0x36FA0000,
+        0x36FC0000, 0x36FE0000, 0x37000000, 0x37010000, 0x37020000, 0x37030000, 0x37040000, 0x37050000, 0x37060000,
+        0x37070000, 0x37080000, 0x37090000, 0x370A0000, 0x370B0000, 0x370C0000, 0x370D0000, 0x370E0000, 0x370F0000,
+        0x37100000, 0x37110000, 0x37120000, 0x37130000, 0x37140000, 0x37150000, 0x37160000, 0x37170000, 0x37180000,
+        0x37190000, 0x371A0000, 0x371B0000, 0x371C0000, 0x371D0000, 0x371E0000, 0x371F0000, 0x37200000, 0x37210000,
+        0x37220000, 0x37230000, 0x37240000, 0x37250000, 0x37260000, 0x37270000, 0x37280000, 0x37290000, 0x372A0000,
+        0x372B0000, 0x372C0000, 0x372D0000, 0x372E0000, 0x372F0000, 0x37300000, 0x37310000, 0x37320000, 0x37330000,
+        0x37340000, 0x37350000, 0x37360000, 0x37370000, 0x37380000, 0x37390000, 0x373A0000, 0x373B0000, 0x373C0000,
+        0x373D0000, 0x373E0000, 0x373F0000, 0x37400000, 0x37410000, 0x37420000, 0x37430000, 0x37440000, 0x37450000,
+        0x37460000, 0x37470000, 0x37480000, 0x37490000, 0x374A0000, 0x374B0000, 0x374C0000, 0x374D0000, 0x374E0000,
+        0x374F0000, 0x37500000, 0x37510000, 0x37520000, 0x37530000, 0x37540000, 0x37550000, 0x37560000, 0x37570000,
+        0x37580000, 0x37590000, 0x375A0000, 0x375B0000, 0x375C0000, 0x375D0000, 0x375E0000, 0x375F0000, 0x37600000,
+        0x37610000, 0x37620000, 0x37630000, 0x37640000, 0x37650000, 0x37660000, 0x37670000, 0x37680000, 0x37690000,
+        0x376A0000, 0x376B0000, 0x376C0000, 0x376D0000, 0x376E0000, 0x376F0000, 0x37700000, 0x37710000, 0x37720000,
+        0x37730000, 0x37740000, 0x37750000, 0x37760000, 0x37770000, 0x37780000, 0x37790000, 0x377A0000, 0x377B0000,
+        0x377C0000, 0x377D0000, 0x377E0000, 0x377F0000, 0x37800000, 0x37808000, 0x37810000, 0x37818000, 0x37820000,
+        0x37828000, 0x37830000, 0x37838000, 0x37840000, 0x37848000, 0x37850000, 0x37858000, 0x37860000, 0x37868000,
+        0x37870000, 0x37878000, 0x37880000, 0x37888000, 0x37890000, 0x37898000, 0x378A0000, 0x378A8000, 0x378B0000,
+        0x378B8000, 0x378C0000, 0x378C8000, 0x378D0000, 0x378D8000, 0x378E0000, 0x378E8000, 0x378F0000, 0x378F8000,
+        0x37900000, 0x37908000, 0x37910000, 0x37918000, 0x37920000, 0x37928000, 0x37930000, 0x37938000, 0x37940000,
+        0x37948000, 0x37950000, 0x37958000, 0x37960000, 0x37968000, 0x37970000, 0x37978000, 0x37980000, 0x37988000,
+        0x37990000, 0x37998000, 0x379A0000, 0x379A8000, 0x379B0000, 0x379B8000, 0x379C0000, 0x379C8000, 0x379D0000,
+        0x379D8000, 0x379E0000, 0x379E8000, 0x379F0000, 0x379F8000, 0x37A00000, 0x37A08000, 0x37A10000, 0x37A18000,
+        0x37A20000, 0x37A28000, 0x37A30000, 0x37A38000, 0x37A40000, 0x37A48000, 0x37A50000, 0x37A58000, 0x37A60000,
+        0x37A68000, 0x37A70000, 0x37A78000, 0x37A80000, 0x37A88000, 0x37A90000, 0x37A98000, 0x37AA0000, 0x37AA8000,
+        0x37AB0000, 0x37AB8000, 0x37AC0000, 0x37AC8000, 0x37AD0000, 0x37AD8000, 0x37AE0000, 0x37AE8000, 0x37AF0000,
+        0x37AF8000, 0x37B00000, 0x37B08000, 0x37B10000, 0x37B18000, 0x37B20000, 0x37B28000, 0x37B30000, 0x37B38000,
+        0x37B40000, 0x37B48000, 0x37B50000, 0x37B58000, 0x37B60000, 0x37B68000, 0x37B70000, 0x37B78000, 0x37B80000,
+        0x37B88000, 0x37B90000, 0x37B98000, 0x37BA0000, 0x37BA8000, 0x37BB0000, 0x37BB8000, 0x37BC0000, 0x37BC8000,
+        0x37BD0000, 0x37BD8000, 0x37BE0000, 0x37BE8000, 0x37BF0000, 0x37BF8000, 0x37C00000, 0x37C08000, 0x37C10000,
+        0x37C18000, 0x37C20000, 0x37C28000, 0x37C30000, 0x37C38000, 0x37C40000, 0x37C48000, 0x37C50000, 0x37C58000,
+        0x37C60000, 0x37C68000, 0x37C70000, 0x37C78000, 0x37C80000, 0x37C88000, 0x37C90000, 0x37C98000, 0x37CA0000,
+        0x37CA8000, 0x37CB0000, 0x37CB8000, 0x37CC0000, 0x37CC8000, 0x37CD0000, 0x37CD8000, 0x37CE0000, 0x37CE8000,
+        0x37CF0000, 0x37CF8000, 0x37D00000, 0x37D08000, 0x37D10000, 0x37D18000, 0x37D20000, 0x37D28000, 0x37D30000,
+        0x37D38000, 0x37D40000, 0x37D48000, 0x37D50000, 0x37D58000, 0x37D60000, 0x37D68000, 0x37D70000, 0x37D78000,
+        0x37D80000, 0x37D88000, 0x37D90000, 0x37D98000, 0x37DA0000, 0x37DA8000, 0x37DB0000, 0x37DB8000, 0x37DC0000,
+        0x37DC8000, 0x37DD0000, 0x37DD8000, 0x37DE0000, 0x37DE8000, 0x37DF0000, 0x37DF8000, 0x37E00000, 0x37E08000,
+        0x37E10000, 0x37E18000, 0x37E20000, 0x37E28000, 0x37E30000, 0x37E38000, 0x37E40000, 0x37E48000, 0x37E50000,
+        0x37E58000, 0x37E60000, 0x37E68000, 0x37E70000, 0x37E78000, 0x37E80000, 0x37E88000, 0x37E90000, 0x37E98000,
+        0x37EA0000, 0x37EA8000, 0x37EB0000, 0x37EB8000, 0x37EC0000, 0x37EC8000, 0x37ED0000, 0x37ED8000, 0x37EE0000,
+        0x37EE8000, 0x37EF0000, 0x37EF8000, 0x37F00000, 0x37F08000, 0x37F10000, 0x37F18000, 0x37F20000, 0x37F28000,
+        0x37F30000, 0x37F38000, 0x37F40000, 0x37F48000, 0x37F50000, 0x37F58000, 0x37F60000, 0x37F68000, 0x37F70000,
+        0x37F78000, 0x37F80000, 0x37F88000, 0x37F90000, 0x37F98000, 0x37FA0000, 0x37FA8000, 0x37FB0000, 0x37FB8000,
+        0x37FC0000, 0x37FC8000, 0x37FD0000, 0x37FD8000, 0x37FE0000, 0x37FE8000, 0x37FF0000, 0x37FF8000, 0x38000000,
+        0x38004000, 0x38008000, 0x3800C000, 0x38010000, 0x38014000, 0x38018000, 0x3801C000, 0x38020000, 0x38024000,
+        0x38028000, 0x3802C000, 0x38030000, 0x38034000, 0x38038000, 0x3803C000, 0x38040000, 0x38044000, 0x38048000,
+        0x3804C000, 0x38050000, 0x38054000, 0x38058000, 0x3805C000, 0x38060000, 0x38064000, 0x38068000, 0x3806C000,
+        0x38070000, 0x38074000, 0x38078000, 0x3807C000, 0x38080000, 0x38084000, 0x38088000, 0x3808C000, 0x38090000,
+        0x38094000, 0x38098000, 0x3809C000, 0x380A0000, 0x380A4000, 0x380A8000, 0x380AC000, 0x380B0000, 0x380B4000,
+        0x380B8000, 0x380BC000, 0x380C0000, 0x380C4000, 0x380C8000, 0x380CC000, 0x380D0000, 0x380D4000, 0x380D8000,
+        0x380DC000, 0x380E0000, 0x380E4000, 0x380E8000, 0x380EC000, 0x380F0000, 0x380F4000, 0x380F8000, 0x380FC000,
+        0x38100000, 0x38104000, 0x38108000, 0x3810C000, 0x38110000, 0x38114000, 0x38118000, 0x3811C000, 0x38120000,
+        0x38124000, 0x38128000, 0x3812C000, 0x38130000, 0x38134000, 0x38138000, 0x3813C000, 0x38140000, 0x38144000,
+        0x38148000, 0x3814C000, 0x38150000, 0x38154000, 0x38158000, 0x3815C000, 0x38160000, 0x38164000, 0x38168000,
+        0x3816C000, 0x38170000, 0x38174000, 0x38178000, 0x3817C000, 0x38180000, 0x38184000, 0x38188000, 0x3818C000,
+        0x38190000, 0x38194000, 0x38198000, 0x3819C000, 0x381A0000, 0x381A4000, 0x381A8000, 0x381AC000, 0x381B0000,
+        0x381B4000, 0x381B8000, 0x381BC000, 0x381C0000, 0x381C4000, 0x381C8000, 0x381CC000, 0x381D0000, 0x381D4000,
+        0x381D8000, 0x381DC000, 0x381E0000, 0x381E4000, 0x381E8000, 0x381EC000, 0x381F0000, 0x381F4000, 0x381F8000,
+        0x381FC000, 0x38200000, 0x38204000, 0x38208000, 0x3820C000, 0x38210000, 0x38214000, 0x38218000, 0x3821C000,
+        0x38220000, 0x38224000, 0x38228000, 0x3822C000, 0x38230000, 0x38234000, 0x38238000, 0x3823C000, 0x38240000,
+        0x38244000, 0x38248000, 0x3824C000, 0x38250000, 0x38254000, 0x38258000, 0x3825C000, 0x38260000, 0x38264000,
+        0x38268000, 0x3826C000, 0x38270000, 0x38274000, 0x38278000, 0x3827C000, 0x38280000, 0x38284000, 0x38288000,
+        0x3828C000, 0x38290000, 0x38294000, 0x38298000, 0x3829C000, 0x382A0000, 0x382A4000, 0x382A8000, 0x382AC000,
+        0x382B0000, 0x382B4000, 0x382B8000, 0x382BC000, 0x382C0000, 0x382C4000, 0x382C8000, 0x382CC000, 0x382D0000,
+        0x382D4000, 0x382D8000, 0x382DC000, 0x382E0000, 0x382E4000, 0x382E8000, 0x382EC000, 0x382F0000, 0x382F4000,
+        0x382F8000, 0x382FC000, 0x38300000, 0x38304000, 0x38308000, 0x3830C000, 0x38310000, 0x38314000, 0x38318000,
+        0x3831C000, 0x38320000, 0x38324000, 0x38328000, 0x3832C000, 0x38330000, 0x38334000, 0x38338000, 0x3833C000,
+        0x38340000, 0x38344000, 0x38348000, 0x3834C000, 0x38350000, 0x38354000, 0x38358000, 0x3835C000, 0x38360000,
+        0x38364000, 0x38368000, 0x3836C000, 0x38370000, 0x38374000, 0x38378000, 0x3837C000, 0x38380000, 0x38384000,
+        0x38388000, 0x3838C000, 0x38390000, 0x38394000, 0x38398000, 0x3839C000, 0x383A0000, 0x383A4000, 0x383A8000,
+        0x383AC000, 0x383B0000, 0x383B4000, 0x383B8000, 0x383BC000, 0x383C0000, 0x383C4000, 0x383C8000, 0x383CC000,
+        0x383D0000, 0x383D4000, 0x383D8000, 0x383DC000, 0x383E0000, 0x383E4000, 0x383E8000, 0x383EC000, 0x383F0000,
+        0x383F4000, 0x383F8000, 0x383FC000, 0x38400000, 0x38404000, 0x38408000, 0x3840C000, 0x38410000, 0x38414000,
+        0x38418000, 0x3841C000, 0x38420000, 0x38424000, 0x38428000, 0x3842C000, 0x38430000, 0x38434000, 0x38438000,
+        0x3843C000, 0x38440000, 0x38444000, 0x38448000, 0x3844C000, 0x38450000, 0x38454000, 0x38458000, 0x3845C000,
+        0x38460000, 0x38464000, 0x38468000, 0x3846C000, 0x38470000, 0x38474000, 0x38478000, 0x3847C000, 0x38480000,
+        0x38484000, 0x38488000, 0x3848C000, 0x38490000, 0x38494000, 0x38498000, 0x3849C000, 0x384A0000, 0x384A4000,
+        0x384A8000, 0x384AC000, 0x384B0000, 0x384B4000, 0x384B8000, 0x384BC000, 0x384C0000, 0x384C4000, 0x384C8000,
+        0x384CC000, 0x384D0000, 0x384D4000, 0x384D8000, 0x384DC000, 0x384E0000, 0x384E4000, 0x384E8000, 0x384EC000,
+        0x384F0000, 0x384F4000, 0x384F8000, 0x384FC000, 0x38500000, 0x38504000, 0x38508000, 0x3850C000, 0x38510000,
+        0x38514000, 0x38518000, 0x3851C000, 0x38520000, 0x38524000, 0x38528000, 0x3852C000, 0x38530000, 0x38534000,
+        0x38538000, 0x3853C000, 0x38540000, 0x38544000, 0x38548000, 0x3854C000, 0x38550000, 0x38554000, 0x38558000,
+        0x3855C000, 0x38560000, 0x38564000, 0x38568000, 0x3856C000, 0x38570000, 0x38574000, 0x38578000, 0x3857C000,
+        0x38580000, 0x38584000, 0x38588000, 0x3858C000, 0x38590000, 0x38594000, 0x38598000, 0x3859C000, 0x385A0000,
+        0x385A4000, 0x385A8000, 0x385AC000, 0x385B0000, 0x385B4000, 0x385B8000, 0x385BC000, 0x385C0000, 0x385C4000,
+        0x385C8000, 0x385CC000, 0x385D0000, 0x385D4000, 0x385D8000, 0x385DC000, 0x385E0000, 0x385E4000, 0x385E8000,
+        0x385EC000, 0x385F0000, 0x385F4000, 0x385F8000, 0x385FC000, 0x38600000, 0x38604000, 0x38608000, 0x3860C000,
+        0x38610000, 0x38614000, 0x38618000, 0x3861C000, 0x38620000, 0x38624000, 0x38628000, 0x3862C000, 0x38630000,
+        0x38634000, 0x38638000, 0x3863C000, 0x38640000, 0x38644000, 0x38648000, 0x3864C000, 0x38650000, 0x38654000,
+        0x38658000, 0x3865C000, 0x38660000, 0x38664000, 0x38668000, 0x3866C000, 0x38670000, 0x38674000, 0x38678000,
+        0x3867C000, 0x38680000, 0x38684000, 0x38688000, 0x3868C000, 0x38690000, 0x38694000, 0x38698000, 0x3869C000,
+        0x386A0000, 0x386A4000, 0x386A8000, 0x386AC000, 0x386B0000, 0x386B4000, 0x386B8000, 0x386BC000, 0x386C0000,
+        0x386C4000, 0x386C8000, 0x386CC000, 0x386D0000, 0x386D4000, 0x386D8000, 0x386DC000, 0x386E0000, 0x386E4000,
+        0x386E8000, 0x386EC000, 0x386F0000, 0x386F4000, 0x386F8000, 0x386FC000, 0x38700000, 0x38704000, 0x38708000,
+        0x3870C000, 0x38710000, 0x38714000, 0x38718000, 0x3871C000, 0x38720000, 0x38724000, 0x38728000, 0x3872C000,
+        0x38730000, 0x38734000, 0x38738000, 0x3873C000, 0x38740000, 0x38744000, 0x38748000, 0x3874C000, 0x38750000,
+        0x38754000, 0x38758000, 0x3875C000, 0x38760000, 0x38764000, 0x38768000, 0x3876C000, 0x38770000, 0x38774000,
+        0x38778000, 0x3877C000, 0x38780000, 0x38784000, 0x38788000, 0x3878C000, 0x38790000, 0x38794000, 0x38798000,
+        0x3879C000, 0x387A0000, 0x387A4000, 0x387A8000, 0x387AC000, 0x387B0000, 0x387B4000, 0x387B8000, 0x387BC000,
+        0x387C0000, 0x387C4000, 0x387C8000, 0x387CC000, 0x387D0000, 0x387D4000, 0x387D8000, 0x387DC000, 0x387E0000,
+        0x387E4000, 0x387E8000, 0x387EC000, 0x387F0000, 0x387F4000, 0x387F8000, 0x387FC000, 0x38000000, 0x38002000,
+        0x38004000, 0x38006000, 0x38008000, 0x3800A000, 0x3800C000, 0x3800E000, 0x38010000, 0x38012000, 0x38014000,
+        0x38016000, 0x38018000, 0x3801A000, 0x3801C000, 0x3801E000, 0x38020000, 0x38022000, 0x38024000, 0x38026000,
+        0x38028000, 0x3802A000, 0x3802C000, 0x3802E000, 0x38030000, 0x38032000, 0x38034000, 0x38036000, 0x38038000,
+        0x3803A000, 0x3803C000, 0x3803E000, 0x38040000, 0x38042000, 0x38044000, 0x38046000, 0x38048000, 0x3804A000,
+        0x3804C000, 0x3804E000, 0x38050000, 0x38052000, 0x38054000, 0x38056000, 0x38058000, 0x3805A000, 0x3805C000,
+        0x3805E000, 0x38060000, 0x38062000, 0x38064000, 0x38066000, 0x38068000, 0x3806A000, 0x3806C000, 0x3806E000,
+        0x38070000, 0x38072000, 0x38074000, 0x38076000, 0x38078000, 0x3807A000, 0x3807C000, 0x3807E000, 0x38080000,
+        0x38082000, 0x38084000, 0x38086000, 0x38088000, 0x3808A000, 0x3808C000, 0x3808E000, 0x38090000, 0x38092000,
+        0x38094000, 0x38096000, 0x38098000, 0x3809A000, 0x3809C000, 0x3809E000, 0x380A0000, 0x380A2000, 0x380A4000,
+        0x380A6000, 0x380A8000, 0x380AA000, 0x380AC000, 0x380AE000, 0x380B0000, 0x380B2000, 0x380B4000, 0x380B6000,
+        0x380B8000, 0x380BA000, 0x380BC000, 0x380BE000, 0x380C0000, 0x380C2000, 0x380C4000, 0x380C6000, 0x380C8000,
+        0x380CA000, 0x380CC000, 0x380CE000, 0x380D0000, 0x380D2000, 0x380D4000, 0x380D6000, 0x380D8000, 0x380DA000,
+        0x380DC000, 0x380DE000, 0x380E0000, 0x380E2000, 0x380E4000, 0x380E6000, 0x380E8000, 0x380EA000, 0x380EC000,
+        0x380EE000, 0x380F0000, 0x380F2000, 0x380F4000, 0x380F6000, 0x380F8000, 0x380FA000, 0x380FC000, 0x380FE000,
+        0x38100000, 0x38102000, 0x38104000, 0x38106000, 0x38108000, 0x3810A000, 0x3810C000, 0x3810E000, 0x38110000,
+        0x38112000, 0x38114000, 0x38116000, 0x38118000, 0x3811A000, 0x3811C000, 0x3811E000, 0x38120000, 0x38122000,
+        0x38124000, 0x38126000, 0x38128000, 0x3812A000, 0x3812C000, 0x3812E000, 0x38130000, 0x38132000, 0x38134000,
+        0x38136000, 0x38138000, 0x3813A000, 0x3813C000, 0x3813E000, 0x38140000, 0x38142000, 0x38144000, 0x38146000,
+        0x38148000, 0x3814A000, 0x3814C000, 0x3814E000, 0x38150000, 0x38152000, 0x38154000, 0x38156000, 0x38158000,
+        0x3815A000, 0x3815C000, 0x3815E000, 0x38160000, 0x38162000, 0x38164000, 0x38166000, 0x38168000, 0x3816A000,
+        0x3816C000, 0x3816E000, 0x38170000, 0x38172000, 0x38174000, 0x38176000, 0x38178000, 0x3817A000, 0x3817C000,
+        0x3817E000, 0x38180000, 0x38182000, 0x38184000, 0x38186000, 0x38188000, 0x3818A000, 0x3818C000, 0x3818E000,
+        0x38190000, 0x38192000, 0x38194000, 0x38196000, 0x38198000, 0x3819A000, 0x3819C000, 0x3819E000, 0x381A0000,
+        0x381A2000, 0x381A4000, 0x381A6000, 0x381A8000, 0x381AA000, 0x381AC000, 0x381AE000, 0x381B0000, 0x381B2000,
+        0x381B4000, 0x381B6000, 0x381B8000, 0x381BA000, 0x381BC000, 0x381BE000, 0x381C0000, 0x381C2000, 0x381C4000,
+        0x381C6000, 0x381C8000, 0x381CA000, 0x381CC000, 0x381CE000, 0x381D0000, 0x381D2000, 0x381D4000, 0x381D6000,
+        0x381D8000, 0x381DA000, 0x381DC000, 0x381DE000, 0x381E0000, 0x381E2000, 0x381E4000, 0x381E6000, 0x381E8000,
+        0x381EA000, 0x381EC000, 0x381EE000, 0x381F0000, 0x381F2000, 0x381F4000, 0x381F6000, 0x381F8000, 0x381FA000,
+        0x381FC000, 0x381FE000, 0x38200000, 0x38202000, 0x38204000, 0x38206000, 0x38208000, 0x3820A000, 0x3820C000,
+        0x3820E000, 0x38210000, 0x38212000, 0x38214000, 0x38216000, 0x38218000, 0x3821A000, 0x3821C000, 0x3821E000,
+        0x38220000, 0x38222000, 0x38224000, 0x38226000, 0x38228000, 0x3822A000, 0x3822C000, 0x3822E000, 0x38230000,
+        0x38232000, 0x38234000, 0x38236000, 0x38238000, 0x3823A000, 0x3823C000, 0x3823E000, 0x38240000, 0x38242000,
+        0x38244000, 0x38246000, 0x38248000, 0x3824A000, 0x3824C000, 0x3824E000, 0x38250000, 0x38252000, 0x38254000,
+        0x38256000, 0x38258000, 0x3825A000, 0x3825C000, 0x3825E000, 0x38260000, 0x38262000, 0x38264000, 0x38266000,
+        0x38268000, 0x3826A000, 0x3826C000, 0x3826E000, 0x38270000, 0x38272000, 0x38274000, 0x38276000, 0x38278000,
+        0x3827A000, 0x3827C000, 0x3827E000, 0x38280000, 0x38282000, 0x38284000, 0x38286000, 0x38288000, 0x3828A000,
+        0x3828C000, 0x3828E000, 0x38290000, 0x38292000, 0x38294000, 0x38296000, 0x38298000, 0x3829A000, 0x3829C000,
+        0x3829E000, 0x382A0000, 0x382A2000, 0x382A4000, 0x382A6000, 0x382A8000, 0x382AA000, 0x382AC000, 0x382AE000,
+        0x382B0000, 0x382B2000, 0x382B4000, 0x382B6000, 0x382B8000, 0x382BA000, 0x382BC000, 0x382BE000, 0x382C0000,
+        0x382C2000, 0x382C4000, 0x382C6000, 0x382C8000, 0x382CA000, 0x382CC000, 0x382CE000, 0x382D0000, 0x382D2000,
+        0x382D4000, 0x382D6000, 0x382D8000, 0x382DA000, 0x382DC000, 0x382DE000, 0x382E0000, 0x382E2000, 0x382E4000,
+        0x382E6000, 0x382E8000, 0x382EA000, 0x382EC000, 0x382EE000, 0x382F0000, 0x382F2000, 0x382F4000, 0x382F6000,
+        0x382F8000, 0x382FA000, 0x382FC000, 0x382FE000, 0x38300000, 0x38302000, 0x38304000, 0x38306000, 0x38308000,
+        0x3830A000, 0x3830C000, 0x3830E000, 0x38310000, 0x38312000, 0x38314000, 0x38316000, 0x38318000, 0x3831A000,
+        0x3831C000, 0x3831E000, 0x38320000, 0x38322000, 0x38324000, 0x38326000, 0x38328000, 0x3832A000, 0x3832C000,
+        0x3832E000, 0x38330000, 0x38332000, 0x38334000, 0x38336000, 0x38338000, 0x3833A000, 0x3833C000, 0x3833E000,
+        0x38340000, 0x38342000, 0x38344000, 0x38346000, 0x38348000, 0x3834A000, 0x3834C000, 0x3834E000, 0x38350000,
+        0x38352000, 0x38354000, 0x38356000, 0x38358000, 0x3835A000, 0x3835C000, 0x3835E000, 0x38360000, 0x38362000,
+        0x38364000, 0x38366000, 0x38368000, 0x3836A000, 0x3836C000, 0x3836E000, 0x38370000, 0x38372000, 0x38374000,
+        0x38376000, 0x38378000, 0x3837A000, 0x3837C000, 0x3837E000, 0x38380000, 0x38382000, 0x38384000, 0x38386000,
+        0x38388000, 0x3838A000, 0x3838C000, 0x3838E000, 0x38390000, 0x38392000, 0x38394000, 0x38396000, 0x38398000,
+        0x3839A000, 0x3839C000, 0x3839E000, 0x383A0000, 0x383A2000, 0x383A4000, 0x383A6000, 0x383A8000, 0x383AA000,
+        0x383AC000, 0x383AE000, 0x383B0000, 0x383B2000, 0x383B4000, 0x383B6000, 0x383B8000, 0x383BA000, 0x383BC000,
+        0x383BE000, 0x383C0000, 0x383C2000, 0x383C4000, 0x383C6000, 0x383C8000, 0x383CA000, 0x383CC000, 0x383CE000,
+        0x383D0000, 0x383D2000, 0x383D4000, 0x383D6000, 0x383D8000, 0x383DA000, 0x383DC000, 0x383DE000, 0x383E0000,
+        0x383E2000, 0x383E4000, 0x383E6000, 0x383E8000, 0x383EA000, 0x383EC000, 0x383EE000, 0x383F0000, 0x383F2000,
+        0x383F4000, 0x383F6000, 0x383F8000, 0x383FA000, 0x383FC000, 0x383FE000, 0x38400000, 0x38402000, 0x38404000,
+        0x38406000, 0x38408000, 0x3840A000, 0x3840C000, 0x3840E000, 0x38410000, 0x38412000, 0x38414000, 0x38416000,
+        0x38418000, 0x3841A000, 0x3841C000, 0x3841E000, 0x38420000, 0x38422000, 0x38424000, 0x38426000, 0x38428000,
+        0x3842A000, 0x3842C000, 0x3842E000, 0x38430000, 0x38432000, 0x38434000, 0x38436000, 0x38438000, 0x3843A000,
+        0x3843C000, 0x3843E000, 0x38440000, 0x38442000, 0x38444000, 0x38446000, 0x38448000, 0x3844A000, 0x3844C000,
+        0x3844E000, 0x38450000, 0x38452000, 0x38454000, 0x38456000, 0x38458000, 0x3845A000, 0x3845C000, 0x3845E000,
+        0x38460000, 0x38462000, 0x38464000, 0x38466000, 0x38468000, 0x3846A000, 0x3846C000, 0x3846E000, 0x38470000,
+        0x38472000, 0x38474000, 0x38476000, 0x38478000, 0x3847A000, 0x3847C000, 0x3847E000, 0x38480000, 0x38482000,
+        0x38484000, 0x38486000, 0x38488000, 0x3848A000, 0x3848C000, 0x3848E000, 0x38490000, 0x38492000, 0x38494000,
+        0x38496000, 0x38498000, 0x3849A000, 0x3849C000, 0x3849E000, 0x384A0000, 0x384A2000, 0x384A4000, 0x384A6000,
+        0x384A8000, 0x384AA000, 0x384AC000, 0x384AE000, 0x384B0000, 0x384B2000, 0x384B4000, 0x384B6000, 0x384B8000,
+        0x384BA000, 0x384BC000, 0x384BE000, 0x384C0000, 0x384C2000, 0x384C4000, 0x384C6000, 0x384C8000, 0x384CA000,
+        0x384CC000, 0x384CE000, 0x384D0000, 0x384D2000, 0x384D4000, 0x384D6000, 0x384D8000, 0x384DA000, 0x384DC000,
+        0x384DE000, 0x384E0000, 0x384E2000, 0x384E4000, 0x384E6000, 0x384E8000, 0x384EA000, 0x384EC000, 0x384EE000,
+        0x384F0000, 0x384F2000, 0x384F4000, 0x384F6000, 0x384F8000, 0x384FA000, 0x384FC000, 0x384FE000, 0x38500000,
+        0x38502000, 0x38504000, 0x38506000, 0x38508000, 0x3850A000, 0x3850C000, 0x3850E000, 0x38510000, 0x38512000,
+        0x38514000, 0x38516000, 0x38518000, 0x3851A000, 0x3851C000, 0x3851E000, 0x38520000, 0x38522000, 0x38524000,
+        0x38526000, 0x38528000, 0x3852A000, 0x3852C000, 0x3852E000, 0x38530000, 0x38532000, 0x38534000, 0x38536000,
+        0x38538000, 0x3853A000, 0x3853C000, 0x3853E000, 0x38540000, 0x38542000, 0x38544000, 0x38546000, 0x38548000,
+        0x3854A000, 0x3854C000, 0x3854E000, 0x38550000, 0x38552000, 0x38554000, 0x38556000, 0x38558000, 0x3855A000,
+        0x3855C000, 0x3855E000, 0x38560000, 0x38562000, 0x38564000, 0x38566000, 0x38568000, 0x3856A000, 0x3856C000,
+        0x3856E000, 0x38570000, 0x38572000, 0x38574000, 0x38576000, 0x38578000, 0x3857A000, 0x3857C000, 0x3857E000,
+        0x38580000, 0x38582000, 0x38584000, 0x38586000, 0x38588000, 0x3858A000, 0x3858C000, 0x3858E000, 0x38590000,
+        0x38592000, 0x38594000, 0x38596000, 0x38598000, 0x3859A000, 0x3859C000, 0x3859E000, 0x385A0000, 0x385A2000,
+        0x385A4000, 0x385A6000, 0x385A8000, 0x385AA000, 0x385AC000, 0x385AE000, 0x385B0000, 0x385B2000, 0x385B4000,
+        0x385B6000, 0x385B8000, 0x385BA000, 0x385BC000, 0x385BE000, 0x385C0000, 0x385C2000, 0x385C4000, 0x385C6000,
+        0x385C8000, 0x385CA000, 0x385CC000, 0x385CE000, 0x385D0000, 0x385D2000, 0x385D4000, 0x385D6000, 0x385D8000,
+        0x385DA000, 0x385DC000, 0x385DE000, 0x385E0000, 0x385E2000, 0x385E4000, 0x385E6000, 0x385E8000, 0x385EA000,
+        0x385EC000, 0x385EE000, 0x385F0000, 0x385F2000, 0x385F4000, 0x385F6000, 0x385F8000, 0x385FA000, 0x385FC000,
+        0x385FE000, 0x38600000, 0x38602000, 0x38604000, 0x38606000, 0x38608000, 0x3860A000, 0x3860C000, 0x3860E000,
+        0x38610000, 0x38612000, 0x38614000, 0x38616000, 0x38618000, 0x3861A000, 0x3861C000, 0x3861E000, 0x38620000,
+        0x38622000, 0x38624000, 0x38626000, 0x38628000, 0x3862A000, 0x3862C000, 0x3862E000, 0x38630000, 0x38632000,
+        0x38634000, 0x38636000, 0x38638000, 0x3863A000, 0x3863C000, 0x3863E000, 0x38640000, 0x38642000, 0x38644000,
+        0x38646000, 0x38648000, 0x3864A000, 0x3864C000, 0x3864E000, 0x38650000, 0x38652000, 0x38654000, 0x38656000,
+        0x38658000, 0x3865A000, 0x3865C000, 0x3865E000, 0x38660000, 0x38662000, 0x38664000, 0x38666000, 0x38668000,
+        0x3866A000, 0x3866C000, 0x3866E000, 0x38670000, 0x38672000, 0x38674000, 0x38676000, 0x38678000, 0x3867A000,
+        0x3867C000, 0x3867E000, 0x38680000, 0x38682000, 0x38684000, 0x38686000, 0x38688000, 0x3868A000, 0x3868C000,
+        0x3868E000, 0x38690000, 0x38692000, 0x38694000, 0x38696000, 0x38698000, 0x3869A000, 0x3869C000, 0x3869E000,
+        0x386A0000, 0x386A2000, 0x386A4000, 0x386A6000, 0x386A8000, 0x386AA000, 0x386AC000, 0x386AE000, 0x386B0000,
+        0x386B2000, 0x386B4000, 0x386B6000, 0x386B8000, 0x386BA000, 0x386BC000, 0x386BE000, 0x386C0000, 0x386C2000,
+        0x386C4000, 0x386C6000, 0x386C8000, 0x386CA000, 0x386CC000, 0x386CE000, 0x386D0000, 0x386D2000, 0x386D4000,
+        0x386D6000, 0x386D8000, 0x386DA000, 0x386DC000, 0x386DE000, 0x386E0000, 0x386E2000, 0x386E4000, 0x386E6000,
+        0x386E8000, 0x386EA000, 0x386EC000, 0x386EE000, 0x386F0000, 0x386F2000, 0x386F4000, 0x386F6000, 0x386F8000,
+        0x386FA000, 0x386FC000, 0x386FE000, 0x38700000, 0x38702000, 0x38704000, 0x38706000, 0x38708000, 0x3870A000,
+        0x3870C000, 0x3870E000, 0x38710000, 0x38712000, 0x38714000, 0x38716000, 0x38718000, 0x3871A000, 0x3871C000,
+        0x3871E000, 0x38720000, 0x38722000, 0x38724000, 0x38726000, 0x38728000, 0x3872A000, 0x3872C000, 0x3872E000,
+        0x38730000, 0x38732000, 0x38734000, 0x38736000, 0x38738000, 0x3873A000, 0x3873C000, 0x3873E000, 0x38740000,
+        0x38742000, 0x38744000, 0x38746000, 0x38748000, 0x3874A000, 0x3874C000, 0x3874E000, 0x38750000, 0x38752000,
+        0x38754000, 0x38756000, 0x38758000, 0x3875A000, 0x3875C000, 0x3875E000, 0x38760000, 0x38762000, 0x38764000,
+        0x38766000, 0x38768000, 0x3876A000, 0x3876C000, 0x3876E000, 0x38770000, 0x38772000, 0x38774000, 0x38776000,
+        0x38778000, 0x3877A000, 0x3877C000, 0x3877E000, 0x38780000, 0x38782000, 0x38784000, 0x38786000, 0x38788000,
+        0x3878A000, 0x3878C000, 0x3878E000, 0x38790000, 0x38792000, 0x38794000, 0x38796000, 0x38798000, 0x3879A000,
+        0x3879C000, 0x3879E000, 0x387A0000, 0x387A2000, 0x387A4000, 0x387A6000, 0x387A8000, 0x387AA000, 0x387AC000,
+        0x387AE000, 0x387B0000, 0x387B2000, 0x387B4000, 0x387B6000, 0x387B8000, 0x387BA000, 0x387BC000, 0x387BE000,
+        0x387C0000, 0x387C2000, 0x387C4000, 0x387C6000, 0x387C8000, 0x387CA000, 0x387CC000, 0x387CE000, 0x387D0000,
+        0x387D2000, 0x387D4000, 0x387D6000, 0x387D8000, 0x387DA000, 0x387DC000, 0x387DE000, 0x387E0000, 0x387E2000,
+        0x387E4000, 0x387E6000, 0x387E8000, 0x387EA000, 0x387EC000, 0x387EE000, 0x387F0000, 0x387F2000, 0x387F4000,
+        0x387F6000, 0x387F8000, 0x387FA000, 0x387FC000, 0x387FE000};
     static const bits<float>::type exponent_table[64] = {
-        0x00000000, 0x00800000, 0x01000000, 0x01800000, 0x02000000, 0x02800000, 0x03000000,
-        0x03800000, 0x04000000, 0x04800000, 0x05000000, 0x05800000, 0x06000000, 0x06800000,
-        0x07000000, 0x07800000, 0x08000000, 0x08800000, 0x09000000, 0x09800000, 0x0A000000,
-        0x0A800000, 0x0B000000, 0x0B800000, 0x0C000000, 0x0C800000, 0x0D000000, 0x0D800000,
-        0x0E000000, 0x0E800000, 0x0F000000, 0x47800000, 0x80000000, 0x80800000, 0x81000000,
-        0x81800000, 0x82000000, 0x82800000, 0x83000000, 0x83800000, 0x84000000, 0x84800000,
-        0x85000000, 0x85800000, 0x86000000, 0x86800000, 0x87000000, 0x87800000, 0x88000000,
-        0x88800000, 0x89000000, 0x89800000, 0x8A000000, 0x8A800000, 0x8B000000, 0x8B800000,
-        0x8C000000, 0x8C800000, 0x8D000000, 0x8D800000, 0x8E000000, 0x8E800000, 0x8F000000,
-        0xC7800000};
+        0x00000000, 0x00800000, 0x01000000, 0x01800000, 0x02000000, 0x02800000, 0x03000000, 0x03800000,
+        0x04000000, 0x04800000, 0x05000000, 0x05800000, 0x06000000, 0x06800000, 0x07000000, 0x07800000,
+        0x08000000, 0x08800000, 0x09000000, 0x09800000, 0x0A000000, 0x0A800000, 0x0B000000, 0x0B800000,
+        0x0C000000, 0x0C800000, 0x0D000000, 0x0D800000, 0x0E000000, 0x0E800000, 0x0F000000, 0x47800000,
+        0x80000000, 0x80800000, 0x81000000, 0x81800000, 0x82000000, 0x82800000, 0x83000000, 0x83800000,
+        0x84000000, 0x84800000, 0x85000000, 0x85800000, 0x86000000, 0x86800000, 0x87000000, 0x87800000,
+        0x88000000, 0x88800000, 0x89000000, 0x89800000, 0x8A000000, 0x8A800000, 0x8B000000, 0x8B800000,
+        0x8C000000, 0x8C800000, 0x8D000000, 0x8D800000, 0x8E000000, 0x8E800000, 0x8F000000, 0xC7800000};
     static const unsigned short offset_table[64] = {
-        0,    1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
-        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
-        1024, 1024, 1024, 1024, 1024, 1024, 0,    1024, 1024, 1024, 1024, 1024, 1024,
-        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
-        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024};
-    bits<float>::type fbits =
-        mantissa_table[offset_table[value >> 10] + (value & 0x3FF)] + exponent_table[value >> 10];
+        0,    1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
+        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
+        0,    1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024,
+        1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024};
+    bits<float>::type fbits = mantissa_table[offset_table[value >> 10] + (value & 0x3FF)] + exponent_table[value >> 10];
     //#endif
     float out;
     std::memcpy(&out, &fbits, sizeof(float));
@@ -1589,13 +1490,11 @@ T half2float_impl(unsigned int value, T, ...)
     T out;
     unsigned int abs = value & 0x7FFF;
     if (abs > 0x7C00)
-        out =
-            (std::numeric_limits<T>::has_signaling_NaN && !(abs & 0x200))
-                ? std::numeric_limits<T>::signaling_NaN()
-                : std::numeric_limits<T>::has_quiet_NaN ? std::numeric_limits<T>::quiet_NaN() : T();
+        out = (std::numeric_limits<T>::has_signaling_NaN && !(abs & 0x200))
+                  ? std::numeric_limits<T>::signaling_NaN()
+                  : std::numeric_limits<T>::has_quiet_NaN ? std::numeric_limits<T>::quiet_NaN() : T();
     else if (abs == 0x7C00)
-        out = std::numeric_limits<T>::has_infinity ? std::numeric_limits<T>::infinity()
-                                                   : std::numeric_limits<T>::max();
+        out = std::numeric_limits<T>::has_infinity ? std::numeric_limits<T>::infinity() : std::numeric_limits<T>::max();
     else if (abs > 0x3FF)
         out = std::ldexp(static_cast<T>((abs & 0x3FF) | 0x400), (abs >> 10) - 25);
     else
@@ -1610,9 +1509,8 @@ T half2float_impl(unsigned int value, T, ...)
 template <typename T>
 T half2float(unsigned int value)
 {
-    return half2float_impl(value, T(),
-                           bool_type < std::numeric_limits<T>::is_iec559 &&
-                               sizeof(typename bits<T>::type) == sizeof(T) > ());
+    return half2float_impl(
+        value, T(), bool_type < std::numeric_limits<T>::is_iec559 && sizeof(typename bits<T>::type) == sizeof(T) > ());
 }
 
 /// Convert half-precision floating-point to integer.
@@ -1633,26 +1531,23 @@ T half2int(unsigned int value)
     }
     if (abs < 0x3800) {
         raise(FE_INEXACT, I);
-        return (R == std::round_toward_infinity)
-                   ? T(~(value >> 15) & (abs != 0))
-                   : (R == std::round_toward_neg_infinity) ? -T(value > 0x8000) : T();
+        return (R == std::round_toward_infinity) ? T(~(value >> 15) & (abs != 0))
+                                                 : (R == std::round_toward_neg_infinity) ? -T(value > 0x8000) : T();
     }
     int exp = 25 - (abs >> 10);
     unsigned int m = (value & 0x3FF) | 0x400;
     int32 i = static_cast<int32>(
         (exp <= 0)
             ? (m << -exp)
-            : ((m + ((R == std::round_to_nearest) ? ((1 << (exp - 1)) - (~(m >> exp) & E))
-                                                  : (R == std::round_toward_infinity)
-                                                        ? (((1 << exp) - 1) & ((value >> 15) - 1))
-                                                        : (R == std::round_toward_neg_infinity)
-                                                              ? (((1 << exp) - 1) & -(value >> 15))
-                                                              : 0)) >>
+            : ((m + ((R == std::round_to_nearest)
+                         ? ((1 << (exp - 1)) - (~(m >> exp) & E))
+                         : (R == std::round_toward_infinity)
+                               ? (((1 << exp) - 1) & ((value >> 15) - 1))
+                               : (R == std::round_toward_neg_infinity) ? (((1 << exp) - 1) & -(value >> 15)) : 0)) >>
                exp));
     if ((!std::numeric_limits<T>::is_signed && (value & 0x8000)) ||
         (std::numeric_limits<T>::digits < 16 &&
-         ((value & 0x8000) ? (-i < std::numeric_limits<T>::min())
-                           : (i > std::numeric_limits<T>::max()))))
+         ((value & 0x8000) ? (-i < std::numeric_limits<T>::min()) : (i > std::numeric_limits<T>::max()))))
         raise(FE_INVALID);
     else if (I && exp > 0 && (m & ((1 << exp) - 1)))
         raise(FE_INEXACT);
@@ -1674,9 +1569,8 @@ uint32 mulhi(uint32 x, uint32 y)
     uint32 xy = (x >> 16) * (y & 0xFFFF), yx = (x & 0xFFFF) * (y >> 16),
            c = (xy & 0xFFFF) + (yx & 0xFFFF) + (((x & 0xFFFF) * (y & 0xFFFF)) >> 16);
     return (x >> 16) * (y >> 16) + (xy >> 16) + (yx >> 16) + (c >> 16) +
-           ((R == std::round_to_nearest)
-                ? ((c >> 15) & 1)
-                : (R == std::round_toward_infinity) ? ((c & 0xFFFF) != 0) : 0);
+           ((R == std::round_to_nearest) ? ((c >> 15) & 1)
+                                         : (R == std::round_toward_infinity) ? ((c & 0xFFFF) != 0) : 0);
 }
 
 /// 64-bit multiplication.
@@ -1686,9 +1580,8 @@ uint32 mulhi(uint32 x, uint32 y)
 inline uint32 multiply64(uint32 x, uint32 y)
 {
 #if HALF_ENABLE_CPP11_LONG_LONG
-    return static_cast<uint32>(
-        (static_cast<unsigned long long>(x) * static_cast<unsigned long long>(y) + 0x80000000) >>
-        32);
+    return static_cast<uint32>((static_cast<unsigned long long>(x) * static_cast<unsigned long long>(y) + 0x80000000) >>
+                               32);
 #else
     return mulhi<std::round_to_nearest>(x, y);
 #endif
@@ -1772,8 +1665,7 @@ unsigned int mod(unsigned int x, unsigned int y, int* quo = NULL)
         }
         if (a > b || (a == b && (q & 1))) {
             int exp = (y >> 10) + (y <= 0x3FF), d = exp - (x >> 10) - (x <= 0x3FF);
-            int m = (((y & 0x3FF) | ((y > 0x3FF) << 10)) << 1) -
-                    (((x & 0x3FF) | ((x > 0x3FF) << 10)) << (1 - d));
+            int m = (((y & 0x3FF) | ((y > 0x3FF) << 10)) << 1) - (((x & 0x3FF) | ((x > 0x3FF) << 10)) << (1 - d));
             for (; m < 0x800 && exp > 1; m <<= 1, --exp)
                 ;
             x = 0x8000 + ((exp - 1) << 10) + (m >> 1);
@@ -1814,12 +1706,11 @@ uint32 sqrt(uint32& r, int& exp)
 /// \return 2 ^ \a m as Q1.31
 inline uint32 exp2(uint32 m, unsigned int n = 32)
 {
-    static const uint32 logs[] = {
-        0x80000000, 0x4AE00D1D, 0x2934F098, 0x15C01A3A, 0x0B31FB7D, 0x05AEB4DD, 0x02DCF2D1,
-        0x016FE50B, 0x00B84E23, 0x005C3E10, 0x002E24CA, 0x001713D6, 0x000B8A47, 0x0005C53B,
-        0x0002E2A3, 0x00017153, 0x0000B8AA, 0x00005C55, 0x00002E2B, 0x00001715, 0x00000B8B,
-        0x000005C5, 0x000002E3, 0x00000171, 0x000000B9, 0x0000005C, 0x0000002E, 0x00000017,
-        0x0000000C, 0x00000006, 0x00000003, 0x00000001};
+    static const uint32 logs[] = {0x80000000, 0x4AE00D1D, 0x2934F098, 0x15C01A3A, 0x0B31FB7D, 0x05AEB4DD, 0x02DCF2D1,
+                                  0x016FE50B, 0x00B84E23, 0x005C3E10, 0x002E24CA, 0x001713D6, 0x000B8A47, 0x0005C53B,
+                                  0x0002E2A3, 0x00017153, 0x0000B8AA, 0x00005C55, 0x00002E2B, 0x00001715, 0x00000B8B,
+                                  0x000005C5, 0x000002E3, 0x00000171, 0x000000B9, 0x0000005C, 0x0000002E, 0x00000017,
+                                  0x0000000C, 0x00000006, 0x00000003, 0x00000001};
     if (!m) return 0x80000000;
     uint32 mx = 0x80000000, my = 0;
     for (unsigned int i = 1; i < n; ++i) {
@@ -1839,12 +1730,11 @@ inline uint32 exp2(uint32 m, unsigned int n = 32)
 /// \return log2(\a m) as Q0.31
 inline uint32 log2(uint32 m, unsigned int n = 32)
 {
-    static const uint32 logs[] = {
-        0x80000000, 0x4AE00D1D, 0x2934F098, 0x15C01A3A, 0x0B31FB7D, 0x05AEB4DD, 0x02DCF2D1,
-        0x016FE50B, 0x00B84E23, 0x005C3E10, 0x002E24CA, 0x001713D6, 0x000B8A47, 0x0005C53B,
-        0x0002E2A3, 0x00017153, 0x0000B8AA, 0x00005C55, 0x00002E2B, 0x00001715, 0x00000B8B,
-        0x000005C5, 0x000002E3, 0x00000171, 0x000000B9, 0x0000005C, 0x0000002E, 0x00000017,
-        0x0000000C, 0x00000006, 0x00000003, 0x00000001};
+    static const uint32 logs[] = {0x80000000, 0x4AE00D1D, 0x2934F098, 0x15C01A3A, 0x0B31FB7D, 0x05AEB4DD, 0x02DCF2D1,
+                                  0x016FE50B, 0x00B84E23, 0x005C3E10, 0x002E24CA, 0x001713D6, 0x000B8A47, 0x0005C53B,
+                                  0x0002E2A3, 0x00017153, 0x0000B8AA, 0x00005C55, 0x00002E2B, 0x00001715, 0x00000B8B,
+                                  0x000005C5, 0x000002E3, 0x00000171, 0x000000B9, 0x0000005C, 0x0000002E, 0x00000017,
+                                  0x0000000C, 0x00000006, 0x00000003, 0x00000001};
     if (m == 0x40000000) return 0;
     uint32 mx = 0x40000000, my = 0;
     for (unsigned int i = 1; i < n; ++i) {
@@ -1864,12 +1754,11 @@ inline uint32 log2(uint32 m, unsigned int n = 32)
 /// \return sine and cosine of \a mz as Q1.30
 inline std::pair<uint32, uint32> sincos(uint32 mz, unsigned int n = 31)
 {
-    static const uint32 angles[] = {
-        0x3243F6A9, 0x1DAC6705, 0x0FADBAFD, 0x07F56EA7, 0x03FEAB77, 0x01FFD55C, 0x00FFFAAB,
-        0x007FFF55, 0x003FFFEB, 0x001FFFFD, 0x00100000, 0x00080000, 0x00040000, 0x00020000,
-        0x00010000, 0x00008000, 0x00004000, 0x00002000, 0x00001000, 0x00000800, 0x00000400,
-        0x00000200, 0x00000100, 0x00000080, 0x00000040, 0x00000020, 0x00000010, 0x00000008,
-        0x00000004, 0x00000002, 0x00000001};
+    static const uint32 angles[] = {0x3243F6A9, 0x1DAC6705, 0x0FADBAFD, 0x07F56EA7, 0x03FEAB77, 0x01FFD55C, 0x00FFFAAB,
+                                    0x007FFF55, 0x003FFFEB, 0x001FFFFD, 0x00100000, 0x00080000, 0x00040000, 0x00020000,
+                                    0x00010000, 0x00008000, 0x00004000, 0x00002000, 0x00001000, 0x00000800, 0x00000400,
+                                    0x00000200, 0x00000100, 0x00000080, 0x00000040, 0x00000020, 0x00000010, 0x00000008,
+                                    0x00000004, 0x00000002, 0x00000001};
     uint32 mx = 0x26DD3B6A, my = 0;
     for (unsigned int i = 0; i < n; ++i) {
         uint32 sign = sign_mask(mz);
@@ -1890,12 +1779,11 @@ inline std::pair<uint32, uint32> sincos(uint32 mz, unsigned int n = 31)
 /// \return arc tangent of \a my / \a mx as Q1.30
 inline uint32 atan2(uint32 my, uint32 mx, unsigned int n = 31)
 {
-    static const uint32 angles[] = {
-        0x3243F6A9, 0x1DAC6705, 0x0FADBAFD, 0x07F56EA7, 0x03FEAB77, 0x01FFD55C, 0x00FFFAAB,
-        0x007FFF55, 0x003FFFEB, 0x001FFFFD, 0x00100000, 0x00080000, 0x00040000, 0x00020000,
-        0x00010000, 0x00008000, 0x00004000, 0x00002000, 0x00001000, 0x00000800, 0x00000400,
-        0x00000200, 0x00000100, 0x00000080, 0x00000040, 0x00000020, 0x00000010, 0x00000008,
-        0x00000004, 0x00000002, 0x00000001};
+    static const uint32 angles[] = {0x3243F6A9, 0x1DAC6705, 0x0FADBAFD, 0x07F56EA7, 0x03FEAB77, 0x01FFD55C, 0x00FFFAAB,
+                                    0x007FFF55, 0x003FFFEB, 0x001FFFFD, 0x00100000, 0x00080000, 0x00040000, 0x00020000,
+                                    0x00010000, 0x00008000, 0x00004000, 0x00002000, 0x00001000, 0x00000800, 0x00000400,
+                                    0x00000200, 0x00000100, 0x00000080, 0x00000040, 0x00000020, 0x00000010, 0x00000008,
+                                    0x00000004, 0x00000002, 0x00000001};
     uint32 mz = 0;
     for (unsigned int i = 0; i < n; ++i) {
         uint32 sign = sign_mask(my);
@@ -1918,22 +1806,18 @@ inline uint32 angle_arg(unsigned int abs, int& k)
     int exp = (abs >> 10) + (abs <= 0x3FF) - 15;
     if (abs < 0x3A48) return k = 0, m << (exp + 20);
 #if HALF_ENABLE_CPP11_LONG_LONG
-    unsigned long long y = m * 0xA2F9836E4E442, mask = (1ULL << (62 - exp)) - 1,
-                       yi = (y + (mask >> 1)) & ~mask, f = y - yi;
+    unsigned long long y = m * 0xA2F9836E4E442, mask = (1ULL << (62 - exp)) - 1, yi = (y + (mask >> 1)) & ~mask,
+                       f = y - yi;
     uint32 sign = -static_cast<uint32>(f >> 63);
     k = static_cast<int>(yi >> (62 - exp));
-    return (multiply64(static_cast<uint32>((sign ? -f : f) >> (31 - exp)), 0xC90FDAA2) ^ sign) -
-           sign;
+    return (multiply64(static_cast<uint32>((sign ? -f : f) >> (31 - exp)), 0xC90FDAA2) ^ sign) - sign;
 #else
-    uint32 yh = m * 0xA2F98 + mulhi<std::round_toward_zero>(m, 0x36E4E442),
-           yl = (m * 0x36E4E442) & 0xFFFFFFFF;
+    uint32 yh = m * 0xA2F98 + mulhi<std::round_toward_zero>(m, 0x36E4E442), yl = (m * 0x36E4E442) & 0xFFFFFFFF;
     uint32 mask = (static_cast<uint32>(1) << (30 - exp)) - 1, yi = (yh + (mask >> 1)) & ~mask,
            sign = -static_cast<uint32>(yi > yh);
     k = static_cast<int>(yi >> (30 - exp));
     uint32 fh = (yh ^ sign) + (yi ^ ~sign) - ~sign, fl = (yl ^ sign) - sign;
-    return (multiply64((exp > -1)
-                           ? (((fh << (1 + exp)) & 0xFFFFFFFF) | ((fl & 0xFFFFFFFF) >> (31 - exp)))
-                           : fh,
+    return (multiply64((exp > -1) ? (((fh << (1 + exp)) & 0xFFFFFFFF) | ((fl & 0xFFFFFFFF) >> (31 - exp))) : fh,
                        0xC90FDAA2) ^
             sign) -
            sign;
@@ -1951,20 +1835,17 @@ inline std::pair<uint32, uint32> atan2_args(unsigned int abs)
     exp += abs >> 10;
     uint32 my = ((abs & 0x3FF) | 0x400) << 5, r = my * my;
     int rexp = 2 * exp;
-    r = 0x40000000 -
-        ((rexp > -31) ? ((r >> -rexp) | ((r & ((static_cast<uint32>(1) << -rexp) - 1)) != 0)) : 1);
+    r = 0x40000000 - ((rexp > -31) ? ((r >> -rexp) | ((r & ((static_cast<uint32>(1) << -rexp) - 1)) != 0)) : 1);
     for (rexp = 0; r < 0x40000000; r <<= 1, --rexp)
         ;
     uint32 mx = sqrt<30>(r, rexp);
     int d = exp - rexp;
     if (d < 0)
-        return std::make_pair(
-            (d < -14) ? ((my >> (-d - 14)) + ((my >> (-d - 15)) & 1)) : (my << (14 + d)),
-            (mx << 14) + (r << 13) / mx);
+        return std::make_pair((d < -14) ? ((my >> (-d - 14)) + ((my >> (-d - 15)) & 1)) : (my << (14 + d)),
+                              (mx << 14) + (r << 13) / mx);
     if (d > 0)
-        return std::make_pair(
-            my << 14, (d > 14) ? ((mx >> (d - 14)) + ((mx >> (d - 15)) & 1))
-                               : ((d == 14) ? mx : ((mx << (14 - d)) + (r << (13 - d)) / mx)));
+        return std::make_pair(my << 14, (d > 14) ? ((mx >> (d - 14)) + ((mx >> (d - 15)) & 1))
+                                                 : ((d == 14) ? mx : ((mx << (14 - d)) + (r << (13 - d)) / mx)));
     return std::make_pair(my << 13, (mx << 13) + (r << 12) / mx);
 }
 
@@ -1975,9 +1856,7 @@ inline std::pair<uint32, uint32> atan2_args(unsigned int abs)
 /// \return exp(abs) and exp(-\a abs) as Q1.31 with same exponent
 inline std::pair<uint32, uint32> hyperbolic_args(unsigned int abs, int& exp, unsigned int n = 32)
 {
-    uint32 mx = detail::multiply64(static_cast<uint32>((abs & 0x3FF) + ((abs > 0x3FF) << 10)) << 21,
-                                   0xB8AA3B29),
-           my;
+    uint32 mx = detail::multiply64(static_cast<uint32>((abs & 0x3FF) + ((abs > 0x3FF) << 10)) << 21, 0xB8AA3B29), my;
     int e = (abs >> 10) + (abs <= 0x3FF);
     if (e < 14) {
         exp = 0;
@@ -1994,8 +1873,7 @@ inline std::pair<uint32, uint32> hyperbolic_args(unsigned int abs, int& exp, uns
         ++d;
     } else
         my = mx;
-    return std::make_pair(
-        mx, (d < 31) ? ((my >> d) | ((my & ((static_cast<uint32>(1) << d) - 1)) != 0)) : 1);
+    return std::make_pair(mx, (d < 31) ? ((my >> d) | ((my & ((static_cast<uint32>(1) << d) - 1)) != 0)) : 1);
 }
 
 /// Postprocessing for binary exponential.
@@ -2118,9 +1996,7 @@ unsigned int area(unsigned int arg)
     r >>= i;
     if (S) {
         if (expy < 0) {
-            r = 0x40000000 + ((expy > -30) ? ((r >> -expy) |
-                                              ((r & ((static_cast<uint32>(1) << -expy) - 1)) != 0))
-                                           : 1);
+            r = 0x40000000 + ((expy > -30) ? ((r >> -expy) | ((r & ((static_cast<uint32>(1) << -expy) - 1)) != 0)) : 1);
             expy = 0;
         } else {
             r += 0x40000000 >> expy;
@@ -2241,11 +2117,9 @@ unsigned int erf(unsigned int arg)
             ((x2.exp < 0) ? f31(exp2((x2.exp > -32) ? (x2.m >> -x2.exp) : 0, 30), 0)
                           : f31(exp2((x2.m << x2.exp) & 0x7FFFFFFF, 22), x2.m >> (31 - x2.exp)));
     return (!C || sign)
-               ? fixed2half<R, 31, false, true, true>(0x80000000 - (e.m >> (C - e.exp)), 14 + C,
-                                                      sign & (C - 1U))
-               : (e.exp < -25)
-                     ? underflow<R>()
-                     : fixed2half<R, 30, false, false, true>(e.m >> 1, e.exp + 14, 0, e.m & 1);
+               ? fixed2half<R, 31, false, true, true>(0x80000000 - (e.m >> (C - e.exp)), 14 + C, sign & (C - 1U))
+               : (e.exp < -25) ? underflow<R>()
+                               : fixed2half<R, 30, false, false, true>(e.m >> 1, e.exp + 14, 0, e.m & 1);
 }
 
 /// Gamma function and postprocessing.
@@ -2270,22 +2144,19 @@ unsigned int gamma(unsigned int arg)
     f31 z(abs), x = sign ? (z + f31(0x80000000, 0)) : z, t = x + f31(0x94CCCCCD, 2),
                 s = f31(0xA06C9901, 1) + f31(0xBBE654E2, -7) / (x + f31(0x80000000, 2)) +
                     f31(0xA1CE6098, 6) / (x + f31(0x80000000, 1)) + f31(0xE1868CB7, 7) / x -
-                    f31(0x8625E279, 8) / (x + f31(0x80000000, 0)) -
-                    f31(0xA03E158F, 2) / (x + f31(0xC0000000, 1));
+                    f31(0x8625E279, 8) / (x + f31(0x80000000, 0)) - f31(0xA03E158F, 2) / (x + f31(0xC0000000, 1));
     int i = (s.exp >= 2) + (s.exp >= 4) + (s.exp >= 8) + (s.exp >= 16);
     s = f31((static_cast<uint32>(s.exp) << (31 - i)) + (log2(s.m >> 1, 28) >> i), i) / lbe;
     if (x.exp != -1 || x.m != 0x80000000) {
         i = (t.exp >= 2) + (t.exp >= 4) + (t.exp >= 8);
         f31 l = f31((static_cast<uint32>(t.exp) << (31 - i)) + (log2(t.m >> 1, 30) >> i), i) / lbe;
-        s = (x.exp < -1) ? (s - (f31(0x80000000, -1) - x) * l)
-                         : (s + (x - f31(0x80000000, -1)) * l);
+        s = (x.exp < -1) ? (s - (f31(0x80000000, -1) - x) * l) : (s + (x - f31(0x80000000, -1)) * l);
     }
     s = x.exp ? (s - t) : (t - s);
     if (bsign) {
         if (z.exp >= 0) {
             sign &= (L | ((z.m >> (31 - z.exp)) & 1)) - 1;
-            for (z = f31((z.m << (1 + z.exp)) & 0xFFFFFFFF, -1); z.m < 0x80000000;
-                 z.m <<= 1, --z.exp)
+            for (z = f31((z.m << (1 + z.exp)) & 0xFFFFFFFF, -1); z.m < 0x80000000; z.m <<= 1, --z.exp)
                 ;
         }
         if (z.exp == -1) z = f31(0x80000000, 0) - z;
@@ -2307,8 +2178,7 @@ unsigned int gamma(unsigned int arg)
                     ;
                 l = l + z / lbe;
             }
-            sign = static_cast<unsigned>(x.exp && (l.exp < s.exp || (l.exp == s.exp && l.m < s.m)))
-                   << 15;
+            sign = static_cast<unsigned>(x.exp && (l.exp < s.exp || (l.exp == s.exp && l.m < s.m))) << 15;
             s = sign ? (s - l) : x.exp ? (l - s) : (l + s);
         } else {
             sign = static_cast<unsigned>(x.exp == 0) << 15;
@@ -2379,10 +2249,7 @@ class half
     /// Conversion constructor.
     /// \param rhs float to convert
     /// \exception FE_OVERFLOW, ...UNDERFLOW, ...INEXACT according to rounding
-    explicit half(float rhs)
-        : data_(static_cast<detail::uint16>(detail::float2half<round_style>(rhs)))
-    {
-    }
+    explicit half(float rhs) : data_(static_cast<detail::uint16>(detail::float2half<round_style>(rhs))) {}
 
     /// Conversion to single-precision.
     /// \return single precision value representing expression value
@@ -2495,10 +2362,7 @@ class half
 
     /// Constructor.
     /// \param bits binary representation to set half to
-    HALF_CONSTEXPR half(detail::binary_t, unsigned int bits) HALF_NOEXCEPT
-        : data_(static_cast<detail::uint16>(bits))
-    {
-    }
+    HALF_CONSTEXPR half(detail::binary_t, unsigned int bits) HALF_NOEXCEPT : data_(static_cast<detail::uint16>(bits)) {}
 
     /// Internal binary representation
     detail::uint16 data_;
@@ -2625,8 +2489,7 @@ namespace detail
 /// \tparam T destination type
 /// \tparam U source type
 /// \tparam R rounding mode to use
-template <typename T, typename U,
-          std::float_round_style R = (std::float_round_style)(HALF_ROUND_STYLE)>
+template <typename T, typename U, std::float_round_style R = (std::float_round_style)(HALF_ROUND_STYLE)>
 struct half_caster {
 };
 template <typename U, std::float_round_style R>
@@ -2771,8 +2634,7 @@ class numeric_limits<half_float::half>
     /// Maximum rounding error in ULP (units in the last place).
     static HALF_CONSTEXPR half_float::half round_error() HALF_NOTHROW
     {
-        return half_float::half(half_float::detail::binary,
-                                (round_style == std::round_to_nearest) ? 0x3800 : 0x3C00);
+        return half_float::half(half_float::detail::binary, (round_style == std::round_to_nearest) ? 0x3800 : 0x3C00);
     }
 
     /// Positive infinity.
@@ -2818,8 +2680,7 @@ struct hash<half_float::half> {
     /// \return hash value
     result_type operator()(argument_type arg) const
     {
-        return hash<half_float::detail::uint16>()(arg.data_ &
-                                                  -static_cast<unsigned>(arg.data_ != 0x8000));
+        return hash<half_float::detail::uint16>()(arg.data_ & -static_cast<unsigned>(arg.data_ != 0x8000));
     }
 };
 #endif
@@ -2839,8 +2700,7 @@ namespace half_float
 /// \exception FE_INVALID if \a x or \a y is NaN
 inline HALF_CONSTEXPR_NOERR bool operator==(half x, half y)
 {
-    return !detail::compsignal(x.data_, y.data_) &&
-           (x.data_ == y.data_ || !((x.data_ | y.data_) & 0x7FFF));
+    return !detail::compsignal(x.data_, y.data_) && (x.data_ == y.data_ || !((x.data_ | y.data_) & 0x7FFF));
 }
 
 /// Comparison for inequality.
@@ -2851,8 +2711,7 @@ inline HALF_CONSTEXPR_NOERR bool operator==(half x, half y)
 /// \exception FE_INVALID if \a x or \a y is NaN
 inline HALF_CONSTEXPR_NOERR bool operator!=(half x, half y)
 {
-    return detail::compsignal(x.data_, y.data_) ||
-           (x.data_ != y.data_ && ((x.data_ | y.data_) & 0x7FFF));
+    return detail::compsignal(x.data_, y.data_) || (x.data_ != y.data_ && ((x.data_ | y.data_) & 0x7FFF));
 }
 
 /// Comparison for less than.
@@ -2932,9 +2791,8 @@ inline HALF_CONSTEXPR half operator-(half arg) { return half(detail::binary, arg
 inline half operator+(half x, half y)
 {
 #ifdef HALF_ARITHMETIC_TYPE
-    return half(detail::binary, detail::float2half<half::round_style>(
-                                    detail::half2float<detail::internal_t>(x.data_) +
-                                    detail::half2float<detail::internal_t>(y.data_)));
+    return half(detail::binary, detail::float2half<half::round_style>(detail::half2float<detail::internal_t>(x.data_) +
+                                                                      detail::half2float<detail::internal_t>(y.data_)));
 #else
     int absx = x.data_ & 0x7FFF, absy = y.data_ & 0x7FFF;
     bool sub = ((x.data_ ^ y.data_) & 0x8000) != 0;
@@ -2942,13 +2800,11 @@ inline half operator+(half x, half y)
         return half(detail::binary,
                     (absx > 0x7C00 || absy > 0x7C00)
                         ? detail::signal(x.data_, y.data_)
-                        : (absy != 0x7C00) ? x.data_
-                                           : (sub && absx == 0x7C00) ? detail::invalid() : y.data_);
+                        : (absy != 0x7C00) ? x.data_ : (sub && absx == 0x7C00) ? detail::invalid() : y.data_);
     if (!absx)
         return absy ? y
-                    : half(detail::binary, (half::round_style == std::round_toward_neg_infinity)
-                                               ? (x.data_ | y.data_)
-                                               : (x.data_ & y.data_));
+                    : half(detail::binary, (half::round_style == std::round_toward_neg_infinity) ? (x.data_ | y.data_)
+                                                                                                 : (x.data_ & y.data_));
     if (!absy) return x;
     unsigned int sign = ((sub && absy > absx) ? y.data_ : x.data_) & 0x8000;
     if (absy > absx) std::swap(absx, absy);
@@ -2961,9 +2817,8 @@ inline half operator+(half x, half y)
         my = 1;
     if (sub) {
         if (!(mx -= my))
-            return half(detail::binary,
-                        static_cast<unsigned>(half::round_style == std::round_toward_neg_infinity)
-                            << 15);
+            return half(detail::binary, static_cast<unsigned>(half::round_style == std::round_toward_neg_infinity)
+                                            << 15);
         for (; mx < 0x2000 && exp > 1; mx <<= 1, --exp)
             ;
     } else {
@@ -2972,9 +2827,8 @@ inline half operator+(half x, half y)
         if ((exp += i) > 30) return half(detail::binary, detail::overflow<half::round_style>(sign));
         mx = (mx >> i) | (mx & i);
     }
-    return half(detail::binary,
-                detail::rounded<half::round_style, false>(sign + ((exp - 1) << 10) + (mx >> 3),
-                                                          (mx >> 2) & 1, (mx & 0x3) != 0));
+    return half(detail::binary, detail::rounded<half::round_style, false>(sign + ((exp - 1) << 10) + (mx >> 3),
+                                                                          (mx >> 2) & 1, (mx & 0x3) != 0));
 #endif
 }
 
@@ -2988,9 +2842,8 @@ inline half operator+(half x, half y)
 inline half operator-(half x, half y)
 {
 #ifdef HALF_ARITHMETIC_TYPE
-    return half(detail::binary, detail::float2half<half::round_style>(
-                                    detail::half2float<detail::internal_t>(x.data_) -
-                                    detail::half2float<detail::internal_t>(y.data_)));
+    return half(detail::binary, detail::float2half<half::round_style>(detail::half2float<detail::internal_t>(x.data_) -
+                                                                      detail::half2float<detail::internal_t>(y.data_)));
 #else
     return x + -y;
 #endif
@@ -3006,33 +2859,30 @@ inline half operator-(half x, half y)
 inline half operator*(half x, half y)
 {
 #ifdef HALF_ARITHMETIC_TYPE
-    return half(detail::binary, detail::float2half<half::round_style>(
-                                    detail::half2float<detail::internal_t>(x.data_) *
-                                    detail::half2float<detail::internal_t>(y.data_)));
+    return half(detail::binary, detail::float2half<half::round_style>(detail::half2float<detail::internal_t>(x.data_) *
+                                                                      detail::half2float<detail::internal_t>(y.data_)));
 #else
     int absx = x.data_ & 0x7FFF, absy = y.data_ & 0x7FFF, exp = -16;
     unsigned int sign = (x.data_ ^ y.data_) & 0x8000;
     if (absx >= 0x7C00 || absy >= 0x7C00)
         return half(detail::binary, (absx > 0x7C00 || absy > 0x7C00)
                                         ? detail::signal(x.data_, y.data_)
-                                        : ((absx == 0x7C00 && !absy) || (absy == 0x7C00 && !absx))
-                                              ? detail::invalid()
-                                              : (sign | 0x7C00));
+                                        : ((absx == 0x7C00 && !absy) || (absy == 0x7C00 && !absx)) ? detail::invalid()
+                                                                                                   : (sign | 0x7C00));
     if (!absx || !absy) return half(detail::binary, sign);
     for (; absx < 0x400; absx <<= 1, --exp)
         ;
     for (; absy < 0x400; absy <<= 1, --exp)
         ;
-    detail::uint32 m = static_cast<detail::uint32>((absx & 0x3FF) | 0x400) *
-                       static_cast<detail::uint32>((absy & 0x3FF) | 0x400);
+    detail::uint32 m =
+        static_cast<detail::uint32>((absx & 0x3FF) | 0x400) * static_cast<detail::uint32>((absy & 0x3FF) | 0x400);
     int i = m >> 21, s = m & i;
     exp += (absx >> 10) + (absy >> 10) + i;
     if (exp > 29)
         return half(detail::binary, detail::overflow<half::round_style>(sign));
     else if (exp < -11)
         return half(detail::binary, detail::underflow<half::round_style>(sign));
-    return half(detail::binary, detail::fixed2half<half::round_style, 20, false, false, false>(
-                                    m >> i, exp, sign, s));
+    return half(detail::binary, detail::fixed2half<half::round_style, 20, false, false, false>(m >> i, exp, sign, s));
 #endif
 }
 
@@ -3047,18 +2897,16 @@ inline half operator*(half x, half y)
 inline half operator/(half x, half y)
 {
 #ifdef HALF_ARITHMETIC_TYPE
-    return half(detail::binary, detail::float2half<half::round_style>(
-                                    detail::half2float<detail::internal_t>(x.data_) /
-                                    detail::half2float<detail::internal_t>(y.data_)));
+    return half(detail::binary, detail::float2half<half::round_style>(detail::half2float<detail::internal_t>(x.data_) /
+                                                                      detail::half2float<detail::internal_t>(y.data_)));
 #else
     int absx = x.data_ & 0x7FFF, absy = y.data_ & 0x7FFF, exp = 14;
     unsigned int sign = (x.data_ ^ y.data_) & 0x8000;
     if (absx >= 0x7C00 || absy >= 0x7C00)
-        return half(detail::binary, (absx > 0x7C00 || absy > 0x7C00)
-                                        ? detail::signal(x.data_, y.data_)
-                                        : (absx == absy)
-                                              ? detail::invalid()
-                                              : (sign | ((absx == 0x7C00) ? 0x7C00 : 0)));
+        return half(detail::binary,
+                    (absx > 0x7C00 || absy > 0x7C00)
+                        ? detail::signal(x.data_, y.data_)
+                        : (absx == absy) ? detail::invalid() : (sign | ((absx == 0x7C00) ? 0x7C00 : 0)));
     if (!absx) return half(detail::binary, absy ? sign : detail::invalid());
     if (!absy) return half(detail::binary, detail::pole(sign));
     for (; absx < 0x400; absx <<= 1, --exp)
@@ -3074,8 +2922,8 @@ inline half operator/(half x, half y)
         return half(detail::binary, detail::underflow<half::round_style>(sign));
     mx <<= 12 + i;
     my <<= 1;
-    return half(detail::binary, detail::fixed2half<half::round_style, 11, false, false, false>(
-                                    mx / my, exp, sign, mx % my != 0));
+    return half(detail::binary,
+                detail::fixed2half<half::round_style, 11, false, false, false>(mx / my, exp, sign, mx % my != 0));
 #endif
 }
 
@@ -3146,9 +2994,8 @@ inline half fmod(half x, half y)
 {
     unsigned int absx = x.data_ & 0x7FFF, absy = y.data_ & 0x7FFF, sign = x.data_ & 0x8000;
     if (absx >= 0x7C00 || absy >= 0x7C00)
-        return half(detail::binary, (absx > 0x7C00 || absy > 0x7C00)
-                                        ? detail::signal(x.data_, y.data_)
-                                        : (absx == 0x7C00) ? detail::invalid() : x.data_);
+        return half(detail::binary, (absx > 0x7C00 || absy > 0x7C00) ? detail::signal(x.data_, y.data_)
+                                                                     : (absx == 0x7C00) ? detail::invalid() : x.data_);
     if (!absy) return half(detail::binary, detail::invalid());
     if (!absx) return x;
     if (absx == absy) return half(detail::binary, sign);
@@ -3164,9 +3011,8 @@ inline half remainder(half x, half y)
 {
     unsigned int absx = x.data_ & 0x7FFF, absy = y.data_ & 0x7FFF, sign = x.data_ & 0x8000;
     if (absx >= 0x7C00 || absy >= 0x7C00)
-        return half(detail::binary, (absx > 0x7C00 || absy > 0x7C00)
-                                        ? detail::signal(x.data_, y.data_)
-                                        : (absx == 0x7C00) ? detail::invalid() : x.data_);
+        return half(detail::binary, (absx > 0x7C00 || absy > 0x7C00) ? detail::signal(x.data_, y.data_)
+                                                                     : (absx == 0x7C00) ? detail::invalid() : x.data_);
     if (!absy) return half(detail::binary, detail::invalid());
     if (absx == absy) return half(detail::binary, sign);
     return half(detail::binary, sign ^ detail::mod<false, true>(absx, absy));
@@ -3183,10 +3029,9 @@ inline half remquo(half x, half y, int* quo)
 {
     unsigned int absx = x.data_ & 0x7FFF, absy = y.data_ & 0x7FFF, value = x.data_ & 0x8000;
     if (absx >= 0x7C00 || absy >= 0x7C00)
-        return half(detail::binary,
-                    (absx > 0x7C00 || absy > 0x7C00)
-                        ? detail::signal(x.data_, y.data_)
-                        : (absx == 0x7C00) ? detail::invalid() : (*quo = 0, x.data_));
+        return half(detail::binary, (absx > 0x7C00 || absy > 0x7C00)
+                                        ? detail::signal(x.data_, y.data_)
+                                        : (absx == 0x7C00) ? detail::invalid() : (*quo = 0, x.data_));
     if (!absy) return half(detail::binary, detail::invalid());
     bool qsign = ((value ^ y.data_) & 0x8000) != 0;
     int q = 1;
@@ -3223,26 +3068,22 @@ inline half fma(half x, half y, half z)
     if (absx >= 0x7C00 || absy >= 0x7C00 || absz >= 0x7C00)
         return (absx > 0x7C00 || absy > 0x7C00 || absz > 0x7C00)
                    ? half(detail::binary, detail::signal(x.data_, y.data_, z.data_))
-                   : (absx == 0x7C00)
-                         ? half(detail::binary, (!absy || (sub && absz == 0x7C00))
-                                                    ? detail::invalid()
-                                                    : (sign | 0x7C00))
-                         : (absy == 0x7C00)
-                               ? half(detail::binary, (!absx || (sub && absz == 0x7C00))
-                                                          ? detail::invalid()
-                                                          : (sign | 0x7C00))
-                               : z;
+                   : (absx == 0x7C00) ? half(detail::binary,
+                                             (!absy || (sub && absz == 0x7C00)) ? detail::invalid() : (sign | 0x7C00))
+                                      : (absy == 0x7C00) ? half(detail::binary, (!absx || (sub && absz == 0x7C00))
+                                                                                    ? detail::invalid()
+                                                                                    : (sign | 0x7C00))
+                                                         : z;
     if (!absx || !absy)
         return absz ? z
-                    : half(detail::binary, (half::round_style == std::round_toward_neg_infinity)
-                                               ? (z.data_ | sign)
-                                               : (z.data_ & sign));
+                    : half(detail::binary,
+                           (half::round_style == std::round_toward_neg_infinity) ? (z.data_ | sign) : (z.data_ & sign));
     for (; absx < 0x400; absx <<= 1, --exp)
         ;
     for (; absy < 0x400; absy <<= 1, --exp)
         ;
-    detail::uint32 m = static_cast<detail::uint32>((absx & 0x3FF) | 0x400) *
-                       static_cast<detail::uint32>((absy & 0x3FF) | 0x400);
+    detail::uint32 m =
+        static_cast<detail::uint32>((absx & 0x3FF) | 0x400) * static_cast<detail::uint32>((absy & 0x3FF) | 0x400);
     int i = m >> 21;
     exp += (absx >> 10) + (absy >> 10) + i;
     m <<= 3 - i;
@@ -3262,10 +3103,8 @@ inline half fma(half x, half y, half z)
         if (sub) {
             m = m - mz;
             if (!m)
-                return half(
-                    detail::binary,
-                    static_cast<unsigned>(half::round_style == std::round_toward_neg_infinity)
-                        << 15);
+                return half(detail::binary, static_cast<unsigned>(half::round_style == std::round_toward_neg_infinity)
+                                                << 15);
             for (; m < 0x800000; m <<= 1, --exp)
                 ;
         } else {
@@ -3279,8 +3118,7 @@ inline half fma(half x, half y, half z)
         return half(detail::binary, detail::overflow<half::round_style>(sign));
     else if (exp < -10)
         return half(detail::binary, detail::underflow<half::round_style>(sign));
-    return half(detail::binary,
-                detail::fixed2half<half::round_style, 23, false, false, false>(m, exp - 1, sign));
+    return half(detail::binary, detail::fixed2half<half::round_style, 23, false, false, false>(m, exp - 1, sign));
 #endif
 }
 
@@ -3291,11 +3129,10 @@ inline half fma(half x, half y, half z)
 /// or \a y is signaling NaN
 inline HALF_CONSTEXPR_NOERR half fmax(half x, half y)
 {
-    return half(detail::binary,
-                (!isnan(y) && (isnan(x) || (x.data_ ^ (0x8000 | (0x8000 - (x.data_ >> 15)))) <
-                                               (y.data_ ^ (0x8000 | (0x8000 - (y.data_ >> 15))))))
-                    ? detail::select(y.data_, x.data_)
-                    : detail::select(x.data_, y.data_));
+    return half(detail::binary, (!isnan(y) && (isnan(x) || (x.data_ ^ (0x8000 | (0x8000 - (x.data_ >> 15)))) <
+                                                               (y.data_ ^ (0x8000 | (0x8000 - (y.data_ >> 15))))))
+                                    ? detail::select(y.data_, x.data_)
+                                    : detail::select(x.data_, y.data_));
 }
 
 /// Minimum of half expressions.
@@ -3305,11 +3142,10 @@ inline HALF_CONSTEXPR_NOERR half fmax(half x, half y)
 /// or \a y is signaling NaN
 inline HALF_CONSTEXPR_NOERR half fmin(half x, half y)
 {
-    return half(detail::binary,
-                (!isnan(y) && (isnan(x) || (x.data_ ^ (0x8000 | (0x8000 - (x.data_ >> 15)))) >
-                                               (y.data_ ^ (0x8000 | (0x8000 - (y.data_ >> 15))))))
-                    ? detail::select(y.data_, x.data_)
-                    : detail::select(x.data_, y.data_));
+    return half(detail::binary, (!isnan(y) && (isnan(x) || (x.data_ ^ (0x8000 | (0x8000 - (x.data_ >> 15)))) >
+                                                               (y.data_ ^ (0x8000 | (0x8000 - (y.data_ >> 15))))))
+                                    ? detail::select(y.data_, x.data_)
+                                    : detail::select(x.data_, y.data_));
 }
 
 /// Positive difference.
@@ -3322,8 +3158,7 @@ inline HALF_CONSTEXPR_NOERR half fmin(half x, half y)
 inline half fdim(half x, half y)
 {
     if (isnan(x) || isnan(y)) return half(detail::binary, detail::signal(x.data_, y.data_));
-    return (x.data_ ^ (0x8000 | (0x8000 - (x.data_ >> 15)))) <=
-                   (y.data_ ^ (0x8000 | (0x8000 - (y.data_ >> 15))))
+    return (x.data_ ^ (0x8000 | (0x8000 - (x.data_ >> 15)))) <= (y.data_ ^ (0x8000 | (0x8000 - (y.data_ >> 15))))
                ? half(detail::binary, 0)
                : (x - y);
 }
@@ -3355,19 +3190,18 @@ inline half nanh(const char* arg)
 inline half exp(half arg)
 {
 #ifdef HALF_ARITHMETIC_TYPE
-    return half(detail::binary, detail::float2half<half::round_style>(
-                                    std::exp(detail::half2float<detail::internal_t>(arg.data_))));
+    return half(detail::binary,
+                detail::float2half<half::round_style>(std::exp(detail::half2float<detail::internal_t>(arg.data_))));
 #else
     int abs = arg.data_ & 0x7FFF;
     if (!abs) return half(detail::binary, 0x3C00);
     if (abs >= 0x7C00)
-        return half(detail::binary, (abs == 0x7C00) ? (0x7C00 & ((arg.data_ >> 15) - 1U))
-                                                    : detail::signal(arg.data_));
+        return half(detail::binary, (abs == 0x7C00) ? (0x7C00 & ((arg.data_ >> 15) - 1U)) : detail::signal(arg.data_));
     if (abs >= 0x4C80)
         return half(detail::binary, (arg.data_ & 0x8000) ? detail::underflow<half::round_style>()
                                                          : detail::overflow<half::round_style>());
-    detail::uint32 m = detail::multiply64(
-        static_cast<detail::uint32>((abs & 0x3FF) + ((abs > 0x3FF) << 10)) << 21, 0xB8AA3B29);
+    detail::uint32 m =
+        detail::multiply64(static_cast<detail::uint32>((abs & 0x3FF) + ((abs > 0x3FF) << 10)) << 21, 0xB8AA3B29);
     int e = (abs >> 10) + (abs <= 0x3FF), exp;
     if (e < 14) {
         exp = 0;
@@ -3376,8 +3210,8 @@ inline half exp(half arg)
         exp = m >> (45 - e);
         m = (m << (e - 14)) & 0x7FFFFFFF;
     }
-    return half(detail::binary, detail::exp2_post<half::round_style, true>(
-                                    detail::exp2(m, 26), exp, (arg.data_ & 0x8000) != 0));
+    return half(detail::binary,
+                detail::exp2_post<half::round_style, true>(detail::exp2(m, 26), exp, (arg.data_ & 0x8000) != 0));
 #endif
 }
 
@@ -3392,14 +3226,13 @@ inline half exp(half arg)
 inline half exp2(half arg)
 {
 #if defined(HALF_ARITHMETIC_TYPE) && HALF_ENABLE_CPP11_CMATH
-    return half(detail::binary, detail::float2half<half::round_style>(
-                                    std::exp2(detail::half2float<detail::internal_t>(arg.data_))));
+    return half(detail::binary,
+                detail::float2half<half::round_style>(std::exp2(detail::half2float<detail::internal_t>(arg.data_))));
 #else
     int abs = arg.data_ & 0x7FFF;
     if (!abs) return half(detail::binary, 0x3C00);
     if (abs >= 0x7C00)
-        return half(detail::binary, (abs == 0x7C00) ? (0x7C00 & ((arg.data_ >> 15) - 1U))
-                                                    : detail::signal(arg.data_));
+        return half(detail::binary, (abs == 0x7C00) ? (0x7C00 & ((arg.data_ >> 15) - 1U)) : detail::signal(arg.data_));
     if (abs >= 0x4E40)
         return half(detail::binary, (arg.data_ & 0x8000) ? detail::underflow<half::round_style>()
                                                          : detail::overflow<half::round_style>());
@@ -3411,11 +3244,9 @@ inline half exp2(half arg)
             exp = -exp;
         else if (exp > 15)
             return half(detail::binary, detail::overflow<half::round_style>());
-        return half(detail::binary,
-                    detail::fixed2half<half::round_style, 31, false, false, false>(m, exp + 14));
+        return half(detail::binary, detail::fixed2half<half::round_style, 31, false, false, false>(m, exp + 14));
     }
-    return half(detail::binary,
-                detail::exp2_post<half::round_style, true>(m, exp, (arg.data_ & 0x8000) != 0));
+    return half(detail::binary, detail::exp2_post<half::round_style, true>(m, exp, (arg.data_ & 0x8000) != 0));
 #endif
 }
 
@@ -3431,20 +3262,18 @@ inline half exp2(half arg)
 inline half expm1(half arg)
 {
 #if defined(HALF_ARITHMETIC_TYPE) && HALF_ENABLE_CPP11_CMATH
-    return half(detail::binary, detail::float2half<half::round_style>(
-                                    std::expm1(detail::half2float<detail::internal_t>(arg.data_))));
+    return half(detail::binary,
+                detail::float2half<half::round_style>(std::expm1(detail::half2float<detail::internal_t>(arg.data_))));
 #else
     unsigned int abs = arg.data_ & 0x7FFF, sign = arg.data_ & 0x8000;
     if (!abs) return arg;
     if (abs >= 0x7C00)
-        return half(detail::binary,
-                    (abs == 0x7C00) ? (0x7C00 + (sign >> 1)) : detail::signal(arg.data_));
+        return half(detail::binary, (abs == 0x7C00) ? (0x7C00 + (sign >> 1)) : detail::signal(arg.data_));
     if (abs >= 0x4A00)
-        return half(detail::binary, (arg.data_ & 0x8000)
-                                        ? detail::rounded<half::round_style, true>(0xBBFF, 1, 1)
-                                        : detail::overflow<half::round_style>());
-    detail::uint32 m = detail::multiply64(
-        static_cast<detail::uint32>((abs & 0x3FF) + ((abs > 0x3FF) << 10)) << 21, 0xB8AA3B29);
+        return half(detail::binary, (arg.data_ & 0x8000) ? detail::rounded<half::round_style, true>(0xBBFF, 1, 1)
+                                                         : detail::overflow<half::round_style>());
+    detail::uint32 m =
+        detail::multiply64(static_cast<detail::uint32>((abs & 0x3FF) + ((abs > 0x3FF) << 10)) << 21, 0xB8AA3B29);
     int e = (abs >> 10) + (abs <= 0x3FF), exp;
     if (e < 14) {
         exp = 0;
@@ -3460,17 +3289,15 @@ inline half expm1(half arg)
             ++exp;
             m = detail::divide64(0x80000000, m, s);
         }
-        m = 0x80000000 -
-            ((m >> exp) | ((m & ((static_cast<detail::uint32>(1) << exp) - 1)) != 0) | s);
+        m = 0x80000000 - ((m >> exp) | ((m & ((static_cast<detail::uint32>(1) << exp) - 1)) != 0) | s);
         exp = 0;
     } else
         m -= (exp < 31) ? (0x80000000 >> exp) : 1;
     for (exp += 14; m < 0x80000000 && exp; m <<= 1, --exp)
         ;
     if (exp > 29) return half(detail::binary, detail::overflow<half::round_style>());
-    return half(detail::binary,
-                detail::rounded<half::round_style, true>(sign + (exp << 10) + (m >> 21),
-                                                         (m >> 20) & 1, (m & 0xFFFFF) != 0));
+    return half(detail::binary, detail::rounded<half::round_style, true>(sign + (exp << 10) + (m >> 21), (m >> 20) & 1,
+                                                                         (m & 0xFFFFF) != 0));
 #endif
 }
 
@@ -3486,23 +3313,20 @@ inline half expm1(half arg)
 inline half log(half arg)
 {
 #ifdef HALF_ARITHMETIC_TYPE
-    return half(detail::binary, detail::float2half<half::round_style>(
-                                    std::log(detail::half2float<detail::internal_t>(arg.data_))));
+    return half(detail::binary,
+                detail::float2half<half::round_style>(std::log(detail::half2float<detail::internal_t>(arg.data_))));
 #else
     int abs = arg.data_ & 0x7FFF, exp = -15;
     if (!abs) return half(detail::binary, detail::pole(0x8000));
     if (arg.data_ & 0x8000)
-        return half(detail::binary,
-                    (arg.data_ <= 0xFC00) ? detail::invalid() : detail::signal(arg.data_));
-    if (abs >= 0x7C00)
-        return (abs == 0x7C00) ? arg : half(detail::binary, detail::signal(arg.data_));
+        return half(detail::binary, (arg.data_ <= 0xFC00) ? detail::invalid() : detail::signal(arg.data_));
+    if (abs >= 0x7C00) return (abs == 0x7C00) ? arg : half(detail::binary, detail::signal(arg.data_));
     for (; abs < 0x400; abs <<= 1, --exp)
         ;
     exp += abs >> 10;
     return half(detail::binary,
                 detail::log2_post<half::round_style, 0xB8AA3B2A>(
-                    detail::log2(static_cast<detail::uint32>((abs & 0x3FF) | 0x400) << 20, 27) + 8,
-                    exp, 17));
+                    detail::log2(static_cast<detail::uint32>((abs & 0x3FF) | 0x400) << 20, 27) + 8, exp, 17));
 #endif
 }
 
@@ -3518,16 +3342,14 @@ inline half log(half arg)
 inline half log10(half arg)
 {
 #ifdef HALF_ARITHMETIC_TYPE
-    return half(detail::binary, detail::float2half<half::round_style>(
-                                    std::log10(detail::half2float<detail::internal_t>(arg.data_))));
+    return half(detail::binary,
+                detail::float2half<half::round_style>(std::log10(detail::half2float<detail::internal_t>(arg.data_))));
 #else
     int abs = arg.data_ & 0x7FFF, exp = -15;
     if (!abs) return half(detail::binary, detail::pole(0x8000));
     if (arg.data_ & 0x8000)
-        return half(detail::binary,
-                    (arg.data_ <= 0xFC00) ? detail::invalid() : detail::signal(arg.data_));
-    if (abs >= 0x7C00)
-        return (abs == 0x7C00) ? arg : half(detail::binary, detail::signal(arg.data_));
+        return half(detail::binary, (arg.data_ <= 0xFC00) ? detail::invalid() : detail::signal(arg.data_));
+    if (abs >= 0x7C00) return (abs == 0x7C00) ? arg : half(detail::binary, detail::signal(arg.data_));
     switch (abs) {
         case 0x4900:
             return half(detail::binary, 0x3C00);
@@ -3543,8 +3365,7 @@ inline half log10(half arg)
     exp += abs >> 10;
     return half(detail::binary,
                 detail::log2_post<half::round_style, 0xD49A784C>(
-                    detail::log2(static_cast<detail::uint32>((abs & 0x3FF) | 0x400) << 20, 27) + 8,
-                    exp, 16));
+                    detail::log2(static_cast<detail::uint32>((abs & 0x3FF) | 0x400) << 20, 27) + 8, exp, 16));
 #endif
 }
 
@@ -3560,16 +3381,14 @@ inline half log10(half arg)
 inline half log2(half arg)
 {
 #if defined(HALF_ARITHMETIC_TYPE) && HALF_ENABLE_CPP11_CMATH
-    return half(detail::binary, detail::float2half<half::round_style>(
-                                    std::log2(detail::half2float<detail::internal_t>(arg.data_))));
+    return half(detail::binary,
+                detail::float2half<half::round_style>(std::log2(detail::half2float<detail::internal_t>(arg.data_))));
 #else
     int abs = arg.data_ & 0x7FFF, exp = -15, s = 0;
     if (!abs) return half(detail::binary, detail::pole(0x8000));
     if (arg.data_ & 0x8000)
-        return half(detail::binary,
-                    (arg.data_ <= 0xFC00) ? detail::invalid() : detail::signal(arg.data_));
-    if (abs >= 0x7C00)
-        return (abs == 0x7C00) ? arg : half(detail::binary, detail::signal(arg.data_));
+        return half(detail::binary, (arg.data_ <= 0xFC00) ? detail::invalid() : detail::signal(arg.data_));
+    if (abs >= 0x7C00) return (abs == 0x7C00) ? arg : half(detail::binary, detail::signal(arg.data_));
     if (abs == 0x3C00) return half(detail::binary, 0);
     for (; abs < 0x400; abs <<= 1, --exp)
         ;
@@ -3582,17 +3401,15 @@ inline half log2(half arg)
     }
     detail::uint32 ilog = exp, sign = detail::sign_mask(ilog),
                    m = (((ilog << 27) +
-                         (detail::log2(static_cast<detail::uint32>((abs & 0x3FF) | 0x400) << 20,
-                                       28) >>
-                          4)) ^
+                         (detail::log2(static_cast<detail::uint32>((abs & 0x3FF) | 0x400) << 20, 28) >> 4)) ^
                         sign) -
                        sign;
     if (!m) return half(detail::binary, 0);
     for (exp = 14; m < 0x8000000 && exp; m <<= 1, --exp)
         ;
     for (; m > 0xFFFFFFF; m >>= 1, ++exp) s |= m & 1;
-    return half(detail::binary, detail::fixed2half<half::round_style, 27, false, false, true>(
-                                    m, exp, sign & 0x8000, s));
+    return half(detail::binary,
+                detail::fixed2half<half::round_style, 27, false, false, true>(m, exp, sign & 0x8000, s));
 #endif
 }
 
@@ -3609,17 +3426,15 @@ inline half log2(half arg)
 inline half log1p(half arg)
 {
 #if defined(HALF_ARITHMETIC_TYPE) && HALF_ENABLE_CPP11_CMATH
-    return half(detail::binary, detail::float2half<half::round_style>(
-                                    std::log1p(detail::half2float<detail::internal_t>(arg.data_))));
+    return half(detail::binary,
+                detail::float2half<half::round_style>(std::log1p(detail::half2float<detail::internal_t>(arg.data_))));
 #else
     if (arg.data_ >= 0xBC00)
-        return half(detail::binary,
-                    (arg.data_ == 0xBC00)
-                        ? detail::pole(0x8000)
-                        : (arg.data_ <= 0xFC00) ? detail::invalid() : detail::signal(arg.data_));
+        return half(detail::binary, (arg.data_ == 0xBC00)
+                                        ? detail::pole(0x8000)
+                                        : (arg.data_ <= 0xFC00) ? detail::invalid() : detail::signal(arg.data_));
     int abs = arg.data_ & 0x7FFF, exp = -15;
-    if (!abs || abs >= 0x7C00)
-        return (abs > 0x7C00) ? half(detail::binary, detail::signal(arg.data_)) : arg;
+    if (!abs || abs >= 0x7C00) return (abs > 0x7C00) ? half(detail::binary, detail::signal(arg.data_)) : arg;
     for (; abs < 0x400; abs <<= 1, --exp)
         ;
     exp += abs >> 10;
@@ -3639,8 +3454,7 @@ inline half log1p(half arg)
             exp += i;
         }
     }
-    return half(detail::binary,
-                detail::log2_post<half::round_style, 0xB8AA3B2A>(detail::log2(m), exp, 17));
+    return half(detail::binary, detail::log2_post<half::round_style, 0xB8AA3B2A>(detail::log2(m), exp, 17));
 #endif
 }
 
@@ -3660,20 +3474,18 @@ inline half log1p(half arg)
 inline half sqrt(half arg)
 {
 #ifdef HALF_ARITHMETIC_TYPE
-    return half(detail::binary, detail::float2half<half::round_style>(
-                                    std::sqrt(detail::half2float<detail::internal_t>(arg.data_))));
+    return half(detail::binary,
+                detail::float2half<half::round_style>(std::sqrt(detail::half2float<detail::internal_t>(arg.data_))));
 #else
     int abs = arg.data_ & 0x7FFF, exp = 15;
     if (!abs || arg.data_ >= 0x7C00)
-        return half(detail::binary, (abs > 0x7C00)
-                                        ? detail::signal(arg.data_)
-                                        : (arg.data_ > 0x8000) ? detail::invalid() : arg.data_);
+        return half(detail::binary,
+                    (abs > 0x7C00) ? detail::signal(arg.data_) : (arg.data_ > 0x8000) ? detail::invalid() : arg.data_);
     for (; abs < 0x400; abs <<= 1, --exp)
         ;
     detail::uint32 r = static_cast<detail::uint32>((abs & 0x3FF) | 0x400) << 10,
                    m = detail::sqrt<20>(r, exp += abs >> 10);
-    return half(detail::binary, detail::rounded<half::round_style, false>((exp << 10) + (m & 0x3FF),
-                                                                          r > m, r != 0));
+    return half(detail::binary, detail::rounded<half::round_style, false>((exp << 10) + (m & 0x3FF), r > m, r != 0));
 #endif
 }
 
@@ -3688,8 +3500,8 @@ inline half sqrt(half arg)
 inline half cbrt(half arg)
 {
 #if defined(HALF_ARITHMETIC_TYPE) && HALF_ENABLE_CPP11_CMATH
-    return half(detail::binary, detail::float2half<half::round_style>(
-                                    std::cbrt(detail::half2float<detail::internal_t>(arg.data_))));
+    return half(detail::binary,
+                detail::float2half<half::round_style>(std::cbrt(detail::half2float<detail::internal_t>(arg.data_))));
 #else
     int abs = arg.data_ & 0x7FFF, exp = -15;
     if (!abs || abs == 0x3C00 || abs >= 0x7C00)
@@ -3698,9 +3510,7 @@ inline half cbrt(half arg)
         ;
     detail::uint32 ilog = exp + (abs >> 10), sign = detail::sign_mask(ilog), f,
                    m = (((ilog << 27) +
-                         (detail::log2(static_cast<detail::uint32>((abs & 0x3FF) | 0x400) << 20,
-                                       24) >>
-                          4)) ^
+                         (detail::log2(static_cast<detail::uint32>((abs & 0x3FF) | 0x400) << 20, 24) >> 4)) ^
                         sign) -
                        sign;
     for (exp = 2; m < 0x80000000; m <<= 1, --exp)
@@ -3726,10 +3536,9 @@ inline half cbrt(half arg)
     }
     return half(detail::binary,
                 (half::round_style == std::round_to_nearest)
-                    ? detail::fixed2half<half::round_style, 31, false, false, false>(
-                          m, exp + 14, arg.data_ & 0x8000)
-                    : detail::fixed2half<half::round_style, 23, false, false, false>(
-                          (m + 0x80) >> 8, exp + 14, arg.data_ & 0x8000));
+                    ? detail::fixed2half<half::round_style, 31, false, false, false>(m, exp + 14, arg.data_ & 0x8000)
+                    : detail::fixed2half<half::round_style, 23, false, false, false>((m + 0x80) >> 8, exp + 14,
+                                                                                     arg.data_ & 0x8000));
 #endif
 }
 
@@ -3750,16 +3559,14 @@ inline half hypot(half x, half y)
 #if HALF_ENABLE_CPP11_CMATH
     return half(detail::binary, detail::float2half<half::round_style>(std::hypot(fx, fy)));
 #else
-    return half(detail::binary,
-                detail::float2half<half::round_style>(std::sqrt(fx * fx + fy * fy)));
+    return half(detail::binary, detail::float2half<half::round_style>(std::sqrt(fx * fx + fy * fy)));
 #endif
 #else
     int absx = x.data_ & 0x7FFF, absy = y.data_ & 0x7FFF, expx = 0, expy = 0;
     if (absx >= 0x7C00 || absy >= 0x7C00)
-        return half(detail::binary, (absx == 0x7C00)
-                                        ? detail::select(0x7C00, y.data_)
-                                        : (absy == 0x7C00) ? detail::select(0x7C00, x.data_)
-                                                           : detail::signal(x.data_, y.data_));
+        return half(detail::binary, (absx == 0x7C00) ? detail::select(0x7C00, y.data_)
+                                                     : (absy == 0x7C00) ? detail::select(0x7C00, x.data_)
+                                                                        : detail::signal(x.data_, y.data_));
     if (!absx) return half(detail::binary, absy ? detail::check_underflow(absy) : 0);
     if (!absy) return half(detail::binary, detail::check_underflow(absx));
     if (absy > absx) std::swap(absx, absy);
@@ -3797,11 +3604,9 @@ inline half hypot(half x, half y, half z)
     detail::internal_t fx = detail::half2float<detail::internal_t>(x.data_),
                        fy = detail::half2float<detail::internal_t>(y.data_),
                        fz = detail::half2float<detail::internal_t>(z.data_);
-    return half(detail::binary,
-                detail::float2half<half::round_style>(std::sqrt(fx * fx + fy * fy + fz * fz)));
+    return half(detail::binary, detail::float2half<half::round_style>(std::sqrt(fx * fx + fy * fy + fz * fz)));
 #else
-    int absx = x.data_ & 0x7FFF, absy = y.data_ & 0x7FFF, absz = z.data_ & 0x7FFF, expx = 0,
-        expy = 0, expz = 0;
+    int absx = x.data_ & 0x7FFF, absy = y.data_ & 0x7FFF, absz = z.data_ & 0x7FFF, expx = 0, expy = 0, expz = 0;
     if (!absx) return hypot(y, z);
     if (!absy) return hypot(x, z);
     if (!absz) return hypot(x, y);
@@ -3809,11 +3614,9 @@ inline half hypot(half x, half y, half z)
         return half(detail::binary,
                     (absx == 0x7C00)
                         ? detail::select(0x7C00, detail::select(y.data_, z.data_))
-                        : (absy == 0x7C00)
-                              ? detail::select(0x7C00, detail::select(x.data_, z.data_))
-                              : (absz == 0x7C00)
-                                    ? detail::select(0x7C00, detail::select(x.data_, y.data_))
-                                    : detail::signal(x.data_, y.data_, z.data_));
+                        : (absy == 0x7C00) ? detail::select(0x7C00, detail::select(x.data_, z.data_))
+                                           : (absz == 0x7C00) ? detail::select(0x7C00, detail::select(x.data_, y.data_))
+                                                              : detail::signal(x.data_, y.data_, z.data_));
     if (absz > absy) std::swap(absy, absz);
     if (absy > absx) std::swap(absx, absy);
     if (absz > absy) std::swap(absy, absz);
@@ -3823,8 +3626,7 @@ inline half hypot(half x, half y, half z)
         ;
     for (; absz < 0x400; absz <<= 1, --expz)
         ;
-    detail::uint32 mx = (absx & 0x3FF) | 0x400, my = (absy & 0x3FF) | 0x400,
-                   mz = (absz & 0x3FF) | 0x400;
+    detail::uint32 mx = (absx & 0x3FF) | 0x400, my = (absy & 0x3FF) | 0x400, mz = (absz & 0x3FF) | 0x400;
     mx *= mx;
     my *= my;
     mz *= mz;
@@ -3865,30 +3667,25 @@ inline half hypot(half x, half y, half z)
 inline half pow(half x, half y)
 {
 #ifdef HALF_ARITHMETIC_TYPE
-    return half(detail::binary, detail::float2half<half::round_style>(
-                                    std::pow(detail::half2float<detail::internal_t>(x.data_),
-                                             detail::half2float<detail::internal_t>(y.data_))));
+    return half(detail::binary,
+                detail::float2half<half::round_style>(std::pow(detail::half2float<detail::internal_t>(x.data_),
+                                                               detail::half2float<detail::internal_t>(y.data_))));
 #else
     int absx = x.data_ & 0x7FFF, absy = y.data_ & 0x7FFF, exp = -15;
     if (!absy || x.data_ == 0x3C00)
-        return half(detail::binary,
-                    detail::select(0x3C00, (x.data_ == 0x3C00) ? y.data_ : x.data_));
+        return half(detail::binary, detail::select(0x3C00, (x.data_ == 0x3C00) ? y.data_ : x.data_));
     bool is_int = absy >= 0x6400 || (absy >= 0x3C00 && !(absy & ((1 << (25 - (absy >> 10))) - 1)));
     unsigned int sign =
-        x.data_ &
-        (static_cast<unsigned>((absy < 0x6800) && is_int && ((absy >> (25 - (absy >> 10))) & 1))
-         << 15);
+        x.data_ & (static_cast<unsigned>((absy < 0x6800) && is_int && ((absy >> (25 - (absy >> 10))) & 1)) << 15);
     if (absx >= 0x7C00 || absy >= 0x7C00)
-        return half(
-            detail::binary,
-            (absx > 0x7C00 || absy > 0x7C00)
-                ? detail::signal(x.data_, y.data_)
-                : (absy == 0x7C00)
-                      ? ((absx == 0x3C00) ? 0x3C00
-                                          : (!absx && y.data_ == 0xFC00)
-                                                ? detail::pole()
-                                                : (0x7C00 & -((y.data_ >> 15) ^ (absx > 0x3C00))))
-                      : (sign | (0x7C00 & ((y.data_ >> 15) - 1U))));
+        return half(detail::binary,
+                    (absx > 0x7C00 || absy > 0x7C00)
+                        ? detail::signal(x.data_, y.data_)
+                        : (absy == 0x7C00) ? ((absx == 0x3C00) ? 0x3C00
+                                                               : (!absx && y.data_ == 0xFC00)
+                                                                     ? detail::pole()
+                                                                     : (0x7C00 & -((y.data_ >> 15) ^ (absx > 0x3C00))))
+                                           : (sign | (0x7C00 & ((y.data_ >> 15) - 1U))));
     if (!absx) return half(detail::binary, (y.data_ & 0x8000) ? detail::pole(sign) : sign);
     if ((x.data_ & 0x8000) && !is_int) return half(detail::binary, detail::invalid());
     if (x.data_ == 0xBC00) return half(detail::binary, sign | 0x3C00);
@@ -3899,9 +3696,7 @@ inline half pow(half x, half y)
         ;
     detail::uint32 ilog = exp + (absx >> 10), msign = detail::sign_mask(ilog), f,
                    m = (((ilog << 27) +
-                         ((detail::log2(static_cast<detail::uint32>((absx & 0x3FF) | 0x400) << 20) +
-                           8) >>
-                          4)) ^
+                         ((detail::log2(static_cast<detail::uint32>((absx & 0x3FF) | 0x400) << 20) + 8) >> 4)) ^
                         msign) -
                        msign;
     for (exp = -11; m < 0x80000000; m <<= 1, --exp)
@@ -3919,9 +3714,8 @@ inline half pow(half x, half y)
         f = (m << exp) & 0x7FFFFFFF;
         exp = m >> (31 - exp);
     }
-    return half(detail::binary,
-                detail::exp2_post<half::round_style, false>(
-                    detail::exp2(f), exp, ((msign & 1) ^ (y.data_ >> 15)) != 0, sign));
+    return half(detail::binary, detail::exp2_post<half::round_style, false>(
+                                    detail::exp2(f), exp, ((msign & 1) ^ (y.data_ >> 15)) != 0, sign));
 #endif
 }
 
@@ -3949,8 +3743,7 @@ inline void sincos(half arg, half* sin, half* cos)
 #else
     int abs = arg.data_ & 0x7FFF, sign = arg.data_ >> 15, k;
     if (abs >= 0x7C00)
-        *sin = *cos =
-            half(detail::binary, (abs == 0x7C00) ? detail::invalid() : detail::signal(arg.data_));
+        *sin = *cos = half(detail::binary, (abs == 0x7C00) ? detail::invalid() : detail::signal(arg.data_));
     else if (!abs) {
         *sin = arg;
         *cos = half(detail::binary, 0x3C00);
@@ -3961,33 +3754,28 @@ inline void sincos(half arg, half* sin, half* cos)
         if (half::round_style != std::round_to_nearest) {
             switch (abs) {
                 case 0x48B7:
-                    *sin = half(detail::binary, detail::rounded<half::round_style, true>(
-                                                    (~arg.data_ & 0x8000) | 0x1D07, 1, 1));
-                    *cos = half(detail::binary,
-                                detail::rounded<half::round_style, true>(0xBBFF, 1, 1));
+                    *sin = half(detail::binary,
+                                detail::rounded<half::round_style, true>((~arg.data_ & 0x8000) | 0x1D07, 1, 1));
+                    *cos = half(detail::binary, detail::rounded<half::round_style, true>(0xBBFF, 1, 1));
                     return;
                 case 0x598C:
-                    *sin = half(detail::binary, detail::rounded<half::round_style, true>(
-                                                    (arg.data_ & 0x8000) | 0x3BFF, 1, 1));
-                    *cos = half(detail::binary,
-                                detail::rounded<half::round_style, true>(0x80FC, 1, 1));
+                    *sin = half(detail::binary,
+                                detail::rounded<half::round_style, true>((arg.data_ & 0x8000) | 0x3BFF, 1, 1));
+                    *cos = half(detail::binary, detail::rounded<half::round_style, true>(0x80FC, 1, 1));
                     return;
                 case 0x6A64:
-                    *sin = half(detail::binary, detail::rounded<half::round_style, true>(
-                                                    (~arg.data_ & 0x8000) | 0x3BFE, 1, 1));
-                    *cos = half(detail::binary,
-                                detail::rounded<half::round_style, true>(0x27FF, 1, 1));
+                    *sin = half(detail::binary,
+                                detail::rounded<half::round_style, true>((~arg.data_ & 0x8000) | 0x3BFE, 1, 1));
+                    *cos = half(detail::binary, detail::rounded<half::round_style, true>(0x27FF, 1, 1));
                     return;
                 case 0x6D8C:
-                    *sin = half(detail::binary, detail::rounded<half::round_style, true>(
-                                                    (arg.data_ & 0x8000) | 0x0FE6, 1, 1));
-                    *cos = half(detail::binary,
-                                detail::rounded<half::round_style, true>(0x3BFF, 1, 1));
+                    *sin = half(detail::binary,
+                                detail::rounded<half::round_style, true>((arg.data_ & 0x8000) | 0x0FE6, 1, 1));
+                    *cos = half(detail::binary, detail::rounded<half::round_style, true>(0x3BFF, 1, 1));
                     return;
             }
         }
-        std::pair<detail::uint32, detail::uint32> sc =
-            detail::sincos(detail::angle_arg(abs, k), 28);
+        std::pair<detail::uint32, detail::uint32> sc = detail::sincos(detail::angle_arg(abs, k), 28);
         switch (k & 3) {
             case 1:
                 sc = std::make_pair(sc.second, -sc.first);
@@ -4001,8 +3789,7 @@ inline void sincos(half arg, half* sin, half* cos)
         }
         *sin = half(detail::binary, detail::fixed2half<half::round_style, 30, true, true, true>(
                                         (sc.first ^ -static_cast<detail::uint32>(sign)) + sign));
-        *cos = half(detail::binary,
-                    detail::fixed2half<half::round_style, 30, true, true, true>(sc.second));
+        *cos = half(detail::binary, detail::fixed2half<half::round_style, 30, true, true, true>(sc.second));
     }
 #endif
 }
@@ -4018,26 +3805,23 @@ inline void sincos(half arg, half* sin, half* cos)
 inline half sin(half arg)
 {
 #ifdef HALF_ARITHMETIC_TYPE
-    return half(detail::binary, detail::float2half<half::round_style>(
-                                    std::sin(detail::half2float<detail::internal_t>(arg.data_))));
+    return half(detail::binary,
+                detail::float2half<half::round_style>(std::sin(detail::half2float<detail::internal_t>(arg.data_))));
 #else
     int abs = arg.data_ & 0x7FFF, k;
     if (!abs) return arg;
-    if (abs >= 0x7C00)
-        return half(detail::binary,
-                    (abs == 0x7C00) ? detail::invalid() : detail::signal(arg.data_));
-    if (abs < 0x2900)
-        return half(detail::binary, detail::rounded<half::round_style, true>(arg.data_ - 1, 1, 1));
+    if (abs >= 0x7C00) return half(detail::binary, (abs == 0x7C00) ? detail::invalid() : detail::signal(arg.data_));
+    if (abs < 0x2900) return half(detail::binary, detail::rounded<half::round_style, true>(arg.data_ - 1, 1, 1));
     if (half::round_style != std::round_to_nearest) switch (abs) {
             case 0x48B7:
-                return half(detail::binary, detail::rounded<half::round_style, true>(
-                                                (~arg.data_ & 0x8000) | 0x1D07, 1, 1));
+                return half(detail::binary,
+                            detail::rounded<half::round_style, true>((~arg.data_ & 0x8000) | 0x1D07, 1, 1));
             case 0x6A64:
-                return half(detail::binary, detail::rounded<half::round_style, true>(
-                                                (~arg.data_ & 0x8000) | 0x3BFE, 1, 1));
+                return half(detail::binary,
+                            detail::rounded<half::round_style, true>((~arg.data_ & 0x8000) | 0x3BFE, 1, 1));
             case 0x6D8C:
-                return half(detail::binary, detail::rounded<half::round_style, true>(
-                                                (arg.data_ & 0x8000) | 0x0FE6, 1, 1));
+                return half(detail::binary,
+                            detail::rounded<half::round_style, true>((arg.data_ & 0x8000) | 0x0FE6, 1, 1));
         }
     std::pair<detail::uint32, detail::uint32> sc = detail::sincos(detail::angle_arg(abs, k), 28);
     detail::uint32 sign = -static_cast<detail::uint32>(((k >> 1) & 1) ^ (arg.data_ >> 15));
@@ -4057,16 +3841,13 @@ inline half sin(half arg)
 inline half cos(half arg)
 {
 #ifdef HALF_ARITHMETIC_TYPE
-    return half(detail::binary, detail::float2half<half::round_style>(
-                                    std::cos(detail::half2float<detail::internal_t>(arg.data_))));
+    return half(detail::binary,
+                detail::float2half<half::round_style>(std::cos(detail::half2float<detail::internal_t>(arg.data_))));
 #else
     int abs = arg.data_ & 0x7FFF, k;
     if (!abs) return half(detail::binary, 0x3C00);
-    if (abs >= 0x7C00)
-        return half(detail::binary,
-                    (abs == 0x7C00) ? detail::invalid() : detail::signal(arg.data_));
-    if (abs < 0x2500)
-        return half(detail::binary, detail::rounded<half::round_style, true>(0x3BFF, 1, 1));
+    if (abs >= 0x7C00) return half(detail::binary, (abs == 0x7C00) ? detail::invalid() : detail::signal(arg.data_));
+    if (abs < 0x2500) return half(detail::binary, detail::rounded<half::round_style, true>(0x3BFF, 1, 1));
     if (half::round_style != std::round_to_nearest && abs == 0x598C)
         return half(detail::binary, detail::rounded<half::round_style, true>(0x80FC, 1, 1));
     std::pair<detail::uint32, detail::uint32> sc = detail::sincos(detail::angle_arg(abs, k), 28);
@@ -4087,23 +3868,20 @@ inline half cos(half arg)
 inline half tan(half arg)
 {
 #ifdef HALF_ARITHMETIC_TYPE
-    return half(detail::binary, detail::float2half<half::round_style>(
-                                    std::tan(detail::half2float<detail::internal_t>(arg.data_))));
+    return half(detail::binary,
+                detail::float2half<half::round_style>(std::tan(detail::half2float<detail::internal_t>(arg.data_))));
 #else
     int abs = arg.data_ & 0x7FFF, exp = 13, k;
     if (!abs) return arg;
-    if (abs >= 0x7C00)
-        return half(detail::binary,
-                    (abs == 0x7C00) ? detail::invalid() : detail::signal(arg.data_));
-    if (abs < 0x2700)
-        return half(detail::binary, detail::rounded<half::round_style, true>(arg.data_, 0, 1));
+    if (abs >= 0x7C00) return half(detail::binary, (abs == 0x7C00) ? detail::invalid() : detail::signal(arg.data_));
+    if (abs < 0x2700) return half(detail::binary, detail::rounded<half::round_style, true>(arg.data_, 0, 1));
     if (half::round_style != std::round_to_nearest) switch (abs) {
             case 0x658C:
-                return half(detail::binary, detail::rounded<half::round_style, true>(
-                                                (arg.data_ & 0x8000) | 0x07E6, 1, 1));
+                return half(detail::binary,
+                            detail::rounded<half::round_style, true>((arg.data_ & 0x8000) | 0x07E6, 1, 1));
             case 0x7330:
-                return half(detail::binary, detail::rounded<half::round_style, true>(
-                                                (~arg.data_ & 0x8000) | 0x4B62, 1, 1));
+                return half(detail::binary,
+                            detail::rounded<half::round_style, true>((~arg.data_ & 0x8000) | 0x4B62, 1, 1));
         }
     std::pair<detail::uint32, detail::uint32> sc = detail::sincos(detail::angle_arg(abs, k), 30);
     if (k & 1) sc = std::make_pair(-sc.second, sc.first);
@@ -4113,8 +3891,8 @@ inline half tan(half arg)
         ;
     for (; mx < 0x80000000; mx <<= 1, ++exp)
         ;
-    return half(detail::binary, detail::tangent_post<half::round_style>(
-                                    my, mx, exp, (signy ^ signx ^ arg.data_) & 0x8000));
+    return half(detail::binary,
+                detail::tangent_post<half::round_style>(my, mx, exp, (signy ^ signx ^ arg.data_) & 0x8000));
 #endif
 }
 
@@ -4129,26 +3907,22 @@ inline half tan(half arg)
 inline half asin(half arg)
 {
 #ifdef HALF_ARITHMETIC_TYPE
-    return half(detail::binary, detail::float2half<half::round_style>(
-                                    std::asin(detail::half2float<detail::internal_t>(arg.data_))));
+    return half(detail::binary,
+                detail::float2half<half::round_style>(std::asin(detail::half2float<detail::internal_t>(arg.data_))));
 #else
     unsigned int abs = arg.data_ & 0x7FFF, sign = arg.data_ & 0x8000;
     if (!abs) return arg;
     if (abs >= 0x3C00)
-        return half(detail::binary, (abs > 0x7C00)
-                                        ? detail::signal(arg.data_)
-                                        : (abs > 0x3C00) ? detail::invalid()
-                                                         : detail::rounded<half::round_style, true>(
-                                                               sign | 0x3E48, 0, 1));
-    if (abs < 0x2900)
-        return half(detail::binary, detail::rounded<half::round_style, true>(arg.data_, 0, 1));
+        return half(detail::binary,
+                    (abs > 0x7C00) ? detail::signal(arg.data_)
+                                   : (abs > 0x3C00) ? detail::invalid()
+                                                    : detail::rounded<half::round_style, true>(sign | 0x3E48, 0, 1));
+    if (abs < 0x2900) return half(detail::binary, detail::rounded<half::round_style, true>(arg.data_, 0, 1));
     if (half::round_style != std::round_to_nearest && (abs == 0x2B44 || abs == 0x2DC3))
         return half(detail::binary, detail::rounded<half::round_style, true>(arg.data_ + 1, 1, 1));
     std::pair<detail::uint32, detail::uint32> sc = detail::atan2_args(abs);
-    detail::uint32 m =
-        detail::atan2(sc.first, sc.second, (half::round_style == std::round_to_nearest) ? 27 : 26);
-    return half(detail::binary,
-                detail::fixed2half<half::round_style, 30, false, true, true>(m, 14, sign));
+    detail::uint32 m = detail::atan2(sc.first, sc.second, (half::round_style == std::round_to_nearest) ? 27 : 26);
+    return half(detail::binary, detail::fixed2half<half::round_style, 30, false, true, true>(m, 14, sign));
 #endif
 }
 
@@ -4163,22 +3937,21 @@ inline half asin(half arg)
 inline half acos(half arg)
 {
 #ifdef HALF_ARITHMETIC_TYPE
-    return half(detail::binary, detail::float2half<half::round_style>(
-                                    std::acos(detail::half2float<detail::internal_t>(arg.data_))));
+    return half(detail::binary,
+                detail::float2half<half::round_style>(std::acos(detail::half2float<detail::internal_t>(arg.data_))));
 #else
     unsigned int abs = arg.data_ & 0x7FFF, sign = arg.data_ >> 15;
     if (!abs) return half(detail::binary, detail::rounded<half::round_style, true>(0x3E48, 0, 1));
     if (abs >= 0x3C00)
-        return half(detail::binary,
-                    (abs > 0x7C00)
-                        ? detail::signal(arg.data_)
-                        : (abs > 0x3C00)
-                              ? detail::invalid()
-                              : sign ? detail::rounded<half::round_style, true>(0x4248, 0, 1) : 0);
+        return half(detail::binary, (abs > 0x7C00)
+                                        ? detail::signal(arg.data_)
+                                        : (abs > 0x3C00)
+                                              ? detail::invalid()
+                                              : sign ? detail::rounded<half::round_style, true>(0x4248, 0, 1) : 0);
     std::pair<detail::uint32, detail::uint32> cs = detail::atan2_args(abs);
     detail::uint32 m = detail::atan2(cs.second, cs.first, 28);
-    return half(detail::binary, detail::fixed2half<half::round_style, 31, false, true, true>(
-                                    sign ? (0xC90FDAA2 - m) : m, 15, 0, sign));
+    return half(detail::binary,
+                detail::fixed2half<half::round_style, 31, false, true, true>(sign ? (0xC90FDAA2 - m) : m, 15, 0, sign));
 #endif
 }
 
@@ -4193,26 +3966,22 @@ inline half acos(half arg)
 inline half atan(half arg)
 {
 #ifdef HALF_ARITHMETIC_TYPE
-    return half(detail::binary, detail::float2half<half::round_style>(
-                                    std::atan(detail::half2float<detail::internal_t>(arg.data_))));
+    return half(detail::binary,
+                detail::float2half<half::round_style>(std::atan(detail::half2float<detail::internal_t>(arg.data_))));
 #else
     unsigned int abs = arg.data_ & 0x7FFF, sign = arg.data_ & 0x8000;
     if (!abs) return arg;
     if (abs >= 0x7C00)
-        return half(detail::binary,
-                    (abs == 0x7C00) ? detail::rounded<half::round_style, true>(sign | 0x3E48, 0, 1)
-                                    : detail::signal(arg.data_));
-    if (abs <= 0x2700)
-        return half(detail::binary, detail::rounded<half::round_style, true>(arg.data_ - 1, 1, 1));
+        return half(detail::binary, (abs == 0x7C00) ? detail::rounded<half::round_style, true>(sign | 0x3E48, 0, 1)
+                                                    : detail::signal(arg.data_));
+    if (abs <= 0x2700) return half(detail::binary, detail::rounded<half::round_style, true>(arg.data_ - 1, 1, 1));
     int exp = (abs >> 10) + (abs <= 0x3FF);
     detail::uint32 my = (abs & 0x3FF) | ((abs > 0x3FF) << 10);
-    detail::uint32 m = (exp > 15)
-                           ? detail::atan2(my << 19, 0x20000000 >> (exp - 15),
-                                           (half::round_style == std::round_to_nearest) ? 26 : 24)
-                           : detail::atan2(my << (exp + 4), 0x20000000,
-                                           (half::round_style == std::round_to_nearest) ? 30 : 28);
-    return half(detail::binary,
-                detail::fixed2half<half::round_style, 30, false, true, true>(m, 14, sign));
+    detail::uint32 m =
+        (exp > 15)
+            ? detail::atan2(my << 19, 0x20000000 >> (exp - 15), (half::round_style == std::round_to_nearest) ? 26 : 24)
+            : detail::atan2(my << (exp + 4), 0x20000000, (half::round_style == std::round_to_nearest) ? 30 : 28);
+    return half(detail::binary, detail::fixed2half<half::round_style, 30, false, true, true>(m, 14, sign));
 #endif
 }
 
@@ -4228,37 +3997,28 @@ inline half atan(half arg)
 inline half atan2(half y, half x)
 {
 #ifdef HALF_ARITHMETIC_TYPE
-    return half(detail::binary, detail::float2half<half::round_style>(
-                                    std::atan2(detail::half2float<detail::internal_t>(y.data_),
-                                               detail::half2float<detail::internal_t>(x.data_))));
+    return half(detail::binary,
+                detail::float2half<half::round_style>(std::atan2(detail::half2float<detail::internal_t>(y.data_),
+                                                                 detail::half2float<detail::internal_t>(x.data_))));
 #else
-    unsigned int absx = x.data_ & 0x7FFF, absy = y.data_ & 0x7FFF, signx = x.data_ >> 15,
-                 signy = y.data_ & 0x8000;
+    unsigned int absx = x.data_ & 0x7FFF, absy = y.data_ & 0x7FFF, signx = x.data_ >> 15, signy = y.data_ & 0x8000;
     if (absx >= 0x7C00 || absy >= 0x7C00) {
-        if (absx > 0x7C00 || absy > 0x7C00)
-            return half(detail::binary, detail::signal(x.data_, y.data_));
+        if (absx > 0x7C00 || absy > 0x7C00) return half(detail::binary, detail::signal(x.data_, y.data_));
         if (absy == 0x7C00)
-            return half(detail::binary,
-                        (absx < 0x7C00)
-                            ? detail::rounded<half::round_style, true>(signy | 0x3E48, 0, 1)
-                            : signx
-                                  ? detail::rounded<half::round_style, true>(signy | 0x40B6, 0, 1)
-                                  : detail::rounded<half::round_style, true>(signy | 0x3A48, 0, 1));
-        return (x.data_ == 0x7C00) ? half(detail::binary, signy)
-                                   : half(detail::binary, detail::rounded<half::round_style, true>(
-                                                              signy | 0x4248, 0, 1));
+            return half(detail::binary, (absx < 0x7C00)
+                                            ? detail::rounded<half::round_style, true>(signy | 0x3E48, 0, 1)
+                                            : signx ? detail::rounded<half::round_style, true>(signy | 0x40B6, 0, 1)
+                                                    : detail::rounded<half::round_style, true>(signy | 0x3A48, 0, 1));
+        return (x.data_ == 0x7C00)
+                   ? half(detail::binary, signy)
+                   : half(detail::binary, detail::rounded<half::round_style, true>(signy | 0x4248, 0, 1));
     }
-    if (!absy)
-        return signx ? half(detail::binary,
-                            detail::rounded<half::round_style, true>(signy | 0x4248, 0, 1))
-                     : y;
-    if (!absx)
-        return half(detail::binary, detail::rounded<half::round_style, true>(signy | 0x3E48, 0, 1));
+    if (!absy) return signx ? half(detail::binary, detail::rounded<half::round_style, true>(signy | 0x4248, 0, 1)) : y;
+    if (!absx) return half(detail::binary, detail::rounded<half::round_style, true>(signy | 0x3E48, 0, 1));
     int d = (absy >> 10) + (absy <= 0x3FF) - (absx >> 10) - (absx <= 0x3FF);
     if (d > (signx ? 18 : 12))
         return half(detail::binary, detail::rounded<half::round_style, true>(signy | 0x3E48, 0, 1));
-    if (signx && d < -11)
-        return half(detail::binary, detail::rounded<half::round_style, true>(signy | 0x4248, 0, 1));
+    if (signx && d < -11) return half(detail::binary, detail::rounded<half::round_style, true>(signy | 0x4248, 0, 1));
     if (!signx && d < ((half::round_style == std::round_toward_zero) ? -15 : -9)) {
         for (; absy < 0x400; absy <<= 1, --d)
             ;
@@ -4267,12 +4027,12 @@ inline half atan2(half y, half x)
         d -= i;
         if (d < -25) return half(detail::binary, detail::underflow<half::round_style>(signy));
         my <<= 11 + i;
-        return half(detail::binary, detail::fixed2half<half::round_style, 11, false, false, true>(
-                                        my / mx, d + 14, signy, my % mx != 0));
+        return half(detail::binary, detail::fixed2half<half::round_style, 11, false, false, true>(my / mx, d + 14,
+                                                                                                  signy, my % mx != 0));
     }
-    detail::uint32 m = detail::atan2(
-        ((absy & 0x3FF) | ((absy > 0x3FF) << 10)) << (19 + ((d < 0) ? d : (d > 0) ? 0 : -1)),
-        ((absx & 0x3FF) | ((absx > 0x3FF) << 10)) << (19 - ((d > 0) ? d : (d < 0) ? 0 : 1)));
+    detail::uint32 m =
+        detail::atan2(((absy & 0x3FF) | ((absy > 0x3FF) << 10)) << (19 + ((d < 0) ? d : (d > 0) ? 0 : -1)),
+                      ((absx & 0x3FF) | ((absx > 0x3FF) << 10)) << (19 - ((d > 0) ? d : (d < 0) ? 0 : 1)));
     return half(detail::binary, detail::fixed2half<half::round_style, 31, false, true, true>(
                                     signx ? (0xC90FDAA2 - m) : m, 15, signy, signx));
 #endif
@@ -4294,14 +4054,12 @@ inline half atan2(half y, half x)
 inline half sinh(half arg)
 {
 #ifdef HALF_ARITHMETIC_TYPE
-    return half(detail::binary, detail::float2half<half::round_style>(
-                                    std::sinh(detail::half2float<detail::internal_t>(arg.data_))));
+    return half(detail::binary,
+                detail::float2half<half::round_style>(std::sinh(detail::half2float<detail::internal_t>(arg.data_))));
 #else
     int abs = arg.data_ & 0x7FFF, exp;
-    if (!abs || abs >= 0x7C00)
-        return (abs > 0x7C00) ? half(detail::binary, detail::signal(arg.data_)) : arg;
-    if (abs <= 0x2900)
-        return half(detail::binary, detail::rounded<half::round_style, true>(arg.data_, 0, 1));
+    if (!abs || abs >= 0x7C00) return (abs > 0x7C00) ? half(detail::binary, detail::signal(arg.data_)) : arg;
+    if (abs <= 0x2900) return half(detail::binary, detail::rounded<half::round_style, true>(arg.data_, 0, 1));
     std::pair<detail::uint32, detail::uint32> mm =
         detail::hyperbolic_args(abs, exp, (half::round_style == std::round_to_nearest) ? 29 : 27);
     detail::uint32 m = mm.first - mm.second;
@@ -4309,8 +4067,7 @@ inline half sinh(half arg)
         ;
     unsigned int sign = arg.data_ & 0x8000;
     if (exp > 29) return half(detail::binary, detail::overflow<half::round_style>(sign));
-    return half(detail::binary,
-                detail::fixed2half<half::round_style, 31, false, false, true>(m, exp, sign));
+    return half(detail::binary, detail::fixed2half<half::round_style, 31, false, false, true>(m, exp, sign));
 #endif
 }
 
@@ -4325,20 +4082,18 @@ inline half sinh(half arg)
 inline half cosh(half arg)
 {
 #ifdef HALF_ARITHMETIC_TYPE
-    return half(detail::binary, detail::float2half<half::round_style>(
-                                    std::cosh(detail::half2float<detail::internal_t>(arg.data_))));
+    return half(detail::binary,
+                detail::float2half<half::round_style>(std::cosh(detail::half2float<detail::internal_t>(arg.data_))));
 #else
     int abs = arg.data_ & 0x7FFF, exp;
     if (!abs) return half(detail::binary, 0x3C00);
-    if (abs >= 0x7C00)
-        return half(detail::binary, (abs > 0x7C00) ? detail::signal(arg.data_) : 0x7C00);
+    if (abs >= 0x7C00) return half(detail::binary, (abs > 0x7C00) ? detail::signal(arg.data_) : 0x7C00);
     std::pair<detail::uint32, detail::uint32> mm =
         detail::hyperbolic_args(abs, exp, (half::round_style == std::round_to_nearest) ? 23 : 26);
     detail::uint32 m = mm.first + mm.second, i = (~m & 0xFFFFFFFF) >> 31;
     m = (m >> i) | (m & i) | 0x80000000;
     if ((exp += 13 + i) > 29) return half(detail::binary, detail::overflow<half::round_style>());
-    return half(detail::binary,
-                detail::fixed2half<half::round_style, 31, false, false, true>(m, exp));
+    return half(detail::binary, detail::fixed2half<half::round_style, 31, false, false, true>(m, exp));
 #endif
 }
 
@@ -4353,29 +4108,24 @@ inline half cosh(half arg)
 inline half tanh(half arg)
 {
 #ifdef HALF_ARITHMETIC_TYPE
-    return half(detail::binary, detail::float2half<half::round_style>(
-                                    std::tanh(detail::half2float<detail::internal_t>(arg.data_))));
+    return half(detail::binary,
+                detail::float2half<half::round_style>(std::tanh(detail::half2float<detail::internal_t>(arg.data_))));
 #else
     int abs = arg.data_ & 0x7FFF, exp;
     if (!abs) return arg;
-    if (abs >= 0x7C00)
-        return half(detail::binary,
-                    (abs > 0x7C00) ? detail::signal(arg.data_) : (arg.data_ - 0x4000));
+    if (abs >= 0x7C00) return half(detail::binary, (abs > 0x7C00) ? detail::signal(arg.data_) : (arg.data_ - 0x4000));
     if (abs >= 0x4500)
-        return half(detail::binary,
-                    detail::rounded<half::round_style, true>((arg.data_ & 0x8000) | 0x3BFF, 1, 1));
-    if (abs < 0x2700)
-        return half(detail::binary, detail::rounded<half::round_style, true>(arg.data_ - 1, 1, 1));
+        return half(detail::binary, detail::rounded<half::round_style, true>((arg.data_ & 0x8000) | 0x3BFF, 1, 1));
+    if (abs < 0x2700) return half(detail::binary, detail::rounded<half::round_style, true>(arg.data_ - 1, 1, 1));
     if (half::round_style != std::round_to_nearest && abs == 0x2D3F)
         return half(detail::binary, detail::rounded<half::round_style, true>(arg.data_ - 3, 0, 1));
     std::pair<detail::uint32, detail::uint32> mm = detail::hyperbolic_args(abs, exp, 27);
-    detail::uint32 my = mm.first - mm.second - (half::round_style != std::round_to_nearest),
-                   mx = mm.first + mm.second, i = (~mx & 0xFFFFFFFF) >> 31;
+    detail::uint32 my = mm.first - mm.second - (half::round_style != std::round_to_nearest), mx = mm.first + mm.second,
+                   i = (~mx & 0xFFFFFFFF) >> 31;
     for (exp = 13; my < 0x80000000; my <<= 1, --exp)
         ;
     mx = (mx >> i) | 0x80000000;
-    return half(detail::binary,
-                detail::tangent_post<half::round_style>(my, mx, exp - i, arg.data_ & 0x8000));
+    return half(detail::binary, detail::tangent_post<half::round_style>(my, mx, exp - i, arg.data_ & 0x8000));
 #endif
 }
 
@@ -4390,21 +4140,17 @@ inline half tanh(half arg)
 inline half asinh(half arg)
 {
 #if defined(HALF_ARITHMETIC_TYPE) && HALF_ENABLE_CPP11_CMATH
-    return half(detail::binary, detail::float2half<half::round_style>(
-                                    std::asinh(detail::half2float<detail::internal_t>(arg.data_))));
+    return half(detail::binary,
+                detail::float2half<half::round_style>(std::asinh(detail::half2float<detail::internal_t>(arg.data_))));
 #else
     int abs = arg.data_ & 0x7FFF;
-    if (!abs || abs >= 0x7C00)
-        return (abs > 0x7C00) ? half(detail::binary, detail::signal(arg.data_)) : arg;
-    if (abs <= 0x2900)
-        return half(detail::binary, detail::rounded<half::round_style, true>(arg.data_ - 1, 1, 1));
+    if (!abs || abs >= 0x7C00) return (abs > 0x7C00) ? half(detail::binary, detail::signal(arg.data_)) : arg;
+    if (abs <= 0x2900) return half(detail::binary, detail::rounded<half::round_style, true>(arg.data_ - 1, 1, 1));
     if (half::round_style != std::round_to_nearest) switch (abs) {
             case 0x32D4:
-                return half(detail::binary,
-                            detail::rounded<half::round_style, true>(arg.data_ - 13, 1, 1));
+                return half(detail::binary, detail::rounded<half::round_style, true>(arg.data_ - 13, 1, 1));
             case 0x3B5B:
-                return half(detail::binary,
-                            detail::rounded<half::round_style, true>(arg.data_ - 197, 1, 1));
+                return half(detail::binary, detail::rounded<half::round_style, true>(arg.data_ - 197, 1, 1));
         }
     return half(detail::binary, detail::area<half::round_style, true>(arg.data_));
 #endif
@@ -4421,16 +4167,14 @@ inline half asinh(half arg)
 inline half acosh(half arg)
 {
 #if defined(HALF_ARITHMETIC_TYPE) && HALF_ENABLE_CPP11_CMATH
-    return half(detail::binary, detail::float2half<half::round_style>(
-                                    std::acosh(detail::half2float<detail::internal_t>(arg.data_))));
+    return half(detail::binary,
+                detail::float2half<half::round_style>(std::acosh(detail::half2float<detail::internal_t>(arg.data_))));
 #else
     int abs = arg.data_ & 0x7FFF;
     if ((arg.data_ & 0x8000) || abs < 0x3C00)
-        return half(detail::binary,
-                    (abs <= 0x7C00) ? detail::invalid() : detail::signal(arg.data_));
+        return half(detail::binary, (abs <= 0x7C00) ? detail::invalid() : detail::signal(arg.data_));
     if (abs == 0x3C00) return half(detail::binary, 0);
-    if (arg.data_ >= 0x7C00)
-        return (abs > 0x7C00) ? half(detail::binary, detail::signal(arg.data_)) : arg;
+    if (arg.data_ >= 0x7C00) return (abs > 0x7C00) ? half(detail::binary, detail::signal(arg.data_)) : arg;
     return half(detail::binary, detail::area<half::round_style, false>(arg.data_));
 #endif
 }
@@ -4447,27 +4191,24 @@ inline half acosh(half arg)
 inline half atanh(half arg)
 {
 #if defined(HALF_ARITHMETIC_TYPE) && HALF_ENABLE_CPP11_CMATH
-    return half(detail::binary, detail::float2half<half::round_style>(
-                                    std::atanh(detail::half2float<detail::internal_t>(arg.data_))));
+    return half(detail::binary,
+                detail::float2half<half::round_style>(std::atanh(detail::half2float<detail::internal_t>(arg.data_))));
 #else
     int abs = arg.data_ & 0x7FFF, exp = 0;
     if (!abs) return arg;
     if (abs >= 0x3C00)
         return half(detail::binary, (abs == 0x3C00) ? detail::pole(arg.data_ & 0x8000)
-                                                    : (abs <= 0x7C00) ? detail::invalid()
-                                                                      : detail::signal(arg.data_));
-    if (abs < 0x2700)
-        return half(detail::binary, detail::rounded<half::round_style, true>(arg.data_, 0, 1));
+                                                    : (abs <= 0x7C00) ? detail::invalid() : detail::signal(arg.data_));
+    if (abs < 0x2700) return half(detail::binary, detail::rounded<half::round_style, true>(arg.data_, 0, 1));
     detail::uint32 m = static_cast<detail::uint32>((abs & 0x3FF) | ((abs > 0x3FF) << 10))
                        << ((abs >> 10) + (abs <= 0x3FF) + 6),
                    my = 0x80000000 + m, mx = 0x80000000 - m;
     for (; mx < 0x80000000; mx <<= 1, ++exp)
         ;
     int i = my >= mx, s;
-    return half(detail::binary,
-                detail::log2_post<half::round_style, 0xB8AA3B2A>(
-                    detail::log2((detail::divide64(my >> i, mx, s) + 1) >> 1, 27) + 0x10,
-                    exp + i - 1, 16, arg.data_ & 0x8000));
+    return half(detail::binary, detail::log2_post<half::round_style, 0xB8AA3B2A>(
+                                    detail::log2((detail::divide64(my >> i, mx, s) + 1) >> 1, 27) + 0x10, exp + i - 1,
+                                    16, arg.data_ & 0x8000));
 #endif
 }
 
@@ -4488,17 +4229,16 @@ inline half atanh(half arg)
 inline half erf(half arg)
 {
 #if defined(HALF_ARITHMETIC_TYPE) && HALF_ENABLE_CPP11_CMATH
-    return half(detail::binary, detail::float2half<half::round_style>(
-                                    std::erf(detail::half2float<detail::internal_t>(arg.data_))));
+    return half(detail::binary,
+                detail::float2half<half::round_style>(std::erf(detail::half2float<detail::internal_t>(arg.data_))));
 #else
     unsigned int abs = arg.data_ & 0x7FFF;
     if (!abs || abs >= 0x7C00)
-        return (abs >= 0x7C00) ? half(detail::binary, (abs == 0x7C00) ? (arg.data_ - 0x4000)
-                                                                      : detail::signal(arg.data_))
-                               : arg;
+        return (abs >= 0x7C00)
+                   ? half(detail::binary, (abs == 0x7C00) ? (arg.data_ - 0x4000) : detail::signal(arg.data_))
+                   : arg;
     if (abs >= 0x4200)
-        return half(detail::binary,
-                    detail::rounded<half::round_style, true>((arg.data_ & 0x8000) | 0x3BFF, 1, 1));
+        return half(detail::binary, detail::rounded<half::round_style, true>((arg.data_ & 0x8000) | 0x3BFF, 1, 1));
     return half(detail::binary, detail::erf<half::round_style, false>(arg.data_));
 #endif
 }
@@ -4515,18 +4255,16 @@ inline half erf(half arg)
 inline half erfc(half arg)
 {
 #if defined(HALF_ARITHMETIC_TYPE) && HALF_ENABLE_CPP11_CMATH
-    return half(detail::binary, detail::float2half<half::round_style>(
-                                    std::erfc(detail::half2float<detail::internal_t>(arg.data_))));
+    return half(detail::binary,
+                detail::float2half<half::round_style>(std::erfc(detail::half2float<detail::internal_t>(arg.data_))));
 #else
     unsigned int abs = arg.data_ & 0x7FFF, sign = arg.data_ & 0x8000;
     if (abs >= 0x7C00)
-        return (abs >= 0x7C00)
-                   ? half(detail::binary, (abs == 0x7C00) ? (sign >> 1) : detail::signal(arg.data_))
-                   : arg;
+        return (abs >= 0x7C00) ? half(detail::binary, (abs == 0x7C00) ? (sign >> 1) : detail::signal(arg.data_)) : arg;
     if (!abs) return half(detail::binary, 0x3C00);
     if (abs >= 0x4400)
-        return half(detail::binary, detail::rounded<half::round_style, true>(
-                                        (sign >> 1) - (sign >> 15), sign >> 15, 1));
+        return half(detail::binary,
+                    detail::rounded<half::round_style, true>((sign >> 1) - (sign >> 15), sign >> 15, 1));
     return half(detail::binary, detail::erf<half::round_style, true>(arg.data_));
 #endif
 }
@@ -4543,14 +4281,12 @@ inline half erfc(half arg)
 inline half lgamma(half arg)
 {
 #if defined(HALF_ARITHMETIC_TYPE) && HALF_ENABLE_CPP11_CMATH
-    return half(detail::binary, detail::float2half<half::round_style>(std::lgamma(
-                                    detail::half2float<detail::internal_t>(arg.data_))));
+    return half(detail::binary,
+                detail::float2half<half::round_style>(std::lgamma(detail::half2float<detail::internal_t>(arg.data_))));
 #else
     int abs = arg.data_ & 0x7FFF;
-    if (abs >= 0x7C00)
-        return half(detail::binary, (abs == 0x7C00) ? 0x7C00 : detail::signal(arg.data_));
-    if (!abs || arg.data_ >= 0xE400 ||
-        (arg.data_ >= 0xBC00 && !(abs & ((1 << (25 - (abs >> 10))) - 1))))
+    if (abs >= 0x7C00) return half(detail::binary, (abs == 0x7C00) ? 0x7C00 : detail::signal(arg.data_));
+    if (!abs || arg.data_ >= 0xE400 || (arg.data_ >= 0xBC00 && !(abs & ((1 << (25 - (abs >> 10))) - 1))))
         return half(detail::binary, detail::pole());
     if (arg.data_ == 0x3C00 || arg.data_ == 0x4000) return half(detail::binary, 0);
     return half(detail::binary, detail::gamma<half::round_style, true>(arg.data_));
@@ -4569,18 +4305,17 @@ inline half lgamma(half arg)
 inline half tgamma(half arg)
 {
 #if defined(HALF_ARITHMETIC_TYPE) && HALF_ENABLE_CPP11_CMATH
-    return half(detail::binary, detail::float2half<half::round_style>(std::tgamma(
-                                    detail::half2float<detail::internal_t>(arg.data_))));
+    return half(detail::binary,
+                detail::float2half<half::round_style>(std::tgamma(detail::half2float<detail::internal_t>(arg.data_))));
 #else
     unsigned int abs = arg.data_ & 0x7FFF;
     if (!abs) return half(detail::binary, detail::pole(arg.data_));
-    if (abs >= 0x7C00)
-        return (arg.data_ == 0x7C00) ? arg : half(detail::binary, detail::signal(arg.data_));
+    if (abs >= 0x7C00) return (arg.data_ == 0x7C00) ? arg : half(detail::binary, detail::signal(arg.data_));
     if (arg.data_ >= 0xE400 || (arg.data_ >= 0xBC00 && !(abs & ((1 << (25 - (abs >> 10))) - 1))))
         return half(detail::binary, detail::invalid());
     if (arg.data_ >= 0xCA80)
-        return half(detail::binary, detail::underflow<half::round_style>(
-                                        (1 - ((abs >> (25 - (abs >> 10))) & 1)) << 15));
+        return half(detail::binary,
+                    detail::underflow<half::round_style>((1 - ((abs >> (25 - (abs >> 10))) & 1)) << 15));
     if (arg.data_ <= 0x100 || (arg.data_ >= 0x4900 && arg.data_ < 0x8000))
         return half(detail::binary, detail::overflow<half::round_style>());
     if (arg.data_ == 0x3C00) return arg;
@@ -4601,8 +4336,7 @@ inline half tgamma(half arg)
 /// \exception FE_INEXACT if value had to be rounded
 inline half ceil(half arg)
 {
-    return half(detail::binary,
-                detail::integral<std::round_toward_infinity, true, true>(arg.data_));
+    return half(detail::binary, detail::integral<std::round_toward_infinity, true, true>(arg.data_));
 }
 
 /// Nearest integer not greater than half value.
@@ -4613,8 +4347,7 @@ inline half ceil(half arg)
 /// \exception FE_INEXACT if value had to be rounded
 inline half floor(half arg)
 {
-    return half(detail::binary,
-                detail::integral<std::round_toward_neg_infinity, true, true>(arg.data_));
+    return half(detail::binary, detail::integral<std::round_toward_neg_infinity, true, true>(arg.data_));
 }
 
 /// Nearest integer not greater in magnitude than half value.
@@ -4644,30 +4377,21 @@ inline half round(half arg)
 /// [std::lround](https://en.cppreference.com/w/cpp/numeric/math/round). \param arg half to round
 /// \return nearest integer, rounded away from zero in half-way cases
 /// \exception FE_INVALID if value is not representable as `long`
-inline long lround(half arg)
-{
-    return detail::half2int<std::round_to_nearest, false, false, long>(arg.data_);
-}
+inline long lround(half arg) { return detail::half2int<std::round_to_nearest, false, false, long>(arg.data_); }
 
 /// Nearest integer using half's internal rounding mode.
 /// **See also:** Documentation for
 /// [std::rint](https://en.cppreference.com/w/cpp/numeric/math/rint). \param arg half expression to
 /// round \return nearest integer using default rounding mode \exception FE_INVALID for signaling
 /// NaN \exception FE_INEXACT if value had to be rounded
-inline half rint(half arg)
-{
-    return half(detail::binary, detail::integral<half::round_style, true, true>(arg.data_));
-}
+inline half rint(half arg) { return half(detail::binary, detail::integral<half::round_style, true, true>(arg.data_)); }
 
 /// Nearest integer using half's internal rounding mode.
 /// **See also:** Documentation for
 /// [std::lrint](https://en.cppreference.com/w/cpp/numeric/math/rint). \param arg half expression to
 /// round \return nearest integer using default rounding mode \exception FE_INVALID if value is not
 /// representable as `long` \exception FE_INEXACT if value had to be rounded
-inline long lrint(half arg)
-{
-    return detail::half2int<half::round_style, true, true, long>(arg.data_);
-}
+inline long lrint(half arg) { return detail::half2int<half::round_style, true, true, long>(arg.data_); }
 
 /// Nearest integer using half's internal rounding mode.
 /// **See also:** Documentation for
@@ -4694,10 +4418,7 @@ inline long long llround(half arg)
 /// [std::llrint](https://en.cppreference.com/w/cpp/numeric/math/rint). \param arg half expression
 /// to round \return nearest integer using default rounding mode \exception FE_INVALID if value is
 /// not representable as `long long` \exception FE_INEXACT if value had to be rounded
-inline long long llrint(half arg)
-{
-    return detail::half2int<half::round_style, true, true, long long>(arg.data_);
-}
+inline long long llrint(half arg) { return detail::half2int<half::round_style, true, true, long long>(arg.data_); }
 #endif
 
 /// \}
@@ -4714,8 +4435,7 @@ inline half frexp(half arg, int* exp)
 {
     *exp = 0;
     unsigned int abs = arg.data_ & 0x7FFF;
-    if (abs >= 0x7C00 || !abs)
-        return (abs > 0x7C00) ? half(detail::binary, detail::signal(arg.data_)) : arg;
+    if (abs >= 0x7C00 || !abs) return (abs > 0x7C00) ? half(detail::binary, detail::signal(arg.data_)) : arg;
     for (; abs < 0x400; abs <<= 1, --*exp)
         ;
     *exp += (abs >> 10) - 14;
@@ -4733,8 +4453,7 @@ inline half frexp(half arg, int* exp)
 inline half scalbln(half arg, long exp)
 {
     unsigned int abs = arg.data_ & 0x7FFF, sign = arg.data_ & 0x8000;
-    if (abs >= 0x7C00 || !abs)
-        return (abs > 0x7C00) ? half(detail::binary, detail::signal(arg.data_)) : arg;
+    if (abs >= 0x7C00 || !abs) return (abs > 0x7C00) ? half(detail::binary, detail::signal(arg.data_)) : arg;
     for (; abs < 0x400; abs <<= 1, --exp)
         ;
     exp += abs >> 10;
@@ -4745,9 +4464,8 @@ inline half scalbln(half arg, long exp)
     else if (exp > 0)
         return half(detail::binary, sign | (exp << 10) | (abs & 0x3FF));
     unsigned int m = (abs & 0x3FF) | 0x400;
-    return half(detail::binary,
-                detail::rounded<half::round_style, false>(sign | (m >> (1 - exp)), (m >> -exp) & 1,
-                                                          (m & ((1 << -exp) - 1)) != 0));
+    return half(detail::binary, detail::rounded<half::round_style, false>(sign | (m >> (1 - exp)), (m >> -exp) & 1,
+                                                                          (m & ((1 << -exp) - 1)) != 0));
 }
 
 /// Multiply by power of two.
@@ -4823,8 +4541,7 @@ inline half logb(half arg)
 {
     int abs = arg.data_ & 0x7FFF, exp;
     if (!abs) return half(detail::binary, detail::pole(0x8000));
-    if (abs >= 0x7C00)
-        return half(detail::binary, (abs == 0x7C00) ? 0x7C00 : detail::signal(arg.data_));
+    if (abs >= 0x7C00) return half(detail::binary, (abs == 0x7C00) ? 0x7C00 : detail::signal(arg.data_));
     for (exp = (abs >> 10) - 15; abs < 0x200; abs <<= 1, --exp)
         ;
     unsigned int value = static_cast<unsigned>(exp < 0) << 15;
@@ -4848,8 +4565,7 @@ inline half logb(half arg)
 inline half nextafter(half from, half to)
 {
     int fabs = from.data_ & 0x7FFF, tabs = to.data_ & 0x7FFF;
-    if (fabs > 0x7C00 || tabs > 0x7C00)
-        return half(detail::binary, detail::signal(from.data_, to.data_));
+    if (fabs > 0x7C00 || tabs > 0x7C00) return half(detail::binary, detail::signal(from.data_, to.data_));
     if (from.data_ == to.data_ || !(fabs | tabs)) return to;
     if (!fabs) {
         detail::raise(FE_UNDERFLOW, !HALF_ERRHANDLING_UNDERFLOW_TO_INEXACT);
@@ -4857,9 +4573,8 @@ inline half nextafter(half from, half to)
     }
     unsigned int out =
         from.data_ +
-        (((from.data_ >> 15) ^
-          static_cast<unsigned>((from.data_ ^ (0x8000 | (0x8000 - (from.data_ >> 15)))) <
-                                (to.data_ ^ (0x8000 | (0x8000 - (to.data_ >> 15))))))
+        (((from.data_ >> 15) ^ static_cast<unsigned>((from.data_ ^ (0x8000 | (0x8000 - (from.data_ >> 15)))) <
+                                                     (to.data_ ^ (0x8000 | (0x8000 - (to.data_ >> 15))))))
          << 1) -
         1;
     detail::raise(FE_OVERFLOW, fabs < 0x7C00 && (out & 0x7C00) == 0x7C00);
@@ -4885,8 +4600,7 @@ inline half nexttoward(half from, long double to)
         detail::raise(FE_UNDERFLOW, !HALF_ERRHANDLING_UNDERFLOW_TO_INEXACT);
         return half(detail::binary, (static_cast<unsigned>(detail::builtin_signbit(to)) << 15) + 1);
     }
-    unsigned int out =
-        from.data_ + (((from.data_ >> 15) ^ static_cast<unsigned>(lfrom < to)) << 1) - 1;
+    unsigned int out = from.data_ + (((from.data_ >> 15) ^ static_cast<unsigned>(lfrom < to)) << 1) - 1;
     detail::raise(FE_OVERFLOW, (out & 0x7FFF) == 0x7C00);
     detail::raise(FE_UNDERFLOW, !HALF_ERRHANDLING_UNDERFLOW_TO_INEXACT && (out & 0x7FFF) < 0x400);
     return half(detail::binary, out);
@@ -4919,9 +4633,8 @@ inline HALF_CONSTEXPR int fpclassify(half arg)
                ? FP_ZERO
                : ((arg.data_ & 0x7FFF) < 0x400)
                      ? FP_SUBNORMAL
-                     : ((arg.data_ & 0x7FFF) < 0x7C00)
-                           ? FP_NORMAL
-                           : ((arg.data_ & 0x7FFF) == 0x7C00) ? FP_INFINITE : FP_NAN;
+                     : ((arg.data_ & 0x7FFF) < 0x7C00) ? FP_NORMAL
+                                                       : ((arg.data_ & 0x7FFF) == 0x7C00) ? FP_INFINITE : FP_NAN;
 }
 
 /// Check if finite number.
@@ -4948,10 +4661,7 @@ inline HALF_CONSTEXPR bool isnan(half arg) { return (arg.data_ & 0x7FFF) > 0x7C0
 /// **See also:** Documentation for
 /// [std::isnormal](https://en.cppreference.com/w/cpp/numeric/math/isnormal). \param arg number to
 /// check \retval true if normal number \retval false if either subnormal, zero, infinity or NaN
-inline HALF_CONSTEXPR bool isnormal(half arg)
-{
-    return ((arg.data_ & 0x7C00) != 0) & ((arg.data_ & 0x7C00) != 0x7C00);
-}
+inline HALF_CONSTEXPR bool isnormal(half arg) { return ((arg.data_ & 0x7C00) != 0) & ((arg.data_ & 0x7C00) != 0x7C00); }
 
 /// Check sign.
 /// **See also:** Documentation for

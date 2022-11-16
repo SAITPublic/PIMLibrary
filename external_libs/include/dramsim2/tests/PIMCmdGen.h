@@ -14,8 +14,8 @@
 #define __PIM_KERNEL_GEN_H__
 
 #include <vector>
-#include "PIMCmd.h"
 #include "MultiChannelMemorySystem.h"
+#include "PIMCmd.h"
 #include "SystemConfiguration.h"
 #include "tests/KernelAddrGen.h"
 
@@ -24,12 +24,12 @@ using namespace DRAMSim;
 
 class IPIMCmd
 {
-  public:
+   public:
     IPIMCmd(KernelType ktype) : kernelType(ktype) {}
-    virtual vector<PIMCmd> generateKernel(int num_jump_to_be_taken,
-                                          int num_jump_to_be_taken_odd_bank,
+    virtual vector<PIMCmd> generateKernel(int num_jump_to_be_taken, int num_jump_to_be_taken_odd_bank,
                                           int num_jump_to_be_taken_even_bank) = 0;
-  protected:
+
+   protected:
     KernelType kernelType;
 };
 
@@ -69,16 +69,14 @@ class BatchNormPIMKernel : public IPIMCmd
 */
 class EltwisePIMKernel : public IPIMCmd
 {
-  public:
+   public:
     EltwisePIMKernel(KernelType ktype) : IPIMCmd(ktype) {}
-    virtual vector<PIMCmd> generateKernel(int num_jump_to_be_taken,
-                                          int num_jump_to_be_taken_odd_bank = 0,
+    virtual vector<PIMCmd> generateKernel(int num_jump_to_be_taken, int num_jump_to_be_taken_odd_bank = 0,
                                           int num_jump_to_be_taken_even_bank = 0) override
     {
         vector<PIMCmd> pim_cmds;
         PIMCmdType pimType = getPIMCmdType();
-        vector<PIMCmd> tmp_cmds
-        {
+        vector<PIMCmd> tmp_cmds{
             PIMCmd(PIMCmdType::FILL, PIMOpdType::GRF_A, PIMOpdType::EVEN_BANK),
             PIMCmd(pimType, PIMOpdType::GRF_A, PIMOpdType::GRF_A, PIMOpdType::EVEN_BANK, 1),
             PIMCmd(PIMCmdType::NOP, 7),
@@ -88,14 +86,14 @@ class EltwisePIMKernel : public IPIMCmd
             PIMCmd(PIMCmdType::NOP, 0),
         };
         pim_cmds.assign(tmp_cmds.begin(), tmp_cmds.end());
-        if (num_jump_to_be_taken != 0)
-        {
+        if (num_jump_to_be_taken != 0) {
             pim_cmds.push_back(PIMCmd(PIMCmdType::JUMP, num_jump_to_be_taken, pim_cmds.size() + 1));
         }
         pim_cmds.push_back(PIMCmd(PIMCmdType::EXIT, 0));
         return pim_cmds;
     }
-  private:
+
+   private:
     PIMCmdType getPIMCmdType()
     {
         if (kernelType == KernelType::ADD)
@@ -109,31 +107,22 @@ class EltwisePIMKernel : public IPIMCmd
 
 class ActPIMKernel : public IPIMCmd
 {
-  public:
+   public:
     ActPIMKernel(KernelType ktype) : IPIMCmd(ktype) {}
-    virtual vector<PIMCmd> generateKernel(int num_jump_to_be_taken,
-                                          int num_jump_to_be_taken_odd_bank = 0,
+    virtual vector<PIMCmd> generateKernel(int num_jump_to_be_taken, int num_jump_to_be_taken_odd_bank = 0,
                                           int num_jump_to_be_taken_even_bank = 0) override
     {
         vector<PIMCmd> pim_cmds;
-        if (kernelType == KernelType::RELU)
-        {
-            vector<PIMCmd> tmp_cmds
-            {
-                PIMCmd(PIMCmdType::FILL, PIMOpdType::GRF_A, PIMOpdType::EVEN_BANK, 1, 0, 0, 0, 1),
-                PIMCmd(PIMCmdType::NOP, 7),
-                PIMCmd(PIMCmdType::FILL, PIMOpdType::GRF_B, PIMOpdType::ODD_BANK, 1, 0, 0, 0, 1),
-                PIMCmd(PIMCmdType::NOP, 7),
-                PIMCmd(PIMCmdType::NOP, 0)
-            };
+        if (kernelType == KernelType::RELU) {
+            vector<PIMCmd> tmp_cmds{PIMCmd(PIMCmdType::FILL, PIMOpdType::GRF_A, PIMOpdType::EVEN_BANK, 1, 0, 0, 0, 1),
+                                    PIMCmd(PIMCmdType::NOP, 7),
+                                    PIMCmd(PIMCmdType::FILL, PIMOpdType::GRF_B, PIMOpdType::ODD_BANK, 1, 0, 0, 0, 1),
+                                    PIMCmd(PIMCmdType::NOP, 7), PIMCmd(PIMCmdType::NOP, 0)};
             pim_cmds.assign(tmp_cmds.begin(), tmp_cmds.end());
-        }
-        else
-        {
+        } else {
             throw invalid_argument("Not supported activation");
         }
-        if (num_jump_to_be_taken != 0)
-        {
+        if (num_jump_to_be_taken != 0) {
             pim_cmds.push_back(PIMCmd(PIMCmdType::JUMP, num_jump_to_be_taken, pim_cmds.size() + 1));
         }
         pim_cmds.push_back(PIMCmd(PIMCmdType::EXIT, 0));
@@ -143,54 +132,37 @@ class ActPIMKernel : public IPIMCmd
 
 class GemvPIMKernel : public IPIMCmd
 {
-  public:
+   public:
     GemvPIMKernel(KernelType ktype) : IPIMCmd(ktype) {}
-    virtual vector<PIMCmd> generateKernel(int num_jump_to_be_taken,
-                                          int num_jump_to_be_taken_odd_bank,
+    virtual vector<PIMCmd> generateKernel(int num_jump_to_be_taken, int num_jump_to_be_taken_odd_bank,
                                           int num_jump_to_be_taken_even_bank) override
     {
         vector<PIMCmd> pim_cmds;
-        if (kernelType == KernelType::GEMV)
-        {
-            vector<PIMCmd> tmp_cmds
-            {
-                PIMCmd(PIMCmdType::MAC, PIMOpdType::GRF_B, PIMOpdType::GRF_A,
-                       PIMOpdType::EVEN_BANK, 1, 0, 0, 0),
+        if (kernelType == KernelType::GEMV) {
+            vector<PIMCmd> tmp_cmds{
+                PIMCmd(PIMCmdType::MAC, PIMOpdType::GRF_B, PIMOpdType::GRF_A, PIMOpdType::EVEN_BANK, 1, 0, 0, 0),
                 PIMCmd(PIMCmdType::JUMP, num_jump_to_be_taken_even_bank, 2),
-                PIMCmd(PIMCmdType::MAC, PIMOpdType::GRF_B, PIMOpdType::GRF_A,
-                       PIMOpdType::ODD_BANK , 1, 0, 0, 0),
+                PIMCmd(PIMCmdType::MAC, PIMOpdType::GRF_B, PIMOpdType::GRF_A, PIMOpdType::ODD_BANK, 1, 0, 0, 0),
                 PIMCmd(PIMCmdType::JUMP, num_jump_to_be_taken_odd_bank, 2),
                 PIMCmd(PIMCmdType::NOP, 7),
             };
             pim_cmds.assign(tmp_cmds.begin(), tmp_cmds.end());
-        }
-        else if (kernelType == KernelType::GEMVTREE)
-        {
-            vector<PIMCmd> tmp_cmds
-            {
-                PIMCmd(PIMCmdType::MAC, PIMOpdType::GRF_B, PIMOpdType::GRF_A,
-                       PIMOpdType::EVEN_BANK, 1, 0, 0, 0),
+        } else if (kernelType == KernelType::GEMVTREE) {
+            vector<PIMCmd> tmp_cmds{
+                PIMCmd(PIMCmdType::MAC, PIMOpdType::GRF_B, PIMOpdType::GRF_A, PIMOpdType::EVEN_BANK, 1, 0, 0, 0),
                 // FIXME: hard coding
-                PIMCmd(PIMCmdType::JUMP, 7, 2),
-                PIMCmd(PIMCmdType::NOP, 7),
-                PIMCmd(PIMCmdType::MUL, PIMOpdType::GRF_B, PIMOpdType::GRF_B,
-                       PIMOpdType::EVEN_BANK, 1),
-                PIMCmd(PIMCmdType::MAC, PIMOpdType::GRF_B, PIMOpdType::GRF_A,
-                       PIMOpdType::ODD_BANK, 1, 0, 0, 0),
-                PIMCmd(PIMCmdType::JUMP, 7, 2),
-                PIMCmd(PIMCmdType::NOP, 7),
-                PIMCmd(PIMCmdType::MUL, PIMOpdType::GRF_B, PIMOpdType::GRF_B,
-                       PIMOpdType::EVEN_BANK, 1),
-                //PIMCmd(PIMCmdType::JUMP, num_jump, 7), /*it used that tile is 2*/
+                PIMCmd(PIMCmdType::JUMP, 7, 2), PIMCmd(PIMCmdType::NOP, 7),
+                PIMCmd(PIMCmdType::MUL, PIMOpdType::GRF_B, PIMOpdType::GRF_B, PIMOpdType::EVEN_BANK, 1),
+                PIMCmd(PIMCmdType::MAC, PIMOpdType::GRF_B, PIMOpdType::GRF_A, PIMOpdType::ODD_BANK, 1, 0, 0, 0),
+                PIMCmd(PIMCmdType::JUMP, 7, 2), PIMCmd(PIMCmdType::NOP, 7),
+                PIMCmd(PIMCmdType::MUL, PIMOpdType::GRF_B, PIMOpdType::GRF_B, PIMOpdType::EVEN_BANK, 1),
+                // PIMCmd(PIMCmdType::JUMP, num_jump, 7), /*it used that tile is 2*/
             };
             pim_cmds.assign(tmp_cmds.begin(), tmp_cmds.end());
-        }
-        else
-        {
+        } else {
             throw invalid_argument("Not supported gemv operation");
         }
-        if (num_jump_to_be_taken != 0)
-        {
+        if (num_jump_to_be_taken != 0) {
             pim_cmds.push_back(PIMCmd(PIMCmdType::JUMP, num_jump_to_be_taken, pim_cmds.size() + 1));
         }
         pim_cmds.push_back(PIMCmd(PIMCmdType::EXIT, 0));
@@ -200,10 +172,9 @@ class GemvPIMKernel : public IPIMCmd
 
 class PIMCmdGen
 {
-  public:
-      static vector<PIMCmd> getPIMCmds(KernelType ktype, int num_jump_to_be_taken,
-                                       int num_jump_to_be_taken_odd_bank,
-                                       int num_jump_to_be_taken_even_bank);
+   public:
+    static vector<PIMCmd> getPIMCmds(KernelType ktype, int num_jump_to_be_taken, int num_jump_to_be_taken_odd_bank,
+                                     int num_jump_to_be_taken_even_bank);
 };
 
-#endif // __PIM_KERNEL_GEN_H__
+#endif  // __PIM_KERNEL_GEN_H__

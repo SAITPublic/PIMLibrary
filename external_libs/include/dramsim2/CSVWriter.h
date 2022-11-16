@@ -31,17 +31,17 @@
 #ifndef _CSV_WRITER_H_
 #define _CSV_WRITER_H_
 
-#include "PrintMacros.h"
-#include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <iostream>
 #include <string>
 #include <vector>
+#include "PrintMacros.h"
 
-using std::vector;
 using std::ostream;
 using std::string;
+using std::vector;
 /*
  * CSVWriter: Writes CSV data with headers to an underlying ofstream
  *     This wrapper is meant to look like an ofstream, but it captures
@@ -85,12 +85,10 @@ using std::string;
 
 namespace DRAMSim
 {
-
 class CSVWriter
 {
-  public:
-    struct IndexedName
-    {
+   public:
+    struct IndexedName {
         static const size_t MAX_TMP_STR = 64;
         static const unsigned SINGLE_INDEX_LEN = 4;
         string str;
@@ -102,10 +100,9 @@ class CSVWriter
         }
         static void checkNameLength(const char* baseName, unsigned numIndices)
         {
-            if (isNameTooLong(baseName, numIndices))
-            {
-                ERROR("Your string " << baseName << " is too long for the max stats size (" <<
-                      MAX_TMP_STR  << ", increase MAX_TMP_STR");
+            if (isNameTooLong(baseName, numIndices)) {
+                ERROR("Your string " << baseName << " is too long for the max stats size (" << MAX_TMP_STR
+                                     << ", increase MAX_TMP_STR");
                 exit(-1);
             }
         }
@@ -137,28 +134,24 @@ class CSVWriter
     bool finalized;
     unsigned idx;
 
-  public:
+   public:
     // Functions
     void finalize()
     {
         // TODO: tag unlikely
-        if (!finalized)
-        {
-            for (unsigned i = 0; i < fieldNames.size(); i++)
-            {
+        if (!finalized) {
+            for (unsigned i = 0; i < fieldNames.size(); i++) {
                 output << fieldNames[i] << ",";
             }
             output << std::endl << std::flush;
             finalized = true;
-        }
-        else
-        {
-            if (idx < fieldNames.size())
-            {
-                printf(" Number of fields doesn't match values (fields=%u, "
-                       "values=%u), "
-                       "check each value has a field name before it\n",
-                       idx, (unsigned)fieldNames.size());
+        } else {
+            if (idx < fieldNames.size()) {
+                printf(
+                    " Number of fields doesn't match values (fields=%u, "
+                    "values=%u), "
+                    "check each value has a field name before it\n",
+                    idx, (unsigned)fieldNames.size());
             }
             idx = 0;
             output << std::endl;
@@ -171,8 +164,7 @@ class CSVWriter
     // Insertion operators for field names
     CSVWriter& operator<<(const char* name)
     {
-        if (!finalized)
-        {
+        if (!finalized) {
             fieldNames.push_back(string(name));
         }
         return *this;
@@ -180,8 +172,7 @@ class CSVWriter
 
     CSVWriter& operator<<(const string& name)
     {
-        if (!finalized)
-        {
+        if (!finalized) {
             fieldNames.push_back(string(name));
         }
         return *this;
@@ -189,8 +180,7 @@ class CSVWriter
 
     CSVWriter& operator<<(const IndexedName& indexedName)
     {
-        if (!finalized)
-        {
+        if (!finalized) {
             fieldNames.push_back(indexedName.str);
         }
         return *this;
@@ -207,13 +197,14 @@ class CSVWriter
 // All of the other types just need to pass through to the underlying
 // ofstream, so just write this small wrapper function to make the
 // whole thing less verbose
-#define ADD_TYPE(T)                                                                                \
-    CSVWriter& operator<<(T value) {                                                               \
-        if (finalized) {                                                                           \
-            output << value << ",";                                                                \
-            idx++;                                                                                 \
-        }                                                                                          \
-        return *this;                                                                              \
+#define ADD_TYPE(T)                 \
+    CSVWriter& operator<<(T value)  \
+    {                               \
+        if (finalized) {            \
+            output << value << ","; \
+            idx++;                  \
+        }                           \
+        return *this;               \
     }
 
     ADD_TYPE(int);
@@ -224,11 +215,11 @@ class CSVWriter
     ADD_TYPE(double);
 
     // disable copy constructor and assignment operator
-  private:
+   private:
     CSVWriter(const CSVWriter&);
     CSVWriter& operator=(const CSVWriter&);
-}; // class CSVWriter
+};  // class CSVWriter
 
-} // namespace DRAMSim
+}  // namespace DRAMSim
 
-#endif // _CSV_WRITER_H_
+#endif  // _CSV_WRITER_H_

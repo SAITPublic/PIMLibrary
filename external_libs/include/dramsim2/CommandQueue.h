@@ -42,14 +42,13 @@ using namespace std;
 
 namespace DRAMSim
 {
-
 class Rank;
 class CommandQueue : public SimulatorObject
 {
     CommandQueue();
     ostream& dramsimLog;
 
-  public:
+   public:
     // typedefs
     typedef vector<BusPacket*> BusPacket1D;
     typedef vector<BusPacket1D> BusPacket2D;
@@ -73,15 +72,15 @@ class CommandQueue : public SimulatorObject
     void needRefresh(unsigned rank);
 
     void print();
-    void update(); // SimulatorObject requirement
+    void update();  // SimulatorObject requirement
     vector<BusPacket*>& getCommandQueue(unsigned rank, unsigned bank);
 
     // fields
-    BusPacket3D queues; // 3D array of BusPacket pointers
+    BusPacket3D queues;  // 3D array of BusPacket pointers
     vector<vector<BankState>>& bankStates;
     vector<Rank*>* ranks;
 
-  private:
+   private:
     void nextRankAndBank(unsigned& rank, unsigned& bank);
     // fields
 
@@ -111,5 +110,5 @@ class CommandQueue : public SimulatorObject
     QueuingStructure queuingStructure_;
 };
 
-} // namespace DRAMSim
+}  // namespace DRAMSim
 #endif
