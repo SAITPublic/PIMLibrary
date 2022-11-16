@@ -42,8 +42,9 @@ namespace npy
    If your compiler does not define these per default, you may want to define
    one of these constants manually.
    Defaults to little endian order. */
-#if defined(__BYTE_ORDER) && __BYTE_ORDER == __BIG_ENDIAN || defined(__BIG_ENDIAN__) || defined(__ARMEB__) || \
-    defined(__THUMBEB__) || defined(__AARCH64EB__) || defined(_MIBSEB) || defined(__MIBSEB) || defined(__MIBSEB__)
+#if defined(__BYTE_ORDER) && __BYTE_ORDER == __BIG_ENDIAN || defined(__BIG_ENDIAN__) ||         \
+    defined(__ARMEB__) || defined(__THUMBEB__) || defined(__AARCH64EB__) || defined(_MIBSEB) || \
+    defined(__MIBSEB) || defined(__MIBSEB__)
 const bool big_endian = true;
 #else
 const bool big_endian = false;
@@ -100,17 +101,42 @@ struct Typestring {
         return std::string(buf);
     }
 
-    Typestring(const std::vector<float>& v) : c_endian{host_endian_char}, c_type{'f'}, len{sizeof(float)} {}
-    Typestring(const std::vector<double>& v) : c_endian{host_endian_char}, c_type{'f'}, len{sizeof(double)} {}
-    Typestring(const std::vector<long double>& v) : c_endian{host_endian_char}, c_type{'f'}, len{sizeof(long double)} {}
+    Typestring(const std::vector<float>& v)
+        : c_endian{host_endian_char}, c_type{'f'}, len{sizeof(float)}
+    {
+    }
+    Typestring(const std::vector<double>& v)
+        : c_endian{host_endian_char}, c_type{'f'}, len{sizeof(double)}
+    {
+    }
+    Typestring(const std::vector<long double>& v)
+        : c_endian{host_endian_char}, c_type{'f'}, len{sizeof(long double)}
+    {
+    }
 
-    Typestring(const std::vector<char>& v) : c_endian{no_endian_char}, c_type{'i'}, len{sizeof(char)} {}
-    Typestring(const std::vector<short>& v) : c_endian{host_endian_char}, c_type{'i'}, len{sizeof(short)} {}
-    Typestring(const std::vector<int>& v) : c_endian{host_endian_char}, c_type{'i'}, len{sizeof(int)} {}
-    Typestring(const std::vector<long>& v) : c_endian{host_endian_char}, c_type{'i'}, len{sizeof(long)} {}
-    Typestring(const std::vector<long long>& v) : c_endian{host_endian_char}, c_type{'i'}, len{sizeof(long long)} {}
+    Typestring(const std::vector<char>& v)
+        : c_endian{no_endian_char}, c_type{'i'}, len{sizeof(char)}
+    {
+    }
+    Typestring(const std::vector<short>& v)
+        : c_endian{host_endian_char}, c_type{'i'}, len{sizeof(short)}
+    {
+    }
+    Typestring(const std::vector<int>& v)
+        : c_endian{host_endian_char}, c_type{'i'}, len{sizeof(int)}
+    {
+    }
+    Typestring(const std::vector<long>& v)
+        : c_endian{host_endian_char}, c_type{'i'}, len{sizeof(long)}
+    {
+    }
+    Typestring(const std::vector<long long>& v)
+        : c_endian{host_endian_char}, c_type{'i'}, len{sizeof(long long)}
+    {
+    }
 
-    Typestring(const std::vector<unsigned char>& v) : c_endian{no_endian_char}, c_type{'u'}, len{sizeof(unsigned char)}
+    Typestring(const std::vector<unsigned char>& v)
+        : c_endian{no_endian_char}, c_type{'u'}, len{sizeof(unsigned char)}
     {
     }
     // TODO(fp16 read)
@@ -118,7 +144,8 @@ struct Typestring {
         : c_endian{host_endian_char}, c_type{'f'}, len{sizeof(unsigned short)}
     {
     }
-    Typestring(const std::vector<unsigned int>& v) : c_endian{host_endian_char}, c_type{'u'}, len{sizeof(unsigned int)}
+    Typestring(const std::vector<unsigned int>& v)
+        : c_endian{host_endian_char}, c_type{'u'}, len{sizeof(unsigned int)}
     {
     }
     Typestring(const std::vector<unsigned long>& v)
@@ -187,7 +214,8 @@ inline std::string get_value_from_map(const std::string& mapstr)
 
    The keys need to be known and may not appear anywhere else in the data.
  */
-inline std::unordered_map<std::string, std::string> parse_dict(std::string in, std::vector<std::string>& keys)
+inline std::unordered_map<std::string, std::string> parse_dict(std::string in,
+                                                               std::vector<std::string>& keys)
 {
     std::unordered_map<std::string, std::string> map;
 
@@ -312,7 +340,8 @@ inline std::string write_boolean(bool b)
 
 }  // namespace pyparse
 
-inline void parse_header(std::string header, std::string& descr, bool& fortran_order, std::vector<ndarray_len_t>& shape)
+inline void parse_header(std::string header, std::string& descr, bool& fortran_order,
+                         std::vector<ndarray_len_t>& shape)
 {
     /*
        The first 6 bytes are a magic string: exactly "x93NUMPY".
@@ -381,7 +410,8 @@ inline std::string write_header_dict(const std::string& descr, bool fortran_orde
     std::string s_fortran_order = npy::pyparse::write_boolean(fortran_order);
     std::string shape_s = npy::pyparse::write_tuple(shape);
 
-    return "{'descr': '" + descr + "', 'fortran_order': " + s_fortran_order + ", 'shape': " + shape_s + ", }";
+    return "{'descr': '" + descr + "', 'fortran_order': " + s_fortran_order +
+           ", 'shape': " + shape_s + ", }";
 }
 
 inline void write_header(std::ostream& out, const std::string& descr, bool fortran_order,
@@ -444,8 +474,8 @@ inline std::string read_header(std::istream& istream)
         char header_len_le32[4];
         istream.read(header_len_le32, 4);
 
-        header_length = (header_len_le32[0] << 0) | (header_len_le32[1] << 8) | (header_len_le32[2] << 16) |
-                        (header_len_le32[3] << 24);
+        header_length = (header_len_le32[0] << 0) | (header_len_le32[1] << 8) |
+                        (header_len_le32[2] << 16) | (header_len_le32[3] << 24);
 
         if ((magic_string_length + 2 + 4 + header_length) % 16 != 0) {
             // TODO: display warning
