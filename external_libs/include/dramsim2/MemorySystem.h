@@ -34,15 +34,9 @@
 #ifndef MEMORYSYSTEM_H
 #define MEMORYSYSTEM_H
 
-// MemorySystem.h
-//
-// Header file for JEDEC memory system wrapper
-//
-
 #include <deque>
 #include <vector>
 #include <string>
-
 #include "CSVWriter.h"
 #include "Callback.h"
 #include "MemoryController.h"

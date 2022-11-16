@@ -34,11 +34,8 @@
 #ifndef MEMORYCONTROLLER_H
 #define MEMORYCONTROLLER_H
 
-// MemoryController.h
-//
-// Header file for memory controller object
-//
-
+#include <map>
+#include <vector>
 #include "BankState.h"
 #include "BusPacket.h"
 #include "CSVWriter.h"
@@ -48,8 +45,6 @@
 #include "SimulatorObject.h"
 #include "SystemConfiguration.h"
 #include "Transaction.h"
-#include <map>
-#include <vector>
 
 using namespace std;
 
@@ -123,8 +118,8 @@ class MemoryController : public SimulatorObject
 
   public:
     // energy values are per rank -- SST uses these directly, so make these public
-    vector<uint64_t> backgroundEnergy, burstEnergy, actpreEnergy, refreshEnergy, aluPimEnergy,
-        readPimEnergy;
+    vector<uint64_t> backgroundEnergy, burstEnergy, actpreEnergy, refreshEnergy, aluPIMEnergy,
+        readPIMEnergy;
     double totalBandwidth;
 
     uint64_t totalReads, totalWrites;
@@ -141,7 +136,7 @@ class MemoryControllerStats
                           vector<uint64_t> &totalActivatesPerB, uint64_t &totalRef,
                           vector<uint64_t> &backgroundE, vector<uint64_t> &burstE,
                           vector<uint64_t> &actpreE, vector<uint64_t> &refreshE,
-                          vector<uint64_t> &aluPimE, vector<uint64_t> &readPimE,
+                          vector<uint64_t> &aluPIME, vector<uint64_t> &readPIME,
                           vector<Transaction*>& pendingReadTrans) :
                           csvOut(csvOut_), dramsimLog(simLog), config(configuration),
                           totalTransactions(totalTrans), grandTotalBankAccesses(grandTotalBankAcc),
@@ -150,7 +145,7 @@ class MemoryControllerStats
                           totalActivatesPerRank(totalActivatesPerR),
                           totalActivatesPerBank(totalActivatesPerB), totalRefreshes(totalRef),
                           backgroundEnergy(backgroundE), burstEnergy(burstE), actpreEnergy(actpreE),
-                          refreshEnergy(refreshE), aluPimEnergy(aluPimE), readPimEnergy(readPimE),
+                          refreshEnergy(refreshE), aluPIMEnergy(aluPIME), readPIMEnergy(readPIME),
                           pendingReadTransactions(pendingReadTrans)
     {
         parentMemorySystem = parent;
@@ -181,8 +176,8 @@ class MemoryControllerStats
     vector<uint64_t>& burstEnergy;
     vector<uint64_t>& actpreEnergy;
     vector<uint64_t>& refreshEnergy;
-    vector<uint64_t>& aluPimEnergy;
-    vector<uint64_t>& readPimEnergy;
+    vector<uint64_t>& aluPIMEnergy;
+    vector<uint64_t>& readPIMEnergy;
     vector<Transaction*>& pendingReadTransactions;
 
     uint64_t currentClockCycle;

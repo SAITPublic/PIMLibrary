@@ -446,7 +446,7 @@ public:
         throw invalid_argument("Invalid PIM precision");
     }
 
-    static int getPimDataLength()
+    static int getPIMDataLength()
     {
         string param = getConfigParam(STRING, "PIM_PRECISION");
         if (param == "FP16")

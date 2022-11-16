@@ -1,6 +1,3 @@
-#ifndef __MULTI_CHANNEL_MEMORY_SYSTEM_H__H__
-#define __MULTI_CHANNEL_MEMORY_SYSTEM_H__H__
-
 /*********************************************************************************
 *  Copyright (c) 2010-2011, Elliott Cooper-Balis
 *                             Paul Rosenfeld
@@ -33,6 +30,10 @@
 *  OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 *  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *********************************************************************************/
+
+#ifndef __MULTI_CHANNEL_MEMORY_SYSTEM_H__H__
+#define __MULTI_CHANNEL_MEMORY_SYSTEM_H__H__
+
 #include <string>
 #include <vector>
 #include "CSVWriter.h"

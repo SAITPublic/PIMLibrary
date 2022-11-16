@@ -24,17 +24,17 @@ using namespace std;
 namespace DRAMSim
 {
 
-class pimBlockT
+class PIMBlock
 {
   public:
-    pimBlockT()
+    PIMBlock()
     {
-      pimPrecision_ = PIMConfiguration::getPIMPrecision();
+        pimPrecision_ = PIMConfiguration::getPIMPrecision();
     }
-    pimBlockT(const PIMPrecision& pimPrecision) : pimPrecision_(pimPrecision) {}
+    PIMBlock(const PIMPrecision& pimPrecision) : pimPrecision_(pimPrecision) {}
 
     BurstType srf;
-    BurstType grfA[8];
+    BurstType grfA[8];      // FIXME: hard coding shcha
     BurstType grfB[8];
     BurstType mOut;
     BurstType aOut;

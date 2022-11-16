@@ -22,7 +22,7 @@ using namespace std;
 namespace DRAMSim
 {
 
-enum class pimCmdType
+enum class PIMCmdType
 {
     NOP,
     ADD,
@@ -42,7 +42,7 @@ enum class pimCmdType
     EXIT
 };
 
-enum class pimOpdType
+enum class PIMOpdType
 {
     A_OUT,
     M_OUT,
@@ -54,14 +54,14 @@ enum class pimOpdType
     SRF_A
 };
 
-class pimCmd
+class PIMCmd
 {
   public:
-    pimCmdType type_;
-    pimOpdType dst_;
-    pimOpdType src0_;
-    pimOpdType src1_;
-    pimOpdType src2_;
+    PIMCmdType type_;
+    PIMOpdType dst_;
+    PIMOpdType src0_;
+    PIMOpdType src1_;
+    PIMOpdType src2_;
     int loopCounter_;
     int loopOffset_;
     int isAuto_;
@@ -70,37 +70,37 @@ class pimCmd
     int src1Idx_;
     int isRelu_;
 
-    pimCmd()
-        : type_(pimCmdType::NOP), dst_(pimOpdType::A_OUT), src0_(pimOpdType::A_OUT),
-          src1_(pimOpdType::A_OUT), src2_(pimOpdType::A_OUT), loopCounter_(0), loopOffset_(0),
+    PIMCmd()
+        : type_(PIMCmdType::NOP), dst_(PIMOpdType::A_OUT), src0_(PIMOpdType::A_OUT),
+          src1_(PIMOpdType::A_OUT), src2_(PIMOpdType::A_OUT), loopCounter_(0), loopOffset_(0),
           isAuto_(0), dstIdx_(0), src0Idx_(0), src1Idx_(0) {}
 
     // NOP, CTRL
-    pimCmd(pimCmdType type, int loopCounter)
-        : type_(type), dst_(pimOpdType::A_OUT), src0_(pimOpdType::A_OUT), src1_(pimOpdType::A_OUT),
-          src2_(pimOpdType::A_OUT), loopCounter_(loopCounter), loopOffset_(0), isAuto_(0),
+    PIMCmd(PIMCmdType type, int loopCounter)
+        : type_(type), dst_(PIMOpdType::A_OUT), src0_(PIMOpdType::A_OUT), src1_(PIMOpdType::A_OUT),
+          src2_(PIMOpdType::A_OUT), loopCounter_(loopCounter), loopOffset_(0), isAuto_(0),
           dstIdx_(0), src0Idx_(0), src1Idx_(0)
     {}
 
     // JUMP
-    pimCmd(pimCmdType type, int loopCounter, int loop_offset)
-        : type_(type), dst_(pimOpdType::A_OUT), src0_(pimOpdType::A_OUT), src1_(pimOpdType::A_OUT),
-          src2_(pimOpdType::A_OUT), loopCounter_(loopCounter), loopOffset_(loop_offset), isAuto_(0),
+    PIMCmd(PIMCmdType type, int loopCounter, int loop_offset)
+        : type_(type), dst_(PIMOpdType::A_OUT), src0_(PIMOpdType::A_OUT), src1_(PIMOpdType::A_OUT),
+          src2_(PIMOpdType::A_OUT), loopCounter_(loopCounter), loopOffset_(loop_offset), isAuto_(0),
           dstIdx_(0), src0Idx_(0), src1Idx_(0) {}
 
-    pimCmd(pimCmdType type, pimOpdType dst, pimOpdType src0, int is_auto = 0, int dst_idx = 0,
+    PIMCmd(PIMCmdType type, PIMOpdType dst, PIMOpdType src0, int is_auto = 0, int dst_idx = 0,
           int src0_idx = 0, int src1_idx = 0, int is_relu = 0)
-        : type_(type), dst_(dst), src0_(src0), src1_(pimOpdType::A_OUT), src2_(pimOpdType::A_OUT),
+        : type_(type), dst_(dst), src0_(src0), src1_(PIMOpdType::A_OUT), src2_(PIMOpdType::A_OUT),
           loopCounter_(0), loopOffset_(0), isAuto_(is_auto), dstIdx_(dst_idx), src0Idx_(src0_idx),
           src1Idx_(src1_idx), isRelu_(is_relu) {}
 
-    pimCmd(pimCmdType type, pimOpdType dst, pimOpdType src0, pimOpdType src1, int is_auto = 0,
+    PIMCmd(PIMCmdType type, PIMOpdType dst, PIMOpdType src0, PIMOpdType src1, int is_auto = 0,
            int dst_idx = 0, int src0_idx = 0, int src1_idx = 0)
-        : type_(type), dst_(dst), src0_(src0), src1_(src1), src2_(pimOpdType::A_OUT),
+        : type_(type), dst_(dst), src0_(src0), src1_(src1), src2_(PIMOpdType::A_OUT),
           loopCounter_(0), loopOffset_(0), isAuto_(is_auto), dstIdx_(dst_idx), src0Idx_(src0_idx),
           src1Idx_(src1_idx) {}
 
-    pimCmd(pimCmdType type, pimOpdType dst, pimOpdType src0, pimOpdType src1, pimOpdType src2,
+    PIMCmd(PIMCmdType type, PIMOpdType dst, PIMOpdType src0, PIMOpdType src1, PIMOpdType src2,
            int is_auto = 0, int dst_idx = 0, int src0_idx = 0, int src1_idx = 0)
         : type_(type), dst_(dst), src0_(src0), src1_(src1), src2_(src2), loopCounter_(0),
           loopOffset_(0), isAuto_(is_auto), dstIdx_(dst_idx), src0Idx_(src0_idx),
@@ -117,52 +117,52 @@ class pimCmd
         return ((val >> bit_pos) & bitmask(bit_len));
     }
 
-    std::string opdToStr(pimOpdType opd, int idx = 0) const
+    std::string opdToStr(PIMOpdType opd, int idx = 0) const
     {
         switch (opd)
         {
-            case pimOpdType::A_OUT:
+            case PIMOpdType::A_OUT:
                 return "A_OUT";
-            case pimOpdType::M_OUT:
+            case PIMOpdType::M_OUT:
                 return "M_OUT";
-            case pimOpdType::EVEN_BANK:
+            case PIMOpdType::EVEN_BANK:
                 return "EVEN_BANK";
-            case pimOpdType::ODD_BANK:
+            case PIMOpdType::ODD_BANK:
                 return "ODD_BANK";
-            case pimOpdType::GRF_A:
+            case PIMOpdType::GRF_A:
                 return "GRF_A[" + to_string(idx) + "]";
-            case pimOpdType::GRF_B:
+            case PIMOpdType::GRF_B:
                 return "GRF_B[" + to_string(idx) + "]";
-            case pimOpdType::SRF_M:
+            case PIMOpdType::SRF_M:
                 return "SRF_M[" + to_string(idx) + "]";
-            case pimOpdType::SRF_A:
+            case PIMOpdType::SRF_A:
                 return "SRF_A[" + to_string(idx) + "]";
             default:
                 return "NOT_DEFINED";
         }
     }
 
-    std::string cmdToStr(pimCmdType type) const
+    std::string cmdToStr(PIMCmdType type) const
     {
         switch (type_)
         {
-            case pimCmdType::EXIT:
+            case PIMCmdType::EXIT:
                 return "EXIT";
-            case pimCmdType::NOP:
+            case PIMCmdType::NOP:
                 return "NOP";
-            case pimCmdType::JUMP:
+            case PIMCmdType::JUMP:
                 return "JUMP";
-            case pimCmdType::FILL:
+            case PIMCmdType::FILL:
                 return "FILL";
-            case pimCmdType::MOV:
+            case PIMCmdType::MOV:
                 return "MOV";
-            case pimCmdType::ADD:
+            case PIMCmdType::ADD:
                 return "ADD";
-            case pimCmdType::MUL:
+            case PIMCmdType::MUL:
                 return "MUL";
-            case pimCmdType::MAC:
+            case PIMCmdType::MAC:
                 return "MAC";
-            case pimCmdType::MAD:
+            case PIMCmdType::MAD:
                 return "MAD";
             default:
                 return "NOT_DEFINED";
@@ -175,8 +175,8 @@ class pimCmd
     std::string toStr() const;
 };
 
-bool operator==(const pimCmd& lhs, const pimCmd& rhs);
-bool operator!=(const pimCmd& lhs, const pimCmd& rhs);
+bool operator==(const PIMCmd& lhs, const PIMCmd& rhs);
+bool operator!=(const PIMCmd& lhs, const PIMCmd& rhs);
 
 } // namespace DRAMSim
 #endif

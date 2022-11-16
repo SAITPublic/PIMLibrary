@@ -78,12 +78,12 @@ class PIMKernel
     }
 
     void addBarrier();
-    void runPim();
+    void runPIM();
     uint64_t getCycle();
 
     void parkIn();
     void parkOut();
-    void changePimMode(dramMode mode1, dramMode mode2);
+    void changePIMMode(dramMode mode1, dramMode mode2);
     void addTransactionAll(bool isWrite, int bg, int bank, int row, int col, const std::string tag,
                            BurstType* bst, bool use_barrier = false, int num_loop = 1);
     void addTransactionAll(bool isWrite, int bg, int bank, int row, int col, BurstType* bst,
@@ -98,7 +98,7 @@ class PIMKernel
     /*
     void programSrf();
     */
-    void programCrf(vector<pimCmd>& cmds);
+    void programCrf(vector<PIMCmd>& cmds);
     void setCrf(BurstType* bst, bool pim_op, bool use_all_grf, int crf_toggle_cond, bool grfA_zero,
                 bool grfB_zero);
     unsigned getResultColGemv(int input_dim, int output_dim);

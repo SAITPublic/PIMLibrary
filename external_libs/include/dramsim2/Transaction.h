@@ -34,13 +34,9 @@
 #ifndef TRANSACTION_H
 #define TRANSACTION_H
 
-// Transaction.h
-//
-// Header file for transaction object
-
+#include <string>
 #include "BusPacket.h"
 #include "SystemConfiguration.h"
-#include <string>
 
 using std::ostream;
 

@@ -34,17 +34,12 @@
 #ifndef CMDQUEUE_H
 #define CMDQUEUE_H
 
-// CommandQueue.h
-//
-// Header
-//
-
+#include <vector>
 #include "BankState.h"
 #include "BusPacket.h"
 #include "SimulatorObject.h"
 #include "SystemConfiguration.h"
 #include "Transaction.h"
-#include <vector>
 
 using namespace std;
 

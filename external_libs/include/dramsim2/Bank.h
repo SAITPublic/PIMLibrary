@@ -31,19 +31,15 @@
 #ifndef BANK_H
 #define BANK_H
 
-// Bank.h
-//
-// Header file for bank class
-//
-
+#include <iostream>
+#include <memory>
+#include <vector>
 #include "BankState.h"
 #include "BusPacket.h"
 #include "SimulatorObject.h"
 #include "SystemConfiguration.h"
 #include "Burst.h"
-#include <iostream>
-#include <memory>
-#include <vector>
+
 
 namespace DRAMSim
 {

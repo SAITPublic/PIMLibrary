@@ -84,16 +84,16 @@ class PIMRank : public SimulatorObject
 
     void readHab(BusPacket* packet);
     void writeHab(BusPacket* packet);
-    void doPim(BusPacket* packet);
-    void doPimBlock(BusPacket* packet, pimCmd curCmd, int pimblock_id);
-    void controlPim(BusPacket* packet);
+    void doPIM(BusPacket* packet);
+    void doPIMBlock(BusPacket* packet, PIMCmd curCmd, int pimblock_id);
+    void controlPIM(BusPacket* packet);
 
-    void readOpd(int pb, BurstType& bst, pimOpdType type, BusPacket* packet, int idx,
+    void readOpd(int pb, BurstType& bst, PIMOpdType type, BusPacket* packet, int idx,
                   bool is_auto, bool is_mac);
-    void writeOpd(int pb, BurstType& bst, pimOpdType type, BusPacket* packet, int idx,
+    void writeOpd(int pb, BurstType& bst, PIMOpdType type, BusPacket* packet, int idx,
                    bool is_auto, bool is_mac);
 
-    vector<pimBlockT> pimBlocks;
+    vector<PIMBlock> pimBlocks;
 
     bool isToggleCond(BusPacket* packet);
 
