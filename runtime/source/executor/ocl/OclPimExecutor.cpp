@@ -773,6 +773,12 @@ int OclPimExecutor::execute_gemm(PimBo* output, PimBo* input, PimBo* weight, Pim
 
     return ret;
 }
+
+int OclPimExecutor::execute_sync(void* stream)
+{
+    cl_ok(clFinish(queue));
+    return 0;
+}
 }  // namespace executor
 }  // namespace runtime
 }  // namespace pim
