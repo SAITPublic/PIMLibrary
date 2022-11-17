@@ -146,21 +146,19 @@ int PimGemmTestFixture::ExecuteTest()
     PimGemmTest pimGemmTest = PimGemmTest(num_batch, num_channels, input_height, input_width, output_height,
                                           output_width, act, has_bias, order);
     pimGemmTest.prepare();
+
+    // warmup
+    pimGemmTest.execute_op(true);
+
+    avg_kernel_time = std::chrono::duration<double>::zero();
     for (int i = 0; i < num_iter; i++) {
-        // considering first iteration as warm up iteration.
-        if (warmup) {
-            pimGemmTest.execute_op(true);
-            warmup = false;
-        } else {
-            Tick();
-            pimGemmTest.execute_op(block);
-            Tock();
-            avg_kernel_time += calculate_elapsed_time();
-            std::cout << "Time taken for iter " << i << " : " << time_duration.count() << std::endl;
-        }
+        Tick();
+        pimGemmTest.execute_op(block);
+        Tock();
+        avg_kernel_time += calculate_elapsed_time();
     }
     pimGemmTest.finalize();
-    kernel_execution_time = avg_kernel_time / (double)(num_iter - 1);
+    calculate_avg_time();
     calculate_gflops(pimGemmTest.get_flt_ops());
     return pimGemmTest.validate();
 }
@@ -172,5 +170,17 @@ int PimGemmTestFixture::ExecuteTestExplicitReordering()
                                           output_width, act, has_bias, order);
     pimGemmTest.prepare();
     pimGemmTest.run_with_explicit_reordering(use_device_weight, block);
+
+    avg_kernel_time = std::chrono::duration<double>::zero();
+    for (int i = 0; i < num_iter; i++) {
+        Tick();
+        pimGemmTest.run_with_explicit_reordering(use_device_weight, block);
+        Tock();
+        avg_kernel_time += calculate_elapsed_time();
+    }
+    pimGemmTest.finalize();
+    calculate_avg_time();
+    calculate_gflops(pimGemmTest.get_flt_ops());
+
     return pimGemmTest.validate();
 }

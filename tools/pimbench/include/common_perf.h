@@ -31,6 +31,7 @@ class PerformanceAnalyser
     virtual int ExecuteTest() = 0;
     void calculate_gflops(double flt_ops);
     std::chrono::duration<double> calculate_elapsed_time();
+    void calculate_avg_time();
 
    protected:
     int num_iter;
@@ -44,8 +45,7 @@ class PerformanceAnalyser
     int output_width;
     string operation;
     int output_height;
-    bool warmup = true;
-    bool block = false;
+    bool block = true;
     PimGemmOrder order;
     PimPrecision precision;
     PimRuntimeType platform;

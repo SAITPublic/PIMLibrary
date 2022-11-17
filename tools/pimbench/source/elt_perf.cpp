@@ -119,20 +119,19 @@ int PimEltTestFixture::ExecuteTest()
 {
     PimEltTest pimEltTest = PimEltTest(num_batch, num_channels, input_height, input_width, precision);
     pimEltTest.prepare();
+
+    // warmup
+    pimEltTest.execute_op(true);
+
+    avg_kernel_time = std::chrono::duration<double>::zero();
     for (int i = 0; i < num_iter; i++) {
-        // considering first iteration as warm up iteration.
-        if (warmup) {
-            pimEltTest.execute_op(true);
-            warmup = false;
-        } else {
-            pimEltTest.execute_op(block);
-            Tock();
-            avg_kernel_time += calculate_elapsed_time();
-            std::cout << "Time taken for iter " << i << " : " << time_duration.count() << std::endl;
-        }
+        Tick();
+        pimEltTest.execute_op(block);
+        Tock();
+        avg_kernel_time += calculate_elapsed_time();
     }
     pimEltTest.finalize();
-    kernel_execution_time = avg_kernel_time / (double)(num_iter - 1);
+    calculate_avg_time();
     calculate_gflops(pimEltTest.get_flt_ops());
     return pimEltTest.validate();
 }
@@ -141,21 +140,19 @@ int PimReluTestFixture::ExecuteTest()
 {
     PimReluTest pimReluTest = PimReluTest(num_batch, num_channels, input_height, input_width, precision);
     pimReluTest.prepare();
+
+    // warmup
+    pimReluTest.execute_op(true);
+
+    avg_kernel_time = std::chrono::duration<double>::zero();
     for (int i = 0; i < num_iter; i++) {
-        // considering first iteration as warm up iteration.
-        if (warmup) {
-            pimReluTest.execute_op(true);
-            warmup = false;
-        } else {
-            pimReluTest.execute_op(block);
-            Tock();
-            avg_kernel_time += calculate_elapsed_time();
-            std::cout << "Time taken for iter " << i << " : " << time_duration.count() << std::endl;
-        }
+        Tick();
+        pimReluTest.execute_op(block);
+        Tock();
+        avg_kernel_time += calculate_elapsed_time();
     }
     pimReluTest.finalize();
-    kernel_execution_time = avg_kernel_time / (double)(num_iter - 1);
+    calculate_avg_time();
     calculate_gflops(pimReluTest.get_flt_ops());
     return pimReluTest.validate();
-    return 1;
 }

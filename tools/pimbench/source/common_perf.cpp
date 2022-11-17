@@ -42,10 +42,11 @@ std::chrono::duration<double> PerformanceAnalyser::calculate_elapsed_time()
     return time_duration;
 }
 
+void PerformanceAnalyser::calculate_avg_time(){ kernel_execution_time = avg_kernel_time / (double)(num_iter); }
 void PerformanceAnalyser::calculate_gflops(double flt_ops) { gflops = flt_ops / (double)kernel_execution_time.count(); }
 void PerformanceAnalyser::print_analytical_data()
 {
-    std::cout << "Time analytics: \n";
+    std::cout << "Time analytics: \nPlatform: " << parser->get_platform() << std::endl;
     std::cout << "Time taken to initialize PIM : " << start_up_time.count() << " seconds\n";
     std::cout << "Time taken to execute operation : " << kernel_execution_time.count() << " seconds\n";
     std::cout << "GFlops : " << gflops << " gflops\n";
