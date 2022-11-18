@@ -14,6 +14,7 @@
 #define _PIMRANK_H_
 
 #include <vector>
+
 #include "AddressMapping.h"
 #include "BusPacket.h"
 #include "Configuration.h"
@@ -56,18 +57,8 @@ class PIMRank : public SimulatorObject
     int rankId;
     ostream& dramsimLog;
     Configuration& config;
-
-    int pimPC_;
-    int lastJumpIdx_;
-    int numJumpToBeTaken_;
-    int lastRepeatIdx_;
-    int numRepeatToBeDone_;
-    bool pimOpMode_;
-    bool toggleEvenBank_;
-    bool toggleOddBank_;
-    bool toggleRa12h_;
-    bool useAllGrf_;
-    bool crfExit_;
+    int pimPC_, lastJumpIdx_, numJumpToBeTaken_, lastRepeatIdx_, numRepeatToBeDone_;
+    bool pimOpMode_, toggleEvenBank_, toggleOddBank_, toggleRa12h_, useAllGrf_, crfExit_;
 
    public:
     PIMRank(ostream& simLog, Configuration& configuration);
@@ -79,18 +70,13 @@ class PIMRank : public SimulatorObject
     int getRankId() const;
     void setRankId(int id);
     void update();
-
     void readHab(BusPacket* packet);
     void writeHab(BusPacket* packet);
     void doPIM(BusPacket* packet);
     void doPIMBlock(BusPacket* packet, PIMCmd curCmd, int pimblock_id);
     void controlPIM(BusPacket* packet);
-
     void readOpd(int pb, BurstType& bst, PIMOpdType type, BusPacket* packet, int idx, bool is_auto, bool is_mac);
     void writeOpd(int pb, BurstType& bst, PIMOpdType type, BusPacket* packet, int idx, bool is_auto, bool is_mac);
-
-    vector<PIMBlock> pimBlocks;
-
     bool isToggleCond(BusPacket* packet);
 
     union crf_t {
@@ -103,6 +89,7 @@ class PIMRank : public SimulatorObject
     unsigned inline getGrfIdxHigh(unsigned r, unsigned c) { return ((r & 0x1) << 2 | ((c >> 3) & 0x3)); }
 
     Rank* rank;
+    vector<PIMBlock> pimBlocks;
 };
 }  // namespace DRAMSim
 #endif

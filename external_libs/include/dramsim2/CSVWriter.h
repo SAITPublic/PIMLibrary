@@ -37,6 +37,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+
 #include "PrintMacros.h"
 
 using std::ostream;

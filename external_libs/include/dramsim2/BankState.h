@@ -31,11 +31,6 @@
 #ifndef BANKSTATE_H
 #define BANKSTATE_H
 
-// BankState.h
-//
-// Header file for bank state class
-//
-
 #include "BusPacket.h"
 #include "SystemConfiguration.h"
 

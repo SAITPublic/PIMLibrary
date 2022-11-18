@@ -32,6 +32,7 @@
 #define TRANSACTION_H
 
 #include <string>
+
 #include "BusPacket.h"
 #include "SystemConfiguration.h"
 

@@ -37,11 +37,11 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include "PrintMacros.h"
-
 #ifdef __APPLE__
 #include <sys/types.h>
 #endif
+
+#include "PrintMacros.h"
 
 extern std::ofstream cmd_verify_out;  // used by BusPacket.cpp if VERIFICATION_OUTPUT is enabled
 // extern std::ofstream visDataOut;

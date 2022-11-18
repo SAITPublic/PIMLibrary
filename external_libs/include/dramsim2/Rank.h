@@ -32,6 +32,7 @@
 #define RANK_H
 
 #include <vector>
+
 #include "AddressMapping.h"
 #include "Bank.h"
 #include "BankState.h"
@@ -95,13 +96,7 @@ class Rank : public SimulatorObject
     vector<BankState> bankStates;
 
     dramMode mode_;
-
-    bool abmr1Even_;
-    bool abmr1Odd_;
-    bool abmr2Even_;
-    bool abmr2Odd_;
-    bool sbmr1_;
-    bool sbmr2_;
+    bool abmr1Even_, abmr1Odd_, abmr2Even_, abmr2Odd_, sbmr1_, sbmr2_;
 
     const char* getModeColor()
     {

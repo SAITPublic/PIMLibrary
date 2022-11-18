@@ -53,17 +53,17 @@ using std::ostream;
 #define DEBUG(str) std::cerr << str << std::endl;
 #define DEBUGN(str) std::cerr << str;
 #else
-#define DEBUG(str) ;
-#define DEBUGN(str) ;
+#define DEBUG(str)
+#define DEBUGN(str)
 #endif  // end DEBUG_BUILD
 
 #ifdef NO_OUTPUT
 #undef DEBUG
 #undef DEBUGN
-#define DEBUG(str) ;
-#define DEBUGN(str) ;
-#define PRINT(str) ;
-#define PRINTN(str) ;
+#define DEBUG(str)
+#define DEBUGN(str)
+#define PRINT(str)
+#define PRINTN(str)
 #else
 #define PRINT(str)                         \
     do {                                   \

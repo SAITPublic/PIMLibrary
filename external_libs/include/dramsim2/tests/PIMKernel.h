@@ -17,6 +17,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+
 #include "MultiChannelMemorySystem.h"
 #include "PIMCmd.h"
 #include "SystemConfiguration.h"
@@ -27,30 +28,6 @@ using namespace DRAMSim;
 
 class PIMKernel
 {
-   public:
-    int transaction_size_;
-    int num_pim_chans_;
-    int num_pim_ranks_;
-    int num_grfA_;
-    int num_grfB_;
-    int num_grf_;
-    bool use_all_grf_;
-
-   private:
-    unsigned cycle_;
-    BurstType null_bst_;
-    BurstType bst_hab_pim_;
-    BurstType bst_hab_;
-    BurstType crf_bst_[4];
-    BurstType* srf_bst_;
-    vector<int> pim_chans_;
-    vector<int> pim_ranks_;
-    PIMMode mode_;
-    shared_ptr<MultiChannelMemorySystem> mem_;
-    unsigned num_banks_;
-    unsigned num_pim_blocks_;
-    unsigned num_bank_groups_;
-
    public:
     PIMKernel(shared_ptr<MultiChannelMemorySystem> mem, int num_pim_chan, int num_pim_rank)
         : mem_(mem),
@@ -67,9 +44,8 @@ class PIMKernel
         transaction_size_ = getConfigParam(UINT, "BL") * (getConfigParam(UINT, "JEDEC_DATA_BUS_BITS") / 8);  // in byte
 
         // FIXME: HARDCODED
-        num_grfA_ = 8;
-        num_grfB_ = 8;
-        num_grf_ = num_grfA_;
+        num_grf_ = num_grfA_ = num_grfB_ = 8;
+        num_total_pim_blocks_ = num_pim_blocks_ * num_pim_chans_ * num_pim_ranks_;
 
         pim_chans_.clear();
         for (int i = 0; i < num_pim_chans_; i++) pim_chans_.push_back(i);
@@ -80,10 +56,15 @@ class PIMKernel
         pim_addr_mgr_ = make_shared<PIMAddrManager>(num_pim_chan, num_pim_rank);
     }
 
+    int transaction_size_;
+    int num_pim_chans_, num_pim_ranks_;
+    int num_grfA_, num_grfB_, num_grf_;
+    bool use_all_grf_;
+    shared_ptr<PIMAddrManager> pim_addr_mgr_;
+
     void addBarrier();
     void runPIM();
     uint64_t getCycle();
-
     void parkIn();
     void parkOut();
     void changePIMMode(dramMode mode1, dramMode mode2);
@@ -102,7 +83,7 @@ class PIMKernel
     void programSrf();
     */
     void programCrf(vector<PIMCmd>& cmds);
-    void setCrf(BurstType* bst, bool pim_op, bool use_all_grf, int crf_toggle_cond, bool grfA_zero, bool grfB_zero);
+    void setCrf(BurstType* bst, bool op, bool use_all_grf, int ctc, bool grfA_zero, bool grfB_zero);
     unsigned getResultColGemv(int input_dim, int output_dim);
     void changeBank(pimBankType bank_types, int& cidx, int& rank, int& bg, int& bank, unsigned& startingRow,
                     unsigned& startingCol, unsigned& row, unsigned& col);
@@ -115,8 +96,8 @@ class PIMKernel
     void executeGemv(NumpyBurstType* w_data, NumpyBurstType* i_data, bool is_tree);
     void executeEltwise(int dim, pimBankType bank_types, KernelType ktype, int input0_row, int result_row,
                         int input1_row = 0);
-    void computeGemv(NumpyBurstType* data, int num_input_tiles, int numOutputTile, int inputTile, int outputTile,
-                     int batchIdx, pimBankType bank_types);
+    void computeGemv(NumpyBurstType* data, int num_input_tiles, int num_output_tile, int input_tile, int output_tile,
+                     int batch_idx, pimBankType bank_types);
     void computeAddOrMul(int numTile, int input0Row, int resultRow, int input1Row);
     void computeRelu(int numTile, int input0Row, int resultRow);
     // void computeBn(int numTile, int input0Row, int resultRow);
@@ -125,7 +106,17 @@ class PIMKernel
                     unsigned startingRow = 0, unsigned startingCol = 0);
     void readData(BurstType* bst_data, size_t bst_cnt, unsigned s_row = 0, unsigned s_col = 0);
     void adderTree(BurstType* result, int output_dim, int numTile, int step, fp16* temp);
-    shared_ptr<PIMAddrManager> pim_addr_mgr_;
+
+   private:
+    unsigned cycle_;
+    unsigned num_banks_, num_pim_blocks_, num_bank_groups_, num_total_pim_blocks_;
+    BurstType null_bst_, bst_hab_pim_, bst_hab_;
+    BurstType crf_bst_[4];
+    BurstType* srf_bst_;
+    vector<int> pim_chans_;
+    vector<int> pim_ranks_;
+    PIMMode mode_;
+    shared_ptr<MultiChannelMemorySystem> mem_;
 };
 
 #endif

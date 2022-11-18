@@ -134,7 +134,6 @@ const static ConfigurationData defaultConfiguration[] = {
     DEFINE_DEFAULT_CONFIG(ADDRESS_MAPPING_SCHEME, STRING, SYS_PARAM, "Scheme8"),  // shcha
     // WARNING, do not remove end of config macro
     DEFINE_ENDOF_CONFIG};
-
 };  // namespace DRAMSim
 
 #endif

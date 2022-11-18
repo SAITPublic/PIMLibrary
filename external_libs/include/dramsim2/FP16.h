@@ -16,6 +16,7 @@
 #include <cstdint>
 #include <cstring>
 #include <iostream>
+
 #include "half.h"
 
 using namespace std;

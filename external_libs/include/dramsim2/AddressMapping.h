@@ -34,6 +34,7 @@
 #define ADDRESS_MAPPING_H
 
 #include <cstdint>
+
 #include "SystemConfiguration.h"
 
 namespace DRAMSim

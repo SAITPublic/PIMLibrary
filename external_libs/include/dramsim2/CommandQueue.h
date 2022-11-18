@@ -32,6 +32,7 @@
 #define CMDQUEUE_H
 
 #include <vector>
+
 #include "BankState.h"
 #include "BusPacket.h"
 #include "SimulatorObject.h"

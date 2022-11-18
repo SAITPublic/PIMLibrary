@@ -17,6 +17,7 @@
 #include <cstring>
 #include <iostream>
 #include <string>
+
 #include "Burst.h"
 #include "SystemConfiguration.h"
 

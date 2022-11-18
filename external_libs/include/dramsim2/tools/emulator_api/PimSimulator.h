@@ -16,6 +16,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+
 #include "tests/PIMKernel.h"
 
 typedef struct __MemTraceData {

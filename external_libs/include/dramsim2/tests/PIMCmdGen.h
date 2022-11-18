@@ -14,6 +14,7 @@
 #define __PIM_KERNEL_GEN_H__
 
 #include <vector>
+
 #include "MultiChannelMemorySystem.h"
 #include "PIMCmd.h"
 #include "SystemConfiguration.h"

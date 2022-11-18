@@ -32,6 +32,7 @@
 #define BUSPACKET_H
 
 #include <string>
+
 #include "Burst.h"
 #include "SystemConfiguration.h"
 
