@@ -67,8 +67,13 @@ __device__ __host__ inline uint64_t convert_idx_from_raw_to_aligned_gemm_weight_
     uint32_t y_tile_data_size = out_tile_size * in_cnt * in_tile_size;
     uint32_t x_tile_data_size = out_tile_size * in_tile_size;
 
+#ifndef EMULATOR
     uint32_t grfb_idx = y_tile_offset % num_grf_B;
     uint32_t grfa_idx = ((h_cord * type_size / trans_size) % in_tile_size);
+#else
+    uint32_t grfa_idx = y_tile_offset % num_grf_B;
+    uint32_t grfb_idx = ((h_cord * type_size / trans_size) % in_tile_size);
+#endif
 
     uint32_t y_block_idx = y_tile_offset / num_grf_B;
 
@@ -126,8 +131,13 @@ __device__ __host__ inline uint64_t convert_idx_from_raw_to_chwise_gemm_weight_l
 
     uint32_t x_tile_data_size = out_tile_size * in_tile_size;
 
+#ifndef EMULATOR
     uint32_t grfb_idx = y_tile_offset % num_grf_B;
     uint32_t grfa_idx = ((h_cord * type_size / trans_size) % in_tile_size);
+#else
+    uint32_t grfa_idx = y_tile_offset % num_grf_B;
+    uint32_t grfb_idx = ((h_cord * type_size / trans_size) % in_tile_size);
+#endif
 
     uint32_t y_block_idx = y_tile_offset / num_grf_B;
 
