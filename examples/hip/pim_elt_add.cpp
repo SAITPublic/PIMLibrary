@@ -191,3 +191,85 @@ TEST(HIPIntegrationTest, PimEltAddProfile1Async) { EXPECT_TRUE(pim_elt_add_profi
 // TEST(HIPIntegrationTest, PimEltAddProfile6Async) { EXPECT_TRUE(pim_elt_add_profile(false, (4096 * 1024)) == 0); }
 // TEST(HIPIntegrationTest, PimEltAddProfile7Async) { EXPECT_TRUE(pim_elt_add_profile(false, (8192 * 1024)) == 0); }
 // TEST(HIPIntegrationTest, PimEltAddProfile8Async) { EXPECT_TRUE(pim_elt_add_profile(false, (16384 * 1024)) == 0); }
+
+int test_pim_elt_add_custom_bshape_rand_data(const bool block, const size_t size_n, const size_t size_c, const size_t size_h,
+                     const size_t size_w)
+{
+    int ret = 0;
+    /* __PIM_API__ call : Initialize PimRuntime */
+    PimInitialize(RT_TYPE_HIP, PIM_FP16);
+
+    PimDesc* pim_desc = PimCreateDesc(size_n, size_c, size_h, size_w, PIM_FP16);
+
+    /* __PIM_API__ call : Create PIM Buffer Object */
+    PimBo* host_input0 = PimCreateBo(pim_desc, MEM_TYPE_HOST);
+    PimBo* host_input1 = PimCreateBo(pim_desc, MEM_TYPE_HOST);
+    PimBo* host_output = PimCreateBo(pim_desc, MEM_TYPE_HOST);
+    PimBo* golden_output = PimCreateBo(pim_desc, MEM_TYPE_HOST);
+    PimBo* pim_input0 = PimCreateBo(pim_desc, MEM_TYPE_PIM);
+    PimBo* pim_input1 = PimCreateBo(pim_desc, MEM_TYPE_PIM);
+    PimBo* device_output = PimCreateBo(pim_desc, MEM_TYPE_PIM);
+
+    /* Initialize the input, weight, output data */
+    const int length = size_n * size_c * size_h * size_w;
+
+    set_rand_half_data((half*)host_input0->data, half(5.0), length);
+    set_rand_half_data((half*)host_input1->data, half(5.0), length);
+
+    addCPU((half*)host_input0->data, (half*)host_input1->data, (half*)golden_output->data, length);
+
+    /* __PIM_API__ call : Preload weight data on PIM memory */
+    PimCopyMemory(pim_input0, host_input0, HOST_TO_PIM);
+    PimCopyMemory(pim_input1, host_input1, HOST_TO_PIM);
+
+/* __PIM_API__ call : Execute PIM kernel (ELT_ADD) */
+#ifndef EMULATOR
+    int iter;
+    for (iter = 0; iter < 100; iter++) {
+#endif
+        PimExecuteAdd(device_output, pim_input0, pim_input1, nullptr, block);
+        if (!block) PimSynchronize();
+#ifndef EMULATOR
+    }
+#endif
+
+    PimCopyMemory(host_output, device_output, PIM_TO_HOST);
+
+    ret = compare_half_relative((half*)host_output->data, (half*)golden_output->data, length);
+
+    /* __PIM_API__ call : Free memory */
+    PimDestroyBo(host_input0);
+    PimDestroyBo(host_input1);
+    PimDestroyBo(host_output);
+    PimDestroyBo(golden_output);
+    PimDestroyBo(device_output);
+    PimDestroyBo(pim_input0);
+    PimDestroyBo(pim_input1);
+    PimDestroyDesc(pim_desc);
+
+    /* __PIM_API__ call : Deinitialize PimRuntime */
+    PimDeinitialize();
+
+    return ret;
+}
+
+TEST(HIPIntegrationTest, PimEltAddMultitileRandomDataSync_w)
+{
+    // Here we intend to exceed one tile for element-wise operations (PIM_ELTWISE_ALIGN == 256 * 1024)
+    EXPECT_TRUE(test_pim_elt_add_custom_bshape_rand_data(true, 1, 1, 1, 257 * 1024) == 0);
+}
+TEST(HIPIntegrationTest, PimEltAddMultitileRandomDataAsync_w)
+{
+    // Here we intend to exceed one tile for element-wise operations (PIM_ELTWISE_ALIGN == 256 * 1024)
+    EXPECT_TRUE(test_pim_elt_add_custom_bshape_rand_data(false, 1, 1, 1, 257 * 1024) == 0);
+}
+TEST(HIPIntegrationTest, PimEltAddMultitileRandomDataSync_h)
+{
+    // Here we intend to exceed one tile for element-wise operations (PIM_ELTWISE_ALIGN == 256 * 1024)
+    EXPECT_TRUE(test_pim_elt_add_custom_bshape_rand_data(true, 1, 1, 257 * 1024, 1) == 0);
+}
+TEST(HIPIntegrationTest, PimEltAddMultitileRandomDataAsync_h)
+{
+    // Here we intend to exceed one tile for element-wise operations (PIM_ELTWISE_ALIGN == 256 * 1024)
+    EXPECT_TRUE(test_pim_elt_add_custom_bshape_rand_data(false, 1, 1, 257 * 1024, 1) == 0);
+}
