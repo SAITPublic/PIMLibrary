@@ -12,23 +12,15 @@
 #ifndef _PIM_GEMM_KERNELS_PIMK_
 #define _PIM_GEMM_KERNELS_PIMK_
 
-#define PREPARE_KERNEL 1
+#define PARK_IN 1
+#define CHANGE_SB_HAB 1
+#define PROGRAM_CRF 1
 #define COMPUTE_GEMM 1
-
-static __constant uint8_t gemv_crf[32] = {
-    0x00, 0x80, 0x10, 0x3b, 0x02, 0x38, 0x00, 0xe0, 0x00, 0x80, 0x18, 0x3b, 0x02, 0x38, 0x00, 0xe0,
-    0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-};
-
-static __constant uint8_t gemv_hab_to_hab_pim[32] = {
-    0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-};
-
-static __constant uint8_t gemv_hab_pim_to_hab[32] = {
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-};
+#define PREPARE_KERNEL 1
+#define CHANGE_HAB_HABPIM 1
+#define CHANGE_HABPIM_HAB 1
+#define CHANGE_HAB_SB 1
+#define PARK_OUT 1
 
 __kernel void pim_chwise_gemm_bias_relu_fp16(
     __global uint8_t* __restrict__ pim_ctr, __global uint8_t* __restrict__ input, __global uint8_t* __restrict__ weight,
@@ -68,36 +60,35 @@ __kernel void pim_chwise_gemm_bias_relu_fp16(
 
 #if PARK_IN
     if (get_local_id(0) < 32) {
-        addr = addr_gen_(ch, 0, (gidx >> ba_shift), gidx % num_ba, (1 << 13), 0);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
+        ParkIn(pim_ctr, gidx, num_ba, offset
+#ifdef EMULATOR
+               ,
+               emulator_trace
+#endif
+               );
     }
 #endif
 
 #if CHANGE_SB_HAB
     if (get_local_id(0) < 2) {
         /* change SB mode to HAB mode */
-        addr = addr_gen_(ch, 0, 2, 0, 0x27ff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
-        addr = addr_gen_(ch, 0, 2, 1, 0x27ff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
-        addr = addr_gen_(ch, 0, 0, 0, 0x27ff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
-        addr = addr_gen_(ch, 0, 0, 1, 0x27ff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
+        ChangeSB2HAB(pim_ctr, offset
+#ifdef EMULATOR
+                     ,
+                     emulator_trace
+#endif
+                     );
     }
 #endif
 
 #if PROGRAM_CRF
     if (get_local_id(0) < (crf_size >> 4)) {
-        addr = addr_gen_(get_group_id(0), 0, 0, 1, 0x3fff, 0x4 + gidx);
-        W_CMD_R(&pim_ctr[addr + offset], crf_binary + (get_local_id(0) << 4));
-        R_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
+        ProgramCRFMod(pim_ctr, gidx, crf_binary, offset
+#ifdef EMULATOR
+                      ,
+                      emulator_trace
+#endif
+                      );
     }
 #endif
 
@@ -196,10 +187,12 @@ __kernel void pim_chwise_gemm_bias_relu_fp16(
                 R_CMD(&t_pim_partial_sum[addr + offset]);
                 B_CMD(1);
 
-                addr = addr_gen_(ch, 0, 0, 0, 0x3fff, 0x0);
-                W_CMD_R_C(&pim_ctr[addr + offset], gemv_hab_pim_to_hab + offset);
-                R_CMD(&pim_ctr[addr + offset]);
-                B_CMD(1);
+                ChangeHABPIM2HAB(pim_ctr, offset
+#ifdef EMULATOR
+                                 ,
+                                 emulator_trace
+#endif
+                                 );
             }
             input += (in_w * (4096 / out_w) * 2);
             weight += (in_w << 13);
@@ -210,19 +203,23 @@ __kernel void pim_chwise_gemm_bias_relu_fp16(
 
 #if CHANGE_HAB_SB
     if (get_local_id(0) < 4) {
-        /* change HAB mode to SB mode */
-        addr = addr_gen_(ch, 0, 0, gidx, 0x2fff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        R_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
+        ChangeHAB2SB(pim_ctr, gidx, offset
+#ifdef EMULATOR
+                     ,
+                     emulator_trace
+#endif
+                     );
     }
 #endif
 
 #if PARK_OUT
     if (get_local_id(0) < 32) {
-        addr = addr_gen_(ch, 0, gidx >> ba_shift, gidx % num_ba, (1 << 13), 0);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
+        ParkOut(pim_ctr, gidx, num_ba, offset
+#ifdef EMULATOR
+                ,
+                emulator_trace
+#endif
+                );
     }
 #endif
 
@@ -299,36 +296,35 @@ __kernel void pim_chwise_gemm_bias_relu_32tile_fp16(
 
 #if PARK_IN
     if (get_local_id(0) < 32) {
-        addr = addr_gen_(ch, 0, (gidx >> ba_shift), gidx % num_ba, (1 << 13), 0);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
+        ParkIn(pim_ctr, gidx, num_ba, offset
+#ifdef EMULATOR
+               ,
+               emulator_trace
+#endif
+               );
     }
 #endif
 
 #if CHANGE_SB_HAB
     if (get_local_id(0) < 2) {
         /* change SB mode to HAB mode */
-        addr = addr_gen_(ch, 0, 2, 0, 0x27ff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
-        addr = addr_gen_(ch, 0, 2, 1, 0x27ff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
-        addr = addr_gen_(ch, 0, 0, 0, 0x27ff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
-        addr = addr_gen_(ch, 0, 0, 1, 0x27ff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
+        ChangeSB2HAB(pim_ctr, offset
+#ifdef EMULATOR
+                     ,
+                     emulator_trace
+#endif
+                     );
     }
 #endif
 
 #if PROGRAM_CRF
     if (get_local_id(0) < (crf_size >> 4)) {
-        addr = addr_gen_(get_group_id(0), 0, 0, 1, 0x3fff, 0x4 + gidx);
-        W_CMD_R(&pim_ctr[addr + offset], crf_binary + (get_local_id(0) << 4));
-        R_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
+        ProgramCRFMod(pim_ctr, gidx, crf_binary, offset
+#ifdef EMULATOR
+                      ,
+                      emulator_trace
+#endif
+                      );
     }
 #endif
 
@@ -427,10 +423,12 @@ __kernel void pim_chwise_gemm_bias_relu_32tile_fp16(
                 R_CMD(&t_pim_partial_sum[addr + offset]);
                 B_CMD(1);
 
-                addr = addr_gen_(ch, 0, 0, 0, 0x3fff, 0x0);
-                W_CMD_R_C(&pim_ctr[addr + offset], gemv_hab_pim_to_hab + offset);
-                R_CMD(&pim_ctr[addr + offset]);
-                B_CMD(1);
+                ChangeHABPIM2HAB(pim_ctr, offset
+#ifdef EMULATOR
+                                 ,
+                                 emulator_trace
+#endif
+                                 );
             }
             input += (in_w * (4096 / out_w) * 2);
             weight += (in_w << 13);
@@ -442,18 +440,23 @@ __kernel void pim_chwise_gemm_bias_relu_32tile_fp16(
 #if CHANGE_HAB_SB
     if (get_local_id(0) < 4) {
         /* change HAB mode to SB mode */
-        addr = addr_gen_(ch, 0, 0, gidx, 0x2fff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        R_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
+        ChangeHAB2SB(pim_ctr, gidx, offset
+#ifdef EMULATOR
+                     ,
+                     emulator_trace
+#endif
+                     );
     }
 #endif
 
 #if PARK_OUT
     if (get_local_id(0) < 32) {
-        addr = addr_gen_(ch, 0, gidx >> ba_shift, gidx % num_ba, (1 << 13), 0);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
+        ParkOut(pim_ctr, gidx, num_ba, offset
+#ifdef EMULATOR
+                ,
+                emulator_trace
+#endif
+                );
     }
 #endif
 
@@ -529,36 +532,35 @@ __kernel void pim_aligned_gemm_bias_relu_fp16(
 
 #if PARK_IN
     if (get_local_id(0) < 32) {
-        addr = addr_gen_(ch, 0, (gidx >> ba_shift), gidx % num_ba, (1 << 13), 0);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
+        ParkIn(pim_ctr, gidx, num_ba, offset
+#ifdef EMULATOR
+               ,
+               emulator_trace
+#endif
+               );
     }
 #endif
 
 #if CHANGE_SB_HAB
     if (get_local_id(0) < 2) {
         /* change SB mode to HAB mode */
-        addr = addr_gen_(ch, 0, 2, 0, 0x27ff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
-        addr = addr_gen_(ch, 0, 2, 1, 0x27ff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
-        addr = addr_gen_(ch, 0, 0, 0, 0x27ff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
-        addr = addr_gen_(ch, 0, 0, 1, 0x27ff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
+        ChangeSB2HAB(pim_ctr, offset
+#ifdef EMULATOR
+                     ,
+                     emulator_trace
+#endif
+                     );
     }
 #endif
 
 #if PROGRAM_CRF
     if (get_local_id(0) < (crf_size >> 4)) {
-        addr = addr_gen_(get_group_id(0), 0, 0, 1, 0x3fff, 0x4 + gidx);
-        W_CMD_R(&pim_ctr[addr + offset], crf_binary + (get_local_id(0) << 4));
-        R_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
+        ProgramCRFMod(pim_ctr, gidx, crf_binary, offset
+#ifdef EMULATOR
+                      ,
+                      emulator_trace
+#endif
+                      );
     }
 #endif
 
@@ -660,10 +662,12 @@ __kernel void pim_aligned_gemm_bias_relu_fp16(
                     R_CMD(&pim_partial_sum[addr + offset]);
                     B_CMD(1);
 
-                    addr = addr_gen_(ch, 0, 0, 0, 0x3fff, 0x0);
-                    W_CMD_R_C(&pim_ctr[addr + offset], gemv_hab_pim_to_hab + offset);
-                    R_CMD(&pim_ctr[addr + offset]);
-                    B_CMD(1);
+                    ChangeHABPIM2HAB(pim_ctr, offset
+#ifdef EMULATOR
+                                     ,
+                                     emulator_trace
+#endif
+                                     );
                 }
                 gemv_cnt++;
             }
@@ -675,18 +679,23 @@ __kernel void pim_aligned_gemm_bias_relu_fp16(
 #if CHANGE_HAB_SB
     if (get_local_id(0) < 4) {
         /* change HAB mode to SB mode */
-        addr = addr_gen_(ch, 0, 0, gidx, 0x2fff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        R_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
+        ChangeHAB2SB(pim_ctr, gidx, offset
+#ifdef EMULATOR
+                     ,
+                     emulator_trace
+#endif
+                     );
     }
 #endif
 
 #if PARK_OUT
     if (get_local_id(0) < 32) {
-        addr = addr_gen_(ch, 0, gidx >> ba_shift, gidx % num_ba, (1 << 13), 0);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
+        ParkOut(pim_ctr, gidx, num_ba, offset
+#ifdef EMULATOR
+                ,
+                emulator_trace
+#endif
+                );
     }
 #endif
 
@@ -772,36 +781,35 @@ __kernel void pim_aligned_gemm_bias_relu_8tile_fp16(
 
 #if PARK_IN
     if (get_local_id(0) < 32) {
-        addr = addr_gen_(ch, 0, (gidx >> ba_shift), gidx % num_ba, (1 << 13), 0);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
+        ParkIn(pim_ctr, gidx, num_ba, offset
+#ifdef EMULATOR
+               ,
+               emulator_trace
+#endif
+               );
     }
 #endif
 
 #if CHANGE_SB_HAB
     if (get_local_id(0) < 2) {
         /* change SB mode to HAB mode */
-        addr = addr_gen_(ch, 0, 2, 0, 0x27ff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
-        addr = addr_gen_(ch, 0, 2, 1, 0x27ff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
-        addr = addr_gen_(ch, 0, 0, 0, 0x27ff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
-        addr = addr_gen_(ch, 0, 0, 1, 0x27ff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
+        ChangeSB2HAB(pim_ctr, offset
+#ifdef EMULATOR
+                     ,
+                     emulator_trace
+#endif
+                     );
     }
 #endif
 
 #if PROGRAM_CRF
     if (get_local_id(0) < (crf_size >> 4)) {
-        addr = addr_gen_(get_group_id(0), 0, 0, 1, 0x3fff, 0x4 + gidx);
-        W_CMD_R(&pim_ctr[addr + offset], crf_binary + (get_local_id(0) << 4));
-        R_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
+        ProgramCRFMod(pim_ctr, gidx, crf_binary, offset
+#ifdef EMULATOR
+                      ,
+                      emulator_trace
+#endif
+                      );
     }
 #endif
 
@@ -905,10 +913,12 @@ __kernel void pim_aligned_gemm_bias_relu_8tile_fp16(
                     R_CMD(&pim_partial_sum[addr + offset]);
                     B_CMD(1);
 
-                    addr = addr_gen_(ch, 0, 0, 0, 0x3fff, 0x0);
-                    W_CMD_R_C(&pim_ctr[addr + offset], gemv_hab_pim_to_hab + offset);
-                    R_CMD(&pim_ctr[addr + offset]);
-                    B_CMD(1);
+                    ChangeHABPIM2HAB(pim_ctr, offset
+#ifdef EMULATOR
+                                     ,
+                                     emulator_trace
+#endif
+                                     );
                 }
                 gemv_cnt++;
             }
@@ -919,19 +929,23 @@ __kernel void pim_aligned_gemm_bias_relu_8tile_fp16(
 
 #if CHANGE_HAB_SB
     if (get_local_id(0) < 4) {
-        /* change HAB mode to SB mode */
-        addr = addr_gen_(ch, 0, 0, gidx, 0x2fff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        R_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
+        ChangeHAB2SB(pim_ctr, gidx, offset
+#ifdef EMULATOR
+                     ,
+                     emulator_trace
+#endif
+                     );
     }
 #endif
 
 #if PARK_OUT
     if (get_local_id(0) < 32) {
-        addr = addr_gen_(ch, 0, gidx >> ba_shift, gidx % num_ba, (1 << 13), 0);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
+        ParkOut(pim_ctr, gidx, num_ba, offset
+#ifdef EMULATOR
+                ,
+                emulator_trace
+#endif
+                );
     }
 #endif
 

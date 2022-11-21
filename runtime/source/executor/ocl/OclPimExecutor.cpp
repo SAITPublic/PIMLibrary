@@ -170,6 +170,7 @@ int OclPimExecutor::build_cl_program_with_source(void)
     const char* cl_source_ptr = nullptr;
 
     cl_source = load_cl_file("PimInfo.cl");
+    cl_source += load_cl_file("kernel_utils.cl");
     cl_source += load_cl_file("pim_op_kernels.cl");
     cl_source += load_cl_file("pim_gemm.cl");
     cl_source += load_cl_file("pim_copy.cl");

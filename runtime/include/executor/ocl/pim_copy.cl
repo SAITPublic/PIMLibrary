@@ -45,36 +45,39 @@ __kernel void copy_pim(__global uint8_t* __restrict__ pim_data, __global uint8_t
 
 /* Radeon7(VEGA20) memory is 16GB but our target is 32GB system */
 /* so program_crf and chagne_pim_mode functions can not access to over 8GB in our system */
-
 #if PARK_IN
-    addr = addr_gen_(get_group_id(0), 0, gidx / num_ba, gidx % num_ba, (1 << 13), 0);
-    W_CMD(&pim_ctr[addr + offset]);
-    B_CMD(1);
+    ParkIn(pim_ctr, gidx, num_ba, offset
+#ifdef EMULATOR
+           ,
+           emulator_trace
+#endif
+           );
 #endif
 
     if (get_local_id(0) < 2) {
 #if CHANGE_SB_HAB
-        addr = addr_gen_(get_group_id(0), 0, 2, 0, 0x27ff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
-        addr = addr_gen_(get_group_id(0), 0, 2, 1, 0x27ff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
-        addr = addr_gen_(get_group_id(0), 0, 0, 0, 0x27ff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
-        addr = addr_gen_(get_group_id(0), 0, 0, 1, 0x27ff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
+        ChangeSB2HAB(pim_ctr, offset
+#ifdef EMULATOR
+                     ,
+                     emulator_trace
+#endif
+                     );
 #endif
 #if PROGRAM_CRF
-        addr = addr_gen_(get_group_id(0), 0, 0, 1, 0x3fff, 0x4 + gidx);
-        W_CMD_R(&pim_ctr[addr + offset], crf_binary + (get_local_id(0) << 4));
+        ProgramCRF(pim_ctr, gidx, crf_binary, offset
+#ifdef EMULATOR
+                   ,
+                   emulator_trace
+#endif
+                   );
 #endif
 #if CHANGE_HAB_HABPIM
-        addr = addr_gen_(get_group_id(0), 0, 0, 0, 0x3fff, 0x0);
-        W_CMD_R_C(&pim_ctr[addr + offset], elt_add_hab_to_hab_pim + offset);
-        R_CMD(&pim_ctr[addr + offset]);
+        ChangeHAB2HABPIM(pim_ctr, offset
+#ifdef EMULATOR
+                         ,
+                         emulator_trace
+#endif
+                         );
 #endif
         B_CMD(1);
     }
@@ -109,22 +112,31 @@ __kernel void copy_pim(__global uint8_t* __restrict__ pim_data, __global uint8_t
 
     if (get_local_id(0) < 4) {
 #if CHANGE_HABPIM_HAB
-        addr = addr_gen_(get_group_id(0), 0, 0, 0, 0x3fff, 0x0);
-        W_CMD_R_C(&pim_ctr[addr + offset], elt_add_hab_pim_to_hab + offset);
-        R_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
+        ChangeHABPIM2HAB(pim_ctr, offset
+#ifdef EMULATOR
+                         ,
+                         emulator_trace
 #endif
+                         );
+#endif
+
 #if CHANGE_HAB_SB
-        addr = addr_gen_(get_group_id(0), 0, 0, gidx, 0x2fff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        R_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
+        ChangeHAB2SB(pim_ctr, gidx, offset
+#ifdef EMULATOR
+                     ,
+                     emulator_trace
+#endif
+                     );
 #endif
     }
 
 #if PARK_OUT
-    addr = addr_gen_(get_group_id(0), 0, gidx / num_ba, gidx % num_ba, (1 << 13), 0);
-    W_CMD(&pim_ctr[addr + offset]);
+    ParkOut(pim_ctr, gidx, num_ba, offset
+#ifdef EMULATOR
+            ,
+            emulator_trace
+#endif
+            );
 #endif
 
 #ifdef EMULATOR

@@ -11,17 +11,16 @@
 
 #ifndef _PIM_BN_KERNELS_PIMK_
 #define _PIM_BN_KERNELS_PIMK_
+
+#define PARK_IN 1
+#define PROGRAM_SRF 1
+#define CHANGE_SB_HAB 1
+#define PROGRAM_CRF 1
+#define CHANGE_HAB_HABPIM 1
 #define COMPUTE_BN 1
-
-static __constant uint8_t bn_hab_pim_to_hab[32] = {
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-};
-
-static __constant uint8_t bn_hab_to_hab_pim[32] = {
-    0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-};
+#define CHANGE_HABPIM_HAB 1
+#define CHANGE_HAB_SB 1
+#define PARK_OUT 1
 
 __kernel void bn_pim_nr_sip(__global uint8_t* __restrict__ pim_data, __global uint8_t* __restrict__ output,
                             __global uint8_t* __restrict__ pim_ctr, int num_tile, __global uint8_t* crf_binary,
@@ -48,40 +47,57 @@ __kernel void bn_pim_nr_sip(__global uint8_t* __restrict__ pim_data, __global ui
     uint64_t offset = (get_local_id(0) % 2) * 0x10;
     uint64_t addr, addr_even, addr_odd;
 
-    /* Radeon7(VEGA20) memory is 16GB but our target is 32GB system */
-    /* so program_crf and chagne_pim_mode functions can not access to over 8GB in our system */
+/* Radeon7(VEGA20) memory is 16GB but our target is 32GB system */
+/* so program_crf and chagne_pim_mode functions can not access to over 8GB in our system */
 
-    addr = addr_gen_(get_group_id(0), 0, gidx / num_bank, gidx % num_bank, 1 << 13, 0);
-    W_CMD(&pim_data[addr + offset]);
-    B_CMD(1);
+#if PARK_IN
+    ParkIn(pim_ctr, gidx, num_bank, offset
+#ifdef EMULATOR
+           ,
+           emulator_trace
+#endif
+           );
+#endif
 
     if (get_local_id(0) < 2) {
-        addr = addr_gen_(get_group_id(0), 0, 2, 0, 0x27ff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
-        addr = addr_gen_(get_group_id(0), 0, 2, 1, 0x27ff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
-        addr = addr_gen_(get_group_id(0), 0, 0, 0, 0x27ff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
-        addr = addr_gen_(get_group_id(0), 0, 0, 1, 0x27ff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
+#if CHANGE_SB_HAB
+        ChangeSB2HAB(pim_ctr, offset
+#ifdef EMULATOR
+                     ,
+                     emulator_trace
+#endif
+                     );
+#endif
 
-        addr = addr_gen_(get_group_id(0), 0, 0, 0, 0x3fff, 0x0);
-        W_CMD_R(&pim_ctr[addr + 32 + offset], srf_binary + offset);
-        W_CMD_R_C(&pim_ctr[addr + offset], bn_hab_to_hab_pim + offset);
-        R_CMD(&pim_ctr[addr + offset]);
+#if PROGRAM_SRF
+        ProgramSRF(pim_ctr, srf_binary, offset
+#ifdef EMULATOR
+                   ,
+                   emulator_trace
+#endif
+                   );
+#endif
+#if CHANGE_HAB_HABPIM
+        ChangeHAB2HABPIM(pim_ctr, offset
+#ifdef EMULATOR
+                         ,
+                         emulator_trace
+#endif
+                         );
         B_CMD(1);
+#endif
     }
 
+#if PROGRAM_CRF
     if (get_local_id(0) < (crf_size >> 4)) {
-        addr = addr_gen_(get_group_id(0), 0, 0, 1, 0x3fff, 0x4 + gidx);
-        W_CMD_R(&pim_ctr[addr + offset], crf_binary + (get_local_id(0) << 4));
-        R_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
+        ProgramCRFMod(pim_ctr, gidx, crf_binary, offset
+#ifdef EMULATOR
+                      ,
+                      emulator_trace
+#endif
+                      );
     }
+#endif
 
     if (get_local_id(0) < 16) {
         for (int tile_idx = 0; tile_idx < num_tile; tile_idx++) {
@@ -124,20 +140,33 @@ __kernel void bn_pim_nr_sip(__global uint8_t* __restrict__ pim_data, __global ui
     }
 
     if (get_local_id(0) < 4) {
-        addr = addr_gen_(get_group_id(0), 0, 0, 0, 0x3fff, 0x0);
-        W_CMD_R_C(&pim_ctr[addr + offset], bn_hab_pim_to_hab + offset);
-        R_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
+#if CHANGE_HABPIM_HAB
+        ChangeHABPIM2HAB(pim_ctr, offset
+#ifdef EMULATOR
+                         ,
+                         emulator_trace
+#endif
+                         );
+#endif
 
-        addr = addr_gen_(get_group_id(0), 0, 0, gidx, 0x2fff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        R_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
+#if CHANGE_HAB_SB
+        ChangeHAB2SB(pim_ctr, gidx, offset
+#ifdef EMULATOR
+                     ,
+                     emulator_trace
+#endif
+                     );
+#endif
     }
 
-    addr = addr_gen_(get_group_id(0), 0, gidx / num_bank, gidx % num_bank, 1 << 13, 0);
-    W_CMD(&pim_ctr[addr + offset]);
-    B_CMD(1);
+#if PARK_OUT
+    ParkOut(pim_ctr, gidx, num_bank, offset
+#ifdef EMULATOR
+            ,
+            emulator_trace
+#endif
+            );
+#endif
 
 #ifdef EMULATOR
     if (get_group_id(0) == 0 && get_local_id(0) == 0) {
