@@ -210,7 +210,10 @@ void align_shape(PimDesc* pim_desc, PimOpType op_type)
         bs.h = PIM_GEMV_IN_ALIGN * ceil((float)bs.h / PIM_GEMV_IN_ALIGN);
         bs.w = PIM_GEMV_OUT_ALIGN * ceil((float)bs.w / PIM_GEMV_OUT_ALIGN);
     } else {
-        bs.w = PIM_ELTWISE_ALIGN * ceil((float)bs.w / PIM_ELTWISE_ALIGN);
+        const auto buffer_length = bs.n * bs.c * bs.h * bs.w;
+        const auto aligned_length = PIM_ELTWISE_ALIGN * ceil((float)buffer_length / PIM_ELTWISE_ALIGN);
+        // Align width to cover aligned length
+        bs.w = ceil((float)aligned_length / (bs.n * bs.h * bs.c));
     }
     pim_desc->bshape = bs;
 }
