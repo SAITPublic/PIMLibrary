@@ -62,36 +62,20 @@ __global__ void gemv_list_chwise_pim_64cu_64th_fp16(
 
 #if PARK_IN
     if (hipThreadIdx_x < 32) {
-        addr = addr_gen(ch, 0, (gidx >> ba_shift), gidx % num_ba, (1 << 13), 0);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
+        park_in(pim_ctr, gidx, num_ba, offset);
     }
 #endif
 
 #if CHANGE_SB_HAB
     if (hipThreadIdx_x < 2) {
         /* change SB mode to HAB mode */
-        addr = addr_gen(ch, 0, 2, 0, 0x27ff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
-        addr = addr_gen(ch, 0, 2, 1, 0x27ff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
-        addr = addr_gen(ch, 0, 0, 0, 0x27ff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
-        addr = addr_gen(ch, 0, 0, 1, 0x27ff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
+        change_sb_hab(pim_ctr, offset);
     }
 #endif
 
 #if PROGRAM_CRF
     if (hipThreadIdx_x < (crf_size >> 4)) {
-        addr = addr_gen(hipBlockIdx_x, 0, 0, 1, 0x3fff, 0x4 + gidx);
-        W_CMD_R(&pim_ctr[addr + offset], crf_binary + (hipThreadIdx_x << 4));
-        R_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
+        program_crfMod(pim_ctr, gidx, crf_binary, offset);
     }
 #endif
 
@@ -193,10 +177,7 @@ __global__ void gemv_list_chwise_pim_64cu_64th_fp16(
                 R_CMD(&pim_gemv_tmp_buffer[addr + offset]);
                 B_CMD(1);
 
-                addr = addr_gen(ch, 0, 0, 0, 0x3fff, 0x0);
-                W_CMD_R(&pim_ctr[addr + offset], gemv_hab_pim_to_hab + offset);
-                R_CMD(&pim_ctr[addr + offset]);
-                B_CMD(1);
+                change_habpim_hab(pim_ctr, offset);
             }
         }
     }
@@ -205,18 +186,13 @@ __global__ void gemv_list_chwise_pim_64cu_64th_fp16(
 #if CHANGE_HAB_SB
     if (hipThreadIdx_x < 4) {
         /* change HAB mode to SB mode */
-        addr = addr_gen(ch, 0, 0, gidx, 0x2fff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        R_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
+        change_hab_sb(pim_ctr, gidx, offset);
     }
 #endif
 
 #if PARK_OUT
     if (hipThreadIdx_x < 32) {
-        addr = addr_gen(ch, 0, gidx >> ba_shift, gidx % num_ba, (1 << 13), 0);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
+        park_out(pim_ctr, gidx, num_ba, offset);
     }
 #endif
 
@@ -300,36 +276,20 @@ __global__ void gemv_list_pim_64cu_64th_fp16(volatile uint8_t* __restrict__ pim_
 
 #if PARK_IN
     if (hipThreadIdx_x < 32) {
-        addr = addr_gen(ch, 0, (gidx >> ba_shift), gidx % num_ba, (1 << 13), 0);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
+        park_in(pim_ctr, gidx, num_ba, offset);
     }
 #endif
 
 #if CHANGE_SB_HAB
     if (hipThreadIdx_x < 2) {
         /* change SB mode to HAB mode */
-        addr = addr_gen(ch, 0, 2, 0, 0x27ff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
-        addr = addr_gen(ch, 0, 2, 1, 0x27ff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
-        addr = addr_gen(ch, 0, 0, 0, 0x27ff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
-        addr = addr_gen(ch, 0, 0, 1, 0x27ff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
+        change_sb_hab(pim_ctr, offset);
     }
 #endif
 
 #if PROGRAM_CRF
     if (hipThreadIdx_x < (crf_size >> 4)) {
-        addr = addr_gen(hipBlockIdx_x, 0, 0, 1, 0x3fff, 0x4 + gidx);
-        W_CMD_R(&pim_ctr[addr + offset], crf_binary + (hipThreadIdx_x << 4));
-        R_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
+        program_crfMod(pim_ctr, gidx, crf_binary, offset);
     }
 #endif
 
@@ -430,10 +390,7 @@ __global__ void gemv_list_pim_64cu_64th_fp16(volatile uint8_t* __restrict__ pim_
                 R_CMD(&pim_gemv_tmp_buffer[addr + offset]);
                 B_CMD(1);
 
-                addr = addr_gen(ch, 0, 0, 0, 0x3fff, 0x0);
-                W_CMD_R(&pim_ctr[addr + offset], gemv_hab_pim_to_hab + offset);
-                R_CMD(&pim_ctr[addr + offset]);
-                B_CMD(1);
+                change_habpim_hab(pim_ctr, offset);
             }
         }
     }
@@ -442,18 +399,13 @@ __global__ void gemv_list_pim_64cu_64th_fp16(volatile uint8_t* __restrict__ pim_
 #if CHANGE_HAB_SB
     if (hipThreadIdx_x < 4) {
         /* change HAB mode to SB mode */
-        addr = addr_gen(ch, 0, 0, gidx, 0x2fff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        R_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
+        change_hab_sb(pim_ctr, gidx, offset);
     }
 #endif
 
 #if PARK_OUT
     if (hipThreadIdx_x < 32) {
-        addr = addr_gen(ch, 0, gidx >> ba_shift, gidx % num_ba, (1 << 13), 0);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
+        park_out(pim_ctr, gidx, num_ba, offset);
     }
 #endif
 
@@ -532,36 +484,20 @@ __global__ void gemv_pim_64cu_64th_fp16(volatile uint8_t* __restrict__ pim_ctr,
 
 #if PARK_IN
     if (hipThreadIdx_x < 32) {
-        addr = addr_gen(ch, 0, (gidx >> ba_shift), gidx % num_ba, (1 << 13), 0);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
+        park_in(pim_ctr, gidx, num_ba, offset);
     }
 #endif
 
 #if CHANGE_SB_HAB
     if (hipThreadIdx_x < 2) {
         /* change SB mode to HAB mode */
-        addr = addr_gen(ch, 0, 2, 0, 0x27ff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
-        addr = addr_gen(ch, 0, 2, 1, 0x27ff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
-        addr = addr_gen(ch, 0, 0, 0, 0x27ff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
-        addr = addr_gen(ch, 0, 0, 1, 0x27ff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
+        change_sb_hab(pim_ctr, offset);
     }
 #endif
 
 #if PROGRAM_CRF
     if (hipThreadIdx_x < (crf_size >> 4)) {
-        addr = addr_gen(hipBlockIdx_x, 0, 0, 1, 0x3fff, 0x4 + gidx);
-        W_CMD_R(&pim_ctr[addr + offset], crf_binary + (hipThreadIdx_x << 4));
-        R_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
+        program_crfMod(pim_ctr, gidx, crf_binary, offset);
     }
 #endif
 
@@ -662,10 +598,7 @@ __global__ void gemv_pim_64cu_64th_fp16(volatile uint8_t* __restrict__ pim_ctr,
                 R_CMD(&pim_gemv_tmp_buffer[addr + offset]);
                 B_CMD(1);
 
-                addr = addr_gen(ch, 0, 0, 0, 0x3fff, 0x0);
-                W_CMD_R(&pim_ctr[addr + offset], gemv_hab_pim_to_hab + offset);
-                R_CMD(&pim_ctr[addr + offset]);
-                B_CMD(1);
+                change_habpim_hab(pim_ctr, offset);
             }
         }
     }
@@ -674,18 +607,13 @@ __global__ void gemv_pim_64cu_64th_fp16(volatile uint8_t* __restrict__ pim_ctr,
 #if CHANGE_HAB_SB
     if (hipThreadIdx_x < 4) {
         /* change HAB mode to SB mode */
-        addr = addr_gen(ch, 0, 0, gidx, 0x2fff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        R_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
+        change_hab_sb(pim_ctr, gidx, offset);
     }
 #endif
 
 #if PARK_OUT
     if (hipThreadIdx_x < 32) {
-        addr = addr_gen(ch, 0, gidx >> ba_shift, gidx % num_ba, (1 << 13), 0);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
+        park_out(pim_ctr, gidx, num_ba, offset);
     }
 #endif
 
@@ -766,36 +694,20 @@ __global__ void gemv_pim_64cu_64th_16tile_fp16(volatile uint8_t* __restrict__ pi
 
 #if PARK_IN
     if (hipThreadIdx_x < 32) {
-        addr = addr_gen(ch, 0, (gidx >> ba_shift), gidx % num_ba, (1 << 13), 0);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
+        park_in(pim_ctr, gidx, num_ba, offset);
     }
 #endif
 
 #if CHANGE_SB_HAB
     if (hipThreadIdx_x < 2) {
         /* change SB mode to HAB mode */
-        addr = addr_gen(ch, 0, 2, 0, 0x27ff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
-        addr = addr_gen(ch, 0, 2, 1, 0x27ff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
-        addr = addr_gen(ch, 0, 0, 0, 0x27ff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
-        addr = addr_gen(ch, 0, 0, 1, 0x27ff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
+        change_sb_hab(pim_ctr, offset);
     }
 #endif
 
 #if PROGRAM_CRF
     if (hipThreadIdx_x < (crf_size >> 4)) {
-        addr = addr_gen(hipBlockIdx_x, 0, 0, 1, 0x3fff, 0x4 + gidx);
-        W_CMD_R(&pim_ctr[addr + offset], crf_binary + (hipThreadIdx_x << 4));
-        R_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
+        program_crfMod(pim_ctr, gidx, crf_binary, offset);
     }
 #endif
 
@@ -897,10 +809,7 @@ __global__ void gemv_pim_64cu_64th_16tile_fp16(volatile uint8_t* __restrict__ pi
                 R_CMD(&pim_gemv_tmp_buffer[addr + offset]);
                 B_CMD(1);
 
-                addr = addr_gen(ch, 0, 0, 0, 0x3fff, 0x0);
-                W_CMD_R(&pim_ctr[addr + offset], gemv_hab_pim_to_hab + offset);
-                R_CMD(&pim_ctr[addr + offset]);
-                B_CMD(1);
+                change_habpim_hab(pim_ctr, offset);
             }
         }
     }
@@ -909,18 +818,13 @@ __global__ void gemv_pim_64cu_64th_16tile_fp16(volatile uint8_t* __restrict__ pi
 #if CHANGE_HAB_SB
     if (hipThreadIdx_x < 4) {
         /* change HAB mode to SB mode */
-        addr = addr_gen(ch, 0, 0, gidx, 0x2fff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        R_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
+        change_hab_sb(pim_ctr, gidx, offset);
     }
 #endif
 
 #if PARK_OUT
     if (hipThreadIdx_x < 32) {
-        addr = addr_gen(ch, 0, gidx >> ba_shift, gidx % num_ba, (1 << 13), 0);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
+        park_out(pim_ctr, gidx, num_ba, offset);
     }
 #endif
 
@@ -1000,38 +904,21 @@ __global__ void gemv_pim_64cu_64th_8tile_fp16(volatile uint8_t* __restrict__ pim
 #endif
 
 #if PARK_IN
-    /* park */
     if (hipThreadIdx_x < 32) {
-        addr = addr_gen(ch, 0, (gidx >> ba_shift), gidx % num_ba, (1 << 13), 0);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
+        park_in(pim_ctr, gidx, num_ba, offset);
     }
 #endif
 
 #if CHANGE_SB_HAB
     if (hipThreadIdx_x < 2) {
         /* change SB mode to HAB mode */
-        addr = addr_gen(ch, 0, 2, 0, 0x27ff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
-        addr = addr_gen(ch, 0, 2, 1, 0x27ff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
-        addr = addr_gen(ch, 0, 0, 0, 0x27ff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
-        addr = addr_gen(ch, 0, 0, 1, 0x27ff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
+        change_sb_hab(pim_ctr, offset);
     }
 #endif
 
 #if PROGRAM_CRF
     if (hipThreadIdx_x < (crf_size >> 4)) {
-        addr = addr_gen(hipBlockIdx_x, 0, 0, 1, 0x3fff, 0x4 + gidx);
-        W_CMD_R(&pim_ctr[addr + offset], crf_binary + (hipThreadIdx_x << 4));
-        R_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
+        program_crfMod(pim_ctr, gidx, crf_binary, offset);
     }
 #endif
 
@@ -1134,10 +1021,7 @@ __global__ void gemv_pim_64cu_64th_8tile_fp16(volatile uint8_t* __restrict__ pim
                 R_CMD(&pim_gemv_tmp_buffer[addr + offset]);
                 B_CMD(1);
 
-                addr = addr_gen(ch, 0, 0, 0, 0x3fff, 0x0);
-                W_CMD_R(&pim_ctr[addr + offset], gemv_hab_pim_to_hab + offset);
-                R_CMD(&pim_ctr[addr + offset]);
-                B_CMD(1);
+                change_habpim_hab(pim_ctr, offset);
             }
         }
     }
@@ -1146,18 +1030,13 @@ __global__ void gemv_pim_64cu_64th_8tile_fp16(volatile uint8_t* __restrict__ pim
 #if CHANGE_HAB_SB
     if (hipThreadIdx_x < 4) {
         /* change HAB mode to SB mode */
-        addr = addr_gen(ch, 0, 0, gidx, 0x2fff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        R_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
+        change_hab_sb(pim_ctr, gidx, offset);
     }
 #endif
 
 #if PARK_OUT
     if (hipThreadIdx_x < 32) {
-        addr = addr_gen(ch, 0, gidx >> ba_shift, gidx % num_ba, (1 << 13), 0);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
+        park_out(pim_ctr, gidx, num_ba, offset);
     }
 #endif
 
@@ -1234,36 +1113,20 @@ __global__ void gemv_tree_pim_64cu_64th_fp16(
 
 #if PARK_IN
     if (hipThreadIdx_x < 32) {
-        addr = addr_gen(ch, 0, gidx / num_ba, gidx % num_ba, (1 << 13), 0);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
+        park_in(pim_ctr, gidx, num_ba, offset);
     }
 #endif
 
 #if CHANGE_SB_HAB
     if (hipThreadIdx_x < 2) {
         /* change SB mode to HAB mode */
-        addr = addr_gen(ch, 0, 2, 0, 0x27ff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
-        addr = addr_gen(ch, 0, 2, 1, 0x27ff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
-        addr = addr_gen(ch, 0, 0, 0, 0x27ff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
-        addr = addr_gen(ch, 0, 0, 1, 0x27ff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
+        change_sb_hab(pim_ctr, offset);
     }
 #endif
 
 #if PROGRAM_CRF
     if (hipThreadIdx_x < (crf_size >> 4)) {
-        addr = addr_gen(hipBlockIdx_x, 0, 0, 1, 0x3fff, 0x4 + gidx);
-        W_CMD_R(&pim_ctr[addr + offset], crf_binary + (hipThreadIdx_x << 4));
-        R_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
+        program_crfMod(pim_ctr, gidx, crf_binary, offset);
     }
 #endif
 
@@ -1381,10 +1244,7 @@ __global__ void gemv_tree_pim_64cu_64th_fp16(
                     }
                 }
 
-                addr = addr_gen(ch, 0, 0, 0, 0x3fff, 0x0);
-                W_CMD_R(&pim_ctr[addr + offset], gemv_hab_pim_to_hab + offset);
-                R_CMD(&pim_ctr[addr + offset]);
-                B_CMD(1);
+                change_habpim_hab(pim_ctr, offset);
             }
         }
     }
@@ -1393,18 +1253,13 @@ __global__ void gemv_tree_pim_64cu_64th_fp16(
 #if CHANGE_HAB_SB
     if (hipThreadIdx_x < 4) {
         /* change HAB mode to SB mode */
-        addr = addr_gen(ch, 0, 0, gidx, 0x2fff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        R_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
+        change_hab_sb(pim_ctr, gidx, offset);
     }
 #endif
 
 #if PARK_OUT
     if (hipThreadIdx_x < 32) {
-        addr = addr_gen(ch, 0, gidx / num_ba, gidx % num_ba, (1 << 13), 0);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
+        park_out(pim_ctr, gidx, num_ba, offset);
     }
 #endif
 

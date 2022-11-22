@@ -48,38 +48,23 @@ __global__ void copy_pim(volatile uint8_t* __restrict__ pim_data, volatile uint8
     uint64_t offset = (hipThreadIdx_x % 2) * 0x10;
     uint64_t addr, addr_even, addr_odd;
 
-    /* Radeon7(VEGA20) memory is 16GB but our target is 32GB system */
-    /* so program_crf and chagne_pim_mode functions can not access to over 8GB in our system */
+/* Radeon7(VEGA20) memory is 16GB but our target is 32GB system */
+/* so program_crf and chagne_pim_mode functions can not access to over 8GB in our system */
 
 #if PARK_IN
-    addr = addr_gen(hipBlockIdx_x, 0, gidx / num_ba, gidx % num_ba, (1 << 13), 0);
-    W_CMD(&pim_ctr[addr + offset]);
-    B_CMD(1);
+    park_in(pim_ctr, gidx, num_ba, offset);
 #endif
 
     if (hipThreadIdx_x < 2) {
 #if CHANGE_SB_HAB
-        addr = addr_gen(hipBlockIdx_x, 0, 2, 0, 0x27ff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
-        addr = addr_gen(hipBlockIdx_x, 0, 2, 1, 0x27ff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
-        addr = addr_gen(hipBlockIdx_x, 0, 0, 0, 0x27ff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
-        addr = addr_gen(hipBlockIdx_x, 0, 0, 1, 0x27ff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
+        change_sb_hab(pim_ctr, offset);
 #endif
+
 #if PROGRAM_CRF
-        addr = addr_gen(hipBlockIdx_x, 0, 0, 1, 0x3fff, 0x4 + gidx);
-        W_CMD_R(&pim_ctr[addr + offset], crf_binary + (hipThreadIdx_x << 4));
+        program_crf(pim_ctr, gidx, crf_binary, offset);
 #endif
 #if CHANGE_HAB_HABPIM
-        addr = addr_gen(hipBlockIdx_x, 0, 0, 0, 0x3fff, 0x0);
-        W_CMD_R(&pim_ctr[addr + offset], elt_add_hab_to_hab_pim + offset);
-        R_CMD(&pim_ctr[addr + offset]);
+        change_hab_habpim(pim_ctr, offset);
 #endif
         B_CMD(1);
     }
@@ -115,21 +100,15 @@ __global__ void copy_pim(volatile uint8_t* __restrict__ pim_data, volatile uint8
     if (hipThreadIdx_x < 4) {
 #if CHANGE_HABPIM_HAB
         addr = addr_gen(hipBlockIdx_x, 0, 0, 0, 0x3fff, 0x0);
-        W_CMD_R(&pim_ctr[addr + offset], elt_add_hab_pim_to_hab + offset);
-        R_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
+        change_habpim_hab(pim_ctr, offset);
 #endif
 #if CHANGE_HAB_SB
-        addr = addr_gen(hipBlockIdx_x, 0, 0, gidx, 0x2fff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        R_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
+        change_hab_sb(pim_ctr, gidx, offset);
 #endif
     }
 
 #if PARK_OUT
-    addr = addr_gen(hipBlockIdx_x, 0, gidx / num_ba, gidx % num_ba, (1 << 13), 0);
-    W_CMD(&pim_ctr[addr + offset]);
+    park_out(pim_ctr, gidx, num_ba, offset);
 #endif
 
 #ifdef EMULATOR

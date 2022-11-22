@@ -45,40 +45,32 @@ __global__ void bn_pim_nr_sip(volatile uint8_t* __restrict__ pim_data, volatile 
     uint64_t offset = (hipThreadIdx_x % 2) * 0x10;
     uint64_t addr, addr_even, addr_odd;
 
-    /* Radeon7(VEGA20) memory is 16GB but our target is 32GB system */
-    /* so program_crf and chagne_pim_mode functions can not access to over 8GB in our system */
+/* Radeon7(VEGA20) memory is 16GB but our target is 32GB system */
+/* so program_crf and chagne_pim_mode functions can not access to over 8GB in our system */
 
-    addr = addr_gen(hipBlockIdx_x, 0, gidx / num_bank, gidx % num_bank, 1 << 13, 0);
-    W_CMD(&pim_data[addr + offset]);
-    B_CMD(1);
+#if PARK_IN
+    park_in(pim_ctr, gidx, num_bank, offset);
+#endif
 
     if (hipThreadIdx_x < 2) {
-        addr = addr_gen(hipBlockIdx_x, 0, 2, 0, 0x27ff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
-        addr = addr_gen(hipBlockIdx_x, 0, 2, 1, 0x27ff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
-        addr = addr_gen(hipBlockIdx_x, 0, 0, 0, 0x27ff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
-        addr = addr_gen(hipBlockIdx_x, 0, 0, 1, 0x27ff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
+#if CHANGE_SB_HAB
+        change_sb_hab(pim_ctr, offset);
+#endif
 
-        addr = addr_gen(hipBlockIdx_x, 0, 0, 0, 0x3fff, 0x0);
-        W_CMD_R(&pim_ctr[addr + 32 + offset], srf_binary + offset);
-        W_CMD_R(&pim_ctr[addr + offset], bn_hab_to_hab_pim + offset);
-        R_CMD(&pim_ctr[addr + offset]);
+#if PROGRAM_SRF
+        program_srf(pim_ctr, srf_binary, offset);
+#endif
+#if CHANGE_HAB_HABPIM
+        change_hab_habpim(pim_ctr, offset);
         B_CMD(1);
+#endif
     }
 
+#if PROGRAM_CRF
     if (hipThreadIdx_x < (crf_size >> 4)) {
-        addr = addr_gen(hipBlockIdx_x, 0, 0, 1, 0x3fff, 0x4 + gidx);
-        W_CMD_R(&pim_ctr[addr + offset], crf_binary + (hipThreadIdx_x << 4));
-        R_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
+        program_crfMod(pim_ctr, gidx, crf_binary, offset);
     }
+#endif
 
     if (hipThreadIdx_x < 16) {
         for (int tile_idx = 0; tile_idx < num_tile; tile_idx++) {
@@ -121,20 +113,18 @@ __global__ void bn_pim_nr_sip(volatile uint8_t* __restrict__ pim_data, volatile 
     }
 
     if (hipThreadIdx_x < 4) {
-        addr = addr_gen(hipBlockIdx_x, 0, 0, 0, 0x3fff, 0x0);
-        W_CMD_R(&pim_ctr[addr + offset], bn_hab_pim_to_hab + offset);
-        R_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
+#if CHANGE_HABPIM_HAB
+        change_habpim_hab(pim_ctr, offset);
+#endif
 
-        addr = addr_gen(hipBlockIdx_x, 0, 0, gidx, 0x2fff, 0x1f);
-        W_CMD(&pim_ctr[addr + offset]);
-        R_CMD(&pim_ctr[addr + offset]);
-        B_CMD(1);
+#if CHANGE_HAB_SB
+        change_hab_sb(pim_ctr, gidx, offset);
+#endif
     }
 
-    addr = addr_gen(hipBlockIdx_x, 0, gidx / num_bank, gidx % num_bank, 1 << 13, 0);
-    W_CMD(&pim_ctr[addr + offset]);
-    B_CMD(1);
+#if PARK_OUT
+    park_out(pim_ctr, gidx, num_bank, offset);
+#endif
 
 #ifdef EMULATOR
     if (hipBlockIdx_x == 0 && hipThreadIdx_x == 0) {
