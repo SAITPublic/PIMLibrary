@@ -100,12 +100,12 @@ int PimRuntime::get_device(uint32_t* device_id)
     return ret;
 }
 
-void* PimRuntime::createStream(PimRuntimeType rt_type)
+void* PimRuntime::create_stream(PimRuntimeType rt_type)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     void* stream_obj = NULL;
     if (rt_type == RT_TYPE_HIP) {
-        stream_obj = pim_executor_->createStream();
+        stream_obj = pim_executor_->create_stream();
     } else {
         DLOG(ERROR) << __FUNCTION__ << " not implemented for runtime " << rt_type << " \n";
     }

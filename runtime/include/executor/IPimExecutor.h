@@ -41,7 +41,7 @@ class IPimExecutor
                                         void* stream, bool block) = 0;
     virtual int execute_sync(void* stream) = 0;
     virtual int execute_dummy(void) = 0;
-    virtual void* createStream(void) = 0;
+    virtual void* create_stream(void) = 0;
     virtual void set_gemm_order(PimGemmOrder gemm_order) = 0;
 };
 

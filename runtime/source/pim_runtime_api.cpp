@@ -460,7 +460,7 @@ int PimCopyMemoryRect(const PimCopy3D* copy_params)
     return ret;
 }
 
-void* createStream(PimRuntimeType rt_type)
+void* PimCreateStream(PimRuntimeType rt_type)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
 
@@ -469,7 +469,7 @@ void* createStream(PimRuntimeType rt_type)
         return NULL;
     }
     void* new_stream = NULL;
-    new_stream = pim_runtime->createStream(rt_type);
+    new_stream = pim_runtime->create_stream(rt_type);
     if (new_stream == NULL) {
         DLOG(ERROR) << "unable to create stream for runtime " << rt_type << "\n";
     }

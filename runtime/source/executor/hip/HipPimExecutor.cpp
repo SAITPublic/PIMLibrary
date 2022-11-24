@@ -133,7 +133,7 @@ int HipPimExecutor::deinitialize(void)
     return ret;
 }
 
-void* HipPimExecutor::createStream(void)
+void* HipPimExecutor::create_stream(void)
 {
     hipStream_t new_stream;
     hipStreamCreate(&new_stream);

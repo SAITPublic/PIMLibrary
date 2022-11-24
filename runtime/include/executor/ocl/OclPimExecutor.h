@@ -52,7 +52,7 @@ class OclPimExecutor : public IPimExecutor
 
     int execute_sync(void* stream);
     int execute_dummy(void) { return -1; }
-    void* createStream(void) { return nullptr; }
+    void* create_stream(void) { return nullptr; }
     void set_gemm_order(PimGemmOrder gemm_order) { gemm_order_ = gemm_order; }
 
    private:

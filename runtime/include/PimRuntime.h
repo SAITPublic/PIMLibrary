@@ -38,7 +38,7 @@ class PimRuntime
     int deinitialize(void);
     int set_device(uint32_t device_id);
     int get_device(uint32_t* device_id);
-    void* createStream(PimRuntimeType rt_type);
+    void* create_stream(PimRuntimeType rt_type);
     int alloc_memory(void** ptr, size_t size, PimMemType mem_type);
     int alloc_memory(PimBo* pimBo, void* user_ptr = nullptr);
     int free_memory(void* ptr, PimMemType mem_type);

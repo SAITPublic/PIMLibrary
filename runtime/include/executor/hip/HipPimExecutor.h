@@ -55,7 +55,7 @@ class HipPimExecutor : public IPimExecutor
                                 void* stream, bool block);
     int execute_sync(void* stream);
     int execute_dummy(void);
-    void* createStream(void);
+    void* create_stream(void);
     void set_gemm_order(PimGemmOrder gemm_order) { gemm_order_ = gemm_order; }
 
    private:

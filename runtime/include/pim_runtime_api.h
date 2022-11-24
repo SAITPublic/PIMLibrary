@@ -269,7 +269,7 @@ __PIM_API__ int PimCopyMemoryRect(const PimCopy3D* copy_params);
  *
  * @return void* stream object
  */
-__PIM_API__ void* createStream(PimRuntimeType rt_type);
+__PIM_API__ void* PimCreateStream(PimRuntimeType rt_type);
 
 /**
  * @brief Execute Add vector operation on PIM

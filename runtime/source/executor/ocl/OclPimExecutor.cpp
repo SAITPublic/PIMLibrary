@@ -416,6 +416,7 @@ int OclPimExecutor::execute_add(PimBo* output, PimBo* operand0, PimBo* operand1,
 {
     return execute_eltwise(OP_ELT_ADD, output, operand0, operand1, stream, block);
 }
+
 int OclPimExecutor::execute_mul(PimBo* output, PimBo* operand0, PimBo* operand1, void* stream, bool block)
 {
     return execute_eltwise(OP_ELT_MUL, output, operand0, operand1, stream, block);
