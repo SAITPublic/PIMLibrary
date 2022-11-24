@@ -1,59 +1,49 @@
 #include "parser.h"
-#include "utils.h"
+#include <boost/program_options.hpp>
+#include "elt_perf.h"
+#include "gemm_perf.h"
 
-int Parser::parse_args(int argc, char* argv[])
+using namespace boost::program_options;
+int Parser::print_help()
 {
-    if (argc < 2) {
-        print_help();
-        return -1;
-    }
-    if (argc < 6) {
-        DLOG(ERROR) << "plt(hip/opencl) , op , n_b , n_c , i_h , i_w are minimum require args\n";
-        return -1;
-    }
+    std::cout << desc;
+    return -1;
+}
+Parser::Parser()
+{
+    desc.add_options()("help,h", "Help screen")(
+        "device,d", value<int>(&device_id)->default_value(0),
+        "sets the device for PIM execution in multi gpu scenario (default : 0)")(
+        "platform,p", value<string>(&platform)->default_value("hip"),
+        "set the platform for PIM execution (default : hip)")(
+        "pscn",
+        value<string>(&precision)->default_value("fp16", "sets the precision for PIM operations (default : fp16)"))(
+        "operation,o", value<string>(&operation), "indicates which operation is to be run on PIM")(
+        "num_batch,n", value<int>(&num_batch), "set the number of batch dimension")(
+        "channel,c", value<int>(&num_channels), "sets the number of channel dimension")(
+        "i_h", value<int>(&input_height), "sets the input height dimension")("i_w", value<int>(&input_width),
+                                                                             "sets the input width")(
+        "o_h", value<int>(&output_height), "sets the output height")("o_w", value<int>(&output_width),
+                                                                     "sets the output width")(
+        "order", value<string>(&order), "order(i_x_w / w_x_i) : sets the order for gemm operation")(
+        "activation,a", value<string>(&act_function)->default_value("relu"),
+        "act (relu / none) : set the activation function for gemm operation (default : relu)")(
+        "bias,b", value<int>(&has_bias)->default_value(1),
+        "bias (0 / 1) : sets if the gemm operation has bias addition (default : 1)")(
+        "num_iter,i", value<int>(&num_iter)->default_value(2),
+        "sets the number of iterations to be executed for a particualr operation. (default : 2)");
+}
 
-    std::vector<std::string> args(argv, argv + argc);
-    for (size_t i = 1; i < args.size(); ++i) {
-        string option = args[i];
-        if (option == "-plt") {
-            platform = args[i + 1];
-        } else if (option == "pcsn") {
-            precision = args[i + 1];
-        } else if (option == "-op") {
-            operation = args[i + 1];
-        } else if (option == "-order") {
-            order = args[i + 1];
-        } else if (option == "-n") {
-            num_batch = stoi(args[i + 1]);
-        } else if (option == "-c") {
-            num_channels = stoi(args[i + 1]);
-        } else if (option == "-i_h") {
-            input_height = stoi(args[i + 1]);
-        } else if (option == "-i_w") {
-            input_width = stoi(args[i + 1]);
-        } else if (option == "-o_h") {
-            output_height = stoi(args[i + 1]);
-        } else if (option == "-o_w") {
-            output_width = stoi(args[i + 1]);
-        } else if (option == "-bias") {
-            has_bias = stoi(args[i + 1]);
-        } else if (option == "-act") {
-            act_function = args[i + 1];
-        } else if (option == "-device") {
-            device_id = stoi(args[i + 1]);
-        } else if (option == "-help" or option == "-h") {
-            print_help();
-            return -1;
-        } else if (option == "-i") {
-            num_iter = stoi(args[i + 1]);
-        }
+variables_map Parser::parse_args(int argc, char *argv[])
+{
+    variables_map vm;
+    try {
+        store(parse_command_line(argc, argv, desc), vm);
+        notify(vm);
+    } catch (const error &ex) {
+        std::cerr << ex.what() << '\n';
     }
-    if (!check_validity()) {
-        DLOG(ERROR) << "Error encountered while parsing the arguments\n";
-        print_help();
-        return -1;
-    }
-    return 1;
+    return vm;
 }
 
 bool Parser::check_validity()

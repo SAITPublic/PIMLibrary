@@ -18,9 +18,7 @@ using namespace std;
 class PerformanceAnalyser
 {
    public:
-    PerformanceAnalyser();
-    ~PerformanceAnalyser();
-    int SetUp(int argc, char* argv[]);
+    int SetUp(Parser* parser);
     void Tick();
     void Tock();
     void SetArgs();
@@ -34,26 +32,26 @@ class PerformanceAnalyser
     void calculate_avg_time();
 
    protected:
-    int num_iter;
-    int num_batch;
-    double gflops;
-    int device_id;
-    Parser* parser;
-    int input_width;
-    int num_channels;
-    int input_height;
-    int output_width;
-    string operation;
-    int output_height;
-    bool block = true;
-    PimGemmOrder order;
-    PimPrecision precision;
-    PimRuntimeType platform;
-    std::chrono::duration<double> time_duration;
-    std::chrono::duration<double> start_up_time;
-    std::chrono::duration<double> avg_kernel_time;
-    std::chrono::duration<double> kernel_execution_time;
-    std::chrono::time_point<std::chrono::high_resolution_clock> start, end;
+    int num_iter_;
+    int num_batch_;
+    double gflops_;
+    int device_id_;
+    Parser* parser_;
+    int input_width_;
+    int num_channels_;
+    int input_height_;
+    int output_width_;
+    string operation_;
+    int output_height_;
+    bool block_ = true;
+    PimGemmOrder order_;
+    PimPrecision precision_;
+    PimRuntimeType platform_;
+    std::chrono::duration<double> time_duration_;
+    std::chrono::duration<double> start_up_time_;
+    std::chrono::duration<double> avg_kernel_time_;
+    std::chrono::duration<double> kernel_execution_time_;
+    std::chrono::time_point<std::chrono::high_resolution_clock> start_, end_;
 };
 
 int compare_data(char* data_A, char* data_b, size_t size);

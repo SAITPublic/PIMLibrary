@@ -2,61 +2,58 @@
 #include <random>
 #include "pim_runtime_api.h"
 
-PerformanceAnalyser::PerformanceAnalyser() { parser = new Parser(); }
-PerformanceAnalyser::~PerformanceAnalyser() { delete parser; }
-void PerformanceAnalyser::SetArgs()
+int PerformanceAnalyser::SetUp(Parser* parser)
 {
-    platform = (parser->get_platform() == "opencl") ? RT_TYPE_OPENCL : RT_TYPE_HIP;
-    precision = (parser->get_precision() == "fp16") ? PIM_FP16 : PIM_INT8;
-    order = (parser->get_order() == "i_x_w") ? I_X_W : W_X_I;
-    operation = parser->get_operation();
-    num_batch = parser->get_num_batch();
-    num_channels = parser->get_num_chan();
-    input_height = parser->get_inp_height();
-    input_width = parser->get_inp_width();
-    output_height = parser->get_out_height();
-    output_width = parser->get_out_width();
-    device_id = parser->get_device_id();
-    num_iter = parser->get_num_iter();
-}
+    int ret = 0;
+    parser_ = parser;
+    platform_ = (parser->get_platform() == "opencl") ? RT_TYPE_OPENCL : RT_TYPE_HIP;
+    precision_ = (parser->get_precision() == "fp16") ? PIM_FP16 : PIM_INT8;
+    order_ = (parser->get_order() == "i_x_w") ? I_X_W : W_X_I;
+    operation_ = parser->get_operation();
+    num_batch_ = parser->get_num_batch();
+    num_channels_ = parser->get_num_chan();
+    input_height_ = parser->get_inp_height();
+    input_width_ = parser->get_inp_width();
+    output_height_ = parser->get_out_height();
+    output_width_ = parser->get_out_width();
+    device_id_ = parser->get_device_id();
+    num_iter_ = parser->get_num_iter();
 
-int PerformanceAnalyser::SetUp(int argc, char* argv[])
-{
-    int ret = parser->parse_args(argc, argv);
-    if (ret == -1) return -1;
-    SetArgs();
     Tick();
-    ret = PimInitialize(platform, precision);
+    ret = PimInitialize(platform_, precision_);
     Tock();
-    start_up_time = calculate_elapsed_time();
+    start_up_time_ = calculate_elapsed_time();
     ret = set_device();
     return ret;
 }
 
 void PerformanceAnalyser::TearDown(void) { PimDeinitialize(); }
-void PerformanceAnalyser::Tick() { start = std::chrono::high_resolution_clock::now(); }
-void PerformanceAnalyser::Tock() { end = std::chrono::high_resolution_clock::now(); }
+void PerformanceAnalyser::Tick() { start_ = std::chrono::high_resolution_clock::now(); }
+void PerformanceAnalyser::Tock() { end_ = std::chrono::high_resolution_clock::now(); }
 std::chrono::duration<double> PerformanceAnalyser::calculate_elapsed_time()
 {
-    time_duration = end - start;
-    return time_duration;
+    time_duration_ = end_ - start_;
+    return time_duration_;
 }
 
-void PerformanceAnalyser::calculate_avg_time() { kernel_execution_time = avg_kernel_time / (double)(num_iter); }
-void PerformanceAnalyser::calculate_gflops(double flt_ops) { gflops = flt_ops / (double)kernel_execution_time.count(); }
+void PerformanceAnalyser::calculate_avg_time() { kernel_execution_time_ = avg_kernel_time_ / (double)(num_iter_); }
+void PerformanceAnalyser::calculate_gflops(double flt_ops)
+{
+    gflops_ = flt_ops / (double)kernel_execution_time_.count();
+}
 void PerformanceAnalyser::print_analytical_data()
 {
-    std::cout << "Time analytics: \nPlatform: " << parser->get_platform() << std::endl;
-    std::cout << "Time taken to initialize PIM : " << start_up_time.count() * 1000 << " ms\n";
-    std::cout << "Time taken to execute operation : " << kernel_execution_time.count() * 1000 << " ms\n";
-    std::cout << "GFlops : " << gflops << " gflops\n";
+    std::cout << "Time analytics: \nPlatform: " << parser_->get_platform() << std::endl;
+    std::cout << "Time taken to initialize PIM : " << start_up_time_.count() * 1000 << " ms\n";
+    std::cout << "Time taken to execute operation : " << kernel_execution_time_.count() * 1000 << " ms\n";
+    std::cout << "GFlops : " << gflops_ << " gflops\n";
 }
 
 int PerformanceAnalyser::set_device()
 {
     int ret = 0;
-    if (platform == RT_TYPE_HIP) {
-        ret = PimSetDevice(device_id);
+    if (platform_ == RT_TYPE_HIP) {
+        ret = PimSetDevice(device_id_);
     } else {
         DLOG(WARNING) << "Device cant be set for desired platform\n";
     }

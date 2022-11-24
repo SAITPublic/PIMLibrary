@@ -141,21 +141,21 @@ double PimGemmTest::get_flt_ops() { return flt_ops_; }
 PimGemmTestFixture::PimGemmTestFixture() {}
 int PimGemmTestFixture::ExecuteTest()
 {
-    act = (parser->get_act_function() == "relu") ? ACT_RELU : NONE;
-    has_bias = (parser->get_has_bias()) ? true : false;
-    PimGemmTest pimGemmTest = PimGemmTest(num_batch, num_channels, input_height, input_width, output_height,
-                                          output_width, act, has_bias, order);
+    act = (parser_->get_act_function() == "relu") ? ACT_RELU : NONE;
+    has_bias = (parser_->get_has_bias()) ? true : false;
+    PimGemmTest pimGemmTest = PimGemmTest(num_batch_, num_channels_, input_height_, input_width_, output_height_,
+                                          output_width_, act, has_bias, order_);
     pimGemmTest.prepare();
 
     // warmup
     pimGemmTest.execute_op(true);
 
-    avg_kernel_time = std::chrono::duration<double>::zero();
-    for (int i = 0; i < num_iter; i++) {
+    avg_kernel_time_ = std::chrono::duration<double>::zero();
+    for (int i = 0; i < num_iter_; i++) {
         Tick();
-        pimGemmTest.execute_op(block);
+        pimGemmTest.execute_op(block_);
         Tock();
-        avg_kernel_time += calculate_elapsed_time();
+        avg_kernel_time_ += calculate_elapsed_time();
     }
     pimGemmTest.finalize();
     calculate_avg_time();
@@ -166,17 +166,17 @@ int PimGemmTestFixture::ExecuteTest()
 int PimGemmTestFixture::ExecuteTestExplicitReordering()
 {
     bool use_device_weight = false;
-    PimGemmTest pimGemmTest = PimGemmTest(num_batch, num_channels, input_height, input_width, output_height,
-                                          output_width, act, has_bias, order);
+    PimGemmTest pimGemmTest = PimGemmTest(num_batch_, num_channels_, input_height_, input_width_, output_height_,
+                                          output_width_, act, has_bias, order_);
     pimGemmTest.prepare();
-    pimGemmTest.run_with_explicit_reordering(use_device_weight, block);
+    pimGemmTest.run_with_explicit_reordering(use_device_weight, block_);
 
-    avg_kernel_time = std::chrono::duration<double>::zero();
-    for (int i = 0; i < num_iter; i++) {
+    avg_kernel_time_ = std::chrono::duration<double>::zero();
+    for (int i = 0; i < num_iter_; i++) {
         Tick();
-        pimGemmTest.run_with_explicit_reordering(use_device_weight, block);
+        pimGemmTest.run_with_explicit_reordering(use_device_weight, block_);
         Tock();
-        avg_kernel_time += calculate_elapsed_time();
+        avg_kernel_time_ += calculate_elapsed_time();
     }
     pimGemmTest.finalize();
     calculate_avg_time();

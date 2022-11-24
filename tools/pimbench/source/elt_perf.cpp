@@ -117,18 +117,18 @@ int PimReluTest::validate(float epsilon)
 double PimReluTest::get_flt_ops() { return flt_ops_; }
 int PimEltTestFixture::ExecuteTest()
 {
-    PimEltTest pimEltTest = PimEltTest(num_batch, num_channels, input_height, input_width, precision);
+    PimEltTest pimEltTest = PimEltTest(num_batch_, num_channels_, input_height_, input_width_, precision_);
     pimEltTest.prepare();
 
     // warmup
     pimEltTest.execute_op(true);
 
-    avg_kernel_time = std::chrono::duration<double>::zero();
-    for (int i = 0; i < num_iter; i++) {
+    avg_kernel_time_ = std::chrono::duration<double>::zero();
+    for (int i = 0; i < num_iter_; i++) {
         Tick();
-        pimEltTest.execute_op(block);
+        pimEltTest.execute_op(block_);
         Tock();
-        avg_kernel_time += calculate_elapsed_time();
+        avg_kernel_time_ += calculate_elapsed_time();
     }
     pimEltTest.finalize();
     calculate_avg_time();
@@ -138,18 +138,18 @@ int PimEltTestFixture::ExecuteTest()
 
 int PimReluTestFixture::ExecuteTest()
 {
-    PimReluTest pimReluTest = PimReluTest(num_batch, num_channels, input_height, input_width, precision);
+    PimReluTest pimReluTest = PimReluTest(num_batch_, num_channels_, input_height_, input_width_, precision_);
     pimReluTest.prepare();
 
     // warmup
     pimReluTest.execute_op(true);
 
-    avg_kernel_time = std::chrono::duration<double>::zero();
-    for (int i = 0; i < num_iter; i++) {
+    avg_kernel_time_ = std::chrono::duration<double>::zero();
+    for (int i = 0; i < num_iter_; i++) {
         Tick();
-        pimReluTest.execute_op(block);
+        pimReluTest.execute_op(block_);
         Tock();
-        avg_kernel_time += calculate_elapsed_time();
+        avg_kernel_time_ += calculate_elapsed_time();
     }
     pimReluTest.finalize();
     calculate_avg_time();
