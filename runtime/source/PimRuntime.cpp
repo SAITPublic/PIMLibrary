@@ -444,8 +444,8 @@ PimCompiledObj* PimRuntime::build_program(pimc::frontend::Var output, std::vecto
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
 
-    pimc_driver::PimCDriver pimc_driver;
-    PimCompiledObj* pim_co = pimc_driver.build_program(output, inputs, input_pimbo, target, compile_opts);
+    auto pimc_driver = Driver::create_driver(target);
+    PimCompiledObj* pim_co = pimc_driver->build_program(output, inputs, input_pimbo, target, compile_opts);
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return pim_co;
@@ -455,8 +455,8 @@ PimBo* PimRuntime::execute_program(PimCompiledObj* obj, PimTarget* target, std::
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
 
-    pimc_driver::PimCDriver pimc_driver;
-    PimBo* output_pimbo = pimc_driver.execute_program(obj, target, launch_opts);
+    auto pimc_driver = Driver::create_driver(target);
+    PimBo* output_pimbo = pimc_driver->execute_program(obj, target, launch_opts);
 
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return output_pimbo;
