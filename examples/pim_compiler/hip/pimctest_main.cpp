@@ -13,8 +13,8 @@ int main(int argc, char** argv)
         std::cout << "No device found ... exiting" << std::endl;
         return -1;
     }
-    // Always default to 0 for now
-    int device_id = 0;
+    // Always default to 3 for now
+    int device_id = 3;
     hipError_t deviceSet = hipSetDevice(device_id);
     if (hipSuccess != deviceSet) {
         std::cout << "Failed to set device " << deviceSet << "Device ID: " << device_id << std::endl;
