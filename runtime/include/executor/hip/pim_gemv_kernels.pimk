@@ -75,7 +75,7 @@ __global__ void gemv_list_chwise_pim_64cu_64th_fp16(
 
 #if PROGRAM_CRF
     if (hipThreadIdx_x < (crf_size >> 4)) {
-        program_crfMod(pim_ctr, gidx, crf_binary, offset);
+        program_crf_mod(pim_ctr, gidx, crf_binary, offset);
     }
 #endif
 
@@ -289,7 +289,7 @@ __global__ void gemv_list_pim_64cu_64th_fp16(volatile uint8_t* __restrict__ pim_
 
 #if PROGRAM_CRF
     if (hipThreadIdx_x < (crf_size >> 4)) {
-        program_crfMod(pim_ctr, gidx, crf_binary, offset);
+        program_crf_mod(pim_ctr, gidx, crf_binary, offset);
     }
 #endif
 
@@ -497,7 +497,7 @@ __global__ void gemv_pim_64cu_64th_fp16(volatile uint8_t* __restrict__ pim_ctr,
 
 #if PROGRAM_CRF
     if (hipThreadIdx_x < (crf_size >> 4)) {
-        program_crfMod(pim_ctr, gidx, crf_binary, offset);
+        program_crf_mod(pim_ctr, gidx, crf_binary, offset);
     }
 #endif
 
@@ -707,7 +707,7 @@ __global__ void gemv_pim_64cu_64th_16tile_fp16(volatile uint8_t* __restrict__ pi
 
 #if PROGRAM_CRF
     if (hipThreadIdx_x < (crf_size >> 4)) {
-        program_crfMod(pim_ctr, gidx, crf_binary, offset);
+        program_crf_mod(pim_ctr, gidx, crf_binary, offset);
     }
 #endif
 
@@ -918,7 +918,7 @@ __global__ void gemv_pim_64cu_64th_8tile_fp16(volatile uint8_t* __restrict__ pim
 
 #if PROGRAM_CRF
     if (hipThreadIdx_x < (crf_size >> 4)) {
-        program_crfMod(pim_ctr, gidx, crf_binary, offset);
+        program_crf_mod(pim_ctr, gidx, crf_binary, offset);
     }
 #endif
 
@@ -1126,7 +1126,7 @@ __global__ void gemv_tree_pim_64cu_64th_fp16(
 
 #if PROGRAM_CRF
     if (hipThreadIdx_x < (crf_size >> 4)) {
-        program_crfMod(pim_ctr, gidx, crf_binary, offset);
+        program_crf_mod(pim_ctr, gidx, crf_binary, offset);
     }
 #endif
 

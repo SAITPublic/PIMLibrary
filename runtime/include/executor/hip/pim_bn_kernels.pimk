@@ -68,7 +68,7 @@ __global__ void bn_pim_nr_sip(volatile uint8_t* __restrict__ pim_data, volatile 
 
 #if PROGRAM_CRF
     if (hipThreadIdx_x < (crf_size >> 4)) {
-        program_crfMod(pim_ctr, gidx, crf_binary, offset);
+        program_crf_mod(pim_ctr, gidx, crf_binary, offset);
     }
 #endif
 

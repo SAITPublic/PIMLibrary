@@ -51,51 +51,26 @@ __kernel void bn_pim_nr_sip(__global uint8_t* __restrict__ pim_data, __global ui
 /* so program_crf and chagne_pim_mode functions can not access to over 8GB in our system */
 
 #if PARK_IN
-    ParkIn(pim_ctr, gidx, num_bank, offset
-#ifdef EMULATOR
-           ,
-           emulator_trace
-#endif
-           );
+    park_in(pim_ctr, gidx, num_bank, offset);
 #endif
 
     if (get_local_id(0) < 2) {
 #if CHANGE_SB_HAB
-        ChangeSB2HAB(pim_ctr, offset
-#ifdef EMULATOR
-                     ,
-                     emulator_trace
-#endif
-                     );
+        change_sb_hab(pim_ctr, offset);
 #endif
 
 #if PROGRAM_SRF
-        ProgramSRF(pim_ctr, srf_binary, offset
-#ifdef EMULATOR
-                   ,
-                   emulator_trace
-#endif
-                   );
+        program_srf(pim_ctr, srf_binary, offset);
 #endif
 #if CHANGE_HAB_HABPIM
-        ChangeHAB2HABPIM(pim_ctr, offset
-#ifdef EMULATOR
-                         ,
-                         emulator_trace
-#endif
-                         );
+        change_hab_habpim(pim_ctr, offset);
         B_CMD(1);
 #endif
     }
 
 #if PROGRAM_CRF
     if (get_local_id(0) < (crf_size >> 4)) {
-        ProgramCRFMod(pim_ctr, gidx, crf_binary, offset
-#ifdef EMULATOR
-                      ,
-                      emulator_trace
-#endif
-                      );
+        program_crf_mod(pim_ctr, gidx, crf_binary, offset);
     }
 #endif
 
@@ -141,31 +116,16 @@ __kernel void bn_pim_nr_sip(__global uint8_t* __restrict__ pim_data, __global ui
 
     if (get_local_id(0) < 4) {
 #if CHANGE_HABPIM_HAB
-        ChangeHABPIM2HAB(pim_ctr, offset
-#ifdef EMULATOR
-                         ,
-                         emulator_trace
-#endif
-                         );
+        change_habpim_hab(pim_ctr, offset);
 #endif
 
 #if CHANGE_HAB_SB
-        ChangeHAB2SB(pim_ctr, gidx, offset
-#ifdef EMULATOR
-                     ,
-                     emulator_trace
-#endif
-                     );
+        change_hab_sb(pim_ctr, gidx, offset);
 #endif
     }
 
 #if PARK_OUT
-    ParkOut(pim_ctr, gidx, num_bank, offset
-#ifdef EMULATOR
-            ,
-            emulator_trace
-#endif
-            );
+    park_out(pim_ctr, gidx, num_bank, offset);
 #endif
 
 #ifdef EMULATOR

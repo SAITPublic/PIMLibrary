@@ -1,3 +1,14 @@
+/*
+ * Copyright (C) 2022 Samsung Electronics Co. LTD
+ *
+ * This software is a property of Samsung Electronics.
+ * No part of this software, either material or conceptual may be copied or distributed, transmitted,
+ * transcribed, stored in a retrieval system or translated into any human or computer language in any form by any means,
+ * electronic, mechanical, manual or otherwise, or disclosed
+ * to third parties without the express written permission of Samsung Electronics.
+ * (Use of the Software is restricted to non-commercial, personal or academic, research purpose only)
+ */
+
 #define PARK_IN 1
 #define CHANGE_SB_HAB 1
 #define PROGRAM_CRF 1
@@ -36,38 +47,18 @@ __kernel void elt_op_pim(__global uint8_t* __restrict__ operand0, __global uint8
     uint64_t addr, addr_even, addr_odd;
 
 #if PARK_IN
-    ParkIn(pim_ctr, gidx, num_ba, offset
-#ifdef EMULATOR
-           ,
-           emulator_trace
-#endif
-           );
+    park_in(pim_ctr, gidx, num_ba, offset);
 #endif
 
     if (get_local_id(0) < 2) {
 #if CHANGE_SB_HAB
-        ChangeSB2HAB(pim_ctr, offset
-#ifdef EMULATOR
-                     ,
-                     emulator_trace
-#endif
-                     );
+        change_sb_hab(pim_ctr, offset);
 #endif
 #if PROGRAM_CRF
-        ProgramCRF(pim_ctr, gidx, crf_binary, offset
-#ifdef EMULATOR
-                   ,
-                   emulator_trace
-#endif
-                   );
+        program_crf(pim_ctr, gidx, crf_binary, offset);
 #endif
 #if CHANGE_HAB_HABPIM
-        ChangeHAB2HABPIM(pim_ctr, offset
-#ifdef EMULATOR
-                         ,
-                         emulator_trace
-#endif
-                         );
+        change_hab_habpim(pim_ctr, offset);
 #endif
         B_CMD(1);
     }
@@ -121,31 +112,16 @@ __kernel void elt_op_pim(__global uint8_t* __restrict__ operand0, __global uint8
 
     if (get_local_id(0) < 4) {
 #if CHANGE_HABPIM_HAB
-        ChangeHABPIM2HAB(pim_ctr, offset
-#ifdef EMULATOR
-                         ,
-                         emulator_trace
-#endif
-                         );
+        change_habpim_hab(pim_ctr, offset);
 #endif
 
 #if CHANGE_HAB_SB
-        ChangeHAB2SB(pim_ctr, gidx, offset
-#ifdef EMULATOR
-                     ,
-                     emulator_trace
-#endif
-                     );
+        change_hab_sb(pim_ctr, gidx, offset);
 #endif
     }
 
 #if PARK_OUT
-    ParkOut(pim_ctr, gidx, num_ba, offset
-#ifdef EMULATOR
-            ,
-            emulator_trace
-#endif
-            );
+    park_out(pim_ctr, gidx, num_ba, offset);
 #endif
 
 #ifdef EMULATOR
@@ -191,38 +167,18 @@ __kernel void relu_pim_operation(__global uint8_t* __restrict__ pim_data, __glob
 /* so program_crf and chagne_pim_mode functions can not access to over 8GB in our system */
 
 #if PARK_IN
-    ParkIn(pim_ctr, gidx, num_ba, offset
-#ifdef EMULATOR
-           ,
-           emulator_trace
-#endif
-           );
+    park_in(pim_ctr, gidx, num_ba, offset);
 #endif
 
     if (get_local_id(0) < 2) {
 #if CHANGE_SB_HAB
-        ChangeSB2HAB(pim_ctr, offset
-#ifdef EMULATOR
-                     ,
-                     emulator_trace
-#endif
-                     );
+        change_sb_hab(pim_ctr, offset);
 #endif
 #if PROGRAM_CRF
-        ProgramCRF(pim_ctr, gidx, crf_binary, offset
-#ifdef EMULATOR
-                   ,
-                   emulator_trace
-#endif
-                   );
+        program_crf(pim_ctr, gidx, crf_binary, offset);
 #endif
 #if CHANGE_HAB_HABPIM
-        ChangeHAB2HABPIM(pim_ctr, offset
-#ifdef EMULATOR
-                         ,
-                         emulator_trace
-#endif
-                         );
+        change_hab_habpim(pim_ctr, offset);
 #endif
         B_CMD(1);
     }
@@ -257,31 +213,16 @@ __kernel void relu_pim_operation(__global uint8_t* __restrict__ pim_data, __glob
 
     if (get_local_id(0) < 4) {
 #if CHANGE_HABPIM_HAB
-        ChangeHABPIM2HAB(pim_ctr, offset
-#ifdef EMULATOR
-                         ,
-                         emulator_trace
-#endif
-                         );
+        change_habpim_hab(pim_ctr, offset);
 #endif
 
 #if CHANGE_HAB_SB
-        ChangeHAB2SB(pim_ctr, gidx, offset
-#ifdef EMULATOR
-                     ,
-                     emulator_trace
-#endif
-                     );
+        change_hab_sb(pim_ctr, gidx, offset);
 #endif
     }
 
 #if PARK_OUT
-    ParkOut(pim_ctr, gidx, num_ba, offset
-#ifdef EMULATOR
-            ,
-            emulator_trace
-#endif
-            );
+    park_out(pim_ctr, gidx, num_ba, offset);
 #endif
 
 #ifdef EMULATOR

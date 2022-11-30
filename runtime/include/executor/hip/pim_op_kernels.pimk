@@ -179,7 +179,7 @@ __device__ void _program_crf(volatile uint8_t* __restrict__ pim_ctr, int gidx, u
 }
 
 // specific to gemv and batch norm,
-__device__ void _program_crfMod(volatile uint8_t* __restrict__ pim_ctr, int gidx, uint8_t* crf_binary, uint64_t offset
+__device__ void _program_crf_mod(volatile uint8_t* __restrict__ pim_ctr, int gidx, uint8_t* crf_binary, uint64_t offset
 #ifdef EMULATOR
                                 ,
                                 PimMemTracer* emulator_trace
@@ -262,7 +262,7 @@ __device__ void _park_out(volatile uint8_t* __restrict__ pim_ctr, int gidx, int 
 #define park_in(a, b, c, d) _park_in(a, b, c, d, emulator_trace)
 #define change_sb_hab(a, b) _change_sb_hab(a, b, emulator_trace)
 #define program_crf(a, b, c, d) _program_crf(a, b, c, d, emulator_trace)
-#define program_crfMod(a, b, c, d) _program_crfMod(a, b, c, d, emulator_trace)
+#define program_crf_mod(a, b, c, d) _program_crf_mod(a, b, c, d, emulator_trace)
 #define program_srf(a, b, c) _program_srf(a, b, c, emulator_trace)
 #define change_hab_habpim(a, b) _change_hab_habpim(a, b, emulator_trace)
 #define change_habpim_hab(a, b) _change_habpim_hab(a, b, emulator_trace)
@@ -273,7 +273,7 @@ __device__ void _park_out(volatile uint8_t* __restrict__ pim_ctr, int gidx, int 
 #define park_in(a, b, c, d) _park_in(a, b, c, d)
 #define change_sb_hab(a, b) _change_sb_hab(a, b)
 #define program_crf(a, b, c, d) _program_crf(a, b, c, d)
-#define program_crfMod(a, b, c, d) _program_crfMod(a, b, c, d)
+#define program_crf_mod(a, b, c, d) _program_crf_mod(a, b, c, d)
 #define program_srf(a, b, c) _program_srf(a, b, c)
 #define change_hab_habpim(a, b) _change_hab_habpim(a, b)
 #define change_habpim_hab(a, b) _change_habpim_hab(a, b)

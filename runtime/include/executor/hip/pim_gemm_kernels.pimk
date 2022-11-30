@@ -73,7 +73,7 @@ __global__ void pim_chwise_gemm_bias_relu_fp16(
 
 #if PROGRAM_CRF
     if (hipThreadIdx_x < (crf_size >> 4)) {
-        program_crfMod(pim_ctr, gidx, crf_binary, offset);
+        program_crf_mod(pim_ctr, gidx, crf_binary, offset);
     }
 #endif
 
@@ -279,7 +279,7 @@ __global__ void pim_chwise_gemm_bias_relu_32tile_fp16(
 
 #if PROGRAM_CRF
     if (hipThreadIdx_x < (crf_size >> 4)) {
-        program_crfMod(pim_ctr, gidx, crf_binary, offset);
+        program_crf_mod(pim_ctr, gidx, crf_binary, offset);
     }
 #endif
 
@@ -484,7 +484,7 @@ __global__ void pim_aligned_gemm_bias_relu_fp16(
 
 #if PROGRAM_CRF
     if (hipThreadIdx_x < (crf_size >> 4)) {
-        program_crfMod(pim_ctr, gidx, crf_binary, offset);
+        program_crf_mod(pim_ctr, gidx, crf_binary, offset);
     }
 #endif
 
@@ -702,7 +702,7 @@ __global__ void pim_aligned_gemm_bias_relu_8tile_fp16(
 
 #if PROGRAM_CRF
     if (hipThreadIdx_x < (crf_size >> 4)) {
-        program_crfMod(pim_ctr, gidx, crf_binary, offset);
+        program_crf_mod(pim_ctr, gidx, crf_binary, offset);
     }
 #endif
 

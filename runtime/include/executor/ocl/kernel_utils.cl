@@ -251,12 +251,12 @@ Sugars to represent each common step in executing a particular kernel on PIM.
 * change hab to sb mode.
 * park_out
 */
-void ParkIn(__global uint8_t* __restrict__ pim_ctr, int gidx, int num_ba, uint64_t offset
+void _park_in(__global uint8_t* __restrict__ pim_ctr, int gidx, int num_ba, uint64_t offset
 #ifdef EMULATOR
-            ,
-            __global PimMemTracer* emulator_trace
+              ,
+              __global PimMemTracer* emulator_trace
 #endif
-            )
+              )
 {
     uint64_t addr;
     addr = addr_gen_(get_group_id(0), 0, gidx / num_ba, gidx % num_ba, (1 << 13), 0);
@@ -264,12 +264,12 @@ void ParkIn(__global uint8_t* __restrict__ pim_ctr, int gidx, int num_ba, uint64
     B_CMD(1);
 }
 
-void ChangeSB2HAB(__global uint8_t* __restrict__ pim_ctr, uint64_t offset
+void _change_sb_hab(__global uint8_t* __restrict__ pim_ctr, uint64_t offset
 #ifdef EMULATOR
-                  ,
-                  __global PimMemTracer* emulator_trace
+                    ,
+                    __global PimMemTracer* emulator_trace
 #endif
-                  )
+                    )
 {
     uint64_t addr;
     addr = addr_gen_(get_group_id(0), 0, 2, 0, 0x27ff, 0x1f);
@@ -286,12 +286,12 @@ void ChangeSB2HAB(__global uint8_t* __restrict__ pim_ctr, uint64_t offset
     B_CMD(1);
 }
 
-void ProgramCRF(__global uint8_t* __restrict__ pim_ctr, int gidx, __global uint8_t* crf_binary, uint64_t offset
+void _program_crf(__global uint8_t* __restrict__ pim_ctr, int gidx, __global uint8_t* crf_binary, uint64_t offset
 #ifdef EMULATOR
-                ,
-                __global PimMemTracer* emulator_trace
+                  ,
+                  __global PimMemTracer* emulator_trace
 #endif
-                )
+                  )
 {
     uint64_t addr;
     addr = addr_gen_(get_group_id(0), 0, 0, 1, 0x3fff, 0x4 + gidx);
@@ -299,12 +299,12 @@ void ProgramCRF(__global uint8_t* __restrict__ pim_ctr, int gidx, __global uint8
 }
 
 // specific to gemv and batch norm,
-void ProgramCRFMod(__global uint8_t* __restrict__ pim_ctr, int gidx, __global uint8_t* crf_binary, uint64_t offset
+void _program_crf_mod(__global uint8_t* __restrict__ pim_ctr, int gidx, __global uint8_t* crf_binary, uint64_t offset
 #ifdef EMULATOR
-                   ,
-                   __global PimMemTracer* emulator_trace
+                     ,
+                     __global PimMemTracer* emulator_trace
 #endif
-                   )
+                     )
 {
     uint64_t addr;
     addr = addr_gen_(get_group_id(0), 0, 0, 1, 0x3fff, 0x4 + gidx);
@@ -313,24 +313,24 @@ void ProgramCRFMod(__global uint8_t* __restrict__ pim_ctr, int gidx, __global ui
     B_CMD(1);
 }
 
-void ProgramSRF(__global uint8_t* __restrict__ pim_ctr, __global uint8_t* srf_binary, uint64_t offset
+void _program_srf(__global uint8_t* __restrict__ pim_ctr, __global uint8_t* srf_binary, uint64_t offset
 #ifdef EMULATOR
-                ,
-                __global PimMemTracer* emulator_trace
+                  ,
+                  __global PimMemTracer* emulator_trace
 #endif
-                )
+                  )
 {
     uint64_t addr;
     addr = addr_gen_(get_group_id(0), 0, 0, 0, 0x3fff, 0x0);
     W_CMD_R(&pim_ctr[addr + 32 + offset], srf_binary + offset);
 }
 
-void ChangeHAB2HABPIM(__global uint8_t* __restrict__ pim_ctr, uint64_t offset
+void _change_hab_habpim(__global uint8_t* __restrict__ pim_ctr, uint64_t offset
 #ifdef EMULATOR
-                      ,
-                      __global PimMemTracer* emulator_trace
+                        ,
+                        __global PimMemTracer* emulator_trace
 #endif
-                      )
+                        )
 {
     uint64_t addr;
     addr = addr_gen_(get_group_id(0), 0, 0, 0, 0x3fff, 0x0);
@@ -338,12 +338,12 @@ void ChangeHAB2HABPIM(__global uint8_t* __restrict__ pim_ctr, uint64_t offset
     R_CMD(&pim_ctr[addr + offset]);
 }
 
-void ChangeHABPIM2HAB(__global uint8_t* __restrict__ pim_ctr, uint64_t offset
+void _change_habpim_hab(__global uint8_t* __restrict__ pim_ctr, uint64_t offset
 #ifdef EMULATOR
-                      ,
-                      __global PimMemTracer* emulator_trace
+                        ,
+                        __global PimMemTracer* emulator_trace
 #endif
-                      )
+                        )
 {
     uint64_t addr;
     addr = addr_gen_(get_group_id(0), 0, 0, 0, 0x3fff, 0x0);
@@ -352,12 +352,12 @@ void ChangeHABPIM2HAB(__global uint8_t* __restrict__ pim_ctr, uint64_t offset
     B_CMD(1);
 }
 
-void ChangeHAB2SB(__global uint8_t* __restrict__ pim_ctr, int gidx, uint64_t offset
+void _change_hab_sb(__global uint8_t* __restrict__ pim_ctr, int gidx, uint64_t offset
 #ifdef EMULATOR
-                  ,
-                  __global PimMemTracer* emulator_trace
+                    ,
+                    __global PimMemTracer* emulator_trace
 #endif
-                  )
+                    )
 {
     uint64_t addr;
     addr = addr_gen_(get_group_id(0), 0, 0, gidx, 0x2fff, 0x1f);
@@ -366,14 +366,37 @@ void ChangeHAB2SB(__global uint8_t* __restrict__ pim_ctr, int gidx, uint64_t off
     B_CMD(1);
 }
 
-void ParkOut(__global uint8_t* __restrict__ pim_ctr, int gidx, int num_ba, uint64_t offset
+void _park_out(__global uint8_t* __restrict__ pim_ctr, int gidx, int num_ba, uint64_t offset
 #ifdef EMULATOR
-             ,
-             __global PimMemTracer* emulator_trace
+               ,
+               __global PimMemTracer* emulator_trace
 #endif
-             )
+               )
 {
     uint64_t addr;
     addr = addr_gen_(get_group_id(0), 0, gidx / num_ba, gidx % num_ba, (1 << 13), 0);
     W_CMD(&pim_ctr[addr + offset]);
 }
+
+#ifdef EMULATOR
+#define park_in(a, b, c, d) _park_in(a, b, c, d, emulator_trace)
+#define change_sb_hab(a, b) _change_sb_hab(a, b, emulator_trace)
+#define program_crf(a, b, c, d) _program_crf(a, b, c, d, emulator_trace)
+#define program_crf_mod(a, b, c, d) _program_crf_mod(a, b, c, d, emulator_trace)
+#define program_srf(a, b, c) _program_srf(a, b, c, emulator_trace)
+#define change_hab_habpim(a, b) _change_hab_habpim(a, b, emulator_trace)
+#define change_habpim_hab(a, b) _change_habpim_hab(a, b, emulator_trace)
+#define change_hab_sb(a, b, c) _change_hab_sb(a, b, c, emulator_trace)
+#define park_out(a, b, c, d) _park_out(a, b, c, d, emulator_trace)
+
+#else
+#define park_in(a, b, c, d) _park_in(a, b, c, d)
+#define change_sb_hab(a, b) _change_sb_hab(a, b)
+#define program_crf(a, b, c, d) _program_crf(a, b, c, d)
+#define program_crf_mod(a, b, c, d) _program_crf_mod(a, b, c, d)
+#define program_srf(a, b, c) _program_srf(a, b, c)
+#define change_hab_habpim(a, b) _change_hab_habpim(a, b)
+#define change_habpim_hab(a, b) _change_habpim_hab(a, b)
+#define change_hab_sb(a, b, c) _change_hab_sb(a, b, c)
+#define park_out(a, b, c, d) _park_out(a, b, c, d)
+#endif
