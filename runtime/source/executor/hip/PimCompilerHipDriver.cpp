@@ -188,7 +188,9 @@ PimBo* HIPDriver::execute_program(PimCompiledObj* obj, PimTarget* target, std::s
 
         } else if (obj->op_order[i] == "crf_binary") {
             // Push pim_ctr
-            args[i++] = (uint8_t*)g_pim_base_addr[3]; // Use GPU 4
+            int device_id = 0;
+            hipGetDevice(&device_id);
+            args[i++] = (uint8_t*)g_pim_base_addr[device_id];
             args[i] = crf_binary_device;
         } else {
             DLOG(ERROR) << "PimBo not found in map";
