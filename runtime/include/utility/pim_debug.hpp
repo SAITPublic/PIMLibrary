@@ -282,6 +282,16 @@ inline void set_rand_half_data(half_float::half* buffer, half_float::half variat
         buffer[i] = half_float::half(dis(gen));
     }
 }
+inline void set_rand_half_data_positive(half_float::half* buffer, half_float::half variation, size_t size)
+{
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<> dis(0.001, variation);
+
+    for (size_t i = 0; i < size; i++) {
+        buffer[i] = half_float::half(dis(gen));
+    }
+}
 
 inline int compare_half_Ulps_and_absoulte(half_float::half data_a, half_float::half data_b, int allow_bit_cnt,
                                           float absTolerance = 0.001)

@@ -134,8 +134,9 @@ __kernel void elt_op_pim(__global uint8_t* __restrict__ operand0, __global uint8
 #define COMPUTE_RELU 1
 
 __kernel void relu_pim_operation(__global uint8_t* __restrict__ pim_data, __global uint8_t* __restrict__ output,
-                                 __global uint8_t* __restrict__ pim_ctr, int size, __global uint8_t* crf_binary,
-                                 int crf_size
+                                __global uint8_t* __restrict__ pim_ctr, int output_size, __global uint8_t* crf_binary,
+                                  int crf_size
+
 #ifdef EMULATOR
                                  ,
                                  __global PimMemTraceData* fmtd16, __global size_t* frd_size, int mt_width,
@@ -156,7 +157,7 @@ __kernel void relu_pim_operation(__global uint8_t* __restrict__ pim_data, __glob
     int num_pim_chan = 64;
     int num_grf = 8;
     int num_ba = 4;
-    int out_dim = size / trans_size;
+    int out_dim = output_size / trans_size;
     int num_tile = out_dim / (num_pim_blocks * num_pim_chan * num_grf) / 2;
 
     int gidx = get_local_id(0) / 2;

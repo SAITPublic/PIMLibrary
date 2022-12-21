@@ -17,6 +17,8 @@
 #include "half.hpp"
 #include "pim_runtime_api.h"
 #include "utility/pim_debug.hpp"
+#include "utility/pim_profile.h"
+#include "utility/test_util.h"
 
 #ifdef DEBUG_PIM
 #define NUM_ITER (100)
@@ -27,56 +29,79 @@
 using namespace std;
 using half_float::half;
 
-int pim_copy_up_to_256KB(bool block, uint32_t input_len)
+class PimCopyTest : public Testing
 {
-    int ret = 0;
+   public:
+    PimCopyTest(unsigned in_length) : n_(in_length)
+    {
+        PimDesc* pim_desc = PimCreateDesc(1, 1, 1, n_, PIM_FP16);
 
-    /* __PIM_API__ call : Initialize PimRuntime */
-    PimInitialize(RT_TYPE_OPENCL, PIM_FP16);
-
-    PimDesc* pim_desc = PimCreateDesc(1, 1, 1, input_len, PIM_FP16);
-
-    /* __PIM_API__ call : Create PIM Buffer Object */
-    PimBo* host_input = PimCreateBo(pim_desc, MEM_TYPE_HOST);
-    PimBo* host_output = PimCreateBo(pim_desc, MEM_TYPE_HOST);
-    PimBo* golden_output = PimCreateBo(pim_desc, MEM_TYPE_HOST);
-    PimBo* pim_input = PimCreateBo(pim_desc, MEM_TYPE_PIM);
-    PimBo* device_output = PimCreateBo(pim_desc, MEM_TYPE_PIM);
-
-    /* Initialize the input, output data */
-    std::string test_vector_data = TEST_VECTORS_DATA;
-
-    std::string input = test_vector_data + "load/relu/input_256KB.dat";
-    std::string output = test_vector_data + "load/relu/input_256KB.dat";
-    std::string output_dump = test_vector_data + "dump/relu/output_256KB.dat";
-
-    load_data(input.c_str(), (char*)host_input->data, host_input->size);
-    load_data(output.c_str(), (char*)golden_output->data, golden_output->size);
-
-    /* __PIM_API__ call : Preload weight data on PIM memory */
-    PimCopyMemory(pim_input, host_input, HOST_TO_PIM);
-    for (int i = 0; i < NUM_ITER; i++) {
-        /* __PIM_API__ call : Execute PIM kernel */
-        PimCopyMemory(device_output, pim_input, PIM_TO_PIM);
-        if (!block) PimSynchronize();
-
-        PimCopyMemory(host_output, device_output, PIM_TO_HOST);
-
-        ret = compare_half_relative((half*)host_output->data, (half*)golden_output->data, input_len);
+        /* __PIM_API__ call : Create PIM Buffer Object */
+        host_input_ = PimCreateBo(pim_desc, MEM_TYPE_HOST);
+        host_output_ = PimCreateBo(pim_desc, MEM_TYPE_HOST);
+        golden_output_ = PimCreateBo(pim_desc, MEM_TYPE_HOST);
+        pim_input_ = PimCreateBo(pim_desc, MEM_TYPE_PIM);
+        device_output_ = PimCreateBo(pim_desc, MEM_TYPE_PIM);
     }
-    //    dump_data(output_dump.c_str(), (char*)host_output->data, host_output->size);
 
-    /* __PIM_API__ call : Free memory */
-    PimDestroyBo(host_input);
-    PimDestroyBo(host_output);
-    PimDestroyBo(golden_output);
-    PimDestroyBo(device_output);
-    PimDestroyBo(pim_input);
+    ~PimCopyTest(void)
+    {
+        PimDestroyBo(host_input_);
+        PimDestroyBo(host_output_);
+        PimDestroyBo(golden_output_);
+        PimDestroyBo(device_output_);
+        PimDestroyBo(pim_input_);
+    }
 
-    /* __PIM_API__ call : Deinitialize PimRuntime */
-    PimDeinitialize();
+    virtual void prepare(float alpha = 1.0f, float beta = 0.0f, float variation = 0.2f) override
+    {
+        set_rand_half_data((half_float::half*)host_input_->data, (half_float::half)0.5, n_);
+        /* __PIM_API__ call : Preload weight data on PIM memory */
+        PimCopyMemory(pim_input_, host_input_, HOST_TO_PIM);
+    }
 
-    return ret;
+    virtual void run(bool block = true, unsigned niter = 1) override
+    {
+        for (unsigned i = 0; i < niter; ++i) {
+            PimCopyMemory(device_output_, pim_input_, PIM_TO_PIM);
+            if (!block) PimSynchronize();
+            PimCopyMemory(host_output_, device_output_, PIM_TO_HOST);
+        }
+    }
+
+    virtual int validate(float epsilon = 0.1f) override
+    {
+        return compare_half_relative((half*)host_output_->data, (half*)host_input_->data, n_);
+    }
+
+   private:
+    unsigned n_;
+
+    PimBo *host_input_, *host_output_;
+    PimBo *pim_input_, *device_output_;
+    PimBo* golden_output_;
+};
+
+class PimCopyTestFixture : public ::testing::Test
+{
+   protected:
+    void SetUp(PimRuntimeType plt)
+    {
+        PimInitialize(plt, PIM_FP16);
+        PimExecuteDummy();
+    }
+    virtual void TearDown(void) override { PimDeinitialize(); }
+    int ExecuteTest(unsigned n, bool block = true)
+    {
+        PimCopyTest pimCopyTest = PimCopyTest(n);
+        pimCopyTest.prepare();
+        pimCopyTest.run(block);
+        return pimCopyTest.validate();
+    }
+};
+// OpenCL Test Cases
+TEST_F(PimCopyTestFixture, ocl_pim_copy_128x1024)
+{
+    SetUp(RT_TYPE_OPENCL);
+    EXPECT_TRUE(ExecuteTest(1 * 1024) == 0);
 }
-
-TEST(OCLPimIntegrationTest, PimCopy1Sync) { EXPECT_TRUE(pim_copy_up_to_256KB(true, 128 * 1024) == 0); }

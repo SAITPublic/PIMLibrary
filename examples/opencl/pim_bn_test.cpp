@@ -13,11 +13,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <algorithm>
+#include <cmath>
 #include <iostream>
 #include "half.hpp"
-#include "hip/hip_runtime.h"
 #include "pim_runtime_api.h"
 #include "utility/pim_debug.hpp"
+#include "utility/pim_profile.h"
+#include "utility/test_util.h"
 
 #ifdef DEBUG_PIM
 #define NUM_ITER (1)
@@ -29,77 +31,114 @@ using namespace std;
 using half_float::half;
 
 inline float convertH2F(half h_val) { return half_float::detail::half2float<float>(h_val); }
-int pim_bn_up_to_256KB(bool block, uint64_t input_len)
+void calculate_bn(half* input, half* output, half* mean, half* variance, half* gamma, half* beta, int len)
 {
-    int ret = 0;
-
-    const int BATCH = 1;
-    const int CH = 1;
-    const int HEIGHT = 1;
-    const int WIDTH = input_len;
-
-    /* __PIM_API__ call : Initialize PimRuntime */
-    PimInitialize(RT_TYPE_OPENCL, PIM_FP16);
-
-    PimDesc* pim_desc = PimCreateDesc(BATCH, CH, HEIGHT, WIDTH, PIM_FP16);
-
-    PimBo* host_beta = PimCreateBo(1, CH, 1, 1, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* host_gamma = PimCreateBo(1, CH, 1, 1, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* host_mean = PimCreateBo(1, CH, 1, 1, PIM_FP16, MEM_TYPE_HOST);
-    PimBo* host_variance = PimCreateBo(1, CH, 1, 1, PIM_FP16, MEM_TYPE_HOST);
-
-    /* __PIM_API__ call : Create PIM Buffer Object */
-    PimBo* host_input = PimCreateBo(pim_desc, MEM_TYPE_HOST);
-    PimBo* host_output = PimCreateBo(pim_desc, MEM_TYPE_HOST);
-    PimBo* golden_output = PimCreateBo(pim_desc, MEM_TYPE_HOST);
-    PimBo* pim_input = PimCreateBo(pim_desc, MEM_TYPE_PIM);
-    PimBo* device_output = PimCreateBo(pim_desc, MEM_TYPE_PIM);
-    /* Initialize the input, output data */
-    std::string test_vector_data = TEST_VECTORS_DATA;
-
-    std::string input = test_vector_data + "load/bn/nr_input_256KB.dat";
-    std::string beta = test_vector_data + "load/bn/nr_beta_256KB.dat";
-    std::string gamma = test_vector_data + "load/bn/nr_gamma_256KB.dat";
-    std::string mean = test_vector_data + "load/bn/nr_mean_256KB.dat";
-    std::string variance = test_vector_data + "load/bn/nr_variance_256KB.dat";
-    std::string output = test_vector_data + "load/bn/nr_output_256KB.dat";
-    std::string output_dump = test_vector_data + "dump/bn/nr_output_256KB.dat";
-
-    load_data(input.c_str(), (char*)host_input->data, host_input->size);
-    load_data(beta.c_str(), (char*)host_beta->data, host_beta->size);
-    load_data(gamma.c_str(), (char*)host_gamma->data, host_gamma->size);
-    load_data(mean.c_str(), (char*)host_mean->data, host_mean->size);
-    load_data(variance.c_str(), (char*)host_variance->data, host_variance->size);
-    load_data(output.c_str(), (char*)golden_output->data, golden_output->size);
-
-    // /* __PIM_API__ call : Preload weight data on PIM memory */
-    PimCopyMemory(pim_input, host_input, HOST_TO_PIM);
-    // /* __PIM_API__ call : Execute PIM kernel */
-    for (int i = 0; i < NUM_ITER; i++) {
-        PimExecuteBN(device_output, pim_input, host_beta, host_gamma, host_mean, host_variance, 1e-5, nullptr, block);
+    for (int i = 0; i < len; i++) {
+        output[i] = gamma[0] * ((input[i] - mean[0]) / sqrt(variance[0])) + beta[0];
     }
-
-    PimCopyMemory(host_output, device_output, PIM_TO_HOST);
-
-    ret = compare_half_relative((half*)host_output->data, (half*)golden_output->data, WIDTH);
-
-    /* __PIM_API__ call : Free memory */
-    PimDestroyBo(host_input);
-    PimDestroyBo(host_beta);
-    PimDestroyBo(host_gamma);
-    PimDestroyBo(host_mean);
-    PimDestroyBo(host_variance);
-    PimDestroyBo(host_output);
-    PimDestroyBo(golden_output);
-    PimDestroyBo(device_output);
-    PimDestroyBo(pim_input);
-
-    /* __PIM_API__ call : Deinitialize PimRuntime */
-    PimDeinitialize();
-
-    return ret;
 }
 
-TEST(OCLPimIntegrationTest, PimNRBN1) { EXPECT_TRUE(pim_bn_up_to_256KB(true, 1 * 1024) == 0); }
-TEST(OCLPimIntegrationTest, PimNRBN2) { EXPECT_TRUE(pim_bn_up_to_256KB(true, 64 * 1024) == 0); }
-TEST(OCLPimIntegrationTest, PimNRBN3) { EXPECT_TRUE(pim_bn_up_to_256KB(true, 128 * 1024) == 0); }
+class PimBNTest : public Testing
+{
+   public:
+    PimBNTest(unsigned in_length) : n_(in_length)
+    {
+        PimDesc* pim_desc = PimCreateDesc(BATCH_, CH_, HEIGHT_, n_, PIM_FP16);
+        host_beta_ = PimCreateBo(1, CH_, 1, 1, PIM_FP16, MEM_TYPE_HOST);
+        host_gamma_ = PimCreateBo(1, CH_, 1, 1, PIM_FP16, MEM_TYPE_HOST);
+        host_mean_ = PimCreateBo(1, CH_, 1, 1, PIM_FP16, MEM_TYPE_HOST);
+        host_variance_ = PimCreateBo(1, CH_, 1, 1, PIM_FP16, MEM_TYPE_HOST);
+
+        /* __PIM_API__ call : Create PIM Buffer Object */
+        host_input_ = PimCreateBo(pim_desc, MEM_TYPE_HOST);
+        host_output_ = PimCreateBo(pim_desc, MEM_TYPE_HOST);
+        golden_output_ = PimCreateBo(pim_desc, MEM_TYPE_HOST);
+        pim_input_ = PimCreateBo(pim_desc, MEM_TYPE_PIM);
+        device_output_ = PimCreateBo(pim_desc, MEM_TYPE_PIM);
+    }
+
+    ~PimBNTest(void)
+    {
+        PimDestroyBo(host_input_);
+        PimDestroyBo(host_beta_);
+        PimDestroyBo(host_gamma_);
+        PimDestroyBo(host_mean_);
+        PimDestroyBo(host_variance_);
+        PimDestroyBo(host_output_);
+        PimDestroyBo(golden_output_);
+        PimDestroyBo(device_output_);
+        PimDestroyBo(pim_input_);
+    }
+
+    virtual void prepare(float alpha = 1.0f, float beta = 0.0f, float variation = 0.2f) override
+    {
+        set_rand_half_data((half*)host_input_->data, (half)0.5, n_);
+        set_rand_half_data_positive((half*)host_beta_->data, (half)0.5, CH_);
+        set_rand_half_data_positive((half*)host_gamma_->data, (half)0.5, CH_);
+        set_rand_half_data_positive((half*)host_mean_->data, (half)0.5, CH_);
+        set_rand_half_data_positive((half*)host_variance_->data, (half)0.5, CH_);
+        set_rand_half_data((half*)golden_output_->data, (half)0.5, n_);
+        calculate_bn((half*)host_input_->data, (half*)golden_output_->data, (half*)host_mean_->data,
+                     (half*)host_variance_->data, (half*)host_gamma_->data, (half*)host_beta_->data, n_);
+
+        PimCopyMemory(pim_input_, host_input_, HOST_TO_PIM);
+    }
+
+    virtual void run(bool block = true, unsigned niter = 1) override
+    {
+        for (unsigned i = 0; i < niter; ++i) {
+            PimExecuteBN(device_output_, pim_input_, host_beta_, host_gamma_, host_mean_, host_variance_, 1e-5, nullptr,
+                         block);
+        }
+        PimCopyMemory(host_output_, device_output_, PIM_TO_HOST);
+    }
+
+    virtual int validate(float epsilon = 0.1f) override
+    {
+        return compare_half_relative((half*)host_output_->data, (half*)golden_output_->data, n_);
+    }
+
+   private:
+    const int BATCH_ = 1;
+    const int CH_ = 1;
+    const int HEIGHT_ = 1;
+    unsigned n_;
+
+    PimBo *host_input_, *host_beta_, *host_gamma_, *host_mean_, *host_variance_, *host_output_;
+    PimBo *pim_input_, *device_output_;
+    PimBo* golden_output_;
+};
+
+class PimBNTestFixture : public ::testing::Test
+{
+   protected:
+    void SetUp(PimRuntimeType plt)
+    {
+        PimInitialize(plt, PIM_FP16);
+        PimExecuteDummy();
+    }
+    virtual void TearDown(void) override { PimDeinitialize(); }
+    int ExecuteTest(unsigned n, bool block = true)
+    {
+        PimBNTest pimBNTest = PimBNTest(n);
+        pimBNTest.prepare();
+        pimBNTest.run(block);
+        return pimBNTest.validate();
+    }
+};
+// OpenCL Test Cases
+TEST_F(PimBNTestFixture, ocl_pim_BN_1x1024)
+{
+    SetUp(RT_TYPE_OPENCL);
+    EXPECT_TRUE(ExecuteTest(1 * 1024) == 0);
+}
+TEST_F(PimBNTestFixture, ocl_pim_BN_64x1024)
+{
+    SetUp(RT_TYPE_OPENCL);
+    EXPECT_TRUE(ExecuteTest(64 * 1024) == 0);
+}
+TEST_F(PimBNTestFixture, ocl_pim_BN_128x1024)
+{
+    SetUp(RT_TYPE_OPENCL);
+    EXPECT_TRUE(ExecuteTest(128 * 1024) == 0);
+}

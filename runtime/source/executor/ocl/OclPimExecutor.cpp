@@ -428,8 +428,9 @@ int OclPimExecutor::execute_relu(PimBo* output, PimBo* pim_data, void* stream, b
     const size_t local_work_size = 32;
     const size_t global_work_size = block_size * local_work_size;
     int align_size = (131072 << 1);
-    int aligned_outsize = ((output->size + align_size - 1) / align_size);
-    uint8_t* crf_bin = get_crf_bin(OP_RELU, output->size);
+    int aligned_outsize = (((output->size + align_size - 1) / align_size) * align_size);
+    uint8_t* crf_bin = get_crf_bin(OP_RELU, aligned_outsize);
+
     int crf_size = CRF_BIN_SIZE;
 
     exec_err_ =

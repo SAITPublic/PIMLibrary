@@ -1,11 +1,12 @@
 /*
- * Copyright (C) 2021 Samsung Electronics Co. LTD
+ * Copyright (C) 2022 Samsung Electronics Co. LTD
  *
  * This software is a property of Samsung Electronics.
  * No part of this software, either material or conceptual may be copied or distributed, transmitted,
  * transcribed, stored in a retrieval system or translated into any human or computer language in any form by any means,
  * electronic, mechanical, manual or otherwise, or disclosed
  * to third parties without the express written permission of Samsung Electronics.
+ * (Use of the Software is restricted to non-commercial, personal or academic, research purpose only)
  */
 
 #include <assert.h>
@@ -18,15 +19,16 @@
 #include "pim_runtime_api.h"
 #include "utility/pim_debug.hpp"
 #include "utility/pim_profile.h"
+#include "utility/test_util.h"
 
 using half_float::half;
 using namespace std;
 
-class OclPimGemmTest
+class PimGemmTest : public Testing
 {
    public:
-    OclPimGemmTest(unsigned n, unsigned c, unsigned in_h, unsigned in_w, unsigned out_h, unsigned out_w, PimActFunc act,
-                   bool has_bias, PimGemmOrder gemm_order)
+    PimGemmTest(unsigned n, unsigned c, unsigned in_h, unsigned in_w, unsigned out_h, unsigned out_w, PimActFunc act,
+                bool has_bias, PimGemmOrder gemm_order)
         : n_(n),
           c_(c),
           in_h_(in_h),
@@ -47,43 +49,39 @@ class OclPimGemmTest
             wgt_size_ = n_ * c_ * in_h_ * out_h_;
         else
             wgt_size_ = n_ * c_ * in_w_ * out_w_;
-
-        desc_ = PimCreateGemmDesc(n_, c_, in_h_, in_w_, out_h_, out_w_, PIM_FP16);
+        desc_ = PimCreateGemmDesc(n_, c_, in_h_, in_w_, out_h_, out_w_, PIM_FP16, gemm_order_);
         h_i_ = PimCreateBo(desc_, MEM_TYPE_HOST, GEMM_INPUT);
         h_w_ = PimCreateBo(desc_, MEM_TYPE_HOST, GEMM_WEIGHT);
-        h_b_ = PimCreateBo(desc_, MEM_TYPE_HOST, GEMM_BIAS);
+        if (has_bias_) h_b_ = PimCreateBo(desc_, MEM_TYPE_HOST, GEMM_BIAS);
         h_o_ = PimCreateBo(desc_, MEM_TYPE_HOST, GEMM_OUTPUT);
         d_i_ = PimCreateBo(desc_, MEM_TYPE_DEVICE, GEMM_INPUT);
         d_w_ = PimCreateBo(desc_, MEM_TYPE_DEVICE, GEMM_WEIGHT);
-        if (has_bias_)
-            d_b_ = PimCreateBo(desc_, MEM_TYPE_DEVICE, GEMM_BIAS);
-        else
-            d_b_ = nullptr;
-
+        if (has_bias_) d_b_ = PimCreateBo(desc_, MEM_TYPE_DEVICE, GEMM_BIAS);
         d_o_ = PimCreateBo(desc_, MEM_TYPE_DEVICE, GEMM_OUTPUT);
         golden_ = PimCreateBo(desc_, MEM_TYPE_HOST, GEMM_OUTPUT);
     }
 
-    ~OclPimGemmTest()
+    ~PimGemmTest(void)
     {
         PimDestroyBo(h_i_);
         PimDestroyBo(h_w_);
-        PimDestroyBo(h_b_);
+        if (has_bias_) PimDestroyBo(h_b_);
         PimDestroyBo(h_o_);
         PimDestroyBo(golden_);
         PimDestroyBo(d_i_);
         PimDestroyBo(d_w_);
         if (has_bias_) PimDestroyBo(d_b_);
         PimDestroyBo(d_o_);
+        PimDestroyGemmDesc(desc_);
     }
 
-    void prepare(float alpha = 1.0f, float beta = 0.0f, float variation = 0.01f)
+    virtual void prepare(float alpha = 1.0f, float beta = 0.0f, float variation = 0.2f) override
     {
         set_half_data((half*)golden_->data, half(0.0), out_size_);
         set_half_data((half*)h_o_->data, half(0.0), out_size_);
         set_rand_half_data((half*)h_i_->data, half(variation), in_size_);
         set_rand_half_data((half*)h_w_->data, half(variation), wgt_size_);
-        set_rand_half_data((half*)h_b_->data, half(variation), out_size_);
+        if (has_bias_) set_rand_half_data((half*)h_b_->data, half(variation), out_size_);
 
         half* h_i_data = (half*)h_i_->data;
         half* h_w_data = (half*)h_w_->data;
@@ -91,7 +89,7 @@ class OclPimGemmTest
 
         if (gemm_order_ == W_X_I) {
             for (int nc_i = 0; nc_i < n_ * c_; nc_i++) {
-                matmulCPU(h_w_data, h_i_data, golden_data, out_h_, out_w_, out_w_, half(alpha), half(beta));
+                matmulCPU(h_w_data, h_i_data, golden_data, out_h_, out_w_, in_h_, half(alpha), half(beta));
                 h_i_data += (in_h_ * in_w_);
                 h_w_data += (in_h_ * out_h_);
                 golden_data += (out_h_ * out_w_);
@@ -121,10 +119,10 @@ class OclPimGemmTest
         }
     }
 
-    void run(bool block = true, unsigned niter = 1)
+    virtual void run(bool block = true, unsigned niter = 1) override
     {
         for (unsigned i = 0; i < niter; ++i) {
-            (void)PimExecuteGemm(d_o_, d_i_, d_w_, has_bias_ ? d_b_ : nullptr, act_, gemm_order_, nullptr, block);
+            (void)PimExecuteGemm(d_o_, d_i_, d_w_, d_b_, act_, gemm_order_, nullptr, block);
             if (!block) PimSynchronize();
         }
         PimCopyMemory(h_o_, d_o_, DEVICE_TO_HOST);
@@ -145,14 +143,29 @@ class OclPimGemmTest
         PimCopyMemory(h_o_, d_o_, DEVICE_TO_HOST);
     }
 
-    int validate(float epsilon = 1e-5)
+    void run_with_explicit_reordering_on_device(bool use_device_weight, bool block = true, unsigned niter = 1)
     {
-        return compare_half_relative((half*)h_o_->data, (half*)golden_->data, out_size_, epsilon);
+        auto* w_to_reorder = use_device_weight ? d_w_ : h_w_;
+        for (unsigned i = 0; i < niter; ++i) {
+            auto* reordered_pim_w =
+                PimConvertGemmWeight(w_to_reorder, gemm_order_, /*reorder_on_device = */ true, nullptr);
+            // Ignore return value here to avoid extra branches.
+            // Please check the success of the API call in logs.
+            // Results are verified further.
+            (void)PimExecuteGemm(d_o_, d_i_, reordered_pim_w, d_b_, act_, gemm_order_, nullptr, block);
+            if (!block) PimSynchronize();
+            PimDestroyBo(reordered_pim_w);
+        }
+        PimCopyMemory(h_o_, d_o_, DEVICE_TO_HOST);
+    }
+
+    virtual int validate(float epsilon = 0.1f) override
+    {
+        return compare_half_relative((half*)golden_->data, (half*)h_o_->data, out_size_, epsilon);
     }
 
    private:
     bool is_support_activation(const PimActFunc& act) { return (act == ACT_RELU || act == NONE) ? true : false; }
-    // (n_, c, h, in_w) * (n_, c, in_w, out_w_) = (n_, c, h, out_w_)
     unsigned n_;
     unsigned c_;
     unsigned in_h_;
@@ -174,63 +187,82 @@ class OclPimGemmTest
     PimBo* golden_;
 };
 
-class PimGemmOCLTestFixture : public ::testing::Test
+class PimGemmTestFixture : public ::testing::Test
 {
    protected:
-    virtual void SetUp(void) override
+    void SetUp(PimRuntimeType plt)
     {
-        PimInitialize(RT_TYPE_OPENCL, PIM_FP16);
+        PimInitialize(plt, PIM_FP16);
         PimExecuteDummy();
     }
     virtual void TearDown(void) override { PimDeinitialize(); }
     int ExecuteTest(unsigned n, unsigned c, unsigned in_h, unsigned in_w, unsigned out_h, unsigned out_w,
-                    PimGemmOrder gemm_order = I_X_W, bool has_bias = true, bool block = true, PimActFunc act = ACT_RELU)
+                    PimGemmOrder gemm_order = I_X_W, bool has_bias = false, bool block = true, PimActFunc act = NONE)
     {
-        OclPimGemmTest pimGemmTest = OclPimGemmTest(n, c, in_h, in_w, out_h, out_w, act, has_bias, gemm_order);
+        PimGemmTest pimGemmTest = PimGemmTest(n, c, in_h, in_w, out_h, out_w, act, has_bias, gemm_order);
         pimGemmTest.prepare();
         pimGemmTest.run(block);
         return pimGemmTest.validate();
     }
+
     int ExecuteTestExplicitReordering(unsigned n, unsigned c, unsigned in_h, unsigned in_w, unsigned out_h,
                                       unsigned out_w, bool use_device_weight, PimGemmOrder gemm_order = I_X_W,
-                                      bool has_bias = true, bool block = true, PimActFunc act = ACT_RELU)
+                                      bool has_bias = true, bool block = true, PimActFunc act = NONE)
     {
-        OclPimGemmTest pimGemmTest = OclPimGemmTest(n, c, in_h, in_w, out_h, out_w, act, has_bias, gemm_order);
+        PimGemmTest pimGemmTest = PimGemmTest(n, c, in_h, in_w, out_h, out_w, act, has_bias, gemm_order);
         pimGemmTest.prepare();
         pimGemmTest.run_with_explicit_reordering(use_device_weight, block);
         return pimGemmTest.validate();
     }
-};
 
-TEST_F(PimGemmOCLTestFixture, pim_gemm_1x1024_1024x4096)
+    int ExecuteTestExplicitReorderingOnDevice(unsigned n, unsigned c, unsigned in_h, unsigned in_w, unsigned out_h,
+                                              unsigned out_w, bool use_device_weight, PimGemmOrder gemm_order = I_X_W,
+                                              bool has_bias = true, bool block = true, PimActFunc act = NONE)
+    {
+        PimGemmTest pimGemmTest = PimGemmTest(n, c, in_h, in_w, out_h, out_w, act, has_bias, gemm_order);
+        pimGemmTest.prepare();
+        pimGemmTest.run_with_explicit_reordering_on_device(use_device_weight, block);
+        return pimGemmTest.validate();
+    }
+};
+// OpenCL Test cases
+TEST_F(PimGemmTestFixture, ocl_pim_gemm_1x1024_1024x4096)
 {
+    SetUp(RT_TYPE_OPENCL);
     EXPECT_TRUE(ExecuteTest(1, 1, 1, 1024, 1, 4096, I_X_W, false, true, NONE) == 0);
 }
-TEST_F(PimGemmOCLTestFixture, pim_gemm_8x1024_1024x4096)
+TEST_F(PimGemmTestFixture, ocl_pim_gemm_8x1024_1024x4096)
 {
+    SetUp(RT_TYPE_OPENCL);
     EXPECT_TRUE(ExecuteTest(1, 1, 8, 1024, 8, 4096, I_X_W, false, true, NONE) == 0);
 }
-TEST_F(PimGemmOCLTestFixture, pim_gemm_4x1x1024_4x1024x4096)
+TEST_F(PimGemmTestFixture, ocl_pim_gemm_4x1x1024_4x1024x4096)
 {
+    SetUp(RT_TYPE_OPENCL);
     EXPECT_TRUE(ExecuteTest(1, 4, 1, 1024, 1, 4096, I_X_W, false, true, NONE) == 0);
 }
-TEST_F(PimGemmOCLTestFixture, pim_gemm_4x8x1024_4x1024x4096)
+TEST_F(PimGemmTestFixture, ocl_pim_gemm_4x8x1024_4x1024x4096)
 {
+    SetUp(RT_TYPE_OPENCL);
     EXPECT_TRUE(ExecuteTest(1, 4, 8, 1024, 8, 4096, I_X_W, false, true, NONE) == 0);
 }
-TEST_F(PimGemmOCLTestFixture, pim_gemm_64x1x256_64x256x64)
+TEST_F(PimGemmTestFixture, ocl_pim_gemm_64x1x256_64x256x64)
 {
+    SetUp(RT_TYPE_OPENCL);
     EXPECT_TRUE(ExecuteTest(1, 64, 1, 256, 1, 64, I_X_W, false, true, NONE) == 0);
 }
-TEST_F(PimGemmOCLTestFixture, pim_gemm_64x1x1024_64x1024x64)
+TEST_F(PimGemmTestFixture, ocl_pim_gemm_64x1x1024_64x1024x64)
 {
+    SetUp(RT_TYPE_OPENCL);
     EXPECT_TRUE(ExecuteTest(1, 64, 1, 1024, 1, 64, I_X_W, false, true, NONE) == 0);
 }
-TEST_F(PimGemmOCLTestFixture, pim_gemm_4x1x4096_4x4096x1024)
+TEST_F(PimGemmTestFixture, ocl_pim_gemm_4x1x4096_4x4096x1024)
 {
+    SetUp(RT_TYPE_OPENCL);
     EXPECT_TRUE(ExecuteTest(1, 4, 1, 4096, 1, 1024, I_X_W, false, true, NONE) == 0);
 }
-TEST_F(PimGemmOCLTestFixture, pim_gemm_8x1x4096_8x4096x1024)
+TEST_F(PimGemmTestFixture, ocl_pim_gemm_8x1x4096_8x4096x1024)
 {
+    SetUp(RT_TYPE_OPENCL);
     EXPECT_TRUE(ExecuteTest(1, 8, 1, 4096, 1, 1024, I_X_W, false, true, NONE) == 0);
 }

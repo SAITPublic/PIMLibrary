@@ -15,58 +15,94 @@
 #include <stdlib.h>
 #include <algorithm>
 #include <iostream>
-#include <random>
+#include "half.hpp"
 #include "pim_runtime_api.h"
 #include "utility/pim_debug.hpp"
-#include "utility/pim_util.h"
+#include "utility/pim_profile.h"
+#include "utility/test_util.h"
 
 using namespace std;
 using half_float::half;
 
-void calculate_relu(half_float::half* input, half_float::half* output, int input_len)
+void inline calculate_relu(half* input, half* output, int len)
 {
-    for (int i = 0; i < input_len; i++) {
-        output[i] = (input[i] > 0) ? input[0] : 0;
+    for (int i = 0; i < len; i++) {
+        output[i] = (input[i] > 0) ? input[i] : (half)0;
     }
 }
 
-bool pim_relu_sync(bool block, uint32_t input_len)
+class PimReluTest : public Testing
 {
-    bool ret = true;
+   public:
+    PimReluTest(unsigned in_length) : n_(in_length)
+    {
+        PimDesc* pim_desc = PimCreateDesc(1, 1, 1, n_, PIM_FP16);
 
-    /* __PIM_API__ call : Initialize PimRuntime */
-    PimInitialize(RT_TYPE_OPENCL, PIM_FP16);
-
-    PimDesc* pim_desc = PimCreateDesc(1, 1, 1, input_len, PIM_FP16);
-
-    /* __PIM_API__ call : Create PIM Buffer Object */
-    PimBo* host_input = PimCreateBo(pim_desc, MEM_TYPE_HOST);
-    PimBo* host_output = PimCreateBo(pim_desc, MEM_TYPE_HOST);
-    PimBo* golden_output = PimCreateBo(pim_desc, MEM_TYPE_HOST);
-    PimBo* pim_input = PimCreateBo(pim_desc, MEM_TYPE_PIM);
-    PimBo* device_output = PimCreateBo(pim_desc, MEM_TYPE_PIM);
-
-    set_rand_half_data((half_float::half*)host_input->data, (half_float::half)0.5, input_len);
-    calculate_relu((half_float::half*)host_input->data, (half_float::half*)golden_output->data, input_len);
-
-    PimCopyMemory(pim_input, host_input, HOST_TO_PIM);
-    PimExecuteRelu(device_output, pim_input, nullptr, true);
-    PimCopyMemory(host_output, device_output, PIM_TO_HOST);
-    int compare_result =
-        compare_half_relative((half_float::half*)golden_output->data, (half_float::half*)host_output->data, input_len);
-    if (compare_result != 0) {
-        ret = false;
+        /* __PIM_API__ call : Create PIM Buffer Object */
+        host_input_ = PimCreateBo(pim_desc, MEM_TYPE_HOST);
+        host_out_ = PimCreateBo(pim_desc, MEM_TYPE_HOST);
+        ref_out_ = PimCreateBo(pim_desc, MEM_TYPE_HOST);
+        device_input_ = PimCreateBo(pim_desc, MEM_TYPE_PIM);
+        device_output_ = PimCreateBo(pim_desc, MEM_TYPE_PIM);
     }
 
-    PimDestroyBo(host_input);
-    PimDestroyBo(host_output);
-    PimDestroyBo(golden_output);
-    PimDestroyBo(device_output);
-    PimDestroyBo(pim_input);
-    PimDeinitialize();
+    ~PimReluTest(void)
+    {
+        PimDestroyBo(host_input_);
+        PimDestroyBo(host_out_);
+        PimDestroyBo(ref_out_);
+        PimDestroyBo(device_output_);
+        PimDestroyBo(device_input_);
+    }
 
-    return ret;
+    virtual void prepare(float alpha = 1.0f, float beta = 0.0f, float variation = 0.2f) override
+    {
+        set_rand_half_data((half*)host_input_->data, (half)0.5, n_);
+        calculate_relu((half*)host_input_->data, (half*)ref_out_->data, n_);
+
+        PimCopyMemory(device_input_, host_input_, HOST_TO_PIM);
+    }
+
+    virtual void run(bool block = true, unsigned niter = 1) override
+    {
+        for (unsigned i = 0; i < niter; ++i) {
+            PimExecuteRelu(device_output_, device_input_, nullptr, true);
+            PimCopyMemory(host_out_, device_output_, PIM_TO_HOST);
+        }
+    }
+
+    virtual int validate(float epsilon = 0.1f) override
+    {
+        return compare_half_relative((half*)host_out_->data, (half*)ref_out_->data, n_);
+    }
+
+   private:
+    unsigned n_;
+
+    PimBo *host_input_, *host_out_;
+    PimBo *device_input_, *device_output_;
+    PimBo* ref_out_;
+};
+
+class PimReluTestFixture : public ::testing::Test
+{
+   protected:
+    void SetUp(PimRuntimeType plt)
+    {
+        PimInitialize(plt, PIM_FP16);
+        PimExecuteDummy();
+    }
+    virtual void TearDown(void) override { PimDeinitialize(); }
+    int ExecuteTest(unsigned n, bool block = true)
+    {
+        PimReluTest pimReluTest = PimReluTest(n);
+        pimReluTest.prepare();
+        pimReluTest.run(block);
+        return pimReluTest.validate();
+    }
+};
+TEST_F(PimReluTestFixture, ocl_pim_relu_256x1024)
+{
+    SetUp(RT_TYPE_OPENCL);
+    EXPECT_TRUE(ExecuteTest(256 * 1024) == 0);
 }
-
-TEST(OCLPimIntegrationTest, PimRelu1Sync) { EXPECT_TRUE(pim_relu_sync(true, 256 * 1024)); }
-TEST(OCLPimIntegrationTest, PimRelu2Sync) { EXPECT_TRUE(pim_relu_sync(true, 1 * 1024)); }
