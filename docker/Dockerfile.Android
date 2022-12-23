@@ -1,0 +1,53 @@
+FROM ubuntu:20.04
+ARG DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get -y upgrade \
+    && apt-get install -y \ 
+    apt-utils \
+    unzip \
+    tar \
+    curl \
+    xz-utils \ 
+    ocl-icd-libopencl1 \
+    opencl-headers \
+    clinfo \
+    ;
+
+RUN apt-get update
+RUN apt-get --yes --allow-unauthenticated install sudo
+RUN apt-get --yes --allow-unauthenticated install wget
+RUN apt-get --yes --allow-unauthenticated install kmod
+RUN apt-get --yes --allow-unauthenticated install libbz2-dev
+
+# Developement Requirments
+RUN apt-get --yes --allow-unauthenticated install build-essential
+RUN apt-get --yes --allow-unauthenticated install git
+RUN apt-get --yes --allow-unauthenticated install vim
+RUN apt-get --yes --allow-unauthenticated install byobu
+RUN apt-get --yes --allow-unauthenticated install bash-completion
+RUN apt-get --yes --allow-unauthenticated install clang-format
+RUN apt-get --yes --allow-unauthenticated install libpci-dev
+RUN apt-get --yes --allow-unauthenticated install libsqlite3-dev
+RUN apt-get --yes --allow-unauthenticated install cmake
+
+
+# download NDK for linux
+RUN wget https://dl.google.com/android/repository/android-ndk-r25b-linux.zip
+RUN unzip android-ndk-r25b-linux.zip -d /opt/android-ndk-r25b
+
+#download android SDK platform-tool for linux
+RUN wget https://dl.google.com/android/repository/platform-tools-latest-linux.zip
+RUN unzip platform-tools-latest-linux.zip -d /opt/platform-tool
+ENV PATH="${PATH}:/opt/platform-tool/platform-tools"
+ENV PATH="${PATH}:/opt/android-ndk-r25b/android-ndk-r25b/toolchains/llvm/prebuilt/linux-x86_64/bin/"
+
+ENV QWORKSPACE=/home/user/pim-workspace
+RUN groupadd -g 9000 developer
+
+COPY ./entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY ./bashrc /tmp/bashrc
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+
+CMD ["bash", "-l"]
+
+
