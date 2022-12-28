@@ -15,13 +15,14 @@
 #include <algorithm>
 #include <iostream>
 #include <random>
-#include "pim_runtime_api.h"
 #include "utility/pim_debug.hpp"
-#include "utility/pim_util.h"
+#include "utility/pim_profile.h"
+#include "half.hpp"
+#include "pim_runtime_api.h"
 
 #define IN_LENGTH 1024 * 256
 #define BATCH_DIM 1
-
+using half_float::half;
 using namespace std;
 
 template <class T>

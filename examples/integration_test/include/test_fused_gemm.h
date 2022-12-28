@@ -19,11 +19,12 @@
 #include "pim_runtime_api.h"
 #include "utility/pim_debug.hpp"
 #include "utility/pim_profile.h"
+#include "test_util.h"
 
 using half_float::half;
 using namespace std;
 
-class PimFusedGemmTest
+class PimFusedGemmTest : public Testing
 {
    public:
     PimFusedGemmTest(unsigned n, unsigned c, unsigned h, unsigned in_w0, unsigned out_w0, unsigned out_w1,
@@ -103,7 +104,7 @@ class PimFusedGemmTest
         PimDestroyBo(golden_);
     }
 
-    void prepare(float alpha = 1.0f, float beta = 0.0f, float variation = 0.2f)
+    virtual void prepare(float alpha = 1.0f, float beta = 0.0f, float variation = 0.2f) override
     {
         set_rand_half_data((half*)h_i0_->data, half(variation), in_size0_);
         set_rand_half_data((half*)h_w0_->data, half(variation), wgt_size0_);
@@ -167,7 +168,7 @@ class PimFusedGemmTest
         }
     }
 
-    void run(bool block = true, unsigned niter = 1)
+    virtual void run(bool block = true, unsigned niter = 1) override
     {
         for (unsigned i = 0; i < niter; ++i) {
             (void)PimExecuteGemm(d_o0_, d_i0_, d_w0_, d_b0_, act0_, I_X_W, nullptr, false);
@@ -177,14 +178,13 @@ class PimFusedGemmTest
         PimCopyMemory(h_o1_, d_o1_, DEVICE_TO_HOST);
     }
 
-    int validate(float epsilon = 0.1f)
+    virtual int validate(float epsilon = 0.1f) override
     {
         return compare_half_relative((half*)golden_->data, (half*)h_o1_->data, out_size1_, epsilon);
     }
 
    private:
     bool is_support_activation(const PimActFunc& act) { return (act == ACT_RELU || act == NONE) ? true : false; }
-
     // First  (n, c, h, in_w0) * (n, c, in_w0, out_w0) = (n, c, h, out_w0)
     // Second (n, c, h, out_w0) * (n, c, out_w0, out_w1) = (n, c, h, out_w1)
     unsigned n_;
@@ -214,13 +214,12 @@ class PimFusedGemmTest
 class PimFusedGemmTestFixture : public ::testing::Test
 {
    protected:
-    virtual void SetUp(void) override
+    void SetUp(PimRuntimeType plt)
     {
-        PimInitialize(RT_TYPE_HIP, PIM_FP16);
+        PimInitialize(plt, PIM_FP16);
         PimExecuteDummy();
     }
     virtual void TearDown(void) override { PimDeinitialize(); }
-
     int ExecuteTest(unsigned n, unsigned c, unsigned h, unsigned in_w0, unsigned out_w0, unsigned out_w1,
                     bool has_bias0 = true, PimActFunc act0 = ACT_RELU, bool has_bias1 = true, PimActFunc act1 = NONE,
                     bool block = true)
@@ -232,8 +231,3 @@ class PimFusedGemmTestFixture : public ::testing::Test
         return pimFusedGemmTest.validate();
     }
 };
-
-TEST_F(PimFusedGemmTestFixture, pim_fused_gemm_bias_relu_4x1x1024_4x1024x4096_4x4096x1024)
-{
-    EXPECT_TRUE(ExecuteTest(1, 4, 1, 1024, 4096, 1024, true, ACT_RELU, true, NONE) == 0);
-}

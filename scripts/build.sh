@@ -157,13 +157,13 @@ make_install_fn()
 if [ $target_device = "amd" ]; then
     make_install_opencl_binary()
     {
-        ./examples/OpenCLPimIntegrationTests --gtest_filter=*create_ocl_kernel_binary*
+        ./examples/integration_test/OpenCLPimIntegrationTests --gtest_filter=*create_ocl_kernel_binary*
         sudo cp ocl_pimk.bin ${ROCM_PATH}/opencl/bin/
     }
 else
     make_install_opencl_binary()
     {
-        ./examples/OpenCLPimIntegrationTests --gtest_filter=*create_ocl_kernel_binary*
+        ./examples/integration_test/OpenCLPimIntegrationTests --gtest_filter=*create_ocl_kernel_binary*
         sudo cp ocl_pimk.bin ${PIM_PATH}/opencl/bin/
     }
 fi

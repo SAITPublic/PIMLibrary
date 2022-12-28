@@ -160,5 +160,5 @@ int pim_copy_rect_d2h()
     return ret;
 }
 
-TEST(HIPIntegrationTest, PimCopyRect3D_H2D) { EXPECT_TRUE(pim_copy_rect_h2d() == 0); }
-TEST(HIPIntegrationTest, PimCopyRect3D_D2H) { EXPECT_TRUE(pim_copy_rect_d2h() == 0); }
+TEST(HIPIntegrationTest, hip_PimCopyRect3D_H2D) { EXPECT_TRUE(pim_copy_rect_h2d() == 0); }
+TEST(HIPIntegrationTest, hip_PimCopyRect3D_D2H) { EXPECT_TRUE(pim_copy_rect_d2h() == 0); }

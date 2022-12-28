@@ -86,4 +86,4 @@ int pim_gemm_beta(bool block)
     return ret;
 }
 
-TEST(HIPIntegrationTest, pim_gemm_beta) { EXPECT_TRUE(pim_gemm_beta(true) == 0); }
+TEST(HIPIntegrationTest, hip_pim_gemm_beta) { EXPECT_TRUE(pim_gemm_beta(true) == 0); }

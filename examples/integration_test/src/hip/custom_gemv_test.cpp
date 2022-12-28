@@ -522,11 +522,11 @@ int custom_addmv_Axy_api(bool relu)
     return ret;
 }
 
-TEST(HIPIntegrationTest, CustomGemvAxyTest) { EXPECT_TRUE(custom_gemv_Axy(true) == 0); }
-TEST(HIPIntegrationTest, CustomGemvxAyTest) { EXPECT_TRUE(custom_gemv_xAy(true) == 0); }
-TEST(HIPIntegrationTest, CustomAddmvAxyTest) { EXPECT_TRUE(custom_addmv_Axy(false) == 0); }
-TEST(HIPIntegrationTest, CustomAddmvAxyReluTest) { EXPECT_TRUE(custom_addmv_Axy(true) == 0); }
-TEST(HIPIntegrationTest, CustomAddmvxAyTest) { EXPECT_TRUE(custom_addmv_xAy(false) == 0); }
-TEST(HIPIntegrationTest, CustomAddmvxAyReluTest) { EXPECT_TRUE(custom_addmv_xAy(true) == 0); }
-TEST(HIPIntegrationTest, CustomGemvAxyAPITest) { EXPECT_TRUE(custom_gemv_Axy_api(false) == 0); }
-TEST(HIPIntegrationTest, CustomAddmvAxyAPITest) { EXPECT_TRUE(custom_addmv_Axy_api(true) == 0); }
+TEST(HIPIntegrationTest, hip_CustomGemvAxyTest) { EXPECT_TRUE(custom_gemv_Axy(true) == 0); }
+TEST(HIPIntegrationTest, hip_CustomGemvxAyTest) { EXPECT_TRUE(custom_gemv_xAy(true) == 0); }
+TEST(HIPIntegrationTest, hip_CustomAddmvAxyTest) { EXPECT_TRUE(custom_addmv_Axy(false) == 0); }
+TEST(HIPIntegrationTest, hip_CustomAddmvAxyReluTest) { EXPECT_TRUE(custom_addmv_Axy(true) == 0); }
+TEST(HIPIntegrationTest, hip_CustomAddmvxAyTest) { EXPECT_TRUE(custom_addmv_xAy(false) == 0); }
+TEST(HIPIntegrationTest, hip_CustomAddmvxAyReluTest) { EXPECT_TRUE(custom_addmv_xAy(true) == 0); }
+TEST(HIPIntegrationTest, hip_CustomGemvAxyAPITest) { EXPECT_TRUE(custom_gemv_Axy_api(false) == 0); }
+TEST(HIPIntegrationTest, hip_CustomAddmvAxyAPITest) { EXPECT_TRUE(custom_addmv_Axy_api(true) == 0); }

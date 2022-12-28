@@ -247,10 +247,10 @@ bool test_memcpy_latency()
     return true;
 }
 
-TEST(UnitTest, PimMemCopyHostAndDeviceTest) { EXPECT_TRUE(test_memcpy_bw_host_device()); }
-TEST(UnitTest, PimMemCopyHostAndPimTest) { EXPECT_TRUE(test_memcpy_bw_host_pim()); }
-TEST(UnitTest, PimMemCopyDeviceAndPimTest) { EXPECT_TRUE(test_memcpy_bw_device_pim()); }
-TEST(UnitTest, PimMemCopyLatencyTest) { EXPECT_TRUE(test_memcpy_latency()); }
-TEST(UnitTest, simplePimAllocFree) { EXPECT_TRUE(simple_pim_alloc_free()); }
-TEST(UnitTest, PimRepeatAllocateFree) { EXPECT_TRUE(pim_repeat_allocate_free()); }
-TEST(UnitTest, PimAllocateExceedBlocksize) { EXPECT_FALSE(pim_allocate_exceed_blocksize()); }
+TEST(UnitTest, hip_hip_PimCopyHostAndDeviceTest) { EXPECT_TRUE(test_memcpy_bw_host_device()); }
+TEST(UnitTest, hip_PimCopyHostAndPimTest) { EXPECT_TRUE(test_memcpy_bw_host_pim()); }
+TEST(UnitTest, hip_PimCopyDeviceAndPimTest) { EXPECT_TRUE(test_memcpy_bw_device_pim()); }
+TEST(UnitTest, hip_PimCopyLatencyTest) { EXPECT_TRUE(test_memcpy_latency()); }
+TEST(UnitTest, hip_simplePimAllocFree) { EXPECT_TRUE(simple_pim_alloc_free()); }
+TEST(UnitTest, hip_PimRepeatAllocateFree) { EXPECT_TRUE(pim_repeat_allocate_free()); }
+TEST(UnitTest, hip_PimAllocateExceedBlocksize) { EXPECT_FALSE(pim_allocate_exceed_blocksize()); }

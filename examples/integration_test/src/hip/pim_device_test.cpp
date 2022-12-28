@@ -61,4 +61,4 @@ bool test_set_get_device()
     return true;
 }
 
-TEST(UnitTest, PimSetGetDeviceTest) { EXPECT_TRUE(test_set_get_device()); }
+TEST(UnitTest, hip_PimSetGetDeviceTest) { EXPECT_TRUE(test_set_get_device()); }

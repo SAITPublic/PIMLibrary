@@ -1,12 +1,12 @@
-
 /*
- * Copyright (C) 2021 Samsung Electronics Co. LTD
+ * Copyright (C) 2022 Samsung Electronics Co. LTD
  *
  * This software is a property of Samsung Electronics.
  * No part of this software, either material or conceptual may be copied or distributed, transmitted,
  * transcribed, stored in a retrieval system or translated into any human or computer language in any form by any means,
  * electronic, mechanical, manual or otherwise, or disclosed
  * to third parties without the express written permission of Samsung Electronics.
+ * (Use of the Software is restricted to non-commercial, personal or academic, research purpose only)
  */
 
 #include <assert.h>
@@ -15,11 +15,11 @@
 #include <stdlib.h>
 #include <algorithm>
 #include <iostream>
-#include "half.hpp"
-#include "pim_runtime_api.h"
 #include "utility/pim_debug.hpp"
 #include "utility/pim_profile.h"
-#include "utility/test_util.h"
+#include "half.hpp"
+#include "pim_runtime_api.h"
+#include "test_util.h"
 
 using half_float::half;
 using namespace std;
@@ -27,15 +27,16 @@ using namespace std;
 class PimEltwiseTest : public Testing
 {
    public:
-    PimEltwiseTest(unsigned in_length, string op) : n_(in_length), op_(op)
+    PimEltwiseTest(unsigned in_length, unsigned c, unsigned h, unsigned w, string op)
+        : n_(in_length), c_(c), h_(h), w_(w), op_(op)
     {
-        host_opr1_ = PimCreateBo(n_, 1, 1, 1, PIM_FP16, MEM_TYPE_HOST);
-        host_opr2_ = PimCreateBo(n_, 1, 1, 1, PIM_FP16, MEM_TYPE_HOST);
-        host_out_ = PimCreateBo(n_, 1, 1, 1, PIM_FP16, MEM_TYPE_HOST);
-        ref_out_ = PimCreateBo(n_, 1, 1, 1, PIM_FP16, MEM_TYPE_HOST);
-        device_opr1_ = PimCreateBo(n_, 1, 1, 1, PIM_FP16, MEM_TYPE_PIM);
-        device_opr2_ = PimCreateBo(n_, 1, 1, 1, PIM_FP16, MEM_TYPE_PIM);
-        device_output_ = PimCreateBo(n_, 1, 1, 1, PIM_FP16, MEM_TYPE_PIM);
+        host_opr1_ = PimCreateBo(n_, c_, h_, w_, PIM_FP16, MEM_TYPE_HOST);
+        host_opr2_ = PimCreateBo(n_, c_, h_, w_, PIM_FP16, MEM_TYPE_HOST);
+        host_out_ = PimCreateBo(n_, c_, h_, w_, PIM_FP16, MEM_TYPE_HOST);
+        ref_out_ = PimCreateBo(n_, c_, h_, w_, PIM_FP16, MEM_TYPE_HOST);
+        device_opr1_ = PimCreateBo(n_, c_, h_, w_, PIM_FP16, MEM_TYPE_PIM);
+        device_opr2_ = PimCreateBo(n_, c_, h_, w_, PIM_FP16, MEM_TYPE_PIM);
+        device_output_ = PimCreateBo(n_, c_, h_, w_, PIM_FP16, MEM_TYPE_PIM);
     }
 
     ~PimEltwiseTest(void)
@@ -54,9 +55,9 @@ class PimEltwiseTest : public Testing
         set_rand_half_data((half *)host_opr1_->data, (half)0.5, n_);
         set_rand_half_data((half *)host_opr2_->data, (half)0.5, n_);
         if (op_ == "add")
-            addCPU((half *)host_opr1_->data, (half *)host_opr2_->data, (half *)ref_out_->data, n_);
+            addCPU((half *)host_opr1_->data, (half *)host_opr2_->data, (half *)ref_out_->data, n_*c_*h_*w_);
         else
-            mulCPU((half *)host_opr1_->data, (half *)host_opr2_->data, (half *)ref_out_->data, n_);
+            mulCPU((half *)host_opr1_->data, (half *)host_opr2_->data, (half *)ref_out_->data, n_*c_*h_*w_);
         PimCopyMemory(device_opr1_, host_opr1_, HOST_TO_PIM);
         PimCopyMemory(device_opr2_, host_opr2_, HOST_TO_PIM);
     }
@@ -79,7 +80,7 @@ class PimEltwiseTest : public Testing
     }
 
    private:
-    unsigned n_;
+    unsigned n_, c_, h_, w_;
     string op_;
 
     PimBo *host_opr1_, *host_opr2_, *host_out_;
@@ -96,22 +97,11 @@ class PimEltwiseTestFixture : public ::testing::Test
         PimExecuteDummy();
     }
     virtual void TearDown(void) override { PimDeinitialize(); }
-    int ExecuteTest(unsigned n, string op, bool block = true)
+    int ExecuteTest(unsigned n, unsigned c, unsigned h, unsigned w, string op, bool block = true)
     {
-        PimEltwiseTest pimEltwiseTest = PimEltwiseTest(n, op);
+        PimEltwiseTest pimEltwiseTest = PimEltwiseTest(n, c, h, w, op);
         pimEltwiseTest.prepare();
         pimEltwiseTest.run(block);
         return pimEltwiseTest.validate();
     }
 };
-// OpenCL Test Cases
-TEST_F(PimEltwiseTestFixture, ocl_pim_eltWise_add_256x1024)
-{
-    SetUp(RT_TYPE_OPENCL);
-    EXPECT_TRUE(ExecuteTest(256 * 1024, "add") == 0);
-}
-TEST_F(PimEltwiseTestFixture, ocl_pim_eltWise_mul_256x1024)
-{
-    SetUp(RT_TYPE_OPENCL);
-    EXPECT_TRUE(ExecuteTest(256 * 1024, "mul") == 0);
-}

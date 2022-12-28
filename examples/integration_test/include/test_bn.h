@@ -1,11 +1,12 @@
 /*
- * Copyright (C) 2021 Samsung Electronics Co. LTD
+ * Copyright (C) 2022 Samsung Electronics Co. LTD
  *
  * This software is a property of Samsung Electronics.
  * No part of this software, either material or conceptual may be copied or distributed, transmitted,
  * transcribed, stored in a retrieval system or translated into any human or computer language in any form by any means,
  * electronic, mechanical, manual or otherwise, or disclosed
  * to third parties without the express written permission of Samsung Electronics.
+ * (Use of the Software is restricted to non-commercial, personal or academic, research purpose only)
  */
 
 #include <assert.h>
@@ -15,11 +16,11 @@
 #include <algorithm>
 #include <cmath>
 #include <iostream>
-#include "half.hpp"
-#include "pim_runtime_api.h"
 #include "utility/pim_debug.hpp"
 #include "utility/pim_profile.h"
-#include "utility/test_util.h"
+#include "half.hpp"
+#include "pim_runtime_api.h"
+#include "test_util.h"
 
 #ifdef DEBUG_PIM
 #define NUM_ITER (1)
@@ -126,19 +127,3 @@ class PimBNTestFixture : public ::testing::Test
         return pimBNTest.validate();
     }
 };
-// OpenCL Test Cases
-TEST_F(PimBNTestFixture, ocl_pim_BN_1x1024)
-{
-    SetUp(RT_TYPE_OPENCL);
-    EXPECT_TRUE(ExecuteTest(1 * 1024) == 0);
-}
-TEST_F(PimBNTestFixture, ocl_pim_BN_64x1024)
-{
-    SetUp(RT_TYPE_OPENCL);
-    EXPECT_TRUE(ExecuteTest(64 * 1024) == 0);
-}
-TEST_F(PimBNTestFixture, ocl_pim_BN_128x1024)
-{
-    SetUp(RT_TYPE_OPENCL);
-    EXPECT_TRUE(ExecuteTest(128 * 1024) == 0);
-}

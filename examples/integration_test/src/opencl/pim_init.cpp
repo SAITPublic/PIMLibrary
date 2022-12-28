@@ -15,9 +15,9 @@
 #include <algorithm>
 #include <iostream>
 #include <random>
-#include "pim_runtime_api.h"
-#include "utility/pim_debug.hpp"
+#include "utility/pim_profile.h"
 #include "utility/pim_util.h"
+#include "pim_runtime_api.h"
 
 using namespace std;
 

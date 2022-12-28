@@ -96,4 +96,4 @@ int gpu_reduce_sum(void)
     return 0;
 }
 
-TEST(UnitTest, GpuIntegralSum) { EXPECT_TRUE(gpu_reduce_sum() == 0); }
+TEST(UnitTest, hip_GpuIntegralSum) { EXPECT_TRUE(gpu_reduce_sum() == 0); }

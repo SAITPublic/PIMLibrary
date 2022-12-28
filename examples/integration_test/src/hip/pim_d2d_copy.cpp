@@ -176,4 +176,4 @@ int pim_d2d_test()
     return 0;
 }
 
-TEST(HIPIntegrationTest, pimD2DTest) { EXPECT_TRUE(pim_d2d_test() == 0); }
+TEST(HIPIntegrationTest, hip_pimD2DTest) { EXPECT_TRUE(pim_d2d_test() == 0); }
