@@ -52,23 +52,23 @@ void checkPeer2PeerSupport()
     int gpuCount;
     int canAccessPeer;
 
-    HIPCHECK(hipGetDeviceCount(&gpuCount));
+    PIMCHECK(hipGetDeviceCount(&gpuCount));
     cout << " gpu count : " << gpuCount << endl;
 
     for (int currentGpu = 0; currentGpu < gpuCount; currentGpu++) {
-        HIPCHECK(hipSetDevice(currentGpu));
+        PIMCHECK(PimSetDevice(currentGpu));
 
         for (int peerGpu = 0; peerGpu < currentGpu; peerGpu++) {
             if (currentGpu != peerGpu) {
-                HIPCHECK(hipDeviceCanAccessPeer(&canAccessPeer, currentGpu, peerGpu));
+                PIMCHECK(hipDeviceCanAccessPeer(&canAccessPeer, currentGpu, peerGpu));
                 printf("currentGpu#%d canAccessPeer: peerGpu#%d=%d\n", currentGpu, peerGpu, canAccessPeer);
             }
 
-            HIPCHECK(hipSetDevice(peerGpu));
-            HIPCHECK(hipDeviceReset());
+            PIMCHECK(PimSetDevice(peerGpu));
+            PIMCHECK(hipDeviceReset());
         }
-        HIPCHECK(hipSetDevice(currentGpu));
-        HIPCHECK(hipDeviceReset());
+        PIMCHECK(PimSetDevice(currentGpu));
+        PIMCHECK(hipDeviceReset());
     }
 }
 
@@ -82,7 +82,7 @@ void enablePeer2Peer(int currentGpu, int peerGpu)
     PIMCHECK(PimSetDevice(currentGpu));
     hipDeviceCanAccessPeer(&canAccessPeer, currentGpu, peerGpu);
     if (canAccessPeer == 1) {
-        HIPCHECK(hipDeviceEnablePeerAccess(peerGpu, 0));
+        PIMCHECK(hipDeviceEnablePeerAccess(peerGpu, 0));
     } else
         printf("peer2peer transfer not possible between the selected gpu devices");
 }
@@ -98,7 +98,7 @@ void disablePeer2Peer(int currentGpu, int peerGpu)
     hipDeviceCanAccessPeer(&canAccessPeer, currentGpu, peerGpu);
 
     if (canAccessPeer == 1) {
-        HIPCHECK(hipDeviceDisablePeerAccess(peerGpu));
+        PIMCHECK(hipDeviceDisablePeerAccess(peerGpu));
     } else
         printf("peer2peer disable not required");
 }
@@ -115,7 +115,7 @@ int pim_d2d_test()
     half* output_data;
 
     PimInitialize(RT_TYPE_HIP, PIM_FP16);
-    HIPCHECK(hipGetDeviceCount(&gpuCount));
+    PIMCHECK(hipGetDeviceCount(&gpuCount));
 
     if (gpuCount < 2) {
         printf("Peer2Peer application requires at least 2 gpu devices");
@@ -176,4 +176,4 @@ int pim_d2d_test()
     return 0;
 }
 
-TEST(HIPIntegrationTest, hip_pimD2DTest) { EXPECT_TRUE(pim_d2d_test() == 0); }
+TEST(UnitTest, hip_pimD2DTest) { EXPECT_TRUE(pim_d2d_test() == 0); }
