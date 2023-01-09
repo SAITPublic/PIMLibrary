@@ -15,14 +15,14 @@
 #include <string.h>
 #include <iostream>
 #include <list>
+#include <memory>
 #include "hip/hip_runtime.h"
 #include "manager/HostInfo.h"
 #include "manager/PimInfo.h"
 #include "pim_data_types.h"
+#include "pim_runtime_api.h"
 #include "utility/pim_debug.hpp"
 #include "utility/pim_util.h"
-
-#include "pim_runtime_api.h"
 
 extern std::map<uint32_t, HostInfo*> host_devices;
 
@@ -168,13 +168,14 @@ __device__ __host__ inline uint64_t convert_idx_from_raw_to_chwise_gemm_weight_l
     return (n_c_offset + addr_gen(cidx, rank, bg, bank, row, col) + (h_cord * type_size % trans_size)) / type_size;
 }
 
-__global__ void fill_gemm_weight_chwise(int n, int c, int h, int w, half* dst, half* src)
+__global__ void fill_gemm_weight_chwise(int n, int c, int h, int w, half_float::half* dst, half_float::half* src)
 {
     for (int i = blockIdx.x; i < n; i += gridDim.x) {
         for (int j = blockIdx.y; j < c; j += gridDim.y) {
             for (int k = threadIdx.x; k < h; k += blockDim.x) {
                 for (int l = threadIdx.y; l < w; l += blockDim.y) {
-                    auto idx = convert_idx_from_raw_to_chwise_gemm_weight_layout(n, c, h, w, i, j, k, l, sizeof(half));
+                    auto idx = convert_idx_from_raw_to_chwise_gemm_weight_layout(n, c, h, w, i, j, k, l,
+                                                                                 sizeof(half_float::half));
                     dst[idx] = src[i * c * h * w + j * h * w + k * w + l];
                 }
             }
@@ -182,13 +183,14 @@ __global__ void fill_gemm_weight_chwise(int n, int c, int h, int w, half* dst, h
     }
 }
 
-__global__ void fill_gemm_weight_aligned(int n, int c, int h, int w, half* dst, half* src)
+__global__ void fill_gemm_weight_aligned(int n, int c, int h, int w, half_float::half* dst, half_float::half* src)
 {
     for (int i = blockIdx.x; i < n; i += gridDim.x) {
         for (int j = blockIdx.y; j < c; j += gridDim.y) {
             for (int k = threadIdx.x; k < h; k += blockDim.x) {
                 for (int l = threadIdx.y; l < w; l += blockDim.y) {
-                    auto idx = convert_idx_from_raw_to_aligned_gemm_weight_layout(n, c, h, w, i, j, k, l, sizeof(half));
+                    auto idx = convert_idx_from_raw_to_aligned_gemm_weight_layout(n, c, h, w, i, j, k, l,
+                                                                                  sizeof(half_float::half));
                     dst[idx] = src[i * c * h * w + j * h * w + k * w + l];
                 }
             }
@@ -563,7 +565,8 @@ int HipMemoryManager::convert_data_layout_for_chwise_gemm_weight(PimBo* dst, Pim
         auto blocks = dim3(src->bshape_r.n, src->bshape_r.c);
         auto threads = dim3(32, 32);  // cover any shape by 32x32 squares
         hipLaunchKernelGGL(fill_gemm_weight_chwise, blocks, threads, 0, (hipStream_t)stream, src->bshape_r.n,
-                           src->bshape_r.c, src->bshape_r.h, src->bshape_r.w, (half*)dst->data, (half*)src->data);
+                           src->bshape_r.c, src->bshape_r.h, src->bshape_r.w, (half_float::half*)dst->data,
+                           (half_float::half*)src->data);
         dst->data_layout_type = PimDataLayoutType::CHWISE_GEMM_WEIGHT;
         return ret;
     }
@@ -716,7 +719,7 @@ int HipMemoryManager::convert_data_layout_for_chwise_gemm_weight(PimBo* dst, Pim
                 }
             }
         }
-        data_offset += (src->bshape.h * PIM_GEMV_OUT_ALIGN * sizeof(half));
+        data_offset += (src->bshape.h * PIM_GEMV_OUT_ALIGN * sizeof(half_float::half));
     }
     dst->data_layout_type = PimDataLayoutType::CHWISE_GEMM_WEIGHT;
 
@@ -772,10 +775,11 @@ int HipMemoryManager::convert_data_layout_for_aligned_gemm_weight(PimBo* dst, Pi
     }
 
     if (src->bshape.w != src->bshape_r.w || src->bshape.h != src->bshape_r.h) {
-        src_temp = (char*)calloc(src_size, sizeof(half));
+        src_temp = (char*)calloc(src_size, sizeof(half_float::half));
         for (int i = 0; i < src->bshape_r.w; i++) {
-            if (hipMemcpy((half*)src_temp + i * src->bshape.h, (half*)src->data + i * src->bshape_r.h,
-                          src->bshape_r.h * sizeof(half), hipMemcpyDeviceToHost) != hipSuccess) {
+            if (hipMemcpy((half_float::half*)src_temp + i * src->bshape.h,
+                          (half_float::half*)src->data + i * src->bshape_r.h,
+                          src->bshape_r.h * sizeof(half_float::half), hipMemcpyDeviceToHost) != hipSuccess) {
                 DLOG(INFO) << "[END] " << __FUNCTION__ << " Failed to copy";
                 return -1;
             }
@@ -791,7 +795,8 @@ int HipMemoryManager::convert_data_layout_for_aligned_gemm_weight(PimBo* dst, Pi
         auto blocks = dim3(src->bshape_r.n, src->bshape_r.c);
         auto threads = dim3(1, 1024);  // alignment 256x4096 can't be reached due to 1024 threads limitation
         hipLaunchKernelGGL(fill_gemm_weight_aligned, blocks, threads, 0, (hipStream_t)stream, src->bshape_r.n,
-                           src->bshape_r.c, src->bshape_r.h, src->bshape_r.w, (half*)dst->data, (half*)src->data);
+                           src->bshape_r.c, src->bshape_r.h, src->bshape_r.w, (half_float::half*)dst->data,
+                           (half_float::half*)src->data);
         dst->data_layout_type = PimDataLayoutType::ALIGNED_GEMM_WEIGHT;
         return ret;
     }
@@ -906,7 +911,7 @@ int HipMemoryManager::convert_data_layout_for_aligned_gemm_weight(PimBo* dst, Pi
                 }
             }
         }
-        data_offset += (src->bshape.h * src->bshape.w * sizeof(half));
+        data_offset += (src->bshape.h * src->bshape.w * sizeof(half_float::half));
     }
     dst->data_layout_type = PimDataLayoutType::ALIGNED_GEMM_WEIGHT;
 

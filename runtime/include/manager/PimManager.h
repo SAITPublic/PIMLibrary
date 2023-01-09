@@ -12,6 +12,7 @@
 #ifndef _PIM_MANAGER_H_
 #define _PIM_MANAGER_H_
 
+#include <memory>
 #include "manager/IPimMemoryManager.h"
 #include "manager/PimDevice.h"
 #include "manager/PimInfo.h"

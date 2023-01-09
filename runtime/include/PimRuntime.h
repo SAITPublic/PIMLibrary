@@ -18,6 +18,7 @@
 #include <api/pim_compiler.hpp>
 #endif
 
+#include <memory>
 #include <unordered_map>
 #include "executor/IPimExecutor.h"
 #include "manager/PimInfo.h"

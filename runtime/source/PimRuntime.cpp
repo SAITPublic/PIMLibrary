@@ -74,6 +74,7 @@ int PimRuntime::deinitialize(void)
     return ret;
 }
 
+#if AMD
 int PimRuntime::set_device(uint32_t device_id)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
@@ -103,7 +104,17 @@ int PimRuntime::get_device(uint32_t* device_id)
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
+#else
+int PimRuntime::set_device(uint32_t device_id)
+{
+    // TO DO
+}
 
+int PimRuntime::get_device(uint32_t* device_id)
+{
+    // TO DO
+}
+#endif
 void* PimRuntime::create_stream(PimRuntimeType rt_type)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";

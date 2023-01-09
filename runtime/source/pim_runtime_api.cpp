@@ -14,7 +14,6 @@
 #include "PimRuntime.h"
 #include "executor/PimCompilerDriver.h"
 #include "half.hpp"
-#include "hip/hip_runtime.h"
 #include "utility/pim_debug.hpp"
 #include "utility/pim_log.h"
 #include "utility/pim_profile.h"

@@ -15,7 +15,9 @@
 #include "manager/IPimMemoryManager.h"
 #include "manager/PimDevice.h"
 #include "manager/PimInfo.h"
+#if AMD
 #include "manager/hip/HipMemoryManager.h"
+#endif
 #include "manager/ocl/OclMemoryManager.h"
 #include "pim_data_types.h"
 
@@ -32,7 +34,11 @@ class PimMemoryManagerFactory
                                                                   PimRuntimeType rt_type, PimPrecision precision)
     {
         if (rt_type == RT_TYPE_HIP) {
+#if AMD
             return std::make_shared<HipMemoryManager>(pim_device, precision);
+#else
+            throw std::invalid_argument("HIP is not supported on Non AMD platforms\n");
+#endif
         } else if (rt_type == RT_TYPE_OPENCL) {
             return std::make_shared<OclMemoryManager>(pim_device, precision);
         } else {

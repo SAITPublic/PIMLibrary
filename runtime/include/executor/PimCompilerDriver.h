@@ -18,8 +18,10 @@
 #include <pim_runtime_api.h>
 #include "manager/HostInfo.h"
 
+#if AMD
 #include <hip/hip_runtime.h>
 #include <hip/hiprtc.h>
+#endif
 
 #include <memory>
 #include <vector>

@@ -15,10 +15,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <iostream>
+#include "half.hpp"
 #include "manager/HostInfo.h"
 #include "utility/assert_cl.h"
 #include "utility/pim_util.h"
-
+using half_float::half;
 /*
 TODO: currently we are using default device id (0) for compilation purposes.
 we need to figure out how to make use of cl_device_id struct for physical id.
@@ -204,8 +205,6 @@ int OclMemoryManager::free_memory(PimBo* pim_bo)
     int err = 0;
 
     cl_mem curr_buff = reinterpret_cast<cl_mem>(pim_bo->data);
-    err = clFinish(queue);
-    cl_ok(err);
     if (pim_bo->mem_type == MEM_TYPE_DEVICE) {
         clReleaseMemObject(curr_buff);
     } else if (pim_bo->mem_type == MEM_TYPE_HOST) {
@@ -517,7 +516,7 @@ int OclMemoryManager::convert_data_layout_for_chwise_gemm_weight(PimBo* dst, Pim
                 }
             }
         }
-        data_offset += (src->bshape.h * PIM_GEMV_OUT_ALIGN * sizeof(half));
+        data_offset += (src->bshape.h * PIM_GEMV_OUT_ALIGN * sizeof(half_float::half));
     }
     dst->data_layout_type = PimDataLayoutType::CHWISE_GEMM_WEIGHT;
 
@@ -573,11 +572,12 @@ int OclMemoryManager::convert_data_layout_for_aligned_gemm_weight(PimBo* dst, Pi
     }
 
     if (src->bshape.w != src->bshape_r.w || src->bshape.h != src->bshape_r.h) {
-        src_temp = (char*)calloc(src_size, sizeof(half));
+        src_temp = (char*)calloc(src_size, sizeof(half_float::half));
         int copy_success;
         for (int i = 0; i < src->bshape_r.w; i++) {
-            copy_success = copy_memory((half*)src_temp + i * src->bshape.h, (half*)src_data + i * src->bshape_r.h,
-                                       src->bshape_r.h * sizeof(half), DEVICE_TO_HOST);
+            copy_success = copy_memory((half_float::half*)src_temp + i * src->bshape.h,
+                                       (half_float::half*)src_data + i * src->bshape_r.h,
+                                       src->bshape_r.h * sizeof(half_float::half), DEVICE_TO_HOST);
             if (copy_success != 0) {
                 DLOG(INFO) << "[END] " << __FUNCTION__ << " Failed to copy";
                 return -1;
@@ -693,7 +693,7 @@ int OclMemoryManager::convert_data_layout_for_aligned_gemm_weight(PimBo* dst, Pi
                 }
             }
         }
-        data_offset += (src->bshape.h * src->bshape.w * sizeof(half));
+        data_offset += (src->bshape.h * src->bshape.w * sizeof(half_float::half));
     }
     dst->data_layout_type = PimDataLayoutType::ALIGNED_GEMM_WEIGHT;
 

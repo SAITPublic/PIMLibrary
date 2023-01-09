@@ -13,6 +13,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <iostream>
+#include "manager/HostInfo.h"
 #include "manager/PimMemoryManagerFactory.h"
 #include "utility/pim_log.h"
 #include "utility/pim_util.h"
@@ -160,7 +161,6 @@ int PimManager::convert_data_layout(PimBo* dst, PimBo* src, bool reorder_on_devi
 }
 
 void PimManager::set_gemm_order(PimGemmOrder gemm_order) { pim_memory_manager_->set_gemm_order(gemm_order); }
-
 } /* namespace manager */
 } /* namespace runtime */
 } /*namespace pim */

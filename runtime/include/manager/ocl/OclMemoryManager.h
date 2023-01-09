@@ -13,6 +13,7 @@
 #define _OPENCL_MEM_MANAGER_H_
 
 #include <CL/cl.h>
+#include <memory>
 #include "manager/IPimMemoryManager.h"
 #include "manager/PimDevice.h"
 #include "manager/PimInfo.h"

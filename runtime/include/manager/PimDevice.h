@@ -27,7 +27,6 @@ class PimDevice
     PimDevice(void) { ::get_pim_block_info(&pbi_); }
     virtual ~PimDevice(void) {}
     PimBlockInfo* get_pim_block_info(void) { return &pbi_; }
-
 #if 0 /* TODO: enable PIM Device Driver */
     int init_device(void) = 0;
     int deinit_device(void) = 0;

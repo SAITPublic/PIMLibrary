@@ -13,7 +13,11 @@
 #define _PIM_EXECUTOR_FACTORY_H_
 
 #include "executor/IPimExecutor.h"
+
+#if AMD
 #include "executor/hip/HipPimExecutor.h"
+#endif
+
 #include "executor/ocl/OclPimExecutor.h"
 #include "manager/PimInfo.h"
 #include "manager/PimManager.h"
@@ -32,6 +36,7 @@ class PimExecutorFactory
                                                         pim::runtime::PimRuntime* pim_runtime, PimRuntimeType rt_type,
                                                         PimPrecision precision)
     {
+#if AMD
         if (rt_type == RT_TYPE_HIP) {
             return std::make_shared<HipPimExecutor>(pim_manager, pim_runtime, precision);
         } else if (rt_type == RT_TYPE_OPENCL) {
@@ -39,6 +44,13 @@ class PimExecutorFactory
         } else {
             throw std::invalid_argument("invalid type of runtime");
         }
+#else
+        if (rt_type == RT_TYPE_OPENCL) {
+            return std::make_shared<OclPimExecutor>(pim_manager, pim_runtime, precision);
+        } else {
+            throw std::invalid_argument("invalid type of runtime");
+        }
+#endif
     }
 };
 }  // namespace executor

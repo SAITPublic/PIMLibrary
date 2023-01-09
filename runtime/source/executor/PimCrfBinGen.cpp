@@ -11,7 +11,8 @@
 
 #include "executor/PimCrfBinGen.h"
 #include <cmath>
-
+#include "half.hpp"
+using half_float::half;
 namespace pim
 {
 namespace runtime
@@ -154,11 +155,11 @@ int PimCrfBinGen::preprocess_srf(PimBo* beta, PimBo* gamma, PimBo* mean, PimBo* 
     int num_stride_reg = 2;
     int num_half_per_reg = 16;
 
-    half* h_srf_binary = reinterpret_cast<half*>(srf_binary);
-    half* h_beta = (half*)beta->data;
-    half* h_gamma = (half*)gamma->data;
-    half* h_var = (half*)variance->data;
-    half* h_mean = (half*)mean->data;
+    half_float::half* h_srf_binary = reinterpret_cast<half_float::half*>(srf_binary);
+    half_float::half* h_beta = (half_float::half*)beta->data;
+    half_float::half* h_gamma = (half_float::half*)gamma->data;
+    half_float::half* h_var = (half_float::half*)variance->data;
+    half_float::half* h_mean = (half_float::half*)mean->data;
 
     for (int ch_model = 0; ch_model < beta->bshape.c; ch_model++) {
         h_srf_binary[cidx * num_pim_rank * num_half_per_reg + rank * num_half_per_reg + burst_idx] =

@@ -1,5 +1,5 @@
 include_directories(include)
-if(NVIDIA AND OPENCL)
+if(NVIDIA)
     set(CMAKE_CXX_COMPILER "g++")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
     include_directories(${PIM_PATH}/include)

@@ -401,7 +401,7 @@ int OclPimExecutor::execute_eltwise(PimOpType eltop, PimBo* output, PimBo* opera
 #endif
     exec_err_ =
         clEnqueueNDRangeKernel(queue, eltwise_kernel_, 1, NULL, &global_work_size, &local_work_size, 0, NULL, NULL);
-
+    cl_ok(exec_err_);
     clFinish(queue);
 
 #ifdef EMULATOR

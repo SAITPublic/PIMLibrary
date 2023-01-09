@@ -1,17 +1,28 @@
 aux_source_directory(. runtime_source)
 aux_source_directory(manager  runtime_source)
-aux_source_directory(manager/hip  runtime_source)
-aux_source_directory(manager/ocl  runtime_source)
 aux_source_directory(executor runtime_source)
-aux_source_directory(executor/hip runtime_source)
-aux_source_directory(executor/ocl runtime_source)
 
+if(AMD)
+aux_source_directory(manager/hip  runtime_source)
+aux_source_directory(executor/hip runtime_source)
+endif()
+
+if(OPENCL)
+aux_source_directory(manager/ocl  runtime_source)
+aux_source_directory(executor/ocl runtime_source)
+endif()
 
 if(EMULATOR)
 aux_source_directory(emulator runtime_source)
+if(AMD)
 aux_source_directory(emulator/hip runtime_source)
+endif()
+
+if(OPENCL)
 aux_source_directory(emulator/ocl runtime_source)
 endif()
+endif()
+
 aux_source_directory(utility runtime_source)
 
 if(NVIDIA AND OPENCL)

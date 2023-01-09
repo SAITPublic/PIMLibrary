@@ -13,8 +13,9 @@
  * research purpose only)
  */
 #include "executor/PimCompilerDriver.h"
+#if AMD
 #include "executor/hip/PimCompilerHipDriver.hpp"
-
+#endif
 namespace pim
 {
 namespace runtime

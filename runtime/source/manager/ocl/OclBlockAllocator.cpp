@@ -65,12 +65,15 @@ void OclBlockAllocator::free(void* ptr, size_t length)
 uint64_t OclBlockAllocator::allocate_pim_block(size_t bsize, int host_id)
 {
     uint64_t ret = 0;
+    cl_int cl_err;
     DLOG(INFO) << "Device ID : " << host_id;
     if (pim_alloc_done[host_id] == true) return 0;
 
-    base_address_memobject_ = clCreateBuffer(context, CL_MEM_READ_WRITE, bsize, NULL, NULL);
+    base_address_memobject_ = clCreateBuffer(context, CL_MEM_READ_WRITE, bsize, NULL, &cl_err);
+    cl_ok(cl_err);
     base_host_address_ = clEnqueueMapBuffer(queue, base_address_memobject_, CL_TRUE, CL_MAP_READ | CL_MAP_WRITE, 0,
-                                            bsize, 0, NULL, NULL, NULL);
+                                            bsize, 0, NULL, NULL, &cl_err);
+    cl_ok(cl_err);
     ret = (uint64_t)base_host_address_;
 
     if (ret) {

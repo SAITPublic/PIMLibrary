@@ -103,7 +103,8 @@ if [ $target_device = "amd" ]; then
     cmake_build_options="${cmake_build_options} -DAMD=ON"
 elif [ $target_device = "nvidia" ]; then
     cmake_build_options="${cmake_build_options} -DNVIDIA=ON"
-    cmake_build_options="${cmake_build_options} -DOPENCL=ON"
+elif [ $target_device = 'mobile' ]; then
+    cmake_build_options="${cmake_build_options} -DMOBILE=ON"
 else
     cmake_build_options="${cmake_build_options} -DAMD=ON"
 fi
@@ -164,7 +165,7 @@ else
     make_install_opencl_binary()
     {
         ./examples/integration_test/OpenCLPimIntegrationTests --gtest_filter=*create_ocl_kernel_binary*
-        sudo cp ocl_pimk.bin ${PIM_PATH}/opencl/bin/
+        sudo cp ocl_pimk.bin ${OPENCL_PATH}/bin/
     }
 fi
 if [ $target_device = "amd" ]; then

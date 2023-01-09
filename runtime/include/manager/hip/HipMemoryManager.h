@@ -13,6 +13,7 @@
 #define _HIP_MEM_MANAGER_H_
 
 #include <map>
+#include <memory>
 #include <vector>
 #include "manager/HostInfo.h"
 #include "manager/IPimMemoryManager.h"

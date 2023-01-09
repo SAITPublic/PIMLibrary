@@ -10,18 +10,20 @@
  */
 
 #include "emulator/ocl/OclPimEmulator.h"
-#include "manager/ocl/OclMemoryManager.h"
-
 #include <CL/opencl.h>
 #include <assert.h>
 #include <stdlib.h>
 #include <iostream>
 #include "half.hpp"
+#include "manager/ocl/OclMemoryManager.h"
+#if AMD
 #include "hip/hip_runtime.h"
+#endif
 #include "utility/assert_cl.h"
 #include "utility/pim_debug.hpp"
 #include "utility/pim_log.h"
 #include "utility/pim_util.h"
+
 namespace pim
 {
 namespace runtime
@@ -41,10 +43,15 @@ int OclPimEmulator::initialize(void)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " Intialization done ";
     int ret = 0;
+#if AMD
     std::string rocm_path = ROCM_PATH;
     pim_sim_.initialize(rocm_path + "/include/dramsim2/ini/HBM2_samsung_2M_16B_x64.ini",
                         rocm_path + "/include/dramsim2/ini/system_hbm_vega20.ini", 256 * 64 * 2, 64, 1);
-
+#else
+    std::string pim_path = PIM_PATH;
+    pim_sim_.initialize("/include/dramsim2/ini/HBM2_samsung_2M_16B_x64.ini",
+                        "/include/dramsim2/ini/system_hbm_vega20.ini", 256 * 64 * 2, 64, 1);
+#endif
     return ret;
 }
 
@@ -130,8 +137,8 @@ int OclPimEmulator::execute_gemm_bias_act(PimBo* output, PimBo* pim_data, PimMem
                 offset += c * output->bshape.h * output->bshape.w;
                 offset_r = n * output->bshape_r.c * output->bshape_r.h * output->bshape_r.w;
                 offset_r += c * output->bshape_r.h * output->bshape_r.w;
-                memcpy((half*)host_addr + offset_r, (half*)sim_output + offset,
-                       pim_data->bshape_r.w * output->bshape_r.h * sizeof(half));
+                memcpy((half_float::half*)host_addr + offset_r, (half_float::half*)sim_output + offset,
+                       pim_data->bshape_r.w * output->bshape_r.h * sizeof(half_float::half));
             }
         }
         cl_ok(clEnqueueUnmapMemObject(queue, (cl_mem)output->data, host_addr, 0, NULL, NULL));

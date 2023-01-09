@@ -36,17 +36,33 @@ supported targets : AMD and NVIDIA.
 if build is in PIMLibrary directory, to build from scratch using the script, below command can be used:  
 ### TARGET mode  (AMD as target)
 ```
+export BUILD_TOOLS_PATH=/opt/rocm-4.0.0/
+export OPENCL_PATH=/opt/rocm-4.0.0/opencl
+```
+```
 ./scripts/build.sh all -o . -t amd
 ```
 ### Emulator mode  (AMD as target)
+```
+export BUILD_TOOLS_PATH=/opt/rocm-4.0.0/
+export OPENCL_PATH=/opt/rocm-4.0.0/opencl
+```
 ```
 ./scripts/build.sh all -o . -t amd -e
 ```
 ### TARGET mode  (NVIDIA as target)
 ```
+export BUILD_TOOLS_PATH=/usr/
+export OPENCL_PATH=/usr/
+```
+```
 ./scripts/build.sh all -o . -t nvidia
 ```
 ### Emulator mode  (NVIDIA as target)
+```
+export BUILD_TOOLS_PATH=/usr/
+export OPENCL_PATH=/usr/
+```
 ```
 ./scripts/build.sh all -o . -t nvidia -e
 ```

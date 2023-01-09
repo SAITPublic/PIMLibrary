@@ -10,9 +10,15 @@
  */
 
 #include "utility/pim_util.h"
+#include <cassert>
 #include "half.hpp"
+// using namespace half_float::half;
 
+#if AMD
 __host__ void get_pim_block_info(PimBlockInfo* pbi) { memcpy(pbi, &vega20_pbi, sizeof(PimBlockInfo)); }
+#else
+void get_pim_block_info(PimBlockInfo* pbi) { memcpy(pbi, &vega20_pbi, sizeof(PimBlockInfo)); }
+#endif
 
 void set_pimbo_t(PimBo* bo0, PimBo* bo1, PimBo* bo2, PimBo* bo3)
 {
@@ -218,18 +224,22 @@ void align_shape(PimDesc* pim_desc, PimOpType op_type)
     pim_desc->bshape = bs;
 }
 
+// TODO gneralise for hip and ocl.
 void pad_data(void* input, PimDesc* pim_desc, PimMemType mem_type, PimMemFlag mem_flag)
 {
     if (mem_flag == GEMV_INPUT && mem_type == MEM_TYPE_HOST) {
         if (mem_type == MEM_TYPE_HOST) {
             for (int i = 0; i < pim_desc->bshape.n; i++) {
                 for (int j = pim_desc->bshape_r.w; j < pim_desc->bshape.w; j++) {
-                    ((half*)input)[i * pim_desc->bshape.w + j] = half(0);
+                    ((half_float::half*)input)[i * pim_desc->bshape.w + j] = half_float::half(0);
                 }
             }
         } else {
-            if (pim_desc->bshape_r.w != pim_desc->bshape.w)
+            if (pim_desc->bshape_r.w != pim_desc->bshape.w) {
+#if AMD
                 hipMemset(input, 0, pim_desc->bshape.n * pim_desc->bshape.w * sizeof(half));
+#endif
+            }
         }
     }
 
@@ -237,7 +247,7 @@ void pad_data(void* input, PimDesc* pim_desc, PimMemType mem_type, PimMemFlag me
         int padded_size = pim_desc->bshape.n * pim_desc->bshape.c * pim_desc->bshape.h * pim_desc->bshape.w;
         int real_size = pim_desc->bshape_r.n * pim_desc->bshape_r.c * pim_desc->bshape_r.h * pim_desc->bshape_r.w;
         for (int i = real_size; i < padded_size; i++) {
-            ((half*)input)[i] = half(0);
+            ((half_float::half*)input)[i] = half_float::half(0);
         }
     }
 }
@@ -247,12 +257,12 @@ void pad_data(void* input, int in_size, int in_nsize, int batch_size, PimMemFlag
     if (mem_flag == GEMV_INPUT) {
         for (int i = 0; i < batch_size; i++) {
             for (int j = in_size; j < in_nsize; j++) {
-                ((half*)input)[in_nsize * i + j] = half(0);
+                ((half_float::half*)input)[in_nsize * i + j] = half_float::half(0);
             }
         }
     } else {
         for (int i = in_size; i < in_nsize; i++) {
-            ((half*)input)[i] = half(0);
+            ((half_float::half*)input)[i] = half_float::half(0);
         }
     }
 }
