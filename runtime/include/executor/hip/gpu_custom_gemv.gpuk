@@ -158,7 +158,7 @@ void rocblas_gemv_template_Axy(hipStream_t p_stream, const V *A, const V *x, W *
     if (n != 1) {
         return;
     }
-    static constexpr int NB = 256;
+    static constexpr int NB = 128;
     dim3 gemvt_grid(1, m);
     dim3 gemvt_threads(NB);
 
