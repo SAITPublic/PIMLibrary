@@ -62,7 +62,7 @@ __kernel void elt_op_pim(__global uint8_t* __restrict__ operand0, __global uint8
 #endif
         B_CMD(1);
     }
-
+    barrier(CLK_GLOBAL_MEM_FENCE);
     if (get_local_id(0) < 16) {
 #if COMPUTE_ELT_OP
         for (int tile_index = 0; tile_index < num_tile; tile_index++) {
@@ -121,6 +121,7 @@ __kernel void elt_op_pim(__global uint8_t* __restrict__ operand0, __global uint8
     }
 
 #if PARK_OUT
+    barrier(CLK_LOCAL_MEM_FENCE);
     park_out(pim_ctr, gidx, num_ba, offset);
 #endif
 
@@ -183,7 +184,7 @@ __kernel void relu_pim_operation(__global uint8_t* __restrict__ pim_data, __glob
 #endif
         B_CMD(1);
     }
-
+    barrier(CLK_GLOBAL_MEM_FENCE);
 #if COMPUTE_RELU
     if (get_local_id(0) < 16) {
         for (int tile_idx = 0; tile_idx < num_tile; tile_idx++) {
@@ -221,7 +222,7 @@ __kernel void relu_pim_operation(__global uint8_t* __restrict__ pim_data, __glob
         change_hab_sb(pim_ctr, gidx, offset);
 #endif
     }
-
+    barrier(CLK_LOCAL_MEM_FENCE);
 #if PARK_OUT
     park_out(pim_ctr, gidx, num_ba, offset);
 #endif

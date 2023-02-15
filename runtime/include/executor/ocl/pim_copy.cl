@@ -62,6 +62,7 @@ __kernel void copy_pim(__global uint8_t* __restrict__ pim_data, __global uint8_t
         B_CMD(1);
     }
 
+    barrier(CLK_GLOBAL_MEM_FENCE);
 #if COMPUTE_COPY
     if (get_local_id(0) < 16) {
         for (int tile_idx = 0; tile_idx < num_tile; tile_idx++) {
@@ -101,6 +102,9 @@ __kernel void copy_pim(__global uint8_t* __restrict__ pim_data, __global uint8_t
     }
 
 #if PARK_OUT
+    // barrier is needed to force nvidia to wait untill all threads reach here in order to avoid concurrent write of
+    // PARK-out command by 16-31 threads before this point.
+    barrier(CLK_LOCAL_MEM_FENCE);
     park_out(pim_ctr, gidx, num_ba, offset);
 #endif
 

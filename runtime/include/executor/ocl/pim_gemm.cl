@@ -70,13 +70,13 @@ __kernel void pim_chwise_gemm_bias_relu_fp16(
         change_sb_hab(pim_ctr, offset);
     }
 #endif
-
+    barrier(CLK_GLOBAL_MEM_FENCE);
 #if PROGRAM_CRF
     if (get_local_id(0) < (crf_size >> 4)) {
         program_crf_mod(pim_ctr, gidx, crf_binary, offset);
     }
 #endif
-
+    barrier(CLK_GLOBAL_MEM_FENCE);
 #if COMPUTE_GEMM
     if (get_local_id(0) < 16) {
         for (int i = 0; i < iter_cnt; i++) {
@@ -188,6 +188,7 @@ __kernel void pim_chwise_gemm_bias_relu_fp16(
 #endif
 
 #if PARK_OUT
+    barrier(CLK_LOCAL_MEM_FENCE);
     if (get_local_id(0) < 32) {
         park_out(pim_ctr, gidx, num_ba, offset);
     }
@@ -204,7 +205,11 @@ __kernel void pim_chwise_gemm_bias_relu_fp16(
     int ba = (((get_local_id(0) >> 3) % 2) << 1) + 1;
     int t_idx = get_local_id(0);
     int out_offset = 0;
+#if NVIDIA_GPU
+    float t_output = 0;
+#else
     half t_output = 0;
+#endif
     t_pim_partial_sum = pim_partial_sum;
 
     for (int i = 0; i < iter_cnt; i++) {
@@ -214,13 +219,27 @@ __kernel void pim_chwise_gemm_bias_relu_fp16(
             addr = addr_gen_(ch, 0, bg, ba, 0, col);
             t_output = 0;
             for (int ti = 0; ti < 16; ti++) {
+            #if NVIDIA_GPU
+                offset = ti << 1;    // offset is used to calculate address, hence is required in byte.
+                float curr_out = vload_half(addr + offset , t_pim_partial_sum);  // load the half fp from (addr + offset) as store it as float.
+                t_output += curr_out;
+            #else
                 t_output += ((half*)t_pim_partial_sum)[(addr >> 1) + ti];
+            #endif
             }
             out_offset = (get_group_id(0) << 6) + t_idx;
+            #if NVIDIA_GPU
+                        if(is_bias) t_output += vload_half(out_offset << 1 , bias);
+            if(is_relu){
+                if(t_output < (float)0.) t_output = (float)0.
+            }
+            vstore_half(t_output , out_offset << 1 , output);
+            #else
             if (is_bias) t_output += ((half*)bias)[out_offset];
             if (is_relu)
                 if (t_output < (half)0.) t_output = (half)0.;
             ((half*)output)[out_offset] = t_output;
+            #endif
         }
         output += 8192;
         t_pim_partial_sum += (1 << 18);
@@ -276,13 +295,13 @@ __kernel void pim_chwise_gemm_bias_relu_32tile_fp16(
         change_sb_hab(pim_ctr, offset);
     }
 #endif
-
+    barrier(CLK_GLOBAL_MEM_FENCE);
 #if PROGRAM_CRF
     if (get_local_id(0) < (crf_size >> 4)) {
         program_crf_mod(pim_ctr, gidx, crf_binary, offset);
     }
 #endif
-
+    barrier(CLK_GLOBAL_MEM_FENCE);
 #if COMPUTE_GEMM
     if (get_local_id(0) < 16) {
         for (int i = 0; i < iter_cnt; i++) {
@@ -393,13 +412,13 @@ __kernel void pim_chwise_gemm_bias_relu_32tile_fp16(
         change_hab_sb(pim_ctr, gidx, offset);
     }
 #endif
-
+    barrier(CLK_GLOBAL_MEM_FENCE);
 #if PARK_OUT
     if (get_local_id(0) < 32) {
         park_out(pim_ctr, gidx, num_ba, offset);
     }
 #endif
-
+    barrier(CLK_GLOBAL_MEM_FENCE);
 #ifdef EMULATOR
     if (get_group_id(0) == 0 && get_local_id(0) == 0) {
         frd_size[0] = emulator_trace->g_ridx[0];
@@ -411,7 +430,12 @@ __kernel void pim_chwise_gemm_bias_relu_32tile_fp16(
     int ba = (((get_local_id(0) >> 3) % 2) << 1) + 1;
     int t_idx = get_local_id(0);
     int out_offset = 0;
+#if NVIDIA_GPU
+    float t_output = 0;
+    size_t offset = 0;
+#else
     half t_output = 0;
+#endif
     t_pim_partial_sum = pim_partial_sum;
 
     for (int i = 0; i < iter_cnt; i++) {
@@ -421,13 +445,26 @@ __kernel void pim_chwise_gemm_bias_relu_32tile_fp16(
             addr = addr_gen_(ch, 0, bg, ba, 0, col);
             t_output = 0;
             for (int ti = 0; ti < 16; ti++) {
+            #if NVIDIA_GPU
+                t_output += vload_half(addr + (ti << 1) , t_pim_partial_sum);
+            #else
                 t_output += ((half*)t_pim_partial_sum)[(addr >> 1) + ti];
+            #endif
             }
             out_offset = (get_group_id(0) << 6) + t_idx;
-            if (is_bias) t_output += ((half*)bias)[out_offset];
-            if (is_relu)
-                if (t_output < (half)0.) t_output = (half)0.;
-            ((half*)output)[out_offset] = t_output;
+
+            #if NVIDIA_GPU
+                if(is_bias) t_output += vload_half(out_offset << 1 , bias);
+                if(is_relu){
+                    if(t_output < (float)0.) t_output = (float)0.
+                }
+                vstore_half(t_output , out_offset << 1 , output);
+            #else
+                if (is_bias) t_output += ((half*)bias)[out_offset];
+                if (is_relu)
+                    if (t_output < (half)0.) t_output = (half)0.;
+                ((half*)output)[out_offset] = t_output;
+            #endif
         }
         output += 8192;
         t_pim_partial_sum += (1 << 18);
@@ -475,20 +512,20 @@ __kernel void pim_aligned_gemm_bias_relu_fp16(
         park_in(pim_ctr, gidx, num_ba, offset);
     }
 #endif
-
+    barrier(CLK_GLOBAL_MEM_FENCE);
 #if CHANGE_SB_HAB
     if (get_local_id(0) < 2) {
         /* change SB mode to HAB mode */
         change_sb_hab(pim_ctr, offset);
     }
 #endif
-
+    barrier(CLK_GLOBAL_MEM_FENCE);
 #if PROGRAM_CRF
     if (get_local_id(0) < (crf_size >> 4)) {
         program_crf_mod(pim_ctr, gidx, crf_binary, offset);
     }
 #endif
-
+    barrier(CLK_GLOBAL_MEM_FENCE);
 #if COMPUTE_GEMM
     if (get_local_id(0) < 16) {
         for (int i = 0; i < iter_cnt; i++) {
@@ -608,7 +645,7 @@ __kernel void pim_aligned_gemm_bias_relu_fp16(
         park_out(pim_ctr, gidx, num_ba, offset);
     }
 #endif
-
+    barrier(CLK_GLOBAL_MEM_FENCE);
 #ifdef EMULATOR
     if (get_group_id(0) == 0 && get_local_id(0) == 0) {
         frd_size[0] = emulator_trace->g_ridx[0];
@@ -622,7 +659,12 @@ __kernel void pim_aligned_gemm_bias_relu_fp16(
     int out_idx;
     int out_offset;
     int li;
+
+    #if NVIDIA_GPU
+    float t_output;
+    #else
     half t_output;
+    #endif
 
     gemv_cnt = 0;
 
@@ -638,14 +680,26 @@ __kernel void pim_aligned_gemm_bias_relu_fp16(
                     col = get_local_id(0) % 8 + ((li % 4) << 3);
                     addr = addr_gen_(ch, 0, bg, ba, row, col);
                     t_output = 0;
-                    for (int ti = 0; ti < 16; ti++) {
-                        t_output += ((half*)pim_partial_sum)[(addr >> 1) + ti];
-                    }
-                    out_offset = gemv_cnt * out_w + out_idx;
-                    if (is_bias) t_output += ((half*)bias)[out_offset];
-                    if (is_relu)
-                        if (t_output < (half)0.) t_output = (half)0.;
-                    ((half*)output)[out_offset] = t_output;
+                    #if NVIDIA_GPU
+                        for (int ti = 0; ti < 16; ti++) {
+                            // t_output += ((half*)pim_partial_sum)[(addr >> 1) + ti];
+                            t_output += vload_half(addr + (ti<<1) , pim_partial_sum);
+                        }
+                        out_offset = gemv_cnt * out_w + out_idx;
+                        if (is_bias) t_output += vload_half(out_offset << 1 , bias)
+                        if (is_relu)
+                            if (t_output < (float)0.) t_output = (float)0.;
+                        vstore_half(t_output , out_offset << 1 , output);
+                    #else
+                        for (int ti = 0; ti < 16; ti++) {
+                            t_output += ((half*)pim_partial_sum)[(addr >> 1) + ti];
+                        }
+                        out_offset = gemv_cnt * out_w + out_idx;
+                        if (is_bias) t_output += ((half*)bias)[out_offset];
+                        if (is_relu)
+                            if (t_output < (half)0.) t_output = (half)0.;
+                        ((half*)output)[out_offset] = t_output;
+                    #endif
                 }
             }
             gemv_cnt++;
@@ -701,13 +755,13 @@ __kernel void pim_aligned_gemm_bias_relu_8tile_fp16(
         change_sb_hab(pim_ctr, offset);
     }
 #endif
-
+    barrier(CLK_GLOBAL_MEM_FENCE);
 #if PROGRAM_CRF
     if (get_local_id(0) < (crf_size >> 4)) {
         program_crf_mod(pim_ctr, gidx, crf_binary, offset);
     }
 #endif
-
+    barrier(CLK_GLOBAL_MEM_FENCE);
 #if COMPUTE_GEMM
     if (get_local_id(0) < 16) {
         for (int i = 0; i < iter_cnt; i++) {
@@ -822,13 +876,13 @@ __kernel void pim_aligned_gemm_bias_relu_8tile_fp16(
         change_hab_sb(pim_ctr, gidx, offset);
     }
 #endif
-
+    barrier(CLK_GLOBAL_MEM_FENCE);
 #if PARK_OUT
     if (get_local_id(0) < 32) {
         park_out(pim_ctr, gidx, num_ba, offset);
     }
 #endif
-
+    
 #ifdef EMULATOR
     if (get_group_id(0) == 0 && get_local_id(0) == 0) {
         frd_size[0] = emulator_trace->g_ridx[0];
@@ -842,8 +896,11 @@ __kernel void pim_aligned_gemm_bias_relu_8tile_fp16(
     int out_idx;
     int out_offset;
     int li;
+    #if NVIDIA_GPU
+    float t_output;
+    #else
     half t_output;
-
+    #endif
     gemv_cnt = 0;
 
     for (int i = 0; i < iter_cnt; i++) {
@@ -858,14 +915,25 @@ __kernel void pim_aligned_gemm_bias_relu_8tile_fp16(
                     col = get_local_id(0) % 8 + ((li % 4) << 3);
                     addr = addr_gen_(ch, 0, bg, ba, row, col);
                     t_output = 0;
-                    for (int ti = 0; ti < 16; ti++) {
-                        t_output += ((half*)pim_partial_sum)[(addr >> 1) + ti];
-                    }
-                    out_offset = gemv_cnt * out_w + out_idx;
-                    if (is_bias) t_output += ((half*)bias)[out_offset];
-                    if (is_relu)
-                        if (t_output < (half)0.) t_output = (half)0.;
-                    ((half*)output)[out_offset] = t_output;
+                    #if NVIDIA_GPU
+                        for (int ti = 0; ti < 16; ti++) {
+                            t_output += vload_half(addr + (ti<<1) , pim_partial_sum);
+                        }
+                        out_offset = gemv_cnt * out_w + out_idx;
+                        if (is_bias) t_output += vload_half(out_offset << 1 , bias);
+                        if (is_relu)
+                            if (t_output < (half)0.) t_output = (half)0.;
+                        vstore_half(t_output , out_offset << 1 , output);
+                    #else
+                        for (int ti = 0; ti < 16; ti++) {
+                            t_output += ((half*)pim_partial_sum)[(addr >> 1) + ti];
+                        }
+                        out_offset = gemv_cnt * out_w + out_idx;
+                        if (is_bias) t_output += ((half*)bias)[out_offset];
+                        if (is_relu)
+                            if (t_output < (half)0.) t_output = (half)0.;
+                        ((half*)output)[out_offset] = t_output;
+                    #endif
                 }
             }
             gemv_cnt++;

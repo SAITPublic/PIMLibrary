@@ -1,5 +1,7 @@
 #pragma OPENCL EXTENSION cl_khr_fp16 : enable
 
+#define NVIDIA_GPU 1
+
 __constant PimBlockInfo vega20_pbi = {
     .pim_addr_map = AMDGPU_VEGA20,
     .num_banks = 16,
