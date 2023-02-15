@@ -54,6 +54,8 @@ class OclPimExecutor : public IPimExecutor
     int execute_dummy(void) { return -1; }
     void* create_stream(void) { return nullptr; }
     void set_gemm_order(PimGemmOrder gemm_order) { gemm_order_ = gemm_order; }
+    int set_device(uint32_t device_id) { return 0; }
+    int get_device(uint32_t *device_id) { return 0; }
 
    private:
     int check_cl_program_path(void);

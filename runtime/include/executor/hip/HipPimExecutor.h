@@ -57,6 +57,8 @@ class HipPimExecutor : public IPimExecutor
     int execute_dummy(void);
     void* create_stream(void);
     void set_gemm_order(PimGemmOrder gemm_order) { gemm_order_ = gemm_order; }
+    int set_device(uint32_t device_id);
+    int get_device(uint32_t *device_id);
 
    private:
     int execute_gemv_next_pim(PimBo* output, PimBo* operand0, PimBo* operand1, int is_gemv_add, void* stream,

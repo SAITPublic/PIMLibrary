@@ -43,6 +43,8 @@ class IPimExecutor
     virtual int execute_dummy(void) = 0;
     virtual void* create_stream(void) = 0;
     virtual void set_gemm_order(PimGemmOrder gemm_order) = 0;
+    virtual int set_device(uint32_t device_id) = 0;
+    virtual int get_device(uint32_t *device_id) = 0;
 };
 
 } /* namespace executor */

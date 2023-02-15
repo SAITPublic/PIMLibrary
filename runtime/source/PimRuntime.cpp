@@ -78,11 +78,13 @@ int PimRuntime::set_device(uint32_t device_id)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
-    hipError_t deviceSet = hipSetDevice(device_id);
-    if (hipSuccess != deviceSet) {
-        DLOG(ERROR) << "Failed to set device " << deviceSet << "Device ID: " << device_id << std::endl;
-        ret = int(deviceSet);
+
+    ret = pim_executor_->set_device(device_id);
+    if (ret != 0) {
+        DLOG(ERROR) << "Failed to set device " << ret << "Device ID: " << device_id << std::endl;
+        return ret;
     }
+
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
@@ -91,11 +93,13 @@ int PimRuntime::get_device(uint32_t* device_id)
 {
     DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
     int ret = 0;
-    hipError_t deviceGet = hipGetDevice((int*)device_id);
-    if (hipSuccess != deviceGet) {
-        DLOG(ERROR) << "Failed to get device " << deviceGet << "Device ID: " << device_id << std::endl;
-        ret = int(deviceGet);
+
+    ret = pim_executor_->get_device(device_id);
+    if (ret != 0) {
+        DLOG(ERROR) << "Failed to get device " << ret << "Device ID: " << device_id << std::endl;
+        return ret;
     }
+
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }

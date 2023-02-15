@@ -761,6 +761,37 @@ int HipPimExecutor::execute_dummy(void)
     DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
     return ret;
 }
+
+int HipPimExecutor::set_device(uint32_t device_id)
+{
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
+    int ret = 0;
+
+    hipError_t device_set = hipSetDevice(device_id);
+    if (hipSuccess != device_set) {
+        DLOG(ERROR) << "Failed to set device " << device_set << "Device ID: " << device_id << std::endl;
+        ret = int(device_set);
+    }
+
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+    return ret;
+}
+
+int HipPimExecutor::get_device(uint32_t *device_id)
+{
+    DLOG(INFO) << "[START] " << __FUNCTION__ << " called";
+    int ret = 0;
+
+    hipError_t device_get = hipGetDevice((int*)device_id);
+    if (hipSuccess != device_get) {
+        DLOG(ERROR) << "Failed to set device " << device_get << "Device ID: " << device_id << std::endl;
+        ret = int(device_get);
+    }
+
+    DLOG(INFO) << "[END] " << __FUNCTION__ << " called";
+    return ret;
+}
+
 }  // namespace executor
 }  // namespace runtime
 }  // namespace pim
