@@ -1,17 +1,27 @@
 # PIMLibrary
 
 PIM Runtime library and tools to execute computations on PIM hardware.  
-Platforms supported : HIP , OpenCL
+Platforms supported : HIP, OpenCL
 
 # Setup Contribution Environment
 ## Docker env
 
-All Prerequisites for PIMLibrary build and testing are installed in docker image. For more info refer [Dockefile](https://github.sec.samsung.net/PIM/PIMLibrary/blob/develop/docker/Dockerfile.PimLibrary)
+All Prerequisites for PIMLibrary build and testing are installed in docker image.
+
 ```
 cd PIMLibrary/docker
-./docker-fim.sh <image-name> <directory>
 
-image name : docker image to be used ( pim-rocm4.0:tf2.3-dev )
+Please update Dockerfiles to suit your environment before building images.
+
+<build docker images>
+./build-release.sh Dockerfile.ROCm-4.0.SAIT.GPU
+./build-release.sh Dockerfile.Nvidia
+
+<create docker containers>
+./docker-pim.sh <image-name> <directory>
+./docker-pim-nvidia.sh <image-name> <directory>
+
+image name : docker image to be used (pim-rocm4.0:tf2.3-dev)
 directory  : (optional) Directory to be mapped inside container. default your home directory is mapped
 ```
 # How to build
@@ -29,7 +39,7 @@ install : installs to rocm path
 <options>
 -o <relative path> : Relative path from current directory where build folder is created
 -d --debug  [optional] : if mentioned, Debug mode will be enabled.
--t --target [optional] TARGET : represent which target hardware PIMLibrary is built for.  {default : AMD device as target device}
+-t --target [optional] TARGET : represent which target hardware PIMLibrary is built for. {default : AMD device as target device}
 supported targets : AMD and NVIDIA.  
 -e --emulator [optional]: enables the execution in emulator mode (where the computation for PIM are imitated using a simulator) for functionality check and debugging.  
 ```
@@ -52,6 +62,7 @@ export OPENCL_PATH=/opt/rocm-4.0.0/opencl
 ```
 ### TARGET mode  (NVIDIA as target)
 ```
+export PIM_PATH=/usr/
 export BUILD_TOOLS_PATH=/usr/
 export OPENCL_PATH=/usr/
 ```
@@ -60,6 +71,7 @@ export OPENCL_PATH=/usr/
 ```
 ### Emulator mode  (NVIDIA as target)
 ```
+export PIM_PATH=/usr/
 export BUILD_TOOLS_PATH=/usr/
 export OPENCL_PATH=/usr/
 ```
@@ -73,7 +85,7 @@ defaults :
 ```
 mkdir build
 cd build
-cmake -DCMAKE_BUILD_TYPE=<Build Type> -DEMULATOR=<option> -DCMAKE_INSTALL_PREFIX=$ROCM_PATH ..
+cmake -DCMAKE_BUILD_TYPE=<Build Type> -DEMULATOR=<option> -DCMAKE_INSTALL_PREFIX=$BUILD_TOOLS_PATH ..
 <build Type> : Release, Debug
 <option>     : ON, OFF
 make -j8
@@ -81,7 +93,7 @@ sudo make install
 ```
 
 # Note
-- Build in release mode if you want to install all Lib and Simulator to ROCM_PATH
+- Build in release mode if you want to install all Lib and Simulator to BUILD_TOOLS_PATH 
 - Logs will be generated only in Debug mode in /tmp/ directory
 
 ## DLOG Generation
@@ -104,21 +116,21 @@ severity
 ### Run all Tests
 ### HIP
 ```
-./build/examples/PimIntegrationTests
+./build/examples/integration_test/PimIntegrationTests
 ```
 ### OpenCL
-```
-./build/examples/OpenCLPimIntegrationTests
+
+./build/examples/integration_test/OpenCLPimIntegrationTests
 ```
 
 ### Run Single Test
 - List all available Tests
 append --gtest_list_tests to the execute command.  
-``./build/examples/<executable-binary> --gtest_list_tests``  
+``./build/examples/integration_test/<executable-binary> --gtest_list_tests``  
 
  - Run the Test  
 append --gtest_filter flag to execute command.  
-`` ./build/examples/<executable-binary> --gtest_filter=<Test from List>``
+`` ./build/examples/integration_test/<executable-binary> --gtest_filter=<Test from List>``
 
 -executable-binary : PimIntegrationTests (HIP) / OpenCLPimIntegrationTests (OpenCL)
 
@@ -135,10 +147,10 @@ Profiler has been developed for Profiling PIM Library
 
 ### Pre requisites
 1. PIMLibrary in debug mode
-   PIM Library need to be build in debug mode for generating debug logs for profiling. Logs will be generated in /tmp/ folder
+   PIM Library needs to be built in debug mode for generating debug logs for profiling. Logs will be generated in /tmp/ folder
 
 ### Profiler Usage
-For more details about usage, refer [Profiler](https://github.sec.samsung.net/PIM/PIMLibrary/tree/develop/tools/profiler)
+Fo more details about usage, refer [Profiler](PIMLibrary/tools/profiler/README.md)
 
 # Documentation
 ## How to generate Doxygen documentation
