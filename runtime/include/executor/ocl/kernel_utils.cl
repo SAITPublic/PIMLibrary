@@ -340,6 +340,20 @@ void _change_hab_habpim(__global uint8_t* __restrict__ pim_ctr, uint64_t offset
     R_CMD(&pim_ctr[addr + offset]);
 }
 
+void _change_gemv_hab_habpim(__global uint8_t* __restrict__ pim_ctr, uint64_t offset
+#ifdef EMULATOR
+                        ,
+                        __global PimMemTracer* emulator_trace
+#endif
+                        )
+{
+    uint64_t addr;
+    addr = addr_gen_(get_group_id(0), 0, 0, 0, 0x3fff, 0x0);
+    W_CMD_R_C(&pim_ctr[addr + offset], gemv_hab_to_hab_pim + offset);
+    R_CMD(&pim_ctr[addr + offset]);
+    B_CMD(1);
+}
+
 void _change_habpim_hab(__global uint8_t* __restrict__ pim_ctr, uint64_t offset
 #ifdef EMULATOR
                         ,
@@ -380,6 +394,19 @@ void _park_out(__global uint8_t* __restrict__ pim_ctr, int gidx, int num_ba, uin
     W_CMD(&pim_ctr[addr + offset]);
 }
 
+uint64_t addr_gen_s(uint32_t chan, uint32_t rank, uint32_t bankgroup, uint32_t bank, uint32_t row, uint32_t col, uint32_t offset)
+{
+    uint32_t offset_size = 1 << vega20_pbi.num_offset_bit;
+    uint32_t col_size = vega20_pbi.num_col / vega20_pbi.bl;
+
+    uint32_t offset_s = offset % offset_size;
+    uint32_t new_col = col + offset / offset_size;
+    uint32_t col_s = new_col % col_size;
+    uint32_t row_s = row + new_col / col_size;
+
+    return addr_gen_(chan, rank, bankgroup, bank, row_s, col_s) + offset_s;
+}
+
 #ifdef EMULATOR
 #define park_in(a, b, c, d) _park_in(a, b, c, d, emulator_trace)
 #define change_sb_hab(a, b) _change_sb_hab(a, b, emulator_trace)
@@ -387,6 +414,7 @@ void _park_out(__global uint8_t* __restrict__ pim_ctr, int gidx, int num_ba, uin
 #define program_crf_mod(a, b, c, d) _program_crf_mod(a, b, c, d, emulator_trace)
 #define program_srf(a, b, c) _program_srf(a, b, c, emulator_trace)
 #define change_hab_habpim(a, b) _change_hab_habpim(a, b, emulator_trace)
+#define change_gemv_hab_habpim(a, b) _change_gemv_hab_habpim(a, b, emulator_trace)
 #define change_habpim_hab(a, b) _change_habpim_hab(a, b, emulator_trace)
 #define change_hab_sb(a, b, c) _change_hab_sb(a, b, c, emulator_trace)
 #define park_out(a, b, c, d) _park_out(a, b, c, d, emulator_trace)
@@ -398,6 +426,7 @@ void _park_out(__global uint8_t* __restrict__ pim_ctr, int gidx, int num_ba, uin
 #define program_crf_mod(a, b, c, d) _program_crf_mod(a, b, c, d)
 #define program_srf(a, b, c) _program_srf(a, b, c)
 #define change_hab_habpim(a, b) _change_hab_habpim(a, b)
+#define change_gemv_hab_habpim(a, b) _change_gemv_hab_habpim(a, b)
 #define change_habpim_hab(a, b) _change_habpim_hab(a, b)
 #define change_hab_sb(a, b, c) _change_hab_sb(a, b, c)
 #define park_out(a, b, c, d) _park_out(a, b, c, d)
